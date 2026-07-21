@@ -1,0 +1,114 @@
+.hero-wrapper {
+    background: linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #f8fbff 55%,
+        #ffffff 100%
+    );
+    padding-top: 80px;
+}
+
+.hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    max-width: 1400px;
+    margin: auto;
+    padding: 90px 40px;
+    gap: 80px;
+}
+
+.hero h1 {
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+}
+
+.hero p {
+    font-size: 22px;
+    line-height: 1.7;
+    max-width: 520px;
+    color: #555;
+}
+
+.hero img {
+    width: 100%;
+    max-width: 760px;
+    border-radius: 24px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.18);
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 70px;
+    margin-top: 20px;
+}
+
+.hero-stats li {
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-stats span {
+    font-size: 16px;
+}
+
+.hero-stats strong {
+    font-size: 34px;
+    color: var(--cor-principal);
+}
+/* BOTÕES DO HERO */
+
+.hero .hero-buttons {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    margin-top: 24px;
+    margin-bottom: 40px;
+}
+
+.hero .hero-buttons .btn {
+    width: auto;
+    min-width: 165px;
+    min-height: 52px;
+
+    padding: 13px 24px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.hero .hero-buttons .btn-outline {
+    color: var(--cor-principal);
+    background: #ffffff;
+    border: 2px solid var(--cor-principal);
+}
+
+@media (max-width: 650px) {
+
+    .hero .hero-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hero .hero-buttons .btn {
+        width: 100%;
+    }
+}

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Área do Cliente - AZURY</title>
+
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/cliente.css">
+</head>
+
+<body class="pagina-cliente">
+
+    <!-- CABEÇALHO -->
+    <header class="cliente-header">
+
+        <div class="cliente-header-container">
+
+            <a href="cliente.html" class="cliente-logo">
+                <img src="Imagens/coroa-azury-header.svg" alt="Coroa Azury">
+                <span>AZURY</span>
+            </a>
+
+            <div class="acoes-cliente">
+
+                <a href="index.html" class="btn-inicio-cliente">
+                    ← Início
+                </a>
+
+                <button type="button" id="btnSair" class="btn-sair">
+                    Sair
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <main class="painel-cliente">
+
+        <!-- PERFIL -->
+        <section class="perfil-cliente">
+
+            <div class="avatar-container">
+
+                <div class="avatar-cliente">
+
+                    <span id="avatarInicial">
+                        C
+                    </span>
+
+                </div>
+
+                <span class="selo-avatar" aria-hidden="true">
+                    ♕
+                </span>
+
+            </div>
+
+            <h1 class="titulo-azury">
+                AZURY
+            </h1>
+
+            <h2 class="saudacao-cliente">
+
+                Olá,
+
+                <strong id="nomeCliente">
+                    Cliente
+                </strong><strong aria-hidden="true">!</strong>
+
+            </h2>
+
+            <span id="nivelClienteCard" class="nivel-cliente">
+                🥉 Cliente Bronze
+            </span>
+
+        </section>
+
+
+        <!-- CARDS PRINCIPAIS -->
+        <section class="cliente-grid">
+
+            <!-- MEUS PONTOS -->
+            <article class="card card-pontos">
+
+                <h2 class="card-titulo">
+
+                    <span class="icone-card icone-pontos">
+                        ★
+                    </span>
+
+                    Meus Pontos
+
+                </h2>
+
+                <div class="quantidade-pontos">
+
+                    <strong id="pontos">
+                        0
+                    </strong>
+
+                    <span>
+                        PONTOS
+                    </span>
+
+                </div>
+
+                <div class="barra-pontos">
+
+                    <div class="progresso" id="progresso"></div>
+
+                </div>
+
+                <p id="faltam" class="texto-progresso">
+                    Faltam 100 pontos para o nível Prata
+                </p>
+
+                <button type="button" class="btn btn-detalhes" id="btnVerDetalhes">
+                    Ver detalhes
+                </button>
+
+                <!-- Botão temporário para testes -->
+                <button type="button" id="btnAdicionarPontos" class="btn btn-detalhes">
+                    +10 Pontos (Teste)
+                </button>
+
+            </article>
+
+
+            <!-- RECOMPENSAS -->
+            <article class="card card-recompensas">
+
+                <h2 class="card-titulo">
+
+                    <span class="icone-card icone-recompensa">
+                        🎁
+                    </span>
+
+                    Recompensas
+
+                </h2>
+
+                <div id="recompensas" class="conteudo-recompensas">
+
+                    <div class="recompensa-bloqueada">
+
+                        <div class="icone-bloqueado">
+                            🔒
+                        </div>
+
+                        <div class="recompensa-informacoes">
+
+                            <strong>
+                                Açaí 300ml Grátis
+                            </strong>
+
+                            <span>
+                                100 pontos
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="barra-recompensa">
+
+                        <div class="progresso-recompensa"></div>
+
+                    </div>
+
+                    <p class="texto-recompensa">
+                        Faltam
+                        <strong>100 pontos</strong>
+                        para desbloquear
+                    </p>
+
+                </div>
+
+            </article>
+
+
+            <!-- MEUS PEDIDOS -->
+            <article class="card card-pedidos">
+
+                <h2 class="card-titulo">
+
+                    <span class="icone-card icone-pedidos">
+                        🛍
+                    </span>
+
+                    Meus Pedidos
+
+                </h2>
+
+                <div id="pedidos" class="lista-pedidos">
+
+                    <p>
+                        Nenhum pedido realizado.
+                    </p>
+
+                </div>
+
+                <button type="button" class="link-card" id="btnVerTodosPedidos">
+                    Ver todos os pedidos
+                </button>
+
+            </article>
+
+        </section>
+
+
+        <!-- HISTÓRICO -->
+        <section class="card card-historico">
+
+            <div class="historico-cabecalho">
+
+                <h2 class="card-titulo">
+
+                    <span class="icone-card icone-historico">
+                        ▣
+                    </span>
+
+                    Histórico
+
+                </h2>
+
+            </div>
+
+            <div id="listaHistorico" class="lista-historico">
+
+                <p class="historico-vazio">
+                    Nenhuma atividade ainda.
+                </p>
+
+            </div>
+
+            <button type="button" class="link-card link-historico" id="btnVerTodoHistorico">
+                Ver todo histórico
+            </button>
+
+        </section>
+
+
+        <!-- INFORMAÇÃO INTERNA DOS PONTOS -->
+        <span id="pontosCard" hidden>
+            0
+        </span>
+
+    </main>
+
+
+    <!-- MODAL DE DETALHES DOS PONTOS -->
+    <div id="modalDetalhesPontos" class="modal">
+
+        <div class="modal-content modal-pontos">
+
+            <h2>⭐ Detalhes dos Pontos</h2>
+
+            <div class="resumo-pontos-modal">
+
+                <strong id="pontosModal">
+                    0
+                </strong>
+
+                <span>
+                    pontos acumulados
+                </span>
+
+            </div>
+
+            <div class="nivel-modal">
+
+                <span>Nível atual</span>
+
+                <strong id="nivelModal">
+                    🥉 Bronze
+                </strong>
+
+            </div>
+
+            <div class="barra-pontos">
+
+                <div class="progresso" id="progressoModal"></div>
+
+            </div>
+
+            <p id="faltamModal">
+                Faltam 100 pontos para o próximo nível.
+            </p>
+
+            <div class="lista-niveis">
+
+                <p>🥉 Bronze — de 0 a 99 pontos</p>
+
+                <p>🥈 Prata — de 100 a 299 pontos</p>
+
+                <p>🥇 Ouro — de 300 a 599 pontos</p>
+
+                <p>💎 Diamante — a partir de 600 pontos</p>
+
+            </div>
+
+            <button type="button" class="btn btn-outline" id="btnFecharDetalhes">
+                Fechar
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL DE TODOS OS PEDIDOS -->
+    <div id="modalTodosPedidos" class="modal">
+
+        <div class="modal-content modal-pedidos">
+
+            <h2>📦 Todos os Pedidos</h2>
+
+            <div id="listaTodosPedidos">
+
+                <p>Nenhum pedido realizado.</p>
+
+            </div>
+
+            <button type="button" class="btn btn-outline" id="btnFecharTodosPedidos">
+                Fechar
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- MODAL DE TODO O HISTÓRICO -->
+    <div id="modalTodoHistorico" class="modal">
+
+        <div class="modal-content modal-historico">
+
+            <h2>📜 Todo o Histórico</h2>
+
+            <div id="listaTodoHistorico">
+
+                <p>Nenhuma atividade encontrada.</p>
+
+            </div>
+
+            <button type="button" class="btn btn-outline" id="btnFecharTodoHistorico">
+                Fechar
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL DO CUPOM -->
+    <div id="modalCupom" class="modal">
+
+        <div class="modal-content">
+
+            <h2>
+                🎉 Recompensa Resgatada!
+            </h2>
+
+            <p>
+                Seu cupom exclusivo é:
+            </p>
+
+            <h1 id="codigoCupom"></h1>
+
+            <button type="button" class="btn" id="btnCopiarCupom">
+                📋 Copiar Cupom
+            </button>
+
+            <button type="button" class="btn btn-outline" id="btnFecharModal">
+                Fechar
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script src="./js/perfil.js"></script>
+    <script src="./js/pontos.js"></script>
+    <script src="./js/pedidos.js"></script>
+    <script src="./js/historico.js"></script>
+    <script src="./js/recompensas.js"></script>
+    <script src="./js/ui.js"></script>
+    <script src="./js/cliente.js"></script>
+
+</body>
+
+</html>

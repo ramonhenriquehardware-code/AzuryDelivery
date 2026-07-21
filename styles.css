@@ -1,0 +1,22 @@
+body {
+
+    background:
+        radial-gradient(circle at top right,
+            rgba(0, 81, 255, .06),
+            transparent 35%),
+
+        radial-gradient(circle at bottom left,
+            rgba(212, 175, 55, .08),
+            transparent 30%),
+
+        #f8f9fc;
+
+    font-family: 'Poppins', sans-serif;
+
+}
+
+
+
+
+
+

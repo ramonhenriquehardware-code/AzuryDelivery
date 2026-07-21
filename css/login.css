@@ -1,0 +1,769 @@
+/* =========================================
+   LOGIN — AZURY
+========================================= */
+
+body {
+    min-height: 100vh;
+    margin: 0;
+
+    color: #171717;
+    background:
+        radial-gradient(
+            circle at 85% 15%,
+            rgba(0, 81, 255, 0.08),
+            transparent 32%
+        ),
+        #f5f7fb;
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================
+   CABEÇALHO DO LOGIN
+========================================= */
+
+body .login-header {
+    width: 100%;
+    min-height: 78px;
+    padding: 10px 6%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    position: relative;
+    z-index: 20;
+
+    background: #ffffff;
+    border-bottom: 1px solid #edf0f5;
+
+    box-shadow: 0 5px 18px rgba(24, 48, 92, 0.06);
+}
+
+body .login-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #222222;
+
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+body .login-logo .coroa-topo {
+    width: 82px;
+    height: 54px;
+
+    display: block;
+    flex-shrink: 0;
+
+    overflow: visible;
+}
+
+body .login-nav {
+    display: flex;
+    align-items: center;
+}
+
+body .login-nav a {
+    color: #222222;
+
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+body .login-nav a:hover {
+    color: var(--cor-principal);
+}
+
+
+/* =========================================
+   CONTEÚDO PRINCIPAL
+========================================= */
+
+.login-container {
+    width: 100%;
+    min-height: calc(100vh - 78px);
+
+    padding: 38px 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* =========================================
+   CARTÃO DE LOGIN
+========================================= */
+
+.login-card {
+    width: 100%;
+    max-width: 500px;
+
+    padding: 42px 48px;
+
+    position: relative;
+    overflow: hidden;
+
+    text-align: center;
+
+    background: #ffffff;
+    border: 1px solid rgba(23, 23, 23, 0.06);
+    border-radius: 24px;
+
+    box-shadow: 0 18px 50px rgba(25, 45, 85, 0.11);
+}
+
+
+/* =========================================
+   COROAS
+========================================= */
+
+.icone-coroa-azury {
+    display: block;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+.logo-login {
+    margin: 0 0 5px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    z-index: 2;
+}
+
+.logo-login .coroa-login {
+    width: 125px;
+    height: 82px;
+}
+
+.marca-dagua {
+    position: absolute;
+    top: -30px;
+    right: -35px;
+    z-index: 0;
+
+    pointer-events: none;
+    user-select: none;
+
+    transform: rotate(-12deg);
+}
+
+.marca-dagua .coroa-marca {
+    width: 245px;
+    height: 155px;
+
+    opacity: 0.06;
+}
+
+
+/* =========================================
+   TEXTOS
+========================================= */
+
+.login-card h1 {
+    margin: 0 0 14px;
+
+    position: relative;
+    z-index: 2;
+
+    color: #111111;
+
+    font-size: 46px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 3px;
+}
+
+.login-badge {
+    margin: 0 0 22px;
+    padding: 8px 18px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    z-index: 2;
+
+    color: #a66f00;
+    background: #fff7dd;
+    border: 1px solid rgba(212, 175, 55, 0.32);
+    border-radius: 999px;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.login-card h2 {
+    margin: 0 0 14px;
+
+    position: relative;
+    z-index: 2;
+
+    color: #252525;
+
+    font-size: 29px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.descricao-login {
+    max-width: 365px;
+
+    margin: 0 auto 26px;
+
+    position: relative;
+    z-index: 2;
+
+    color: #666666;
+
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+
+/* =========================================
+   VANTAGENS
+========================================= */
+
+.vantagens-login {
+    margin: 0 0 28px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    position: relative;
+    z-index: 2;
+}
+
+.vantagens-login div {
+    min-height: 48px;
+    padding: 13px 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #303030;
+    background: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   FORMULÁRIO
+========================================= */
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    position: relative;
+    z-index: 2;
+}
+
+.login-form input {
+    width: 100%;
+    min-height: 54px;
+
+    padding: 14px 16px;
+
+    color: #222222;
+    background: #ffffff;
+    border: 2px solid #e2e6ed;
+    border-radius: 13px;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.login-form input:focus {
+    border-color: var(--cor-principal);
+
+    box-shadow: 0 0 0 4px rgba(0, 81, 255, 0.09);
+}
+
+.login-form .btn {
+    width: 100%;
+    min-height: 54px;
+
+    padding: 12px 20px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+    background: var(--cor-principal);
+    border: 1px solid var(--cor-principal);
+    border-radius: 14px;
+
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+
+    cursor: pointer;
+
+    box-shadow: 0 10px 24px rgba(0, 81, 255, 0.22);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.login-form .btn:hover {
+    background: #0048df;
+    transform: translateY(-1px);
+}
+
+.login-form .btn-outline {
+    color: var(--cor-principal);
+    background: #ffffff;
+    box-shadow: none;
+}
+
+.login-form .btn-outline:hover {
+    color: #ffffff;
+    background: var(--cor-principal);
+}
+
+.texto-cadastro {
+    margin: 8px 0 0;
+
+    color: #666666;
+
+    font-size: 14px;
+}
+
+
+/* =========================================
+   MENSAGENS
+========================================= */
+
+.mensagem {
+    display: none;
+
+    margin: 0;
+    padding: 13px;
+
+    border-radius: 11px;
+
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.mensagem.sucesso {
+    display: block;
+
+    color: #187b43;
+    background: #e8fff1;
+    border: 1px solid #9de0b8;
+}
+
+.mensagem.erro {
+    display: block;
+
+    color: #b92323;
+    background: #fff0f0;
+    border: 1px solid #f3b5b5;
+}
+
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+
+@media (max-width: 600px) {
+
+    body .login-header {
+        min-height: 68px;
+        padding: 8px 18px;
+    }
+
+    body .login-logo {
+        gap: 6px;
+        font-size: 24px;
+    }
+
+    body .login-logo .coroa-topo {
+        width: 62px;
+        height: 43px;
+    }
+
+    body .login-nav a {
+        font-size: 14px;
+    }
+
+    .login-container {
+        min-height: calc(100vh - 68px);
+        padding: 22px 12px;
+        align-items: flex-start;
+    }
+
+    .login-card {
+        padding: 32px 20px;
+        border-radius: 18px;
+    }
+
+    .logo-login .coroa-login {
+        width: 105px;
+        height: 68px;
+    }
+
+    .marca-dagua .coroa-marca {
+        width: 190px;
+        height: 120px;
+    }
+
+    .login-card h1 {
+        font-size: 38px;
+    }
+
+    .login-card h2 {
+        font-size: 24px;
+    }
+
+    .descricao-login {
+        font-size: 14px;
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
+===========================
+   LOGIN NOVO AZURY
+=========================== 
+
+.login-container {
+
+    max-width: 500px;
+
+    margin: 180px auto 80px;
+
+    background: #fff;
+
+    padding: 45px;
+
+    border-radius: 24px;
+
+    box-shadow: 0 15px 40px rgba(0, 0, 0, .08);
+
+    text-align: center;
+
+}
+.login-form {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+
+}
+.login-form input {
+
+    font-weight: 500;
+}
+.login-form input:focus {
+
+    outline: none;
+
+    border-color: var(--cor-principal);
+
+    background: #fff;
+
+    box-shadow: 0 0 0 5px rgba(0, 81, 255, .08);
+
+}
+.login-form .btn {
+
+    background: linear-gradient(135deg,
+            #0051ff,
+            #003dbf);
+
+    border: none;
+
+    color: #fff;
+
+    font-weight: 700;
+
+    letter-spacing: .5px;
+
+}
+.login-form .btn {
+
+    transition: .3s;
+
+}
+
+.login-form .btn {
+
+    position: relative;
+
+    overflow: hidden;
+
+}
+.login-form .btn:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 15px 35px rgba(0, 81, 255, .30);
+
+}
+.login-form .btn:hover {
+
+    transform: translateY(-2px);
+
+}
+.login-form .btn-outline:hover {
+
+    background: #0051ff;
+
+    color: #fff;
+
+}
+.login-form .btn-outline {
+
+    color: #0051ff;
+
+    border: 2px solid #0051ff;
+
+    background: #fff;
+
+}
+.login-form input::placeholder {
+
+    color: #999;
+
+}
+.login-card {
+
+    position: relative;
+
+    overflow: hidden;
+
+}
+.login-card {
+
+    padding: 55px 50px;
+}
+.login-card {
+
+    border-radius: 24px;
+
+    border: 1px solid rgba(0, 0, 0, .04);
+
+}
+.login-card:hover {
+
+    transform: translateY(-4px);
+
+    box-shadow: 0 25px 60px rgba(0, 0, 0, .12);
+
+}
+.logo-login {
+
+    font-size: 58px;
+
+    color: #d4af37;
+
+    margin-bottom: 15px;
+
+}
+.login-card h1 {
+
+    margin-top: 10px;
+
+    margin-bottom: 8px;
+
+    letter-spacing: 2px;
+
+    font-weight: 800;
+
+}
+.login-card h2 {
+
+    margin-bottom: 15px;
+
+    font-size: 30px;
+
+    font-weight: 700;
+
+}
+.login-badge {
+
+    background: #fff6d8;
+
+    color: #b8860b;
+
+    border: 1px solid rgba(212, 175, 55, .25);
+
+}
+.descricao-login {
+
+    max-width: 340px;
+
+    margin: 0 auto 30px;
+
+}
+.vantagens-login {
+
+    margin: 30px 0;
+
+    gap: 15px;
+
+}
+.vantagens-login div {
+
+    background: #fafafa;
+
+    padding: 15px;
+
+    border-radius: 12px;
+
+    transition: .3s;
+
+    border: 1px solid #f1f1f1;
+
+}
+.vantagens-login div:hover {
+
+    transform: translateX(5px);
+
+    background: #f6f9ff;
+
+    border-color: #0051ff20;
+
+}
+.texto-cadastro {
+
+    margin-top: 25px;
+
+    margin-bottom: 12px;
+
+}
+/* ===========================
+   MARCA D'ÁGUA LOGIN
+===========================
+.marca-dagua {
+
+    position: absolute;
+
+    top: -40px;
+
+    right: -20px;
+
+    font-size: 180px;
+
+    opacity: .08;
+
+    color: #d4af37;
+
+    user-select: none;
+
+    pointer-events: none;
+
+    transform: rotate(-15deg);
+
+}
+/* ===========================
+   ANIMAÇÃO LOGIN
+=========================== 
+
+
+
+@keyframes aparecer {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(35px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+
+    }
+
+} */

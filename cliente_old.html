@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área do Cliente - AZURY</title>
+
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <header>
+        <a href="index.html" class="logo">
+            <img src="Imagens/Coroa.png" alt="Azury">
+            AZURY
+        </a>
+    </header>
+
+    <section class="perfil-cliente">
+
+        <div class="avatar-cliente">
+
+            👑
+
+        </div>
+
+        <h1 class="titulo-azury">
+
+            AZURY
+
+        </h1>
+
+        <h2>
+
+            Olá,
+            <span id="nomeCliente">
+                Cliente
+            </span>
+
+        </h2>
+
+        <span id="nivelClienteCard">
+
+            🥉 Cliente Bronze
+
+        </span>
+
+        <h3 class="pontos-card">
+
+            ⭐ <span id="pontosCard">0</span> Pontos
+
+        </h3>
+
+    </section>
+
+    <main class="login-container">
+
+        <h1 id="boasVindas">Bem-vindo!</h1>
+
+        <h3 id="nivelCliente">🥉 Cliente Bronze</h3>
+
+        <p>Você entrou com sucesso na sua conta.</p>
+
+        <!-- CARD PONTOS -->
+        <div class="card">
+
+            <h2>⭐ Meus Pontos</h2>
+
+            <h1 id="pontos">0</h1>
+
+            <div class="barra-pontos">
+
+                <div class="progresso" id="progresso"></div>
+
+            </div>
+
+            <p id="faltam"></p>
+
+            <button class="btn" id="btnAdicionarPontos">
+
+                +10 Pontos (Teste)
+
+            </button>
+
+        </div>
+
+        <!-- CARD RECOMPENSAS -->
+        <div class="card">
+
+            <h2>🎁 Recompensas</h2>
+
+            <div id="recompensas">
+
+                <p>Nenhuma recompensa disponível.</p>
+
+            </div>
+
+        </div>
+
+        <!-- CARD PEDIDOS -->
+        <div class="card">
+
+            <h2>📦 Meus Pedidos</h2>
+
+            <div id="pedidos">
+
+                <p>Nenhum pedido realizado.</p>
+
+            </div>
+
+        </div>
+
+        <!-- CARD HISTÓRICO -->
+        <div class="card">
+
+            <h2>📜 Histórico</h2>
+
+            <div id="listaHistorico">
+
+                <p>Nenhuma atividade ainda.</p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <div id="modalCupom" class="modal">
+        <div class="modal-content">
+            
+            <h2>🎉 Recompensa Resgatada!</h2>
+            
+            <p>Seu cupom exclusivo é:</p>
+            
+            <h1 id="codigoCupom"></h1> 
+
+            <button class="btn" id="btnCopiarCupom"> 📋 Copiar Cupom </button> 
+            <button class="btn btn-outline" id="btnFecharModal"> Fechar </button>
+
+        </div>
+    </div>
+
+    <script src="./js/perfil.js"></script>
+    <script src="./js/pontos.js"></script>
+    <script src="./js/pedidos.js"></script>
+    <script src="./js/historico.js"></script>
+    <script src="./js/recompensas.js"></script>
+    <script src="./js/ui.js"></script>
+    <script src="./js/cliente.js"></script>
+</body>
+
+</html>

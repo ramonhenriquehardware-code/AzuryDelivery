@@ -1,0 +1,211 @@
+/* =========================================
+   CABEÇALHO PRINCIPAL — AZURY
+========================================= */
+
+.header-site {
+    width: 100%;
+    min-height: 90px;
+    padding: 10px 6%;
+
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 36px;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99;
+
+    background: #ffffff;
+    box-shadow: var(--shadow);
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
+
+.header-site .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #222222;
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+
+    overflow: visible;
+}
+
+.header-site .logo img {
+    width: 72px;
+    height: 72px;
+
+    display: block;
+    flex-shrink: 0;
+
+    object-fit: contain;
+    object-position: center;
+
+    /*
+     * A imagem possui espaço vazio interno.
+     * O scale aumenta a coroa realmente visível.
+     */
+    transform: scale(1.55);
+    transform-origin: center;
+
+    margin-right: 5px;
+}
+
+
+/* =========================================
+   MENU
+========================================= */
+
+.header-site .menu-principal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 38px;
+}
+
+.header-site .menu-principal a {
+    color: #222222;
+
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition: color 0.2s ease;
+}
+
+.header-site .menu-principal a:hover {
+    color: var(--cor-principal);
+}
+
+
+/* =========================================
+   BOTÃO PEÇA AGORA
+========================================= */
+
+.header-site .btn-header {
+    width: auto;
+    min-width: 145px;
+    min-height: 46px;
+
+    padding: 12px 22px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+    background: var(--cor-principal);
+    border-radius: 12px;
+
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+
+    box-shadow: 0 8px 22px rgba(0, 81, 255, 0.22);
+}
+
+.header-site .btn-header:hover {
+    background: #0048df;
+}
+
+
+/* =========================================
+   ESPAÇO PARA O CABEÇALHO FIXO
+========================================= */
+
+.header-site + .hero-wrapper {
+    margin-top: 90px;
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 950px) {
+
+    .header-site {
+        grid-template-columns: auto auto;
+    }
+
+    .header-site .menu-principal {
+        display: none;
+    }
+
+    .header-site .btn-header {
+        justify-self: end;
+    }
+
+}
+
+
+/* =========================================
+   CELULAR
+========================================= */
+
+@media (max-width: 520px) {
+
+    .header-site {
+        min-height: 72px;
+        padding: 8px 16px;
+        gap: 12px;
+    }
+
+    .header-site .logo {
+        gap: 5px;
+        font-size: 24px;
+    }
+
+    .header-site .logo img {
+        width: 48px;
+        height: 48px;
+
+        transform: scale(1.4);
+
+        margin-right: 2px;
+    }
+
+    .header-site .btn-header {
+        min-width: auto;
+        min-height: 40px;
+
+        padding: 9px 13px;
+
+        font-size: 13px;
+    }
+
+    .header-site + .hero-wrapper {
+        margin-top: 72px;
+    }
+
+}
+.header-site .logo .coroa-header {
+    width: 72px;
+    height: 48px;
+
+    display: block;
+    flex-shrink: 0;
+
+    overflow: visible;
+}
+
+@media (max-width: 520px) {
+
+    .header-site .logo .coroa-header {
+        width: 55px;
+        height: 38px;
+    }
+
+}

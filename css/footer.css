@@ -1,0 +1,115 @@
+/* =========================================
+   RODAPÉ — AZURY
+========================================= */
+
+footer {
+    width: 100%;
+    padding: 42px 6% 24px;
+
+    color: #ffffff;
+    background: #050505;
+
+    text-align: center;
+}
+
+.footer-conteudo {
+    width: 100%;
+    max-width: 1050px;
+
+    margin: 0 auto 34px;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+    justify-content: center;
+    gap: 60px;
+}
+
+.footer-coluna {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    text-align: center;
+}
+
+.footer-coluna h2,
+.footer-coluna h3 {
+    margin: 0 0 12px;
+
+    color: #ffffff;
+}
+
+.footer-coluna h2 {
+    font-size: 23px;
+}
+
+.footer-coluna h3 {
+    font-size: 19px;
+}
+
+.footer-coluna p {
+    margin: 4px 0;
+
+    color: #e0e0e0;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.instagram-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.instagram-link svg {
+    width: 22px;
+    height: 22px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+}
+
+.instagram-link .instagram-ponto {
+    fill: currentColor;
+    stroke: none;
+}
+
+.instagram-link:hover {
+    color: #d9a7ff;
+    transform: translateY(-2px);
+}
+
+.copy {
+    margin: 0;
+
+    color: #cfcfcf;
+
+    font-size: 13px;
+    text-align: center;
+}
+
+
+/* RESPONSIVIDADE */
+
+@media (max-width: 750px) {
+
+    .footer-conteudo {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+}

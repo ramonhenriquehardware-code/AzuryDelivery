@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login - AZURY</title>
+
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/login.css">
+    <style>
+        /* Coroa incorporada diretamente no login */
+
+        .icone-coroa-azury {
+            display: block;
+            flex-shrink: 0;
+            overflow: visible;
+        }
+
+        .login-header .login-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .login-header .coroa-topo {
+            width: 82px;
+            height: 54px;
+        }
+
+        .logo-login {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-login .coroa-login {
+            width: 125px;
+            height: 82px;
+        }
+
+        .marca-dagua {
+            pointer-events: none;
+        }
+
+        .marca-dagua .coroa-marca {
+            width: 240px;
+            height: 150px;
+
+            opacity: 0.07;
+            transform: rotate(-12deg);
+        }
+
+        @media (max-width: 600px) {
+
+            .login-header .coroa-topo {
+                width: 65px;
+                height: 44px;
+            }
+
+            .logo-login .coroa-login {
+                width: 105px;
+                height: 70px;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- DEFINIÇÃO DA COROA AZURY -->
+    <svg width="0" height="0" aria-hidden="true" style="position: absolute">
+
+        <defs>
+
+            <linearGradient id="ouroAzury" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#fff4ad"></stop>
+                <stop offset="0.28" stop-color="#f8c94e"></stop>
+                <stop offset="0.58" stop-color="#bd7800"></stop>
+                <stop offset="0.82" stop-color="#ffdc68"></stop>
+                <stop offset="1" stop-color="#8e5600"></stop>
+            </linearGradient>
+
+            <linearGradient id="azulAzury" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#8ccbff"></stop>
+                <stop offset="0.45" stop-color="#0051ff"></stop>
+                <stop offset="1" stop-color="#00156b"></stop>
+            </linearGradient>
+
+            <filter id="sombraCoroa" x="-20%" y="-20%" width="140%" height="150%">
+                <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#704000" flood-opacity="0.25"></feDropShadow>
+            </filter>
+
+            <symbol id="coroaAzury" viewBox="0 0 256 160">
+
+                <g filter="url(#sombraCoroa)">
+
+                    <path d="
+                            M25 116
+                            L42 43
+                            L91 87
+                            L128 20
+                            L165 87
+                            L214 43
+                            L231 116
+                            Z
+                        " fill="url(#ouroAzury)" stroke="#8f5700" stroke-width="5" stroke-linejoin="round"></path>
+
+                    <path d="
+                            M35 114
+                            C68 102 98 105 128 116
+                            C158 105 188 102 221 114
+                            L216 136
+                            C182 128 160 132 128 142
+                            C96 132 74 128 40 136
+                            Z
+                        " fill="url(#ouroAzury)" stroke="#8f5700" stroke-width="5" stroke-linejoin="round"></path>
+
+                    <circle cx="42" cy="43" r="8" fill="url(#ouroAzury)" stroke="#8f5700" stroke-width="4"></circle>
+
+                    <circle cx="128" cy="20" r="9" fill="url(#ouroAzury)" stroke="#8f5700" stroke-width="4"></circle>
+
+                    <circle cx="214" cy="43" r="8" fill="url(#ouroAzury)" stroke="#8f5700" stroke-width="4"></circle>
+
+                    <path d="M128 74 L151 99 L128 125 L105 99 Z" fill="url(#azulAzury)" stroke="#ffffff"
+                        stroke-width="3"></path>
+
+                    <path d="M128 75 L128 124 M106 99 H150" fill="none" stroke="#b9ddff" stroke-width="2" opacity="0.8">
+                    </path>
+
+                </g>
+
+            </symbol>
+
+        </defs>
+
+    </svg>
+
+
+    <!-- CABEÇALHO -->
+    <header class="login-header">
+
+        <a href="index.html" class="login-logo">
+
+            <svg class="icone-coroa-azury coroa-topo" aria-hidden="true">
+                <use href="#coroaAzury"></use>
+            </svg>
+
+            <span>AZURY</span>
+
+        </a>
+
+        <nav class="login-nav">
+
+            <a href="index.html">
+                Início
+            </a>
+
+        </nav>
+
+    </header>
+
+
+    <!-- CONTEÚDO -->
+    <main class="login-container">
+
+        <div class="login-card">
+
+            <div class="marca-dagua" aria-hidden="true">
+
+                <svg class="icone-coroa-azury coroa-marca">
+                    <use href="#coroaAzury"></use>
+                </svg>
+
+            </div>
+
+            <div class="logo-login">
+
+                <svg class="icone-coroa-azury coroa-login" aria-label="Coroa Azury" role="img">
+                    <use href="#coroaAzury"></use>
+                </svg>
+
+            </div>
+
+            <h1>AZURY</h1>
+
+            <span class="login-badge">
+                ✨ Exclusivo para Clientes
+            </span>
+
+            <h2>
+                Área Exclusiva do Cliente
+            </h2>
+
+            <p class="descricao-login">
+                Entre para acompanhar seus pedidos,
+                acumular pontos e receber
+                recompensas exclusivas.
+            </p>
+
+            <div class="vantagens-login">
+
+                <div>
+                    📦 Acompanhe seus pedidos
+                </div>
+
+                <div>
+                    🎁 Ganhe recompensas
+                </div>
+
+                <div>
+                    ⭐ Acumule pontos
+                </div>
+
+            </div>
+
+            <form class="login-form">
+
+                <div id="mensagemLogin" class="mensagem"></div>
+
+                <input type="email" placeholder="Seu e-mail" autocomplete="email" required>
+
+                <input type="password" placeholder="Sua senha" autocomplete="current-password" required>
+
+                <button type="button" class="btn" id="btnEntrar">
+                    Entrar
+                </button>
+
+                <p class="texto-cadastro">
+                    Ainda não possui uma conta?
+                </p>
+
+                <a href="cadastro.html" class="btn btn-outline">
+                    ✨ Criar Conta
+                </a>
+
+            </form>
+
+        </div>
+
+    </main>
+
+    <script src="./js/auth.js"></script>
+
+</body>
+
+</html>

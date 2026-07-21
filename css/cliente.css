@@ -1,0 +1,1049 @@
+/* =========================================
+   ÁREA DO CLIENTE — AZURY
+========================================= */
+
+.pagina-cliente,
+.pagina-cliente * {
+    box-sizing: border-box;
+}
+
+body.pagina-cliente {
+    min-height: 100vh;
+    margin: 0;
+    background:
+        radial-gradient(circle at 12% 90%,
+            rgba(255, 239, 209, 0.38),
+            transparent 30%),
+        radial-gradient(circle at 90% 20%,
+            rgba(220, 230, 255, 0.48),
+            transparent 35%),
+        #f7f9fd;
+
+    color: #171717;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================
+   CABEÇALHO
+========================================= */
+
+.pagina-cliente .cliente-header {
+    width: 100%;
+    height: 78px;
+    padding: 0 48px;
+
+    display: flex;
+    align-items: center;
+
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid #edf0f5;
+
+    box-shadow: 0 5px 18px rgba(24, 48, 92, 0.06);
+
+    position: relative;
+    z-index: 20;
+}
+
+.pagina-cliente .cliente-header-container {
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pagina-cliente .cliente-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+
+    color: #0758f8;
+    font-size: 35px;
+    font-weight: 900;
+    letter-spacing: 1px;
+
+    text-decoration: none;
+}
+
+.pagina-cliente .cliente-logo img {
+    width: 31px;
+    height: 31px;
+
+    object-fit: contain;
+
+    transform: scale(2.3);
+    transform-origin: center;
+
+    margin-right: 5px;
+}
+
+.pagina-cliente .btn-sair {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #0758f8;
+    font-size: 16px;
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+.pagina-cliente .icone-sair {
+    width: 23px;
+    height: 23px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* =========================================
+   PAINEL PRINCIPAL
+========================================= */
+
+.pagina-cliente .painel-cliente {
+    width: calc(100% - 40px);
+    max-width: 1135px;
+
+    margin: 20px auto 50px;
+}
+
+
+/* =========================================
+   PERFIL DO CLIENTE
+========================================= */
+
+.pagina-cliente .perfil-cliente {
+    width: 100%;
+    min-height: 316px;
+
+    margin: 0 0 20px;
+    padding: 154px 30px 11px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #f0f2f6;
+    border-radius: 16px;
+
+    text-align: center;
+
+    box-shadow: 0 12px 35px rgba(29, 52, 91, 0.08);
+}
+
+.pagina-cliente .avatar-container {
+    width: 172px;
+    height: 172px;
+
+    position: absolute;
+    top: -5px;
+    left: 50%;
+
+    transform: translateX(-50%);
+}
+
+.pagina-cliente .avatar-cliente {
+    width: 168px;
+    height: 168px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: static;
+
+    overflow: hidden;
+
+    background: #ffffff;
+    border: 3px solid #0758f8;
+    border-radius: 50%;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+.pagina-cliente .avatar-cliente img {
+    width: 76%;
+    height: 76%;
+    object-fit: contain;
+}
+
+.pagina-cliente .selo-avatar {
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    right: -7px;
+    bottom: 6px;
+
+    color: #ffffff;
+    background: #0758f8;
+    border: 4px solid #ffffff;
+    border-radius: 50%;
+
+    font-size: 22px;
+    font-weight: 900;
+
+    box-shadow: 0 5px 15px rgba(0, 81, 255, 0.22);
+}
+
+.pagina-cliente .titulo-azury {
+    margin: 8px 0 4px;
+
+    color: #0758f8;
+    font-size: 48px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 2px;
+}
+
+.pagina-cliente .saudacao-cliente {
+    margin: 4px 0 16px;
+
+    color: #161616;
+    font-size: 25px;
+    font-weight: 400;
+    line-height: 1.25;
+}
+
+.pagina-cliente .saudacao-cliente strong {
+    color: #0758f8;
+    font-weight: 800;
+}
+
+.pagina-cliente .nivel-cliente {
+    min-height: 37px;
+    padding: 7px 18px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #232323;
+    background: #ffffff;
+    border: 1.5px solid #b9cdfd;
+    border-radius: 999px;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    box-shadow: 0 2px 8px rgba(0, 81, 255, 0.05);
+}
+
+
+/* =========================================
+   GRADE DOS CARDS
+========================================= */
+
+.pagina-cliente .cliente-grid {
+    width: 100%;
+    max-width: none;
+
+    margin: 0 0 20px;
+    padding: 0;
+
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.pagina-cliente .card {
+    min-width: 0;
+    min-height: 276px;
+
+    padding: 24px 22px;
+
+    position: relative;
+
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #f0f2f6;
+    border-radius: 16px;
+
+    box-shadow: 0 10px 28px rgba(29, 52, 91, 0.08);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.pagina-cliente .card:hover {
+    transform: translateY(-2px);
+
+    box-shadow: 0 14px 34px rgba(29, 52, 91, 0.11);
+}
+
+.pagina-cliente .card-titulo {
+    margin: 0 0 20px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    color: #171717;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.pagina-cliente .icone-card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 25px;
+    line-height: 1;
+}
+
+.pagina-cliente .icone-pontos {
+    color: #ffba00;
+}
+
+.pagina-cliente .icone-recompensa {
+    color: #ff671d;
+}
+
+.pagina-cliente .icone-pedidos {
+    color: #bca285;
+}
+
+.pagina-cliente .icone-historico {
+    color: #6d35ff;
+}
+
+
+/* =========================================
+   CARD DE PONTOS
+========================================= */
+
+.pagina-cliente .quantidade-pontos {
+    margin: 0 0 17px;
+}
+
+.pagina-cliente .quantidade-pontos strong,
+.pagina-cliente #pontos {
+    display: block;
+
+    margin: 0;
+
+    color: #0758f8;
+    font-size: 46px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.pagina-cliente .quantidade-pontos span {
+    display: block;
+    margin-top: 5px;
+
+    color: #0758f8;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.pagina-cliente .barra-pontos {
+    width: 100%;
+    height: 12px;
+
+    margin: 0 0 12px;
+
+    overflow: hidden;
+
+    background: #e5e8ed;
+    border-radius: 999px;
+}
+
+.pagina-cliente .progresso {
+    width: 0;
+    height: 100%;
+
+    background: #0758f8;
+    border-radius: 999px;
+
+    transition: width 0.4s ease;
+}
+
+.pagina-cliente .texto-progresso,
+.pagina-cliente #faltam {
+    min-height: 22px;
+    margin: 0 0 18px;
+
+    color: #414141;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.pagina-cliente #faltam strong {
+    color: #0758f8;
+}
+
+.pagina-cliente .btn-detalhes {
+    width: 100%;
+    height: 42px;
+
+    padding: 0 20px;
+
+    border: none;
+    border-radius: 10px;
+
+    color: #ffffff;
+    background: #0758f8;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.pagina-cliente .btn-detalhes:hover {
+    background: #0048df;
+}
+
+.pagina-cliente .btn-adicionar-teste {
+    display: none !important;
+}
+
+
+/* =========================================
+   CARD DE RECOMPENSAS
+========================================= */
+
+.pagina-cliente .conteudo-recompensas {
+    width: 100%;
+}
+
+.pagina-cliente .recompensa-bloqueada {
+    width: 100%;
+    min-height: 114px;
+
+    padding: 15px;
+
+    display: flex;
+    align-items: center;
+    gap: 17px;
+
+    background: #fbfcff;
+    border: 1px solid #dfe5f0;
+    border-radius: 11px;
+}
+
+.pagina-cliente .icone-bloqueado {
+    width: 62px;
+    height: 62px;
+    min-width: 62px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #555d68;
+    background: #edf0f5;
+    border-radius: 50%;
+
+    font-size: 27px;
+}
+
+.pagina-cliente .recompensa-informacoes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pagina-cliente .recompensa-informacoes strong {
+    color: #1f1f1f;
+    font-size: 15px;
+    line-height: 1.25;
+}
+
+.pagina-cliente .recompensa-informacoes span {
+    color: #0758f8;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.pagina-cliente .barra-recompensa {
+    width: 100%;
+    height: 11px;
+
+    margin: 16px 0 9px;
+
+    overflow: hidden;
+
+    background: #e5e8ed;
+    border-radius: 999px;
+}
+
+.pagina-cliente .progresso-recompensa {
+    width: 0;
+    height: 100%;
+
+    background: #0758f8;
+    border-radius: 999px;
+}
+
+.pagina-cliente .texto-recompensa {
+    margin: 0;
+
+    color: #444444;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.pagina-cliente .texto-recompensa strong {
+    color: #0758f8;
+}
+
+/* Conteúdo criado pelo recompensas.js */
+
+.pagina-cliente #recompensas>h3 {
+    margin: 12px 0 10px;
+
+    color: #171717;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.pagina-cliente #recompensas>p {
+    margin: 0 0 8px;
+
+    color: #555555;
+    font-size: 14px;
+}
+
+.pagina-cliente #recompensas>strong {
+    display: block;
+
+    margin: 15px 0 20px;
+
+    color: #171717;
+    font-size: 18px;
+}
+
+.pagina-cliente #recompensas .btn {
+    width: 100%;
+    min-height: 42px;
+
+    border: none;
+    border-radius: 10px;
+
+    color: #ffffff;
+    background: #0758f8;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   CARD DE PEDIDOS
+========================================= */
+
+.pagina-cliente .lista-pedidos {
+    min-height: 128px;
+}
+
+.pagina-cliente .lista-pedidos>p {
+    margin: 0;
+    padding: 20px 12px;
+
+    color: #666666;
+    font-size: 14px;
+}
+
+.pagina-cliente .pedido {
+    width: 100%;
+
+    margin: 0 0 9px;
+    padding: 10px 12px;
+
+    background: #fbfcff;
+    border: 1px solid #e1e6ef;
+    border-left: 3px solid #0758f8;
+    border-radius: 9px;
+
+    color: #252525;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.pagina-cliente .pedido:last-child {
+    margin-bottom: 0;
+}
+
+.pagina-cliente .pedido h4 {
+    margin: 0 0 5px;
+
+    color: #222222;
+    font-size: 13px;
+}
+
+.pagina-cliente .status-entregue {
+    color: #0da54a;
+    font-weight: 700;
+}
+
+.pagina-cliente .link-card {
+    padding: 0;
+
+    position: absolute;
+    right: 22px;
+    bottom: 23px;
+
+    color: #0758f8;
+    background: transparent;
+    border: none;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   HISTÓRICO
+========================================= */
+
+.pagina-cliente .card-historico {
+    width: 100%;
+    min-height: 184px;
+
+    padding: 24px 22px 26px;
+
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr;
+    column-gap: 25px;
+
+    position: relative;
+}
+
+.pagina-cliente .historico-cabecalho {
+    grid-column: 1 / -1;
+}
+
+.pagina-cliente .historico-cabecalho .card-titulo {
+    margin-bottom: 20px;
+}
+
+.pagina-cliente .lista-historico {
+    min-width: 0;
+
+    display: grid;
+    grid-template-columns: repeat(4, minmax(135px, 1fr));
+
+    overflow: hidden;
+}
+
+.pagina-cliente .lista-historico>p,
+.pagina-cliente .lista-historico>div {
+    min-height: 78px;
+
+    margin: 0;
+    padding: 5px 23px;
+
+    color: #242424;
+    border-right: 1px solid #e0e4eb;
+
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.pagina-cliente .lista-historico>p:first-child,
+.pagina-cliente .lista-historico>div:first-child {
+    padding-left: 7px;
+}
+
+.pagina-cliente .lista-historico>p:last-child,
+.pagina-cliente .lista-historico>div:last-child {
+    border-right: none;
+}
+
+.pagina-cliente .lista-historico small {
+    color: #5f636b;
+    font-size: 12px;
+}
+
+.pagina-cliente .historico-vazio {
+    grid-column: 1 / -1;
+
+    border-right: none !important;
+}
+
+.pagina-cliente .link-historico {
+    position: static;
+
+    align-self: center;
+    justify-self: end;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   MODAL DO CUPOM
+========================================= */
+
+.pagina-cliente .modal {
+    width: 100%;
+    height: 100%;
+
+    padding: 20px;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    background: rgba(8, 18, 39, 0.62);
+    backdrop-filter: blur(4px);
+}
+
+.pagina-cliente .modal-content {
+    width: 100%;
+    max-width: 460px;
+
+    padding: 34px 30px;
+
+    background: #ffffff;
+    border-radius: 18px;
+
+    text-align: center;
+
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.24);
+}
+
+.pagina-cliente .modal-content h2 {
+    margin: 0 0 14px;
+
+    color: #171717;
+    font-size: 24px;
+}
+
+.pagina-cliente .modal-content p {
+    margin: 0 0 15px;
+
+    color: #595959;
+    font-size: 15px;
+}
+
+.pagina-cliente .modal-content #codigoCupom {
+    margin: 0 0 22px;
+    padding: 13px;
+
+    color: #0758f8;
+    background: #f2f6ff;
+    border: 1px dashed #0758f8;
+    border-radius: 10px;
+
+    font-size: 25px;
+    letter-spacing: 2px;
+}
+
+.pagina-cliente .modal-content .btn {
+    width: 100%;
+    min-height: 43px;
+
+    margin-top: 9px;
+
+    border: 1px solid #0758f8;
+    border-radius: 10px;
+
+    color: #ffffff;
+    background: #0758f8;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.pagina-cliente .modal-content .btn-outline {
+    color: #0758f8;
+    background: #ffffff;
+}
+
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+
+@media (max-width: 950px) {
+
+    .pagina-cliente .cliente-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pagina-cliente .card-pedidos {
+        grid-column: 1 / -1;
+    }
+
+    .pagina-cliente .lista-historico {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+    }
+
+    .pagina-cliente .lista-historico>p:nth-child(2),
+    .pagina-cliente .lista-historico>div:nth-child(2) {
+        border-right: none;
+    }
+}
+
+@media (max-width: 650px) {
+
+    .pagina-cliente .cliente-header {
+        height: 68px;
+        padding: 0 18px;
+    }
+
+    .pagina-cliente .cliente-logo {
+        font-size: 26px;
+    }
+
+    .pagina-cliente .cliente-logo img {
+        width: 25px;
+        height: 25px;
+    }
+
+    .pagina-cliente .painel-cliente {
+        width: calc(100% - 24px);
+        margin-top: 14px;
+    }
+
+    .pagina-cliente .perfil-cliente {
+        min-height: 280px;
+        padding: 139px 20px 26px;
+    }
+
+    .pagina-cliente .avatar-container {
+        width: 145px;
+        height: 145px;
+    }
+
+    .pagina-cliente .avatar-cliente {
+        width: 142px;
+        height: 142px;
+    }
+
+    .pagina-cliente .titulo-azury {
+        font-size: 38px;
+    }
+
+    .pagina-cliente .saudacao-cliente {
+        font-size: 21px;
+    }
+
+    .pagina-cliente .cliente-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pagina-cliente .card-pedidos {
+        grid-column: auto;
+    }
+
+    .pagina-cliente .card {
+        min-height: auto;
+    }
+
+    .pagina-cliente .card-historico {
+        display: block;
+    }
+
+    .pagina-cliente .lista-historico {
+        display: block;
+    }
+
+    .pagina-cliente .lista-historico>p,
+    .pagina-cliente .lista-historico>div {
+        padding: 13px 5px;
+
+        border-right: none;
+        border-bottom: 1px solid #e0e4eb;
+    }
+
+    .pagina-cliente .link-historico {
+        margin-top: 20px;
+        float: right;
+    }
+}
+
+.pagina-cliente .avatar-cliente #avatarInicial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    color: #0758f8;
+    background: linear-gradient(145deg,
+            #ffffff,
+            #edf3ff);
+
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.pagina-cliente .selo-avatar {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 25px;
+    line-height: 1;
+}
+
+/* MODAL DO HISTÓRICO COMPLETO */
+
+.pagina-cliente .modal-historico {
+    width: 100%;
+    max-width: 620px;
+    max-height: 85vh;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+    text-align: left;
+}
+
+.pagina-cliente .modal-historico h2 {
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.pagina-cliente #listaTodoHistorico {
+    flex: 1;
+
+    margin: 15px 0 20px;
+    padding-right: 10px;
+
+    overflow-y: auto;
+}
+
+.pagina-cliente #listaTodoHistorico .historico-item {
+    padding: 12px 5px;
+
+    border-bottom: 1px solid #e4e8ef;
+
+    line-height: 1.6;
+}
+
+.pagina-cliente #listaTodoHistorico .historico-item:last-child {
+    border-bottom: none;
+}
+
+.pagina-cliente .modal-historico #btnFecharTodoHistorico {
+    flex-shrink: 0;
+}
+
+/* AÇÕES DO CABEÇALHO DO CLIENTE */
+
+.pagina-cliente .acoes-cliente {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.pagina-cliente .btn-inicio-cliente,
+.pagina-cliente .btn-sair {
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #0758f8;
+    background: transparent;
+    border: none;
+
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.pagina-cliente .btn-inicio-cliente:hover,
+.pagina-cliente .btn-sair:hover {
+    color: #003fbd;
+}
+
+@media (max-width: 650px) {
+
+    .pagina-cliente .acoes-cliente {
+        gap: 13px;
+    }
+
+    .pagina-cliente .btn-inicio-cliente,
+    .pagina-cliente .btn-sair {
+        font-size: 14px;
+    }
+
+}
+/* CORREÇÃO DEFINITIVA DA LOGO NO CABEÇALHO */
+
+.pagina-cliente .cliente-header {
+    height: 82px;
+    min-height: 82px;
+    padding: 10px 6%;
+    overflow: hidden;
+}
+
+.pagina-cliente .cliente-logo,
+.pagina-cliente .cliente-header .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #222;
+    font-size: 32px;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.pagina-cliente .cliente-logo img,
+.pagina-cliente .cliente-header .logo img {
+    width: 58px !important;
+    height: 58px !important;
+    max-width: 58px !important;
+    max-height: 58px !important;
+
+    display: block;
+    object-fit: contain;
+
+    margin: 0 !important;
+    transform: none !important;
+}
+.pagina-cliente .cliente-logo img {
+    width: 84px !important;
+    height: 56px !important;
+    max-width: none !important;
+    max-height: none !important;
+
+    display: block;
+    object-fit: contain;
+
+    margin: 0 !important;
+    transform: none !important;
+}

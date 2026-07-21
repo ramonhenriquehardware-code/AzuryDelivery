@@ -1,0 +1,37 @@
+.sobre {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 60px;
+    padding: 80px 5%;
+    background: var(--cor-terceira);
+}
+
+.sobre img {
+    border-radius: var(--radius);
+    box-shadow: var(--shodow);
+}
+
+.sobre h2 {
+    font-size: 50px;
+    margin-bottom: 20px;
+    font-size: 30px;
+}
+
+.sobre article {
+    color: var(--gray);
+    margin-bottom: 30px;
+}
+
+.sobre ul {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.sobre li strong {
+    color: #5f6778;
+}
+
+.sobre li strong::first-letter {
+    color: var(--cor-principal);
+}
