@@ -142,7 +142,7 @@
                 !sessao.email ||
                 !cliente.email ||
                 sessao.email ===
-                    cliente.email;
+                cliente.email;
 
             if (!mesmoCliente) {
                 return;
@@ -154,7 +154,7 @@
                     ...cliente,
                     autenticado:
                         sessao.autenticado
-                            !== false
+                        !== false
                 })
             );
         } catch (erro) {
@@ -220,8 +220,8 @@
             pedidoDeRecompensa
                 ? 0
                 : calcularPontosPorValor(
-                      valorPedido
-                  );
+                    valorPedido
+                );
 
         cliente.pontosAcumulados =
             Number(

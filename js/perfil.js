@@ -2,7 +2,7 @@ function inicializarPerfil(usuario) {
 
     document.getElementById("nomeCliente").textContent =
         usuario.nome;
-        
+
     const avatarInicial =
         document.getElementById("avatarInicial");
 

@@ -113,7 +113,7 @@
             window.AzuryPontuacao &&
             typeof window.AzuryPontuacao
                 .converterValorParaNumero ===
-                "function"
+            "function"
         ) {
             return window.AzuryPontuacao
                 .converterValorParaNumero(
@@ -377,8 +377,8 @@
                         </strong>
 
                         ${escaparTexto(
-                            complemento
-                        )}
+                    complemento
+                )}
                     </div>
                 `
                 : "";
@@ -389,20 +389,18 @@
                     Endereço de entrega:
                 </strong>
 
-                ${
-                    linhaRua ||
-                    "Rua não informada"
-                }
+                ${linhaRua ||
+            "Rua não informada"
+            }
             </div>
 
-            ${
-                linhaBairroCep
-                    ? `
+            ${linhaBairroCep
+                ? `
                         <div>
                             ${linhaBairroCep}
                         </div>
                     `
-                    : ""
+                : ""
             }
 
             ${linhaComplemento}
@@ -445,9 +443,9 @@
                             </strong>
 
                             ${escaparTexto(
-                                complementosCopo
-                                    .join(", ")
-                            )}
+                        complementosCopo
+                            .join(", ")
+                    )}
                         </div>
                     `
                 )
@@ -461,8 +459,8 @@
                 </strong>
 
                 ${escaparTexto(
-                    complementos.join(", ")
-                )}
+            complementos.join(", ")
+        )}
             </div>
         `;
     }
@@ -483,8 +481,8 @@
                     </strong>
 
                     ${escaparTexto(
-                        pedido.produto
-                    )}
+                pedido.produto
+            )}
                 </div>
             `);
         }
@@ -497,8 +495,8 @@
                     </strong>
 
                     ${escaparTexto(
-                        pedido.tamanho
-                    )}
+                pedido.tamanho
+            )}
                 </div>
             `);
         }
@@ -515,8 +513,8 @@
                     </strong>
 
                     ${escaparTexto(
-                        pedido.quantidade
-                    )}
+                pedido.quantidade
+            )}
                 </div>
             `);
         }
@@ -538,17 +536,16 @@
                         <div>
                             <strong>
                                 ${escaparTexto(
-                                    nomeItem
-                                )}
+                        nomeItem
+                    )}
                             </strong>
 
-                            ${
+                            ${item.quantidade
+                            ? ` — ${escaparTexto(
                                 item.quantidade
-                                    ? ` — ${escaparTexto(
-                                          item.quantidade
-                                      )} unidade(s)`
-                                    : ""
-                            }
+                            )} unidade(s)`
+                            : ""
+                        }
                         </div>
                     `);
                 }
@@ -611,8 +608,8 @@
             <article
                 class="pedido-admin"
                 data-pedido-id="${escaparTexto(
-                    idPedido
-                )}"
+            idPedido
+        )}"
             >
 
                 <div
@@ -626,18 +623,18 @@
                         >
                             Pedido
                             ${escaparTexto(
-                                idPedido
-                            )}
+            idPedido
+        )}
                         </h3>
 
                         <p
                             class="pedido-admin-data"
                         >
                             ${escaparTexto(
-                                formatarDataPedido(
-                                    pedido
-                                )
-                            )}
+            formatarDataPedido(
+                pedido
+            )
+        )}
                         </p>
 
                     </div>
@@ -646,14 +643,14 @@
                         class="
                             status-pedido-admin
                             ${obterClasseStatus(
-                                pedido.status
-                            )}
+            pedido.status
+        )}
                         "
                     >
                         ${escaparTexto(
-                            pedido.status ||
-                            "Pedido recebido"
-                        )}
+            pedido.status ||
+            "Pedido recebido"
+        )}
                     </span>
 
                 </div>
@@ -672,8 +669,8 @@
 
                         <strong>
                             ${escaparTexto(
-                                tipoPedido
-                            )}
+            tipoPedido
+        )}
                         </strong>
                     </div>
 
@@ -687,8 +684,8 @@
 
                         <strong>
                             ${formatarMoeda(
-                                valorPedido
-                            )}
+            valorPedido
+        )}
                         </strong>
                     </div>
 
@@ -701,11 +698,10 @@
                         </span>
 
                         <strong>
-                            ${
-                                pedido.pontosCreditados
-                                    ? `${pontosGerados} creditados`
-                                    : "Aguardando entrega"
-                            }
+                            ${pedido.pontosCreditados
+                ? `${pontosGerados} creditados`
+                : "Aguardando entrega"
+            }
                         </strong>
                     </div>
 
@@ -719,8 +715,8 @@
 
                         <strong>
                             ${escaparTexto(
-                                nomeCliente
-                            )}
+                nomeCliente
+            )}
                         </strong>
                     </div>
 
@@ -734,8 +730,8 @@
 
                         <strong>
                             ${escaparTexto(
-                                emailCliente
-                            )}
+                emailCliente
+            )}
                         </strong>
                     </div>
 
@@ -749,8 +745,8 @@
 
                         <strong>
                             ${escaparTexto(
-                                canalPedido
-                            )}
+                canalPedido
+            )}
                         </strong>
                     </div>
 
@@ -761,8 +757,8 @@
                     class="pedido-admin-itens"
                 >
                     ${criarHtmlEndereco(
-                        pedido
-                    )}
+                pedido
+            )}
                 </div>
 
 
@@ -770,8 +766,8 @@
                     class="pedido-admin-itens"
                 >
                     ${criarHtmlItens(
-                        pedido
-                    )}
+                pedido
+            )}
                 </div>
 
 
@@ -790,12 +786,12 @@
                         <select
                             class="select-status-pedido"
                             data-status-original="${escaparTexto(
-                                pedido.status
-                            )}"
+                pedido.status
+            )}"
                         >
                             ${criarOpcoesStatus(
-                                pedido.status
-                            )}
+                pedido.status
+            )}
                         </select>
 
                     </label>
@@ -858,9 +854,9 @@
 
                     return (
                         status ===
-                            "entregue" ||
+                        "entregue" ||
                         status ===
-                            "pedido entregue"
+                        "pedido entregue"
                     );
                 }
             ).length;
@@ -896,7 +892,7 @@
             !window.AzuryPedidos ||
             typeof window.AzuryPedidos
                 .listarPedidos !==
-                "function"
+            "function"
         ) {
             throw new Error(
                 "O serviço de pedidos não foi carregado."
@@ -933,10 +929,10 @@
                 filtro === "todos"
                     ? todosPedidos
                     : todosPedidos.filter(
-                          pedido =>
-                              pedido.status ===
-                              filtro
-                      );
+                        pedido =>
+                            pedido.status ===
+                            filtro
+                    );
 
             if (
                 pedidosFiltrados.length ===

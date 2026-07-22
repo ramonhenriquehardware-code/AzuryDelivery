@@ -1040,7 +1040,7 @@ ${formatarPreco(valorTotal)}
             if (
                 modalProduto &&
                 modalProduto.style.display ===
-                    "flex"
+                "flex"
             ) {
                 fecharModal(
                     modalProduto
@@ -1050,7 +1050,7 @@ ${formatarPreco(valorTotal)}
             if (
                 modalMonteSeu &&
                 modalMonteSeu.style.display ===
-                    "flex"
+                "flex"
             ) {
                 fecharModal(
                     modalMonteSeu

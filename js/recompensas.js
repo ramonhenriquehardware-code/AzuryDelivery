@@ -225,7 +225,7 @@ function inicializarRecompensas(usuario) {
         return (
             Number(
                 usuario.controleResgates[
-                    recompensa.chaveControle
+                recompensa.chaveControle
                 ]
             ) || 0
         );
@@ -339,11 +339,10 @@ function inicializarRecompensas(usuario) {
 
                                 <p class="status-recompensa">
 
-                                    ${
-                                        situacao.disponivel
-                                            ? "🎉"
-                                            : "🔒"
-                                    }
+                                    ${situacao.disponivel
+                            ? "🎉"
+                            : "🔒"
+                        }
 
                                     ${situacao.mensagem}
 
@@ -355,17 +354,15 @@ function inicializarRecompensas(usuario) {
                                 type="button"
                                 class="btn btn-resgatar-recompensa"
                                 data-recompensa="${recompensa.id}"
-                                ${
-                                    situacao.disponivel
-                                        ? ""
-                                        : "disabled"
-                                }
+                                ${situacao.disponivel
+                            ? ""
+                            : "disabled"
+                        }
                             >
-                                ${
-                                    situacao.disponivel
-                                        ? "Resgatar"
-                                        : "Indisponível"
-                                }
+                                ${situacao.disponivel
+                            ? "Resgatar"
+                            : "Indisponível"
+                        }
                             </button>
 
                         </div>
@@ -745,7 +742,7 @@ function inicializarRecompensas(usuario) {
                         `input[data-copo="${numeroCopo}"]:checked`
                     )
                 )
-                .map(input => input.value);
+                    .map(input => input.value);
 
 
             if (
@@ -947,7 +944,7 @@ function inicializarRecompensas(usuario) {
     }
 
 
-    
+
 
 
     /* =====================================
