@@ -4,12 +4,17 @@
 <head>
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Azury</title>
 
-    <meta name="description"
-        content="Peça o melhor açaí da região. Delivery rápido, ingredientes selecionados e atendimento pelo WhatsApp.">
+    <meta
+        name="description"
+        content="Peça o melhor açaí da região. Delivery rápido, ingredientes selecionados e atendimento pelo WhatsApp."
+    >
 
     <link rel="stylesheet" href="../css/reset.css">
     <link rel="stylesheet" href="../css/variables.css">
@@ -26,8 +31,10 @@
         .header-site .logo .coroa-header {
             width: 76px;
             height: 50px;
+
             display: block;
             flex-shrink: 0;
+
             overflow: visible;
         }
 
@@ -43,77 +50,201 @@
 
 <body>
 
-    <!-- CABEÇALHO -->
+    <!-- =====================================
+         CABEÇALHO
+    ====================================== -->
+
     <header class="header-site">
 
-        <a href="#home" class="logo">
+        <a
+            href="#home"
+            class="logo"
+            aria-label="Azury - Ir para o início"
+        >
 
-            <svg class="coroa-header" viewBox="0 0 256 160" role="img" aria-label="Coroa Azury">
+            <svg
+                class="coroa-header"
+                viewBox="0 0 256 160"
+                role="img"
+                aria-label="Coroa Azury"
+            >
+
                 <defs>
-                    <linearGradient id="ouroHeader" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0" stop-color="#fff4ad"></stop>
-                        <stop offset="0.30" stop-color="#f8c94e"></stop>
-                        <stop offset="0.65" stop-color="#bd7800"></stop>
-                        <stop offset="1" stop-color="#ffdc68"></stop>
+
+                    <linearGradient
+                        id="ouroHeader"
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="1"
+                    >
+                        <stop
+                            offset="0"
+                            stop-color="#fff4ad"
+                        ></stop>
+
+                        <stop
+                            offset="0.30"
+                            stop-color="#f8c94e"
+                        ></stop>
+
+                        <stop
+                            offset="0.65"
+                            stop-color="#bd7800"
+                        ></stop>
+
+                        <stop
+                            offset="1"
+                            stop-color="#ffdc68"
+                        ></stop>
                     </linearGradient>
 
-                    <linearGradient id="azulHeader" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0" stop-color="#8ccbff"></stop>
-                        <stop offset="0.50" stop-color="#0051ff"></stop>
-                        <stop offset="1" stop-color="#00156b"></stop>
+
+                    <linearGradient
+                        id="azulHeader"
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="1"
+                    >
+                        <stop
+                            offset="0"
+                            stop-color="#8ccbff"
+                        ></stop>
+
+                        <stop
+                            offset="0.50"
+                            stop-color="#0051ff"
+                        ></stop>
+
+                        <stop
+                            offset="1"
+                            stop-color="#00156b"
+                        ></stop>
                     </linearGradient>
+
                 </defs>
 
-                <path d="M25 116 L42 43 L91 87 L128 20 L165 87 L214 43 L231 116 Z" fill="url(#ouroHeader)"
-                    stroke="#8f5700" stroke-width="5" stroke-linejoin="round"></path>
 
-                <path d="M35 114 C68 102 98 105 128 116 C158 105 188 102 221 114
+                <path
+                    d="M25 116 L42 43 L91 87 L128 20 L165 87 L214 43 L231 116 Z"
+                    fill="url(#ouroHeader)"
+                    stroke="#8f5700"
+                    stroke-width="5"
+                    stroke-linejoin="round"
+                ></path>
+
+
+                <path
+                    d="M35 114 C68 102 98 105 128 116 C158 105 188 102 221 114
                        L216 136 C182 128 160 132 128 142
-                       C96 132 74 128 40 136 Z" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="5"
-                    stroke-linejoin="round"></path>
+                       C96 132 74 128 40 136 Z"
+                    fill="url(#ouroHeader)"
+                    stroke="#8f5700"
+                    stroke-width="5"
+                    stroke-linejoin="round"
+                ></path>
 
-                <circle cx="42" cy="43" r="8" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4"></circle>
 
-                <circle cx="128" cy="20" r="9" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4"></circle>
+                <circle
+                    cx="42"
+                    cy="43"
+                    r="8"
+                    fill="url(#ouroHeader)"
+                    stroke="#8f5700"
+                    stroke-width="4"
+                ></circle>
 
-                <circle cx="214" cy="43" r="8" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4"></circle>
 
-                <path d="M128 74 L151 99 L128 125 L105 99 Z" fill="url(#azulHeader)" stroke="#ffffff" stroke-width="3">
-                </path>
+                <circle
+                    cx="128"
+                    cy="20"
+                    r="9"
+                    fill="url(#ouroHeader)"
+                    stroke="#8f5700"
+                    stroke-width="4"
+                ></circle>
 
-                <path d="M128 75 L128 124 M106 99 H150" fill="none" stroke="#b9ddff" stroke-width="2" opacity="0.8">
-                </path>
+
+                <circle
+                    cx="214"
+                    cy="43"
+                    r="8"
+                    fill="url(#ouroHeader)"
+                    stroke="#8f5700"
+                    stroke-width="4"
+                ></circle>
+
+
+                <path
+                    d="M128 74 L151 99 L128 125 L105 99 Z"
+                    fill="url(#azulHeader)"
+                    stroke="#ffffff"
+                    stroke-width="3"
+                ></path>
+
+
+                <path
+                    d="M128 75 L128 124 M106 99 H150"
+                    fill="none"
+                    stroke="#b9ddff"
+                    stroke-width="2"
+                    opacity="0.8"
+                ></path>
+
             </svg>
 
             <span>AZURY</span>
 
         </a>
 
+
         <nav class="menu-principal">
 
-            <a href="#home">Início</a>
+            <a href="#home">
+                Início
+            </a>
 
-            <a href="#Cardapio">Cardápio</a>
+            <a href="#Cardapio">
+                Cardápio
+            </a>
 
-            <a href="#Sobre">Sobre</a>
+            <a href="#Sobre">
+                Sobre
+            </a>
 
-            <a href="#Contato">Contato</a>
-            <a href="login.html" id="linkConta">
+            <a href="#Contato">
+                Contato
+            </a>
+
+            <a
+                href="login.html"
+                id="linkConta"
+            >
                 Entrar
             </a>
 
-
         </nav>
 
-        <a href="#Cardapio" class="btn btn-header">
+
+        <a
+            href="#Cardapio"
+            class="btn btn-header"
+        >
             Peça Agora
         </a>
 
     </header>
 
 
-    <!-- HERO -->
-    <section id="home" class="hero-wrapper">
+    <!-- =====================================
+         HERO
+    ====================================== -->
+
+    <section
+        id="home"
+        class="hero-wrapper"
+    >
 
         <article class="hero">
 
@@ -128,23 +259,35 @@
                     o melhor açaí da região.
                 </p>
 
+
                 <nav class="hero-buttons">
 
-                    <a href="#Cardapio" class="btn">
+                    <a
+                        href="#Cardapio"
+                        class="btn"
+                    >
                         Ver Cardápio
                     </a>
 
-                    <a href="https://w.app/azury" class="btn btn-outline">
+                    <a
+                        href="https://w.app/azury"
+                        class="btn btn-outline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
                         🟢 WhatsApp
                     </a>
 
                 </nav>
 
+
                 <ul class="hero-stats">
 
                     <li>
 
-                        <strong>+500</strong>
+                        <strong>
+                            +500
+                        </strong>
 
                         <span>
                             Clientes felizes ♥️
@@ -152,9 +295,12 @@
 
                     </li>
 
+
                     <li>
 
-                        <strong>4.9</strong>
+                        <strong>
+                            4.9
+                        </strong>
 
                         <span>
                             Avaliação 🌟
@@ -162,9 +308,12 @@
 
                     </li>
 
+
                     <li>
 
-                        <strong>40 Min</strong>
+                        <strong>
+                            40 Min
+                        </strong>
 
                         <span>
                             Entrega Média 🏍️
@@ -176,9 +325,13 @@
 
             </div>
 
+
             <div>
 
-                <img src="../Imagens/tamanho certo.png" alt="Açaí Azury">
+                <img
+                    src="../Imagens/tamanho certo.png"
+                    alt="Copo de açaí Azury"
+                >
 
             </div>
 
@@ -187,10 +340,18 @@
     </section>
 
 
-    <!-- CARDÁPIO -->
-    <section id="Cardapio" class="cardapio">
+    <!-- =====================================
+         CARDÁPIO
+    ====================================== -->
 
-        <h2>Nosso Cardápio</h2>
+    <section
+        id="Cardapio"
+        class="cardapio"
+    >
+
+        <h2>
+            Nosso Cardápio
+        </h2>
 
         <p>
             Escolha o seu favorito e faça seu pedido no WhatsApp
@@ -198,17 +359,35 @@
 
 
         <!-- FILTROS -->
-        <div class="filtros-cardapio" aria-label="Categorias do cardápio">
 
-            <button type="button" class="filtro-cardapio ativo" data-categoria="tradicionais">
+        <div
+            class="filtros-cardapio"
+            aria-label="Categorias do cardápio"
+        >
+
+            <button
+                type="button"
+                class="filtro-cardapio ativo"
+                data-categoria="tradicionais"
+            >
                 Tradicionais
             </button>
 
-            <button type="button" class="filtro-cardapio" data-categoria="especiais">
+
+            <button
+                type="button"
+                class="filtro-cardapio"
+                data-categoria="especiais"
+            >
                 Especiais
             </button>
 
-            <button type="button" class="filtro-cardapio" data-categoria="monte-seu">
+
+            <button
+                type="button"
+                class="filtro-cardapio"
+                data-categoria="monte-seu"
+            >
                 Monte o Seu
             </button>
 
@@ -216,23 +395,29 @@
 
 
         <!-- PRODUTOS -->
+
         <ul class="menu-grid">
 
             <!-- =====================================
                  TRADICIONAIS
             ====================================== -->
 
+
             <!-- AZURY ORIGINAL -->
+
             <li data-categoria="tradicionais">
 
-                <img src="../Imagens/copo1.png" alt="Azury Original">
+                <img
+                    src="../Imagens/copo1.png"
+                    alt="Azury Original"
+                >
 
                 <span class="badge">
                     Mais vendido
                 </span>
 
                 <h3>
-                    Azury Original 
+                    Azury Original
                 </h3>
 
                 <p>
@@ -243,19 +428,30 @@
                     R$ 29,90
                 </strong>
 
-                <a href="https://w.app/azuryoriginal" class="btn">
+                <button
+                    type="button"
+                    class="btn btn-pedir-produto"
+                    data-produto="Azury Original"
+                    data-preco="29.90"
+                    data-descricao="Açaí, banana, leite condensado e granola."
+                >
                     Pedir
-                </a>
+                </button>
 
             </li>
 
+
             <!-- AZURY PAÇOCA CROCANTE -->
+
             <li data-categoria="tradicionais">
 
-                <img src="../Imagens/Azury Paçoca.png" alt="Azury Esmeralda">
+                <img
+                    src="../Imagens/Azury Paçoca.png"
+                    alt="Azury Paçoca Crocante"
+                >
 
                 <h3>
-                    Azury Paçoca Crocante 
+                    Azury Paçoca Crocante
                 </h3>
 
                 <p class="descricao">
@@ -266,19 +462,31 @@
                     R$ 30,90
                 </strong>
 
-                <a href="https://w.app/azurypacocacrocante" class="btn">
+                <button
+                    type="button"
+                    class="btn btn-pedir-produto"
+                    data-produto="Azury Paçoca Crocante"
+                    data-preco="30.90"
+                    data-descricao="Açaí, paçoca, granola e leite condensado."
+                >
                     Pedir
-                </a>
+                </button>
 
             </li>
 
+
             <!-- AZURY UVA CREMOSA -->
+
             <li data-categoria="tradicionais">
 
-                <img src="../Imagens/Azury Uva Cremosa.png" alt="Azury tropical" class="tropical">
+                <img
+                    src="../Imagens/Azury Uva Cremosa.png"
+                    alt="Azury Uva Cremosa"
+                    class="tropical"
+                >
 
                 <h3>
-                    Azury Uva Cremosa <!-- • 700ml -->
+                    Azury Uva Cremosa
                 </h3>
 
                 <p>
@@ -289,31 +497,39 @@
                     R$ 32,90
                 </strong>
 
-                <a href="https://w.app/azuryuvacremosa" class="btn">
+                <button
+                    type="button"
+                    class="btn btn-pedir-produto"
+                    data-produto="Azury Uva Cremosa"
+                    data-preco="32.90"
+                    data-descricao="Açaí, uva verde, leite em pó e leite condensado."
+                >
                     Pedir
-                </a>
+                </button>
 
             </li>
+
 
             <!-- =====================================
                  ESPECIAIS
             ====================================== -->
 
-            <!-- AZURY TROPICAL 1 -->
+
+            <!-- AZURY TROPICAL -->
+
             <li data-categoria="especiais">
 
-                <img src="../Imagens/Copo3.png" alt="Azury Supreme">
-
-               <!-- <span class="badge">
-                    Mais vendido
-                </span> -->
+                <img
+                    src="../Imagens/Copo3.png"
+                    alt="Azury Tropical"
+                >
 
                 <h3>
-                     Azury Tropical 
+                    Azury Tropical
                 </h3>
 
                 <p>
-                     Açaí, manga, morangos frescos,
+                    Açaí, manga, morangos frescos,
                     coco ralado e leite condensado.
                 </p>
 
@@ -321,25 +537,30 @@
                     R$ 34,90
                 </strong>
 
-                <a href="https://w.app/azurytropical" class="btn">
+                <button
+                    type="button"
+                    class="btn btn-pedir-produto"
+                    data-produto="Azury Tropical"
+                    data-preco="34.90"
+                    data-descricao="Açaí, manga, morangos frescos, coco ralado e leite condensado."
+                >
                     Pedir
-                </a>
+                </button>
 
             </li>
 
 
-            <!-- AZURY ESMERALDA 2 -->
+            <!-- AZURY ESMERALDA -->
+
             <li data-categoria="especiais">
 
-                <img src="../Imagens/copo2.png" alt="Azury Supreme">
-
-
-                <!--<span class="badge">
-                    Mais vendido
-                </span>  -->
+                <img
+                    src="../Imagens/copo2.png"
+                    alt="Azury Esmeralda"
+                >
 
                 <h3>
-                    Azury Esmeralda 
+                    Azury Esmeralda
                 </h3>
 
                 <p>
@@ -350,24 +571,30 @@
                     R$ 34,90
                 </strong>
 
-                <a href="https://w.app/azuryesmeralda" class="btn">
+                <button
+                    type="button"
+                    class="btn btn-pedir-produto"
+                    data-produto="Azury Esmeralda"
+                    data-preco="34.90"
+                    data-descricao="Açaí, Nutella e uva verde."
+                >
                     Pedir
-                </a>
+                </button>
 
             </li>
 
 
-            <!-- AZURY SUPREME 3 -->
+            <!-- AZURY SUPREME -->
+
             <li data-categoria="especiais">
 
-                <img src="../Imagens/site foto 2.png" alt="Azury Supreme">
-
-                <!--<span class="badge">
-                    Mais vendido
-                </span>  -->
+                <img
+                    src="../Imagens/site foto 2.png"
+                    alt="Azury Supreme"
+                >
 
                 <h3>
-                    Azury Supreme 
+                    Azury Supreme
                 </h3>
 
                 <p>
@@ -379,9 +606,15 @@
                     R$ 29,99
                 </strong>
 
-                <a href="https://w.app/azury" class="btn">
+                <button
+                    type="button"
+                    class="btn btn-pedir-produto"
+                    data-produto="Azury Supreme"
+                    data-preco="29.99"
+                    data-descricao="Açaí, creme branco, granola, banana, creme de avelã e coco ralado."
+                >
                     Pedir
-                </a>
+                </button>
 
             </li>
 
@@ -390,11 +623,18 @@
                  MONTE O SEU
             ====================================== -->
 
+
             <!-- MONTE O SEU 300ML -->
+
             <li data-categoria="monte-seu">
 
                 <div class="monte-seu-imagem">
-                    <img src="../Imagens/Copo vazio de 300ml.png" alt="Copo personalizado de açaí de 300 ml">
+
+                    <img
+                        src="../Imagens/Copo vazio de 300ml.png"
+                        alt="Copo personalizado de açaí de 300 ml"
+                    >
+
                 </div>
 
                 <span class="badge">
@@ -414,17 +654,29 @@
                     A partir de R$ 14,90
                 </strong>
 
-                <button type="button" class="btn btn-montar" data-tamanho="300" data-preco-base="14.90">
+                <button
+                    type="button"
+                    class="btn btn-montar"
+                    data-tamanho="300"
+                    data-preco-base="14.90"
+                >
                     Montar meu açaí
                 </button>
 
             </li>
 
 
+            <!-- MONTE O SEU 400ML -->
+
             <li data-categoria="monte-seu">
 
                 <div class="monte-seu-imagem">
-                    <img src="../Imagens/Copo Vazio 400 ml.png" alt="Copo personalizado de açaí de 400 ml">
+
+                    <img
+                        src="../Imagens/Copo Vazio 400 ml.png"
+                        alt="Copo personalizado de açaí de 400 ml"
+                    >
+
                 </div>
 
                 <span class="badge">
@@ -444,17 +696,29 @@
                     A partir de R$ 18,90
                 </strong>
 
-                <button type="button" class="btn btn-montar" data-tamanho="400" data-preco-base="18.90">
+                <button
+                    type="button"
+                    class="btn btn-montar"
+                    data-tamanho="400"
+                    data-preco-base="18.90"
+                >
                     Montar meu açaí
                 </button>
 
             </li>
 
 
+            <!-- MONTE O SEU 700ML -->
+
             <li data-categoria="monte-seu">
 
                 <div class="monte-seu-imagem">
-                    <img src="../Imagens/Copo vazio 700ml.png" alt="Copo personalizado de açaí de 700 ml">
+
+                    <img
+                        src="../Imagens/Copo vazio 700ml.png"
+                        alt="Copo personalizado de açaí de 700 ml"
+                    >
+
                 </div>
 
                 <span class="badge">
@@ -474,24 +738,36 @@
                     A partir de R$ 25,90
                 </strong>
 
-                <button type="button" class="btn btn-montar" data-tamanho="700" data-preco-base="25.90">
+                <button
+                    type="button"
+                    class="btn btn-montar"
+                    data-tamanho="700"
+                    data-preco-base="25.90"
+                >
                     Montar meu açaí
                 </button>
 
             </li>
-
-
-            
 
         </ul>
 
     </section>
 
 
-    <!-- SOBRE -->
-    <section id="Sobre" class="sobre">
+    <!-- =====================================
+         SOBRE
+    ====================================== -->
 
-        <img src="../Imagens/Historia.png" alt="Preparação de um açaí Azury">
+    <section
+        id="Sobre"
+        class="sobre"
+    >
+
+        <img
+            src="../Imagens/Historia.png"
+            alt="Preparação de um açaí Azury"
+        >
+
 
         <article>
 
@@ -503,22 +779,31 @@
                 Qualidade, cuidado e sabor em cada pedido.
             </p>
 
+
             <ul>
 
                 <li>
-                    <strong>✓ Ingredientes selecionados</strong>
+                    <strong>
+                        ✓ Ingredientes selecionados
+                    </strong>
                 </li>
 
                 <li>
-                    <strong>✓ Montagem caprichada</strong>
+                    <strong>
+                        ✓ Montagem caprichada
+                    </strong>
                 </li>
 
                 <li>
-                    <strong>✓ Exclusivo para delivery</strong>
+                    <strong>
+                        ✓ Exclusivo para delivery
+                    </strong>
                 </li>
 
                 <li>
-                    <strong>✓ Pagamento fácil e seguro</strong>
+                    <strong>
+                        ✓ Pagamento fácil e seguro
+                    </strong>
                 </li>
 
             </ul>
@@ -528,8 +813,14 @@
     </section>
 
 
-    <!-- CHAMADA -->
-    <section id="cta" class="cta">
+    <!-- =====================================
+         CHAMADA
+    ====================================== -->
+
+    <section
+        id="cta"
+        class="cta"
+    >
 
         <h2>
             Bateu vontade de um Açaí?
@@ -539,21 +830,31 @@
             Faça seu pedido agora e receba em casa!
         </p>
 
-        <a href="https://w.app/azury" class="btn btn-light">
+        <a
+            href="https://w.app/azury"
+            class="btn btn-light"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             Pedir pelo WhatsApp
         </a>
 
     </section>
 
 
-    <!-- RODAPÉ -->
+    <!-- =====================================
+         RODAPÉ
+    ====================================== -->
+
     <footer id="Contato">
 
         <div class="footer-conteudo">
 
             <section class="footer-coluna">
 
-                <h2>👑 Azury</h2>
+                <h2>
+                    👑 Azury
+                </h2>
 
                 <p>
                     Sabor, cuidado e qualidade em cada pedido.
@@ -561,38 +862,77 @@
 
             </section>
 
+
             <section class="footer-coluna">
 
-                <h3>Contato</h3>
+                <h3>
+                    Contato
+                </h3>
 
-                <p>📲 (11) 9 6022-0402</p>
+                <p>
+                    📲 (11) 9 6022-0402
+                </p>
 
-                <p>📍 Rua Samuel Arnold, 414</p>
+                <p>
+                    📍 Rua Samuel Arnold, 414
+                </p>
 
-                <p>Corredor ao lado do 414, Numero 378</p>
+                <p>
+                    Corredor ao lado do 414, Número 378
+                </p>
 
             </section>
 
+
             <section class="footer-coluna">
 
-                <h3>Redes Sociais</h3>
+                <h3>
+                    Redes Sociais
+                </h3>
 
-                <a href="https://www.instagram.com/azury.oficial" target="_blank" rel="noopener noreferrer"
-                    class="instagram-link">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+                <a
+                    href="https://www.instagram.com/azury.oficial"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="instagram-link"
+                >
 
-                        <circle cx="12" cy="12" r="4"></circle>
+                    <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
 
-                        <circle cx="17.5" cy="6.5" r="1" class="instagram-ponto"></circle>
+                        <rect
+                            x="3"
+                            y="3"
+                            width="18"
+                            height="18"
+                            rx="5"
+                        ></rect>
+
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="4"
+                        ></circle>
+
+                        <circle
+                            cx="17.5"
+                            cy="6.5"
+                            r="1"
+                            class="instagram-ponto"
+                        ></circle>
+
                     </svg>
 
                     Instagram
+
                 </a>
 
             </section>
 
         </div>
+
 
         <p class="copy">
             © 2026 - AZURY
@@ -600,27 +940,235 @@
 
     </footer>
 
-    <!-- CONFIGURADOR MONTE O SEU -->
-    <div id="modalMonteSeu" class="modal-monte-seu">
+
+    <!-- =====================================
+         MODAL DOS PRODUTOS PRONTOS
+    ====================================== -->
+
+    <div
+        id="modalProduto"
+        class="modal-monte-seu"
+    >
 
         <div class="conteudo-monte-seu">
 
-            <button type="button" id="btnFecharMonteSeu" class="fechar-monte-seu" aria-label="Fechar">
+            <button
+                type="button"
+                id="btnFecharProduto"
+                class="fechar-monte-seu"
+                aria-label="Fechar pedido"
+            >
                 ×
             </button>
 
-            <h2>🥤 Monte o Seu Açaí</h2>
+
+            <h2>
+                🥤 Finalizar Pedido
+            </h2>
+
+
+            <p id="produtoSelecionado">
+                Produto selecionado
+            </p>
+
+
+            <input
+                type="hidden"
+                id="nomeProdutoPedido"
+            >
+
+            <input
+                type="hidden"
+                id="precoProdutoPedido"
+            >
+
+
+            <div class="grupo-monte-seu estrutura-acai">
+
+                <h3 id="tituloProdutoPedido">
+                    Produto
+                </h3>
+
+                <p id="descricaoProdutoPedido">
+                    Descrição do produto
+                </p>
+
+            </div>
+
+
+            <div class="grupo-monte-seu dados-entrega">
+
+                <h3>
+                    Dados para entrega
+                </h3>
+
+
+                <label>
+
+                    Nome completo
+
+                    <input
+                        type="text"
+                        id="nomeClienteProduto"
+                        placeholder="Digite seu nome completo"
+                        autocomplete="name"
+                    >
+
+                </label>
+
+
+                <div class="linha-entrega">
+
+                    <label>
+
+                        CEP
+
+                        <input
+                            type="text"
+                            id="cepClienteProduto"
+                            placeholder="00000-000"
+                            maxlength="9"
+                            inputmode="numeric"
+                            autocomplete="postal-code"
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        Número
+
+                        <input
+                            type="text"
+                            id="numeroClienteProduto"
+                            placeholder="123"
+                            autocomplete="address-line2"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <label>
+
+                    Rua ou Avenida
+
+                    <input
+                        type="text"
+                        id="ruaClienteProduto"
+                        placeholder="Nome da rua ou avenida"
+                        autocomplete="address-line1"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Bairro
+
+                    <input
+                        type="text"
+                        id="bairroClienteProduto"
+                        placeholder="Digite o bairro"
+                        autocomplete="address-level3"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Complemento — opcional
+
+                    <input
+                        type="text"
+                        id="complementoClienteProduto"
+                        placeholder="Apartamento, bloco, casa, referência..."
+                    >
+
+                </label>
+
+            </div>
+
+
+            <div class="total-monte-seu">
+
+                <span>
+                    Total:
+                </span>
+
+                <strong id="totalProdutoPedido">
+                    R$ 0,00
+                </strong>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="btnEnviarProduto"
+                class="btn"
+            >
+                Pedir pelo WhatsApp
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         CONFIGURADOR MONTE O SEU
+    ====================================== -->
+
+    <div
+        id="modalMonteSeu"
+        class="modal-monte-seu"
+    >
+
+        <div class="conteudo-monte-seu">
+
+            <button
+                type="button"
+                id="btnFecharMonteSeu"
+                class="fechar-monte-seu"
+                aria-label="Fechar"
+            >
+                ×
+            </button>
+
+
+            <h2>
+                🥤 Monte o Seu Açaí
+            </h2>
+
 
             <p id="tamanhoSelecionado">
                 Copo selecionado: 300ml
             </p>
 
-            <input type="hidden" id="tamanhoMonteSeu" value="300">
-            <input type="hidden" id="precoBaseMonteSeu" value="14.90">
+
+            <input
+                type="hidden"
+                id="tamanhoMonteSeu"
+                value="300"
+            >
+
+            <input
+                type="hidden"
+                id="precoBaseMonteSeu"
+                value="14.90"
+            >
+
 
             <div class="grupo-monte-seu estrutura-acai">
 
-                <h3>Montagem do copo</h3>
+                <h3>
+                    Montagem do copo
+                </h3>
 
                 <p>
                     1/2 de açaí no fundo, complementos no meio,
@@ -634,67 +1182,138 @@
 
             </div>
 
-            <div class="grupo-monte-seu">
-
-                <h3>Complementos no meio</h3>
-
-                <div id="complementosMeio" class="lista-complementos"></div>
-
-            </div>
 
             <div class="grupo-monte-seu">
 
-                <h3>Complementos na cobertura</h3>
+                <h3>
+                    Complementos no meio
+                </h3>
 
-                <div id="complementosTopo" class="lista-complementos"></div>
+                <div
+                    id="complementosMeio"
+                    class="lista-complementos"
+                ></div>
 
             </div>
+
+
+            <div class="grupo-monte-seu">
+
+                <h3>
+                    Complementos na cobertura
+                </h3>
+
+                <div
+                    id="complementosTopo"
+                    class="lista-complementos"
+                ></div>
+
+            </div>
+
 
             <div class="grupo-monte-seu dados-entrega">
 
-                <h3>Dados para entrega</h3>
+                <h3>
+                    Dados para entrega
+                </h3>
+
 
                 <label>
+
                     Nome completo
-                    <input type="text" id="nomeCliente" placeholder="Digite seu nome completo" autocomplete="name">
+
+                    <input
+                        type="text"
+                        id="nomeCliente"
+                        placeholder="Digite seu nome completo"
+                        autocomplete="name"
+                    >
+
                 </label>
+
 
                 <div class="linha-entrega">
 
                     <label>
+
                         CEP
-                        <input type="text" id="cepCliente" placeholder="00000-000" maxlength="9" inputmode="numeric"
-                            autocomplete="postal-code">
+
+                        <input
+                            type="text"
+                            id="cepCliente"
+                            placeholder="00000-000"
+                            maxlength="9"
+                            inputmode="numeric"
+                            autocomplete="postal-code"
+                        >
+
                     </label>
 
+
                     <label>
+
                         Número
-                        <input type="text" id="numeroCliente" placeholder="123" autocomplete="address-line2">
+
+                        <input
+                            type="text"
+                            id="numeroCliente"
+                            placeholder="123"
+                            autocomplete="address-line2"
+                        >
+
                     </label>
 
                 </div>
 
+
                 <label>
+
                     Rua ou Avenida
-                    <input type="text" id="ruaCliente" placeholder="Nome da rua ou avenida"
-                        autocomplete="address-line1">
+
+                    <input
+                        type="text"
+                        id="ruaCliente"
+                        placeholder="Nome da rua ou avenida"
+                        autocomplete="address-line1"
+                    >
+
                 </label>
 
+
                 <label>
+
                     Bairro
-                    <input type="text" id="bairroCliente" placeholder="Digite o bairro" autocomplete="address-level3">
+
+                    <input
+                        type="text"
+                        id="bairroCliente"
+                        placeholder="Digite o bairro"
+                        autocomplete="address-level3"
+                    >
+
                 </label>
 
+
                 <label>
+
                     Complemento — opcional
-                    <input type="text" id="complementoCliente" placeholder="Apartamento, bloco, casa, referência...">
+
+                    <input
+                        type="text"
+                        id="complementoCliente"
+                        placeholder="Apartamento, bloco, casa, referência..."
+                    >
+
                 </label>
 
             </div>
 
+
             <div class="total-monte-seu">
 
-                <span>Total:</span>
+                <span>
+                    Total:
+                </span>
 
                 <strong id="totalMonteSeu">
                     R$ 14,90
@@ -702,23 +1321,36 @@
 
             </div>
 
-            <button type="button" id="btnEnviarMonteSeu" class="btn">
+
+            <button
+                type="button"
+                id="btnEnviarMonteSeu"
+                class="btn"
+            >
                 Pedir pelo WhatsApp
             </button>
 
         </div>
 
     </div>
-    <!-- SCRIPTS
+
+
+    <!-- =====================================
+         SCRIPTS
+
          Ordem:
          1. Sessão
          2. Pontuação
          3. Pedidos
          4. Cardápio
-    -->
+    ====================================== -->
+
     <script src="../js/sessao.js"></script>
+
     <script src="../js/pontuacao-servico.js"></script>
+
     <script src="../js/pedidos-servico.js"></script>
+
     <script src="../js/cardapio.js"></script>
 
 </body>
