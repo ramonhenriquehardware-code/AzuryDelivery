@@ -1,63 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
     "use strict";
 
-    const NUMERO_WHATSAPP = "5511958620266";
-
+    const NUMERO_WHATSAPP = "5511960220402";
     let enviandoPedido = false;
 
-    const selecionar = seletor =>
+    const $ = seletor =>
         document.querySelector(seletor);
 
-    const selecionarTodos = seletor =>
+    const $$ = seletor =>
         Array.from(
             document.querySelectorAll(seletor)
         );
-
-
-    /* =====================================
-       FILTROS DO CARDÁPIO
-    ====================================== */
-
-    const filtros =
-        selecionarTodos(".filtro-cardapio");
-
-    const produtos =
-        selecionarTodos(
-            ".menu-grid li[data-categoria]"
-        );
-
-    function mostrarCategoria(categoria) {
-        produtos.forEach(produto => {
-            produto.style.display =
-                produto.dataset.categoria ===
-                categoria
-                    ? "flex"
-                    : "none";
-        });
-    }
-
-    filtros.forEach(filtro => {
-        filtro.addEventListener(
-            "click",
-            () => {
-                filtros.forEach(botao => {
-                    botao.classList.remove(
-                        "ativo"
-                    );
-                });
-
-                filtro.classList.add(
-                    "ativo"
-                );
-
-                mostrarCategoria(
-                    filtro.dataset.categoria
-                );
-            }
-        );
-    });
-
-    mostrarCategoria("tradicionais");
 
 
     /* =====================================
@@ -259,128 +212,166 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    function dadosEntregaValidos({
+        nome,
+        cep,
+        rua,
+        numero,
+        bairro
+    }) {
+        return Boolean(
+            nome &&
+            cep.replace(
+                /\D/g,
+                ""
+            ).length === 8 &&
+            rua &&
+            numero &&
+            bairro
+        );
+    }
+
+
+    /* =====================================
+       FILTROS DO CARDÁPIO
+    ====================================== */
+
+    const filtros =
+        $$(".filtro-cardapio");
+
+    const produtos =
+        $$(
+            ".menu-grid li[data-categoria]"
+        );
+
+
+    function mostrarCategoria(
+        categoria
+    ) {
+        produtos.forEach(produto => {
+            produto.style.display =
+                produto.dataset
+                    .categoria ===
+                categoria
+                    ? "flex"
+                    : "none";
+        });
+    }
+
+
+    filtros.forEach(filtro => {
+        filtro.addEventListener(
+            "click",
+            () => {
+                filtros.forEach(
+                    botao =>
+                        botao.classList
+                            .remove(
+                                "ativo"
+                            )
+                );
+
+                filtro.classList.add(
+                    "ativo"
+                );
+
+                mostrarCategoria(
+                    filtro.dataset
+                        .categoria
+                );
+            }
+        );
+    });
+
+
+    mostrarCategoria(
+        "tradicionais"
+    );
+
+
     /* =====================================
        PRODUTOS TRADICIONAIS E ESPECIAIS
     ====================================== */
 
     const modalProduto =
-        selecionar(
-            "#modalProduto"
-        );
+        $("#modalProduto");
 
     const btnFecharProduto =
-        selecionar(
-            "#btnFecharProduto"
-        );
+        $("#btnFecharProduto");
 
     const btnEnviarProduto =
-        selecionar(
-            "#btnEnviarProduto"
-        );
+        $("#btnEnviarProduto");
 
     const produtoSelecionado =
-        selecionar(
-            "#produtoSelecionado"
-        );
+        $("#produtoSelecionado");
 
     const nomeProdutoPedido =
-        selecionar(
-            "#nomeProdutoPedido"
-        );
+        $("#nomeProdutoPedido");
 
     const precoProdutoPedido =
-        selecionar(
-            "#precoProdutoPedido"
-        );
+        $("#precoProdutoPedido");
 
     const tamanhoProdutoPedido =
-        selecionar(
-            "#tamanhoProdutoPedido"
-        );
+        $("#tamanhoProdutoPedido");
 
     const tituloProdutoPedido =
-        selecionar(
-            "#tituloProdutoPedido"
-        );
+        $("#tituloProdutoPedido");
 
     const descricaoProdutoPedido =
-        selecionar(
-            "#descricaoProdutoPedido"
-        );
+        $("#descricaoProdutoPedido");
 
     const totalProdutoPedido =
-        selecionar(
-            "#totalProdutoPedido"
-        );
+        $("#totalProdutoPedido");
 
     const precoProduto300 =
-        selecionar(
-            "#precoProduto300"
-        );
+        $("#precoProduto300");
 
     const precoProduto400 =
-        selecionar(
-            "#precoProduto400"
-        );
+        $("#precoProduto400");
 
     const precoProduto700 =
-        selecionar(
-            "#precoProduto700"
-        );
-
-    const nomeClienteProduto =
-        selecionar(
-            "#nomeClienteProduto"
-        );
-
-    const cepClienteProduto =
-        selecionar(
-            "#cepClienteProduto"
-        );
-
-    const ruaClienteProduto =
-        selecionar(
-            "#ruaClienteProduto"
-        );
-
-    const numeroClienteProduto =
-        selecionar(
-            "#numeroClienteProduto"
-        );
-
-    const bairroClienteProduto =
-        selecionar(
-            "#bairroClienteProduto"
-        );
-
-    const complementoClienteProduto =
-        selecionar(
-            "#complementoClienteProduto"
-        );
+        $("#precoProduto700");
 
     const opcoesTamanhoProduto =
-        selecionarTodos(
+        $$(
             'input[name="tamanhoProduto"]'
         );
 
+    const nomeClienteProduto =
+        $("#nomeClienteProduto");
+
+    const cepClienteProduto =
+        $("#cepClienteProduto");
+
+    const ruaClienteProduto =
+        $("#ruaClienteProduto");
+
+    const numeroClienteProduto =
+        $("#numeroClienteProduto");
+
+    const bairroClienteProduto =
+        $("#bairroClienteProduto");
+
+    const complementoClienteProduto =
+        $("#complementoClienteProduto");
+
+
     let precosProdutoAtual = {
-        300: 0,
-        400: 0,
-        700: 0
+        "300": 0,
+        "400": 0,
+        "700": 0
     };
 
 
     function atualizarTamanhoProduto(
         tamanhoEscolhido
     ) {
-        const tamanhosValidos = [
-            "300",
-            "400",
-            "700"
-        ];
-
         const tamanho =
-            tamanhosValidos.includes(
+            [
+                "300",
+                "400",
+                "700"
+            ].includes(
                 String(
                     tamanhoEscolhido
                 )
@@ -397,110 +388,158 @@ document.addEventListener("DOMContentLoaded", () => {
                 ]
             ) || 0;
 
-        tamanhoProdutoPedido.value =
-            tamanho;
+        if (
+            tamanhoProdutoPedido
+        ) {
+            tamanhoProdutoPedido.value =
+                tamanho;
+        }
 
-        precoProdutoPedido.value =
-            String(preco);
+        if (
+            precoProdutoPedido
+        ) {
+            precoProdutoPedido.value =
+                String(preco);
+        }
 
-        totalProdutoPedido.textContent =
-            formatarPreco(preco);
+        if (
+            totalProdutoPedido
+        ) {
+            totalProdutoPedido.textContent =
+                formatarPreco(preco);
+        }
 
-        produtoSelecionado.textContent =
-            `Produto selecionado: ${nomeProdutoPedido.value} • ${tamanho} ml`;
+        if (
+            produtoSelecionado &&
+            nomeProdutoPedido
+        ) {
+            produtoSelecionado.textContent =
+                `Produto selecionado: ${nomeProdutoPedido.value} • ${tamanho} ml`;
+        }
     }
 
 
-    selecionarTodos(
-        ".btn-pedir-produto"
-    ).forEach(botao => {
-        botao.addEventListener(
-            "click",
-            () => {
-                const produto =
-                    botao.dataset
-                        .produto || "";
+    $$(".btn-pedir-produto")
+        .forEach(botao => {
+            botao.addEventListener(
+                "click",
+                () => {
+                    const produto =
+                        botao.dataset
+                            .produto || "";
 
-                const descricao =
-                    botao.dataset
-                        .descricao || "";
+                    const descricao =
+                        botao.dataset
+                            .descricao || "";
 
-                precosProdutoAtual = {
-                    300:
-                        Number(
-                            botao.dataset
-                                .preco300
-                        ) || 0,
+                    precosProdutoAtual = {
+                        "300":
+                            Number(
+                                botao.getAttribute(
+                                    "data-preco-300"
+                                )
+                            ) || 0,
 
-                    400:
-                        Number(
-                            botao.dataset
-                                .preco400
-                        ) || 0,
+                        "400":
+                            Number(
+                                botao.getAttribute(
+                                    "data-preco-400"
+                                )
+                            ) || 0,
 
-                    700:
-                        Number(
-                            botao.dataset
-                                .preco700
-                        ) || 0
-                };
+                        "700":
+                            Number(
+                                botao.getAttribute(
+                                    "data-preco-700"
+                                )
+                            ) || 0
+                    };
 
-                nomeProdutoPedido.value =
-                    produto;
 
-                tituloProdutoPedido.textContent =
-                    produto;
-
-                descricaoProdutoPedido.textContent =
-                    descricao;
-
-                precoProduto300.textContent =
-                    formatarPreco(
-                        precosProdutoAtual[
-                            300
-                        ]
-                    );
-
-                precoProduto400.textContent =
-                    formatarPreco(
-                        precosProdutoAtual[
-                            400
-                        ]
-                    );
-
-                precoProduto700.textContent =
-                    formatarPreco(
-                        precosProdutoAtual[
-                            700
-                        ]
-                    );
-
-                opcoesTamanhoProduto.forEach(
-                    opcao => {
-                        opcao.checked =
-                            opcao.value ===
-                            "300";
+                    if (
+                        nomeProdutoPedido
+                    ) {
+                        nomeProdutoPedido.value =
+                            produto;
                     }
-                );
 
-                atualizarTamanhoProduto(
-                    "300"
-                );
+                    if (
+                        tituloProdutoPedido
+                    ) {
+                        tituloProdutoPedido.textContent =
+                            produto;
+                    }
 
-                preencherNomeDaSessao(
-                    nomeClienteProduto
-                );
-
-                abrirModal(
-                    modalProduto
-                );
-            }
-        );
-    });
+                    if (
+                        descricaoProdutoPedido
+                    ) {
+                        descricaoProdutoPedido.textContent =
+                            descricao;
+                    }
 
 
-    opcoesTamanhoProduto.forEach(
-        opcao => {
+                    if (
+                        precoProduto300
+                    ) {
+                        precoProduto300.textContent =
+                            formatarPreco(
+                                precosProdutoAtual[
+                                    "300"
+                                ]
+                            );
+                    }
+
+                    if (
+                        precoProduto400
+                    ) {
+                        precoProduto400.textContent =
+                            formatarPreco(
+                                precosProdutoAtual[
+                                    "400"
+                                ]
+                            );
+                    }
+
+                    if (
+                        precoProduto700
+                    ) {
+                        precoProduto700.textContent =
+                            formatarPreco(
+                                precosProdutoAtual[
+                                    "700"
+                                ]
+                            );
+                    }
+
+
+                    opcoesTamanhoProduto
+                        .forEach(
+                            opcao => {
+                                opcao.checked =
+                                    opcao.value ===
+                                    "300";
+                            }
+                        );
+
+
+                    atualizarTamanhoProduto(
+                        "300"
+                    );
+
+                    preencherNomeDaSessao(
+                        nomeClienteProduto
+                    );
+
+                    abrirModal(
+                        modalProduto
+                    );
+                }
+            );
+        });
+
+
+    opcoesTamanhoProduto
+        .forEach(opcao => {
             opcao.addEventListener(
                 "change",
                 () => {
@@ -513,159 +552,185 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             );
-        }
-    );
+        });
 
 
-    btnFecharProduto?.addEventListener(
-        "click",
-        () => {
-            fecharModal(
-                modalProduto
-            );
-        }
-    );
-
-
-    modalProduto?.addEventListener(
-        "click",
-        evento => {
-            if (
-                evento.target ===
-                modalProduto
-            ) {
+    btnFecharProduto
+        ?.addEventListener(
+            "click",
+            () => {
                 fecharModal(
                     modalProduto
                 );
             }
-        }
-    );
+        );
 
 
-    btnEnviarProduto?.addEventListener(
-        "click",
-        () => {
-            if (enviandoPedido) {
-                return;
+    modalProduto
+        ?.addEventListener(
+            "click",
+            evento => {
+                if (
+                    evento.target ===
+                    modalProduto
+                ) {
+                    fecharModal(
+                        modalProduto
+                    );
+                }
             }
+        );
 
-            const produto =
-                nomeProdutoPedido.value
-                    .trim();
 
-            const descricao =
-                descricaoProdutoPedido
-                    .textContent
-                    .trim();
+    btnEnviarProduto
+        ?.addEventListener(
+            "click",
+            () => {
+                if (
+                    enviandoPedido
+                ) {
+                    return;
+                }
 
-            const tamanho =
-                tamanhoProdutoPedido.value
-                    .trim();
 
-            const valorTotal =
-                Number(
-                    precoProdutoPedido.value
-                ) || 0;
+                const produto =
+                    nomeProdutoPedido
+                        ?.value
+                        .trim() || "";
 
-            const nome =
-                nomeClienteProduto.value
-                    .trim();
+                const descricao =
+                    descricaoProdutoPedido
+                        ?.textContent
+                        .trim() || "";
 
-            const cep =
-                cepClienteProduto.value
-                    .trim();
+                const tamanho =
+                    tamanhoProdutoPedido
+                        ?.value
+                        .trim() || "";
 
-            const rua =
-                ruaClienteProduto.value
-                    .trim();
+                const valorTotal =
+                    Number(
+                        precoProdutoPedido
+                            ?.value
+                    ) || 0;
 
-            const numero =
-                numeroClienteProduto.value
-                    .trim();
 
-            const bairro =
-                bairroClienteProduto.value
-                    .trim();
+                const nome =
+                    nomeClienteProduto
+                        ?.value
+                        .trim() || "";
 
-            const complemento =
-                complementoClienteProduto
-                    .value
-                    .trim();
+                const cep =
+                    cepClienteProduto
+                        ?.value
+                        .trim() || "";
 
-            if (
-                !produto ||
-                !tamanho ||
-                valorTotal <= 0 ||
-                !nome ||
-                !cep ||
-                !rua ||
-                !numero ||
-                !bairro
-            ) {
-                alert(
-                    "Escolha o tamanho e preencha nome, CEP, rua, número e bairro."
-                );
+                const rua =
+                    ruaClienteProduto
+                        ?.value
+                        .trim() || "";
 
-                return;
-            }
+                const numero =
+                    numeroClienteProduto
+                        ?.value
+                        .trim() || "";
 
-            iniciarEnvio(
-                btnEnviarProduto
-            );
+                const bairro =
+                    bairroClienteProduto
+                        ?.value
+                        .trim() || "";
 
-            const sessao =
-                obterSessaoCliente();
+                const complemento =
+                    complementoClienteProduto
+                        ?.value
+                        .trim() || "";
 
-            const pedidoCriado =
-                registrarPedidoNoSistema({
-                    tipo: "compra",
 
-                    produto,
-
-                    tamanho:
-                        `${tamanho} ml`,
-
-                    quantidade: 1,
-
-                    itens: [
-                        {
-                            nome:
-                                `${produto} • ${tamanho} ml`,
-
-                            quantidade: 1
-                        }
-                    ],
-
-                    complementos: [],
-
-                    valorTotal,
-
-                    cliente: {
+                if (
+                    !produto ||
+                    !tamanho ||
+                    valorTotal <= 0 ||
+                    !dadosEntregaValidos({
                         nome,
-
-                        email:
-                            sessao?.email ||
-                            ""
-                    },
-
-                    enderecoEntrega: {
                         cep,
                         rua,
                         numero,
-                        bairro,
-                        complemento
-                    },
+                        bairro
+                    })
+                ) {
+                    alert(
+                        "Escolha o tamanho e preencha nome, CEP válido, rua, número e bairro."
+                    );
 
-                    canal:
-                        "Site / WhatsApp"
-                });
+                    return;
+                }
 
-            const codigoPedido =
-                pedidoCriado?.id
-                    ? `\n🧾 *Pedido:* ${pedidoCriado.id}\n`
-                    : "";
 
-            const mensagem = `
+                iniciarEnvio(
+                    btnEnviarProduto
+                );
+
+
+                const sessao =
+                    obterSessaoCliente();
+
+
+                const pedidoCriado =
+                    registrarPedidoNoSistema({
+                        tipo:
+                            "compra",
+
+                        produto,
+
+                        tamanho:
+                            `${tamanho} ml`,
+
+                        quantidade:
+                            1,
+
+                        itens: [
+                            {
+                                nome:
+                                    `${produto} • ${tamanho} ml`,
+
+                                quantidade:
+                                    1
+                            }
+                        ],
+
+                        complementos:
+                            [],
+
+                        valorTotal,
+
+                        cliente: {
+                            nome,
+
+                            email:
+                                sessao?.email ||
+                                ""
+                        },
+
+                        enderecoEntrega: {
+                            cep,
+                            rua,
+                            numero,
+                            bairro,
+                            complemento
+                        },
+
+                        canal:
+                            "Site / WhatsApp"
+                    });
+
+
+                const codigoPedido =
+                    pedidoCriado?.id
+                        ? `\n🧾 *Pedido:* ${pedidoCriado.id}\n`
+                        : "";
+
+
+                const mensagem = `
 Olá! Quero fazer este pedido na AZURY:
 ${codigoPedido}
 👤 *Cliente:*
@@ -688,22 +753,24 @@ ${descricao}
 
 💰 *Total:*
 ${formatarPreco(valorTotal)}
-            `.trim();
+                `.trim();
 
-            abrirWhatsApp(
-                mensagem
-            );
 
-            fecharModal(
-                modalProduto
-            );
+                abrirWhatsApp(
+                    mensagem
+                );
 
-            finalizarEnvio(
-                btnEnviarProduto,
-                "Pedir pelo WhatsApp"
-            );
-        }
-    );
+                fecharModal(
+                    modalProduto
+                );
+
+                finalizarEnvio(
+                    btnEnviarProduto,
+                    "Pedir pelo WhatsApp"
+                );
+            }
+        );
+
 
     aplicarMascaraCEP(
         cepClienteProduto
@@ -711,7 +778,7 @@ ${formatarPreco(valorTotal)}
 
 
     /* =====================================
-       COMPLEMENTOS DO MONTE O SEU
+       MONTE O SEU
     ====================================== */
 
     const complementosDisponiveis = [
@@ -778,84 +845,50 @@ ${formatarPreco(valorTotal)}
     ];
 
 
-    /* =====================================
-       MODAL MONTE O SEU
-    ====================================== */
-
     const modalMonteSeu =
-        selecionar(
-            "#modalMonteSeu"
-        );
+        $("#modalMonteSeu");
 
     const btnFecharMonteSeu =
-        selecionar(
-            "#btnFecharMonteSeu"
-        );
+        $("#btnFecharMonteSeu");
 
     const btnEnviarMonteSeu =
-        selecionar(
-            "#btnEnviarMonteSeu"
-        );
+        $("#btnEnviarMonteSeu");
 
     const tamanhoSelecionado =
-        selecionar(
-            "#tamanhoSelecionado"
-        );
+        $("#tamanhoSelecionado");
 
     const tamanhoMonteSeu =
-        selecionar(
-            "#tamanhoMonteSeu"
-        );
+        $("#tamanhoMonteSeu");
 
     const precoBaseMonteSeu =
-        selecionar(
-            "#precoBaseMonteSeu"
-        );
+        $("#precoBaseMonteSeu");
 
     const totalMonteSeu =
-        selecionar(
-            "#totalMonteSeu"
-        );
+        $("#totalMonteSeu");
 
     const complementosMeio =
-        selecionar(
-            "#complementosMeio"
-        );
+        $("#complementosMeio");
 
     const complementosTopo =
-        selecionar(
-            "#complementosTopo"
-        );
+        $("#complementosTopo");
 
     const nomeCliente =
-        selecionar(
-            "#nomeCliente"
-        );
+        $("#nomeCliente");
 
     const cepCliente =
-        selecionar(
-            "#cepCliente"
-        );
+        $("#cepCliente");
 
     const ruaCliente =
-        selecionar(
-            "#ruaCliente"
-        );
+        $("#ruaCliente");
 
     const numeroCliente =
-        selecionar(
-            "#numeroCliente"
-        );
+        $("#numeroCliente");
 
     const bairroCliente =
-        selecionar(
-            "#bairroCliente"
-        );
+        $("#bairroCliente");
 
     const complementoCliente =
-        selecionar(
-            "#complementoCliente"
-        );
+        $("#complementoCliente");
 
 
     function criarComplementos(
@@ -913,8 +946,9 @@ ${formatarPreco(valorTotal)}
         "cobertura"
     );
 
+
     const todosComplementos =
-        selecionarTodos(
+        $$(
             ".complemento-monte-seu"
         );
 
@@ -926,24 +960,31 @@ ${formatarPreco(valorTotal)}
                     ?.value
             ) || 0;
 
-        todosComplementos.forEach(
-            complemento => {
-                if (
-                    complemento.checked
-                ) {
-                    total +=
-                        Number(
-                            complemento
-                                .dataset
-                                .preco
-                        ) || 0;
-                }
-            }
-        );
 
-        if (totalMonteSeu) {
+        todosComplementos
+            .forEach(
+                complemento => {
+                    if (
+                        complemento.checked
+                    ) {
+                        total +=
+                            Number(
+                                complemento
+                                    .dataset
+                                    .preco
+                            ) || 0;
+                    }
+                }
+            );
+
+
+        if (
+            totalMonteSeu
+        ) {
             totalMonteSeu.textContent =
-                formatarPreco(total);
+                formatarPreco(
+                    total
+                );
         }
 
         return total;
@@ -951,12 +992,13 @@ ${formatarPreco(valorTotal)}
 
 
     function limparComplementos() {
-        todosComplementos.forEach(
-            complemento => {
-                complemento.checked =
-                    false;
-            }
-        );
+        todosComplementos
+            .forEach(
+                complemento => {
+                    complemento.checked =
+                        false;
+                }
+            );
     }
 
 
@@ -981,221 +1023,265 @@ ${formatarPreco(valorTotal)}
     function transformarEmLista(
         itens
     ) {
-        if (
-            itens.length === 0
-        ) {
-            return "• Nenhum complemento";
-        }
-
-        return itens
-            .map(
-                item =>
-                    `• ${item}`
-            )
-            .join("\n");
+        return itens.length
+            ? itens
+                  .map(
+                      item =>
+                          `• ${item}`
+                  )
+                  .join("\n")
+            : "• Nenhum complemento";
     }
 
 
-    todosComplementos.forEach(
-        complemento => {
-            complemento.addEventListener(
-                "change",
-                calcularTotalMonteSeu
-            );
-        }
-    );
-
-
-    selecionarTodos(
-        ".btn-montar"
-    ).forEach(botao => {
-        botao.addEventListener(
-            "click",
-            () => {
-                limparComplementos();
-
-                tamanhoMonteSeu.value =
-                    botao.dataset
-                        .tamanho;
-
-                precoBaseMonteSeu.value =
-                    botao.dataset
-                        .precoBase;
-
-                tamanhoSelecionado.textContent =
-                    `Copo selecionado: ${botao.dataset.tamanho}ml`;
-
-                calcularTotalMonteSeu();
-
-                preencherNomeDaSessao(
-                    nomeCliente
-                );
-
-                abrirModal(
-                    modalMonteSeu
+    todosComplementos
+        .forEach(
+            complemento => {
+                complemento.addEventListener(
+                    "change",
+                    calcularTotalMonteSeu
                 );
             }
         );
-    });
 
 
-    btnFecharMonteSeu?.addEventListener(
-        "click",
-        () => {
-            fecharModal(
-                modalMonteSeu
+    $$(".btn-montar")
+        .forEach(botao => {
+            botao.addEventListener(
+                "click",
+                () => {
+                    limparComplementos();
+
+
+                    if (
+                        tamanhoMonteSeu
+                    ) {
+                        tamanhoMonteSeu.value =
+                            botao.dataset
+                                .tamanho ||
+                            "300";
+                    }
+
+
+                    if (
+                        precoBaseMonteSeu
+                    ) {
+                        precoBaseMonteSeu.value =
+                            botao.dataset
+                                .precoBase ||
+                            "0";
+                    }
+
+
+                    if (
+                        tamanhoSelecionado
+                    ) {
+                        tamanhoSelecionado.textContent =
+                            `Copo selecionado: ${botao.dataset.tamanho}ml`;
+                    }
+
+
+                    calcularTotalMonteSeu();
+
+                    preencherNomeDaSessao(
+                        nomeCliente
+                    );
+
+                    abrirModal(
+                        modalMonteSeu
+                    );
+                }
             );
-        }
-    );
+        });
 
 
-    modalMonteSeu?.addEventListener(
-        "click",
-        evento => {
-            if (
-                evento.target ===
-                modalMonteSeu
-            ) {
+    btnFecharMonteSeu
+        ?.addEventListener(
+            "click",
+            () => {
                 fecharModal(
                     modalMonteSeu
                 );
             }
-        }
-    );
+        );
 
 
-    btnEnviarMonteSeu?.addEventListener(
-        "click",
-        () => {
-            if (enviandoPedido) {
-                return;
+    modalMonteSeu
+        ?.addEventListener(
+            "click",
+            evento => {
+                if (
+                    evento.target ===
+                    modalMonteSeu
+                ) {
+                    fecharModal(
+                        modalMonteSeu
+                    );
+                }
             }
+        );
 
-            const nome =
-                nomeCliente.value
-                    .trim();
 
-            const cep =
-                cepCliente.value
-                    .trim();
+    btnEnviarMonteSeu
+        ?.addEventListener(
+            "click",
+            () => {
+                if (
+                    enviandoPedido
+                ) {
+                    return;
+                }
 
-            const rua =
-                ruaCliente.value
-                    .trim();
 
-            const numero =
-                numeroCliente.value
-                    .trim();
+                const nome =
+                    nomeCliente
+                        ?.value
+                        .trim() || "";
 
-            const bairro =
-                bairroCliente.value
-                    .trim();
+                const cep =
+                    cepCliente
+                        ?.value
+                        .trim() || "";
 
-            const complemento =
-                complementoCliente.value
-                    .trim();
+                const rua =
+                    ruaCliente
+                        ?.value
+                        .trim() || "";
 
-            if (
-                !nome ||
-                !cep ||
-                !rua ||
-                !numero ||
-                !bairro
-            ) {
-                alert(
-                    "Preencha nome, CEP, rua, número e bairro."
-                );
+                const numero =
+                    numeroCliente
+                        ?.value
+                        .trim() || "";
 
-                return;
-            }
+                const bairro =
+                    bairroCliente
+                        ?.value
+                        .trim() || "";
 
-            iniciarEnvio(
-                btnEnviarMonteSeu
-            );
+                const complemento =
+                    complementoCliente
+                        ?.value
+                        .trim() || "";
 
-            const tamanho =
-                tamanhoMonteSeu.value;
 
-            const valorTotal =
-                calcularTotalMonteSeu();
-
-            const itensMeio =
-                obterComplementos(
-                    "meio"
-                );
-
-            const itensCobertura =
-                obterComplementos(
-                    "cobertura"
-                );
-
-            const complementosPedido = [
-                ...itensMeio.map(
-                    item =>
-                        `Meio: ${item}`
-                ),
-
-                ...itensCobertura.map(
-                    item =>
-                        `Cobertura: ${item}`
-                )
-            ];
-
-            const sessao =
-                obterSessaoCliente();
-
-            const pedidoCriado =
-                registrarPedidoNoSistema({
-                    tipo: "compra",
-
-                    produto:
-                        `Monte o Seu • ${tamanho}ml`,
-
-                    tamanho:
-                        `${tamanho} ml`,
-
-                    quantidade: 1,
-
-                    itens: [
-                        {
-                            nome:
-                                `Monte o Seu • ${tamanho}ml`,
-
-                            quantidade: 1
-                        }
-                    ],
-
-                    complementos:
-                        complementosPedido,
-
-                    valorTotal,
-
-                    cliente: {
+                if (
+                    !dadosEntregaValidos({
                         nome,
-
-                        email:
-                            sessao?.email ||
-                            ""
-                    },
-
-                    enderecoEntrega: {
                         cep,
                         rua,
                         numero,
-                        bairro,
-                        complemento
-                    },
+                        bairro
+                    })
+                ) {
+                    alert(
+                        "Preencha nome, CEP válido, rua, número e bairro."
+                    );
 
-                    canal:
-                        "Site / WhatsApp"
-                });
+                    return;
+                }
 
-            const codigoPedido =
-                pedidoCriado?.id
-                    ? `\n🧾 *Pedido:* ${pedidoCriado.id}\n`
-                    : "";
 
-            const mensagem = `
+                iniciarEnvio(
+                    btnEnviarMonteSeu
+                );
+
+
+                const tamanho =
+                    tamanhoMonteSeu
+                        ?.value ||
+                    "300";
+
+
+                const valorTotal =
+                    calcularTotalMonteSeu();
+
+
+                const itensMeio =
+                    obterComplementos(
+                        "meio"
+                    );
+
+
+                const itensCobertura =
+                    obterComplementos(
+                        "cobertura"
+                    );
+
+
+                const complementosPedido = [
+                    ...itensMeio.map(
+                        item =>
+                            `Meio: ${item}`
+                    ),
+
+                    ...itensCobertura.map(
+                        item =>
+                            `Cobertura: ${item}`
+                    )
+                ];
+
+
+                const sessao =
+                    obterSessaoCliente();
+
+
+                const pedidoCriado =
+                    registrarPedidoNoSistema({
+                        tipo:
+                            "compra",
+
+                        produto:
+                            `Monte o Seu • ${tamanho}ml`,
+
+                        tamanho:
+                            `${tamanho} ml`,
+
+                        quantidade:
+                            1,
+
+                        itens: [
+                            {
+                                nome:
+                                    `Monte o Seu • ${tamanho}ml`,
+
+                                quantidade:
+                                    1
+                            }
+                        ],
+
+                        complementos:
+                            complementosPedido,
+
+                        valorTotal,
+
+                        cliente: {
+                            nome,
+
+                            email:
+                                sessao?.email ||
+                                ""
+                        },
+
+                        enderecoEntrega: {
+                            cep,
+                            rua,
+                            numero,
+                            bairro,
+                            complemento
+                        },
+
+                        canal:
+                            "Site / WhatsApp"
+                    });
+
+
+                const codigoPedido =
+                    pedidoCriado?.id
+                        ? `\n🧾 *Pedido:* ${pedidoCriado.id}\n`
+                        : "";
+
+
+                const mensagem = `
 Olá! Quero fazer este pedido na AZURY:
 ${codigoPedido}
 👤 *Cliente:*
@@ -1223,22 +1309,24 @@ ${transformarEmLista(itensCobertura)}
 
 💰 *Total:*
 ${formatarPreco(valorTotal)}
-            `.trim();
+                `.trim();
 
-            abrirWhatsApp(
-                mensagem
-            );
 
-            fecharModal(
-                modalMonteSeu
-            );
+                abrirWhatsApp(
+                    mensagem
+                );
 
-            finalizarEnvio(
-                btnEnviarMonteSeu,
-                "Pedir pelo WhatsApp"
-            );
-        }
-    );
+                fecharModal(
+                    modalMonteSeu
+                );
+
+                finalizarEnvio(
+                    btnEnviarMonteSeu,
+                    "Pedir pelo WhatsApp"
+                );
+            }
+        );
+
 
     aplicarMascaraCEP(
         cepCliente
