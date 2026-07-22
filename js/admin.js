@@ -41,7 +41,8 @@
             "pedidosEntregues"
         );
 
-    let temporizadorMensagem = null;
+    let temporizadorMensagem =
+        null;
 
 
     /* =====================================
@@ -65,14 +66,17 @@
     function normalizarTexto(texto) {
         return String(texto || "")
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
+            .replace(
+                /[\u0300-\u036f]/g,
+                ""
+            )
             .trim()
             .toLowerCase();
     }
 
 
     /* =====================================
-       MENSAGENS DO PAINEL
+       MENSAGENS
     ====================================== */
 
     function mostrarMensagem(
@@ -94,34 +98,42 @@
             `mensagem-admin ${tipo}`;
 
         temporizadorMensagem =
-            setTimeout(() => {
-                mensagemAdmin.textContent =
-                    "";
+            setTimeout(
+                () => {
+                    mensagemAdmin.textContent =
+                        "";
 
-                mensagemAdmin.className =
-                    "mensagem-admin";
-            }, 5000);
+                    mensagemAdmin.className =
+                        "mensagem-admin";
+                },
+                5000
+            );
     }
 
 
     /* =====================================
-       FORMATAÇÃO DE VALORES
+       VALORES DO PEDIDO
     ====================================== */
 
     function converterValor(valor) {
         if (
             window.AzuryPontuacao &&
-            typeof window.AzuryPontuacao
+            typeof window
+                .AzuryPontuacao
                 .converterValorParaNumero ===
             "function"
         ) {
-            return window.AzuryPontuacao
+            return window
+                .AzuryPontuacao
                 .converterValorParaNumero(
                     valor
                 );
         }
 
-        if (typeof valor === "number") {
+        if (
+            typeof valor ===
+            "number"
+        ) {
             return Number.isFinite(valor)
                 ? valor
                 : 0;
@@ -148,18 +160,88 @@
             .toLocaleString(
                 "pt-BR",
                 {
-                    style: "currency",
-                    currency: "BRL"
+                    style:
+                        "currency",
+
+                    currency:
+                        "BRL"
                 }
             );
     }
 
 
+    function obterTaxaEntrega(pedido) {
+        return Math.max(
+            0,
+
+            converterValor(
+                pedido.taxaEntrega ??
+                pedido.entrega ??
+                0
+            )
+        );
+    }
+
+
+    function obterValorTotal(pedido) {
+        return Math.max(
+            0,
+
+            converterValor(
+                pedido.valorTotal ??
+                pedido.total ??
+                pedido.valor ??
+                0
+            )
+        );
+    }
+
+
+    function obterValorProdutos(
+        pedido
+    ) {
+        const valorInformado =
+            converterValor(
+                pedido.valorProdutos ??
+                pedido.subtotal ??
+                pedido.valorPedido ??
+                0
+            );
+
+        if (
+            valorInformado >
+            0
+        ) {
+            return valorInformado;
+        }
+
+        return Math.max(
+            0,
+
+            obterValorTotal(pedido) -
+            obterTaxaEntrega(pedido)
+        );
+    }
+
+
+    function obterFormaPagamento(
+        pedido
+    ) {
+        return String(
+            pedido.formaPagamento ||
+            pedido.pagamento ||
+            "Não informada"
+        ).trim();
+    }
+
+
     /* =====================================
-       FORMATAÇÃO DE DATAS
+       DATA DO PEDIDO
     ====================================== */
 
-    function formatarDataPedido(pedido) {
+    function formatarDataPedido(
+        pedido
+    ) {
         if (pedido.criadoEm) {
             const data =
                 new Date(
@@ -171,13 +253,17 @@
                     data.getTime()
                 )
             ) {
-                return data.toLocaleString(
-                    "pt-BR",
-                    {
-                        dateStyle: "short",
-                        timeStyle: "short"
-                    }
-                );
+                return data
+                    .toLocaleString(
+                        "pt-BR",
+                        {
+                            dateStyle:
+                                "short",
+
+                            timeStyle:
+                                "short"
+                        }
+                    );
             }
         }
 
@@ -189,13 +275,12 @@
 
 
     /* =====================================
-       CLASSE VISUAL DO STATUS
+       STATUS
     ====================================== */
 
-    function obterClasseStatus(status) {
-        const statusNormalizado =
-            normalizarTexto(status);
-
+    function obterClasseStatus(
+        status
+    ) {
         const classes = {
             "pedido recebido":
                 "status-recebido",
@@ -220,15 +305,13 @@
         };
 
         return (
-            classes[statusNormalizado] ||
+            classes[
+            normalizarTexto(status)
+            ] ||
             "status-recebido"
         );
     }
 
-
-    /* =====================================
-       OPÇÕES DE STATUS
-    ====================================== */
 
     function criarOpcoesStatus(
         statusAtual
@@ -245,21 +328,28 @@
             ];
 
         return statusDisponiveis
-            .map(status => {
-                const selecionado =
-                    status === statusAtual
-                        ? "selected"
-                        : "";
+            .map(
+                status => {
+                    const selecionado =
+                        status ===
+                            statusAtual
+                            ? "selected"
+                            : "";
 
-                return `
-                    <option
-                        value="${escaparTexto(status)}"
-                        ${selecionado}
-                    >
-                        ${escaparTexto(status)}
-                    </option>
-                `;
-            })
+                    return `
+                        <option
+                            value="${escaparTexto(
+                        status
+                    )}"
+                            ${selecionado}
+                        >
+                            ${escaparTexto(
+                        status
+                    )}
+                        </option>
+                    `;
+                }
+            )
             .join("");
     }
 
@@ -268,7 +358,9 @@
        DADOS DO CLIENTE
     ====================================== */
 
-    function obterNomeCliente(pedido) {
+    function obterNomeCliente(
+        pedido
+    ) {
         return String(
             pedido.cliente?.nome ||
             pedido.nomeCliente ||
@@ -277,7 +369,9 @@
     }
 
 
-    function obterEmailCliente(pedido) {
+    function obterEmailCliente(
+        pedido
+    ) {
         return String(
             pedido.cliente?.email ||
             pedido.emailCliente ||
@@ -286,7 +380,9 @@
     }
 
 
-    function obterCanalPedido(pedido) {
+    function obterCanalPedido(
+        pedido
+    ) {
         return String(
             pedido.canal ||
             "Não informado"
@@ -295,12 +391,15 @@
 
 
     /* =====================================
-       ENDEREÇO DO PEDIDO
+       ENDEREÇO
     ====================================== */
 
-    function criarHtmlEndereco(pedido) {
+    function criarHtmlEndereco(
+        pedido
+    ) {
         const endereco =
-            pedido.enderecoEntrega || {};
+            pedido.enderecoEntrega ||
+            {};
 
         const rua =
             String(
@@ -324,8 +423,13 @@
 
         const complemento =
             String(
-                endereco.complemento || ""
+                endereco.complemento ||
+                ""
             ).trim();
+
+        const validado =
+            endereco.validado ===
+            true;
 
         const possuiEndereco =
             rua ||
@@ -343,45 +447,44 @@
 
                     Não informado.
                 </div>
+
+                <div>
+                    <strong>
+                        Validação:
+                    </strong>
+
+                    Não validado.
+                </div>
             `;
         }
 
         const linhaRua =
             [
                 rua,
+
                 numero
                     ? `nº ${numero}`
                     : ""
             ]
                 .filter(Boolean)
-                .map(escaparTexto)
+                .map(
+                    escaparTexto
+                )
                 .join(", ");
 
         const linhaBairroCep =
             [
                 bairro,
+
                 cep
                     ? `CEP ${cep}`
                     : ""
             ]
                 .filter(Boolean)
-                .map(escaparTexto)
+                .map(
+                    escaparTexto
+                )
                 .join(" • ");
-
-        const linhaComplemento =
-            complemento
-                ? `
-                    <div>
-                        <strong>
-                            Complemento:
-                        </strong>
-
-                        ${escaparTexto(
-                    complemento
-                )}
-                    </div>
-                `
-                : "";
 
         return `
             <div>
@@ -403,7 +506,31 @@
                 : ""
             }
 
-            ${linhaComplemento}
+            ${complemento
+                ? `
+                        <div>
+                            <strong>
+                                Complemento:
+                            </strong>
+
+                            ${escaparTexto(
+                    complemento
+                )}
+                        </div>
+                    `
+                : ""
+            }
+
+            <div>
+                <strong>
+                    Validação do endereço:
+                </strong>
+
+                ${validado
+                ? "CEP e bairro validados"
+                : "Não validado"
+            }
+            </div>
         `;
     }
 
@@ -419,7 +546,8 @@
             !Array.isArray(
                 complementos
             ) ||
-            complementos.length === 0
+            complementos.length ===
+            0
         ) {
             return "";
         }
@@ -427,10 +555,14 @@
         const complementosPorCopo =
             complementos.every(
                 item =>
-                    Array.isArray(item)
+                    Array.isArray(
+                        item
+                    )
             );
 
-        if (complementosPorCopo) {
+        if (
+            complementosPorCopo
+        ) {
             return complementos
                 .map(
                     (
@@ -459,7 +591,8 @@
                 </strong>
 
                 ${escaparTexto(
-            complementos.join(", ")
+            complementos
+                .join(", ")
         )}
             </div>
         `;
@@ -467,11 +600,14 @@
 
 
     /* =====================================
-       ITENS DO PEDIDO
+       ITENS
     ====================================== */
 
-    function criarHtmlItens(pedido) {
-        const partes = [];
+    function criarHtmlItens(
+        pedido
+    ) {
+        const partes =
+            [];
 
         if (pedido.produto) {
             partes.push(`
@@ -523,14 +659,23 @@
             Array.isArray(
                 pedido.itens
             ) &&
-            pedido.itens.length > 0
+            pedido.itens.length >
+            0
         ) {
             pedido.itens.forEach(
-                (item, indice) => {
+                (
+                    item,
+                    indice
+                ) => {
                     const nomeItem =
                         item.nome ||
                         item.produto ||
                         `Item ${indice + 1}`;
+
+                    const quantidadeItem =
+                        Number(
+                            item.quantidade
+                        ) || 0;
 
                     partes.push(`
                         <div>
@@ -540,9 +685,10 @@
                     )}
                             </strong>
 
-                            ${item.quantidade
+                            ${quantidadeItem >
+                            0
                             ? ` — ${escaparTexto(
-                                item.quantidade
+                                quantidadeItem
                             )} unidade(s)`
                             : ""
                         }
@@ -571,38 +717,101 @@
 
 
     /* =====================================
-       CARD DO PEDIDO
+       TEXTO DOS PONTOS
     ====================================== */
 
-    function criarHtmlPedido(pedido) {
-        const idPedido =
-            pedido.id ||
-            "Sem código";
-
-        const valorPedido =
-            pedido.valorTotal ??
-            pedido.total ??
-            pedido.valor ??
-            0;
-
+    function obterTextoPontos(
+        pedido
+    ) {
         const pontosGerados =
             Number(
                 pedido.pontosGerados
             ) || 0;
 
+        if (
+            pedido.pontosCreditados
+        ) {
+            return pontosGerados >
+                0
+                ? `${pontosGerados} creditados`
+                : "Não gerou pontos";
+        }
+
+        const status =
+            normalizarTexto(
+                pedido.status
+            );
+
+        if (
+            status ===
+            "cancelado"
+        ) {
+            return "Pedido cancelado";
+        }
+
+        if (
+            status ===
+            "entregue" ||
+            status ===
+            "pedido entregue"
+        ) {
+            return "Não creditados";
+        }
+
+        return "Aguardando entrega";
+    }
+
+
+    /* =====================================
+       CARD DO PEDIDO
+    ====================================== */
+
+    function criarHtmlPedido(
+        pedido
+    ) {
+        const idPedido =
+            pedido.id ||
+            "Sem código";
+
+        const valorProdutos =
+            obterValorProdutos(
+                pedido
+            );
+
+        const taxaEntrega =
+            obterTaxaEntrega(
+                pedido
+            );
+
+        const totalInformado =
+            obterValorTotal(
+                pedido
+            );
+
+        const valorTotalPedido =
+            totalInformado > 0
+                ? totalInformado
+                : valorProdutos +
+                taxaEntrega;
+
+        const formaPagamento =
+            obterFormaPagamento(
+                pedido
+            );
+
+        const valorPontuavel =
+            converterValor(
+                pedido.valorPontuavel ??
+                valorProdutos
+            );
+
         const tipoPedido =
-            pedido.tipo === "recompensa"
+            normalizarTexto(
+                pedido.tipo
+            ) ===
+                "recompensa"
                 ? "Recompensa"
                 : "Compra";
-
-        const nomeCliente =
-            obterNomeCliente(pedido);
-
-        const emailCliente =
-            obterEmailCliente(pedido);
-
-        const canalPedido =
-            obterCanalPedido(pedido);
 
         return `
             <article
@@ -679,12 +888,57 @@
                         class="detalhe-pedido-admin"
                     >
                         <span>
-                            Valor
+                            Produtos
                         </span>
 
                         <strong>
                             ${formatarMoeda(
-            valorPedido
+            valorProdutos
+        )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        class="detalhe-pedido-admin"
+                    >
+                        <span>
+                            Entrega
+                        </span>
+
+                        <strong>
+                            ${formatarMoeda(
+            taxaEntrega
+        )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        class="detalhe-pedido-admin"
+                    >
+                        <span>
+                            Total
+                        </span>
+
+                        <strong>
+                            ${formatarMoeda(
+            valorTotalPedido
+        )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        class="detalhe-pedido-admin"
+                    >
+                        <span>
+                            Pagamento
+                        </span>
+
+                        <strong>
+                            ${escaparTexto(
+            formaPagamento
         )}
                         </strong>
                     </div>
@@ -698,10 +952,26 @@
                         </span>
 
                         <strong>
-                            ${pedido.pontosCreditados
-                ? `${pontosGerados} creditados`
-                : "Aguardando entrega"
-            }
+                            ${escaparTexto(
+            obterTextoPontos(
+                pedido
+            )
+        )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        class="detalhe-pedido-admin"
+                    >
+                        <span>
+                            Valor pontuável
+                        </span>
+
+                        <strong>
+                            ${formatarMoeda(
+            valorPontuavel
+        )}
                         </strong>
                     </div>
 
@@ -715,8 +985,10 @@
 
                         <strong>
                             ${escaparTexto(
-                nomeCliente
-            )}
+            obterNomeCliente(
+                pedido
+            )
+        )}
                         </strong>
                     </div>
 
@@ -730,8 +1002,10 @@
 
                         <strong>
                             ${escaparTexto(
-                emailCliente
-            )}
+            obterEmailCliente(
+                pedido
+            )
+        )}
                         </strong>
                     </div>
 
@@ -745,8 +1019,10 @@
 
                         <strong>
                             ${escaparTexto(
-                canalPedido
-            )}
+            obterCanalPedido(
+                pedido
+            )
+        )}
                         </strong>
                     </div>
 
@@ -757,8 +1033,8 @@
                     class="pedido-admin-itens"
                 >
                     ${criarHtmlEndereco(
-                pedido
-            )}
+            pedido
+        )}
                 </div>
 
 
@@ -766,8 +1042,8 @@
                     class="pedido-admin-itens"
                 >
                     ${criarHtmlItens(
-                pedido
-            )}
+            pedido
+        )}
                 </div>
 
 
@@ -786,12 +1062,12 @@
                         <select
                             class="select-status-pedido"
                             data-status-original="${escaparTexto(
-                pedido.status
-            )}"
+            pedido.status
+        )}"
                         >
                             ${criarOpcoesStatus(
-                pedido.status
-            )}
+            pedido.status
+        )}
                         </select>
 
                     </label>
@@ -815,7 +1091,9 @@
        RESUMO
     ====================================== */
 
-    function atualizarResumo(pedidos) {
+    function atualizarResumo(
+        pedidos
+    ) {
         const total =
             pedidos.length;
 
@@ -840,7 +1118,9 @@
                         "em preparo",
                         "pronto",
                         "saiu para entrega"
-                    ].includes(status);
+                    ].includes(
+                        status
+                    );
                 }
             ).length;
 
@@ -890,7 +1170,8 @@
     function obterPedidos() {
         if (
             !window.AzuryPedidos ||
-            typeof window.AzuryPedidos
+            typeof window
+                .AzuryPedidos
                 .listarPedidos !==
             "function"
         ) {
@@ -899,7 +1180,8 @@
             );
         }
 
-        return window.AzuryPedidos
+        return window
+            .AzuryPedidos
             .listarPedidos();
     }
 
@@ -989,7 +1271,7 @@
 
 
     /* =====================================
-       ALTERAÇÃO DO SELECT
+       ALTERAÇÃO DE STATUS
     ====================================== */
 
     function tratarAlteracaoStatus(
@@ -1018,19 +1300,12 @@
             return;
         }
 
-        const statusOriginal =
-            select.dataset
-                .statusOriginal;
-
         botao.disabled =
             select.value ===
-            statusOriginal;
+            select.dataset
+                .statusOriginal;
     }
 
-
-    /* =====================================
-       SALVAR NOVO STATUS
-    ====================================== */
 
     function tratarCliqueLista(
         evento
@@ -1070,13 +1345,16 @@
             return;
         }
 
-        botao.disabled = true;
+        botao.disabled =
+            true;
+
         botao.textContent =
             "Salvando...";
 
         try {
             const resultado =
-                window.AzuryPedidos
+                window
+                    .AzuryPedidos
                     .atualizarStatusPedido(
                         idPedido,
                         select.value
@@ -1098,19 +1376,23 @@
                         `Pedido entregue. ${pontuacao.pontos} pontos foram adicionados automaticamente ao cliente.`,
                         "sucesso"
                     );
+
                 } else if (
-                    pontuacao.pontos > 0
+                    pontuacao.pontos >
+                    0
                 ) {
                     mostrarMensagem(
                         "Pedido entregue. Os pontos deste pedido já haviam sido creditados.",
                         "aviso"
                     );
+
                 } else {
                     mostrarMensagem(
                         `Pedido entregue. ${pontuacao.motivo}`,
                         "aviso"
                     );
                 }
+
             } else {
                 mostrarMensagem(
                     `Status alterado para “${select.value}”.`,
@@ -1132,7 +1414,9 @@
                 "erro"
             );
 
-            botao.disabled = false;
+            botao.disabled =
+                false;
+
             botao.textContent =
                 "Salvar status";
         }
@@ -1143,15 +1427,15 @@
        EVENTOS
     ====================================== */
 
-    if (filtroStatus) {
-        filtroStatus.addEventListener(
+    filtroStatus
+        ?.addEventListener(
             "change",
             renderizarPedidos
         );
-    }
 
-    if (btnAtualizar) {
-        btnAtualizar.addEventListener(
+
+    btnAtualizar
+        ?.addEventListener(
             "click",
             () => {
                 renderizarPedidos();
@@ -1162,19 +1446,20 @@
                 );
             }
         );
-    }
 
-    if (listaPedidos) {
-        listaPedidos.addEventListener(
+
+    listaPedidos
+        ?.addEventListener(
             "change",
             tratarAlteracaoStatus
         );
 
-        listaPedidos.addEventListener(
+
+    listaPedidos
+        ?.addEventListener(
             "click",
             tratarCliqueLista
         );
-    }
 
 
     /* =====================================
