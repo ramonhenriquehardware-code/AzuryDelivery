@@ -1047,3 +1047,377 @@ body.pagina-cliente {
     margin: 0 !important;
     transform: none !important;
 }
+/* =========================================
+   NOVO VISUAL DAS RECOMPENSAS
+========================================= */
+
+/* Organização principal:
+   Pontos e pedidos em cima,
+   recompensas ocupando a largura completa.
+*/
+
+.pagina-cliente .cliente-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+}
+
+.pagina-cliente .card-pontos {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.pagina-cliente .card-pedidos {
+    grid-column: 2;
+    grid-row: 1;
+
+    min-height: 276px;
+    padding-bottom: 68px;
+}
+
+.pagina-cliente .card-recompensas {
+    grid-column: 1 / -1;
+    grid-row: 2;
+
+    min-height: auto;
+}
+
+.pagina-cliente .card-recompensas .card-titulo {
+    margin-bottom: 16px;
+}
+
+
+/* =========================================
+   GRADE DAS QUATRO RECOMPENSAS
+========================================= */
+
+.pagina-cliente .conteudo-recompensas {
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+
+/* =========================================
+   CARD INDIVIDUAL DA RECOMPENSA
+========================================= */
+
+.pagina-cliente .recompensa-item {
+    min-width: 0;
+    min-height: 230px;
+    padding: 18px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+
+    background: #fbfcff;
+    border: 1px solid #dfe6f2;
+    border-radius: 14px;
+
+    box-shadow: 0 6px 18px rgba(29, 52, 91, 0.06);
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.pagina-cliente .recompensa-item:hover {
+    transform: translateY(-2px);
+
+    border-color: #b9cdfd;
+
+    box-shadow: 0 10px 24px rgba(29, 52, 91, 0.1);
+}
+
+.pagina-cliente .recompensa-item .recompensa-informacoes {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.pagina-cliente .recompensa-item .recompensa-informacoes strong {
+    color: #1d1d1d;
+
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.pagina-cliente
+.recompensa-item
+.recompensa-informacoes
+> span:not(.pontos-recompensa) {
+    color: #555d68;
+
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.pagina-cliente .recompensa-item .pontos-recompensa {
+    width: fit-content;
+    margin-top: 4px;
+    padding: 5px 10px;
+
+    color: #0758f8;
+    background: #edf3ff;
+    border-radius: 999px;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.pagina-cliente .recompensa-item .limite-recompensa {
+    color: #666d78;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pagina-cliente .recompensa-item .status-recompensa {
+    margin: 3px 0 0;
+
+    color: #3d4653;
+
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+
+/* =========================================
+   BOTÃO DE RESGATE
+========================================= */
+
+.pagina-cliente .btn-resgatar-recompensa {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+    background: #0758f8;
+    border: 1px solid #0758f8;
+    border-radius: 11px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow: 0 8px 18px rgba(0, 81, 255, 0.18);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.pagina-cliente .btn-resgatar-recompensa:hover:not(:disabled) {
+    background: #0048df;
+    transform: translateY(-1px);
+
+    box-shadow: 0 11px 22px rgba(0, 81, 255, 0.24);
+}
+
+.pagina-cliente .btn-resgatar-recompensa:disabled {
+    color: #737b87;
+    background: #e5e8ed;
+    border-color: #d8dce3;
+
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+
+/* =========================================
+   MODAL DE MONTAGEM DA RECOMPENSA
+========================================= */
+
+.pagina-cliente .modal-recompensa-acai {
+    width: 100%;
+    max-width: 760px;
+    max-height: 88vh;
+
+    padding: 30px;
+
+    overflow-y: auto;
+
+    text-align: left;
+}
+
+.pagina-cliente .modal-recompensa-acai h2,
+.pagina-cliente .modal-recompensa-acai > p {
+    text-align: center;
+}
+
+.pagina-cliente .seletores-complementos {
+    width: 100%;
+    margin: 22px 0;
+
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(270px, 1fr));
+    gap: 18px;
+}
+
+.pagina-cliente .grupo-complementos-recompensa {
+    min-width: 0;
+    margin: 0;
+    padding: 16px;
+
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+
+    background: #f8faff;
+    border: 1px solid #dce4f2;
+    border-radius: 13px;
+}
+
+.pagina-cliente .grupo-complementos-recompensa legend {
+    grid-column: 1 / -1;
+
+    margin: 0 0 5px;
+    padding: 0 6px;
+
+    color: #171717;
+
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.pagina-cliente .opcao-complemento-recompensa {
+    min-height: 42px;
+    padding: 9px 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #343434;
+    background: #ffffff;
+    border: 1px solid #e1e6ef;
+    border-radius: 9px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.pagina-cliente .opcao-complemento-recompensa:hover {
+    background: #f1f5ff;
+    border-color: #b8ccfa;
+}
+
+.pagina-cliente
+.opcao-complemento-recompensa
+input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+
+    flex-shrink: 0;
+
+    accent-color: #0758f8;
+}
+
+.pagina-cliente
+.opcao-complemento-recompensa
+input:disabled + span {
+    color: #a0a5ad;
+}
+
+.pagina-cliente .acoes-modal-recompensa {
+    display: flex;
+    gap: 12px;
+}
+
+.pagina-cliente .acoes-modal-recompensa .btn {
+    flex: 1;
+}
+
+
+/* =========================================
+   MENSAGENS DO RESGATE
+========================================= */
+
+.pagina-cliente #mensagemRecompensa {
+    display: none;
+
+    margin: 0 0 14px;
+    padding: 12px 14px;
+
+    border-radius: 10px;
+
+    text-align: center;
+
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.pagina-cliente #mensagemRecompensa.erro {
+    display: block;
+
+    color: #ad2626;
+    background: #fff0f0;
+    border: 1px solid #efb3b3;
+}
+
+.pagina-cliente #mensagemRecompensa.sucesso {
+    display: block;
+
+    color: #187b43;
+    background: #eafff1;
+    border: 1px solid #a2dfb9;
+}
+
+
+/* =========================================
+   RESPONSIVIDADE DAS RECOMPENSAS
+========================================= */
+
+@media (max-width: 700px) {
+
+    .pagina-cliente .cliente-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pagina-cliente .card-pontos,
+    .pagina-cliente .card-recompensas,
+    .pagina-cliente .card-pedidos {
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    .pagina-cliente .conteudo-recompensas {
+        grid-template-columns: 1fr;
+    }
+
+    .pagina-cliente .recompensa-item {
+        min-height: auto;
+    }
+
+    .pagina-cliente .grupo-complementos-recompensa {
+        grid-template-columns: 1fr;
+    }
+
+    .pagina-cliente .acoes-modal-recompensa {
+        flex-direction: column;
+    }
+
+}
