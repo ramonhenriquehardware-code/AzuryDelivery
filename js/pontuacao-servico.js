@@ -5,9 +5,12 @@
     const TOLERANCIA = 0.99;
     const PONTOS_POR_BLOCO = 15;
 
+
     function converterValorParaNumero(valor) {
         if (typeof valor === "number") {
-            return Number.isFinite(valor) ? valor : 0;
+            return Number.isFinite(valor)
+                ? valor
+                : 0;
         }
 
         if (typeof valor !== "string") {
@@ -26,44 +29,70 @@
                 .replace(/\./g, "")
                 .replace(",", ".");
         } else {
-            valorLimpo = valorLimpo.replace(",", ".");
+            valorLimpo = valorLimpo
+                .replace(",", ".");
         }
 
-        const numero = Number(valorLimpo);
+        const numero =
+            Number(valorLimpo);
 
-        return Number.isFinite(numero) ? numero : 0;
+        return Number.isFinite(numero)
+            ? numero
+            : 0;
     }
 
+
+    function formatarValor(valor) {
+        return converterValorParaNumero(valor)
+            .toLocaleString(
+                "pt-BR",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+    }
+
+
     function calcularPontosPorValor(valorPedido) {
-        const valor = Math.max(
-            0,
-            converterValorParaNumero(valorPedido)
-        );
+        const valor =
+            Math.max(
+                0,
+                converterValorParaNumero(
+                    valorPedido
+                )
+            );
 
         const valorMinimo =
-            VALOR_POR_BLOCO - TOLERANCIA;
+            VALOR_POR_BLOCO -
+            TOLERANCIA;
 
         if (valor < valorMinimo) {
             return 0;
         }
 
-        const quantidadeDeBlocos = Math.floor(
-            (
-                valor +
-                TOLERANCIA +
-                Number.EPSILON
-            ) / VALOR_POR_BLOCO
-        );
+        const quantidadeDeBlocos =
+            Math.floor(
+                (
+                    valor +
+                    TOLERANCIA +
+                    Number.EPSILON
+                ) /
+                VALOR_POR_BLOCO
+            );
 
-        return quantidadeDeBlocos * PONTOS_POR_BLOCO;
+        return quantidadeDeBlocos *
+            PONTOS_POR_BLOCO;
     }
+
 
     function calcularNivel(
         pontosAcumulados
     ) {
-        const pontos = Number(
-            pontosAcumulados
-        ) || 0;
+        const pontos =
+            Number(
+                pontosAcumulados
+            ) || 0;
 
         if (pontos >= 600) {
             return "Diamante";
@@ -80,17 +109,22 @@
         return "Bronze";
     }
 
-    function normalizarStatus(status) {
-        return String(status || "")
+
+    function normalizarTexto(texto) {
+        return String(texto || "")
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
+            .replace(
+                /[\u0300-\u036f]/g,
+                ""
+            )
             .trim()
             .toLowerCase();
     }
 
+
     function pedidoFoiEntregue(pedido) {
         const status =
-            normalizarStatus(
+            normalizarTexto(
                 pedido?.status
             );
 
@@ -100,24 +134,88 @@
         );
     }
 
-    function obterValorDoPedido(pedido) {
-        return (
-            pedido?.valorTotal ??
-            pedido?.total ??
-            pedido?.valor ??
-            0
+
+    function pedidoEhRecompensa(pedido) {
+        return normalizarTexto(
+            pedido?.tipo
+        ) === "recompensa";
+    }
+
+
+    /*
+     * Retorna somente o valor dos produtos.
+     * A taxa de entrega nunca entra no cálculo
+     * dos pontos.
+     */
+    function obterValorPontuavelDoPedido(
+        pedido
+    ) {
+        if (
+            !pedido ||
+            typeof pedido !== "object"
+        ) {
+            return 0;
+        }
+
+
+        /*
+         * Pedidos novos já possuem
+         * valorProdutos ou subtotal.
+         */
+        const valorProdutos =
+            converterValorParaNumero(
+                pedido.valorProdutos ??
+                pedido.subtotal ??
+                pedido.valorPedido ??
+                0
+            );
+
+        if (valorProdutos > 0) {
+            return valorProdutos;
+        }
+
+
+        /*
+         * Compatibilidade com pedidos antigos:
+         * utiliza o total e desconta a entrega.
+         */
+        const valorTotal =
+            converterValorParaNumero(
+                pedido.valorTotal ??
+                pedido.total ??
+                pedido.valor ??
+                0
+            );
+
+        const taxaEntrega =
+            Math.max(
+                0,
+                converterValorParaNumero(
+                    pedido.taxaEntrega ??
+                    pedido.entrega ??
+                    0
+                )
+            );
+
+        return Math.max(
+            0,
+            valorTotal -
+            taxaEntrega
         );
     }
 
+
     function obterDataHoraAtual() {
-        return new Date().toLocaleString(
-            "pt-BR",
-            {
-                dateStyle: "short",
-                timeStyle: "short"
-            }
-        );
+        return new Date()
+            .toLocaleString(
+                "pt-BR",
+                {
+                    dateStyle: "short",
+                    timeStyle: "short"
+                }
+            );
     }
+
 
     function salvarCliente(cliente) {
         localStorage.setItem(
@@ -142,7 +240,7 @@
                 !sessao.email ||
                 !cliente.email ||
                 sessao.email ===
-                cliente.email;
+                    cliente.email;
 
             if (!mesmoCliente) {
                 return;
@@ -152,11 +250,13 @@
                 "usuarioAzury",
                 JSON.stringify({
                     ...cliente,
+
                     autenticado:
-                        sessao.autenticado
-                        !== false
+                        sessao.autenticado !==
+                        false
                 })
             );
+
         } catch (erro) {
             console.error(
                 "Não foi possível atualizar a sessão:",
@@ -164,6 +264,7 @@
             );
         }
     }
+
 
     function creditarPontosDoPedido(
         cliente,
@@ -187,51 +288,69 @@
             );
         }
 
+
         if (!pedidoFoiEntregue(pedido)) {
             return {
                 creditado: false,
+
                 motivo:
                     "O pedido ainda não foi entregue.",
-                pontos: 0
+
+                pontos: 0,
+
+                valorPontuavel: 0
             };
         }
+
 
         if (pedido.pontosCreditados) {
             return {
                 creditado: false,
+
                 motivo:
                     "Os pontos deste pedido já foram creditados.",
+
                 pontos:
                     Number(
                         pedido.pontosGerados
-                    ) || 0
+                    ) || 0,
+
+                valorPontuavel:
+                    converterValorParaNumero(
+                        pedido.valorPontuavel ??
+                        obterValorPontuavelDoPedido(
+                            pedido
+                        )
+                    )
             };
         }
 
-        const valorPedido =
-            converterValorParaNumero(
-                obterValorDoPedido(pedido)
+
+        const valorPontuavel =
+            obterValorPontuavelDoPedido(
+                pedido
             );
 
-        const pedidoDeRecompensa =
-            pedido.tipo === "recompensa";
 
         const pontosGerados =
-            pedidoDeRecompensa
+            pedidoEhRecompensa(pedido)
                 ? 0
                 : calcularPontosPorValor(
-                    valorPedido
+                    valorPontuavel
                 );
+
 
         cliente.pontosAcumulados =
             Number(
                 cliente.pontosAcumulados
             ) || 0;
 
+
         cliente.saldoPontos =
             Number(
                 cliente.saldoPontos
             ) || 0;
+
 
         cliente.historico =
             Array.isArray(
@@ -239,6 +358,7 @@
             )
                 ? cliente.historico
                 : [];
+
 
         if (pontosGerados > 0) {
             cliente.pontosAcumulados +=
@@ -252,9 +372,9 @@
 
             cliente.nivel =
                 calcularNivel(
-                    cliente
-                        .pontosAcumulados
+                    cliente.pontosAcumulados
                 );
+
 
             cliente.historico.unshift(`
                 ⭐ Recebeu ${pontosGerados} pontos pelo pedido
@@ -262,8 +382,8 @@
 
                 <br>
 
-                💰 Valor do pedido:
-                R$ ${valorPedido.toFixed(2).replace(".", ",")}
+                🥤 Valor válido para pontos:
+                R$ ${formatarValor(valorPontuavel)}
 
                 <br>
 
@@ -273,30 +393,59 @@
             `);
         }
 
-        pedido.pontosCreditados = true;
+
+        /*
+         * Salva no pedido qual valor foi
+         * utilizado para a pontuação.
+         */
+        pedido.valorPontuavel =
+            valorPontuavel;
+
+
+        pedido.pontosCreditados =
+            true;
+
+
         pedido.pontosGerados =
             pontosGerados;
+
+
         pedido.dataCreditoPontos =
             new Date().toISOString();
 
+
         salvarCliente(cliente);
+
 
         return {
             creditado:
                 pontosGerados > 0,
+
             motivo:
                 pontosGerados > 0
                     ? "Pontos creditados com sucesso."
-                    : "O pedido não gerou pontos.",
-            pontos: pontosGerados
+                    : pedidoEhRecompensa(pedido)
+                        ? "Pedidos de recompensa não geram pontos."
+                        : "O valor dos produtos não atingiu o mínimo necessário para gerar pontos.",
+
+            pontos:
+                pontosGerados,
+
+            valorPontuavel
         };
     }
 
+
     window.AzuryPontuacao = {
+        VALOR_POR_BLOCO,
+        TOLERANCIA,
+        PONTOS_POR_BLOCO,
+
         converterValorParaNumero,
         calcularPontosPorValor,
         calcularNivel,
         pedidoFoiEntregue,
+        obterValorPontuavelDoPedido,
         creditarPontosDoPedido
     };
 })();

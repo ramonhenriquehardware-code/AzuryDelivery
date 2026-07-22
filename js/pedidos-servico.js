@@ -10,6 +10,7 @@
         "Cancelado"
     ];
 
+
     function normalizarTexto(texto) {
         return String(texto || "")
             .normalize("NFD")
@@ -17,6 +18,7 @@
             .trim()
             .toLowerCase();
     }
+
 
     function obterCliente() {
         const clienteSalvo =
@@ -43,12 +45,14 @@
                     : [];
 
             return cliente;
+
         } catch (erro) {
             throw new Error(
                 "Os dados do cliente estão inválidos."
             );
         }
     }
+
 
     function salvarCliente(cliente) {
         localStorage.setItem(
@@ -80,10 +84,12 @@
                 "usuarioAzury",
                 JSON.stringify({
                     ...cliente,
+
                     autenticado:
                         sessao.autenticado !== false
                 })
             );
+
         } catch (erro) {
             console.error(
                 "Não foi possível atualizar a sessão:",
@@ -92,12 +98,13 @@
         }
     }
 
+
     function converterValor(valor) {
         if (
             window.AzuryPontuacao &&
             typeof window.AzuryPontuacao
                 .converterValorParaNumero ===
-            "function"
+                "function"
         ) {
             return window.AzuryPontuacao
                 .converterValorParaNumero(valor);
@@ -116,12 +123,14 @@
                 .replace(/\./g, "")
                 .replace(",", ".");
 
-        const numero = Number(valorLimpo);
+        const numero =
+            Number(valorLimpo);
 
         return Number.isFinite(numero)
             ? numero
             : 0;
     }
+
 
     function formatarValor(valor) {
         return converterValor(valor)
@@ -129,8 +138,10 @@
             .replace(".", ",");
     }
 
+
     function gerarIdPedido() {
-        const agora = new Date();
+        const agora =
+            new Date();
 
         const data =
             agora
@@ -153,6 +164,7 @@
         return `AZY-${data}-${hora}-${aleatorio}`;
     }
 
+
     function resolverStatus(status) {
         const statusNormalizado =
             normalizarTexto(status);
@@ -162,7 +174,8 @@
                 statusValido =>
                     normalizarTexto(
                         statusValido
-                    ) === statusNormalizado
+                    ) ===
+                    statusNormalizado
             );
 
         if (!statusEncontrado) {
@@ -174,10 +187,45 @@
         return statusEncontrado;
     }
 
-    function criarPedido(dadosPedido = {}) {
-        const cliente = obterCliente();
 
-        const valorTotal =
+    function criarPedido(dadosPedido = {}) {
+        const cliente =
+            obterCliente();
+
+
+        /*
+         * VALORES DO PEDIDO
+         *
+         * valorProdutos:
+         * valor do açaí e dos complementos.
+         *
+         * taxaEntrega:
+         * valor cobrado pela entrega.
+         *
+         * valorTotal:
+         * produtos + entrega.
+         */
+
+        const valorProdutosInformado =
+            converterValor(
+                dadosPedido.valorProdutos ??
+                dadosPedido.subtotal ??
+                dadosPedido.valorPedido ??
+                0
+            );
+
+        const taxaEntrega =
+            Math.max(
+                0,
+
+                converterValor(
+                    dadosPedido.taxaEntrega ??
+                    dadosPedido.entrega ??
+                    0
+                )
+            );
+
+        const valorTotalInformado =
             converterValor(
                 dadosPedido.valorTotal ??
                 dadosPedido.total ??
@@ -185,7 +233,41 @@
                 0
             );
 
-        const agora = new Date();
+
+        /*
+         * Compatibilidade com pedidos antigos:
+         * quando valorProdutos não existe,
+         * ele é calculado retirando a entrega do total.
+         */
+
+        const valorProdutos =
+            valorProdutosInformado > 0
+                ? valorProdutosInformado
+                : Math.max(
+                    0,
+                    valorTotalInformado -
+                    taxaEntrega
+                );
+
+
+        const valorTotal =
+            valorTotalInformado > 0
+                ? valorTotalInformado
+                : valorProdutos +
+                  taxaEntrega;
+
+
+        const agora =
+            new Date();
+
+
+        const statusInicial =
+            dadosPedido.status
+                ? resolverStatus(
+                    dadosPedido.status
+                )
+                : "Pedido recebido";
+
 
         const pedido = {
             id:
@@ -214,6 +296,7 @@
             quantidade:
                 Math.max(
                     1,
+
                     Number(
                         dadosPedido.quantidade
                     ) || 1
@@ -226,66 +309,131 @@
                     ? dadosPedido.complementos
                     : [],
 
-            cliente: {
-                nome: String(
-                    dadosPedido.cliente?.nome ||
-                    cliente.nome ||
+
+            /* PAGAMENTO */
+
+            formaPagamento:
+                String(
+                    dadosPedido.formaPagamento ||
                     ""
                 ).trim(),
 
-                email: String(
-                    dadosPedido.cliente?.email ||
-                    cliente.email ||
-                    ""
-                ).trim()
+
+            /* CLIENTE */
+
+            cliente: {
+                nome:
+                    String(
+                        dadosPedido.cliente?.nome ||
+                        cliente.nome ||
+                        ""
+                    ).trim(),
+
+                email:
+                    String(
+                        dadosPedido.cliente?.email ||
+                        cliente.email ||
+                        ""
+                    ).trim()
             },
+
+
+            /* ENDEREÇO */
 
             enderecoEntrega: {
-                cep: String(
-                    dadosPedido.enderecoEntrega?.cep ||
-                    ""
-                ).trim(),
+                cep:
+                    String(
+                        dadosPedido
+                            .enderecoEntrega
+                            ?.cep ||
+                        ""
+                    ).trim(),
 
-                rua: String(
-                    dadosPedido.enderecoEntrega?.rua ||
-                    ""
-                ).trim(),
+                rua:
+                    String(
+                        dadosPedido
+                            .enderecoEntrega
+                            ?.rua ||
+                        ""
+                    ).trim(),
 
-                numero: String(
-                    dadosPedido.enderecoEntrega?.numero ||
-                    ""
-                ).trim(),
+                numero:
+                    String(
+                        dadosPedido
+                            .enderecoEntrega
+                            ?.numero ||
+                        ""
+                    ).trim(),
 
-                bairro: String(
-                    dadosPedido.enderecoEntrega?.bairro ||
-                    ""
-                ).trim(),
+                bairro:
+                    String(
+                        dadosPedido
+                            .enderecoEntrega
+                            ?.bairro ||
+                        ""
+                    ).trim(),
 
-                complemento: String(
-                    dadosPedido.enderecoEntrega?.complemento ||
-                    ""
-                ).trim()
+                complemento:
+                    String(
+                        dadosPedido
+                            .enderecoEntrega
+                            ?.complemento ||
+                        ""
+                    ).trim(),
+
+                validado:
+                    dadosPedido
+                        .enderecoEntrega
+                        ?.validado ===
+                    true
             },
+
 
             canal:
                 dadosPedido.canal ||
                 "Site",
 
+
+            /* VALORES */
+
+            valorProdutos,
+
+            subtotal:
+                valorProdutos,
+
+            taxaEntrega,
+
             valorTotal,
 
             valor:
-                formatarValor(valorTotal),
+                formatarValor(
+                    valorTotal
+                ),
+
+            valorProdutosFormatado:
+                formatarValor(
+                    valorProdutos
+                ),
+
+            taxaEntregaFormatada:
+                formatarValor(
+                    taxaEntrega
+                ),
+
+
+            /* CONTROLE */
 
             status:
-                dadosPedido.status
-                    ? resolverStatus(
-                        dadosPedido.status
-                    )
-                    : "Pedido recebido",
+                statusInicial,
 
-            pontosCreditados: false,
-            pontosGerados: 0,
-            dataCreditoPontos: null,
+            pontosCreditados:
+                false,
+
+            pontosGerados:
+                0,
+
+            dataCreditoPontos:
+                null,
 
             data:
                 agora.toLocaleDateString(
@@ -301,17 +449,14 @@
             historicoStatus: [
                 {
                     status:
-                        dadosPedido.status
-                            ? resolverStatus(
-                                dadosPedido.status
-                            )
-                            : "Pedido recebido",
+                        statusInicial,
 
                     data:
                         agora.toISOString()
                 }
             ]
         };
+
 
         const pedidoDuplicado =
             cliente.pedidos.some(
@@ -320,21 +465,41 @@
                     pedido.id
             );
 
+
         if (pedidoDuplicado) {
             throw new Error(
                 "Já existe um pedido com este código."
             );
         }
 
-        cliente.pedidos.unshift(pedido);
+
+        cliente.pedidos.unshift(
+            pedido
+        );
+
 
         cliente.historico.unshift(`
             🛍️ Pedido ${pedido.id} realizado
 
             <br>
 
-            💰 Valor:
+            🥤 Produtos:
+            R$ ${pedido.valorProdutosFormatado}
+
+            <br>
+
+            🛵 Taxa de entrega:
+            R$ ${pedido.taxaEntregaFormatada}
+
+            <br>
+
+            💰 Total:
             R$ ${pedido.valor}
+
+            <br>
+
+            💳 Pagamento:
+            ${pedido.formaPagamento || "Não informado"}
 
             <br>
 
@@ -348,13 +513,20 @@
             </small>
         `);
 
-        salvarCliente(cliente);
+
+        salvarCliente(
+            cliente
+        );
 
         return pedido;
     }
 
-    function buscarPedidoPorId(idPedido) {
-        const cliente = obterCliente();
+
+    function buscarPedidoPorId(
+        idPedido
+    ) {
+        const cliente =
+            obterCliente();
 
         return (
             cliente.pedidos.find(
@@ -365,17 +537,23 @@
         );
     }
 
-    function listarPedidos() {
-        const cliente = obterCliente();
 
-        return [...cliente.pedidos];
+    function listarPedidos() {
+        const cliente =
+            obterCliente();
+
+        return [
+            ...cliente.pedidos
+        ];
     }
+
 
     function atualizarStatusPedido(
         idPedido,
         novoStatus
     ) {
-        const cliente = obterCliente();
+        const cliente =
+            obterCliente();
 
         const pedido =
             cliente.pedidos.find(
@@ -384,22 +562,30 @@
                     String(idPedido)
             );
 
+
         if (!pedido) {
             throw new Error(
                 "Pedido não encontrado."
             );
         }
 
-        const statusResolvido =
-            resolverStatus(novoStatus);
 
-        const agora = new Date();
+        const statusResolvido =
+            resolverStatus(
+                novoStatus
+            );
+
+
+        const agora =
+            new Date();
+
 
         pedido.status =
             statusResolvido;
 
         pedido.atualizadoEm =
             agora.toISOString();
+
 
         pedido.historicoStatus =
             Array.isArray(
@@ -408,10 +594,13 @@
                 ? pedido.historicoStatus
                 : [];
 
+
         const ultimoStatus =
             pedido.historicoStatus[
-            pedido.historicoStatus.length - 1
+                pedido.historicoStatus.length -
+                1
             ];
+
 
         if (
             !ultimoStatus ||
@@ -427,7 +616,10 @@
             });
         }
 
-        let resultadoPontuacao = null;
+
+        let resultadoPontuacao =
+            null;
+
 
         if (
             statusResolvido ===
@@ -444,15 +636,20 @@
                 );
             }
 
+
             resultadoPontuacao =
                 window.AzuryPontuacao
                     .creditarPontosDoPedido(
                         cliente,
                         pedido
                     );
+
         } else {
-            salvarCliente(cliente);
+            salvarCliente(
+                cliente
+            );
         }
+
 
         return {
             pedido,
@@ -460,12 +657,16 @@
         };
     }
 
-    function cancelarPedido(idPedido) {
+
+    function cancelarPedido(
+        idPedido
+    ) {
         return atualizarStatusPedido(
             idPedido,
             "Cancelado"
         );
     }
+
 
     window.AzuryPedidos = {
         STATUS_VALIDOS,
