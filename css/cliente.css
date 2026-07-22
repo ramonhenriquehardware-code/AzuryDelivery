@@ -1,587 +1,49 @@
 /* =========================================
-   ÁREA DO CLIENTE — AZURY
+   DETALHES DOS NOVOS PEDIDOS — AZURY
 ========================================= */
 
-.pagina-cliente,
-.pagina-cliente * {
-    box-sizing: border-box;
+.pagina-cliente .card-pedidos {
+    min-height: 360px;
+    padding-bottom: 70px;
 }
-
-body.pagina-cliente {
-    min-height: 100vh;
-    margin: 0;
-    background:
-        radial-gradient(circle at 12% 90%,
-            rgba(255, 239, 209, 0.38),
-            transparent 30%),
-        radial-gradient(circle at 90% 20%,
-            rgba(220, 230, 255, 0.48),
-            transparent 35%),
-        #f7f9fd;
-
-    color: #171717;
-    font-family: Arial, Helvetica, sans-serif;
-}
-
-
-/* =========================================
-   CABEÇALHO
-========================================= */
-
-.pagina-cliente .cliente-header {
-    width: 100%;
-    height: 78px;
-    padding: 0 48px;
-
-    display: flex;
-    align-items: center;
-
-    background: rgba(255, 255, 255, 0.96);
-    border-bottom: 1px solid #edf0f5;
-
-    box-shadow: 0 5px 18px rgba(24, 48, 92, 0.06);
-
-    position: relative;
-    z-index: 20;
-}
-
-.pagina-cliente .cliente-header-container {
-    width: 100%;
-    max-width: 1500px;
-    margin: 0 auto;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.pagina-cliente .cliente-logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-
-    color: #0758f8;
-    font-size: 35px;
-    font-weight: 900;
-    letter-spacing: 1px;
-
-    text-decoration: none;
-}
-
-.pagina-cliente .cliente-logo img {
-    width: 31px;
-    height: 31px;
-
-    object-fit: contain;
-
-    transform: scale(2.3);
-    transform-origin: center;
-
-    margin-right: 5px;
-}
-
-.pagina-cliente .btn-sair {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-
-    color: #0758f8;
-    font-size: 16px;
-    font-weight: 700;
-
-    text-decoration: none;
-}
-
-.pagina-cliente .icone-sair {
-    width: 23px;
-    height: 23px;
-
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-
-/* =========================================
-   PAINEL PRINCIPAL
-========================================= */
-
-.pagina-cliente .painel-cliente {
-    width: calc(100% - 40px);
-    max-width: 1135px;
-
-    margin: 20px auto 50px;
-}
-
-
-/* =========================================
-   PERFIL DO CLIENTE
-========================================= */
-
-.pagina-cliente .perfil-cliente {
-    width: 100%;
-    min-height: 316px;
-
-    margin: 0 0 20px;
-    padding: 154px 30px 11px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    position: relative;
-
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid #f0f2f6;
-    border-radius: 16px;
-
-    text-align: center;
-
-    box-shadow: 0 12px 35px rgba(29, 52, 91, 0.08);
-}
-
-.pagina-cliente .avatar-container {
-    width: 172px;
-    height: 172px;
-
-    position: absolute;
-    top: -5px;
-    left: 50%;
-
-    transform: translateX(-50%);
-}
-
-.pagina-cliente .avatar-cliente {
-    width: 168px;
-    height: 168px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    position: static;
-
-    overflow: hidden;
-
-    background: #ffffff;
-    border: 3px solid #0758f8;
-    border-radius: 50%;
-
-    transform: none;
-
-    box-shadow: none;
-}
-
-.pagina-cliente .avatar-cliente img {
-    width: 76%;
-    height: 76%;
-    object-fit: contain;
-}
-
-.pagina-cliente .selo-avatar {
-    width: 45px;
-    height: 45px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    position: absolute;
-    right: -7px;
-    bottom: 6px;
-
-    color: #ffffff;
-    background: #0758f8;
-    border: 4px solid #ffffff;
-    border-radius: 50%;
-
-    font-size: 22px;
-    font-weight: 900;
-
-    box-shadow: 0 5px 15px rgba(0, 81, 255, 0.22);
-}
-
-.pagina-cliente .titulo-azury {
-    margin: 8px 0 4px;
-
-    color: #0758f8;
-    font-size: 48px;
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: 2px;
-}
-
-.pagina-cliente .saudacao-cliente {
-    margin: 4px 0 16px;
-
-    color: #161616;
-    font-size: 25px;
-    font-weight: 400;
-    line-height: 1.25;
-}
-
-.pagina-cliente .saudacao-cliente strong {
-    color: #0758f8;
-    font-weight: 800;
-}
-
-.pagina-cliente .nivel-cliente {
-    min-height: 37px;
-    padding: 7px 18px;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #232323;
-    background: #ffffff;
-    border: 1.5px solid #b9cdfd;
-    border-radius: 999px;
-
-    font-size: 17px;
-    font-weight: 700;
-
-    box-shadow: 0 2px 8px rgba(0, 81, 255, 0.05);
-}
-
-
-/* =========================================
-   GRADE DOS CARDS
-========================================= */
-
-.pagina-cliente .cliente-grid {
-    width: 100%;
-    max-width: none;
-
-    margin: 0 0 20px;
-    padding: 0;
-
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-}
-
-.pagina-cliente .card {
-    min-width: 0;
-    min-height: 276px;
-
-    padding: 24px 22px;
-
-    position: relative;
-
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid #f0f2f6;
-    border-radius: 16px;
-
-    box-shadow: 0 10px 28px rgba(29, 52, 91, 0.08);
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.pagina-cliente .card:hover {
-    transform: translateY(-2px);
-
-    box-shadow: 0 14px 34px rgba(29, 52, 91, 0.11);
-}
-
-.pagina-cliente .card-titulo {
-    margin: 0 0 20px;
-
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    color: #171717;
-    font-size: 19px;
-    font-weight: 800;
-    line-height: 1.2;
-}
-
-.pagina-cliente .icone-card {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 25px;
-    line-height: 1;
-}
-
-.pagina-cliente .icone-pontos {
-    color: #ffba00;
-}
-
-.pagina-cliente .icone-recompensa {
-    color: #ff671d;
-}
-
-.pagina-cliente .icone-pedidos {
-    color: #bca285;
-}
-
-.pagina-cliente .icone-historico {
-    color: #6d35ff;
-}
-
-
-/* =========================================
-   CARD DE PONTOS
-========================================= */
-
-.pagina-cliente .quantidade-pontos {
-    margin: 0 0 17px;
-}
-
-.pagina-cliente .quantidade-pontos strong,
-.pagina-cliente #pontos {
-    display: block;
-
-    margin: 0;
-
-    color: #0758f8;
-    font-size: 46px;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.pagina-cliente .quantidade-pontos span {
-    display: block;
-    margin-top: 5px;
-
-    color: #0758f8;
-    font-size: 16px;
-    font-weight: 900;
-}
-
-.pagina-cliente .barra-pontos {
-    width: 100%;
-    height: 12px;
-
-    margin: 0 0 12px;
-
-    overflow: hidden;
-
-    background: #e5e8ed;
-    border-radius: 999px;
-}
-
-.pagina-cliente .progresso {
-    width: 0;
-    height: 100%;
-
-    background: #0758f8;
-    border-radius: 999px;
-
-    transition: width 0.4s ease;
-}
-
-.pagina-cliente .texto-progresso,
-.pagina-cliente #faltam {
-    min-height: 22px;
-    margin: 0 0 18px;
-
-    color: #414141;
-    font-size: 14px;
-    line-height: 1.45;
-}
-
-.pagina-cliente #faltam strong {
-    color: #0758f8;
-}
-
-.pagina-cliente .btn-detalhes {
-    width: 100%;
-    height: 42px;
-
-    padding: 0 20px;
-
-    border: none;
-    border-radius: 10px;
-
-    color: #ffffff;
-    background: #0758f8;
-
-    font-size: 15px;
-    font-weight: 700;
-
-    cursor: pointer;
-}
-
-.pagina-cliente .btn-detalhes:hover {
-    background: #0048df;
-}
-
-.pagina-cliente .btn-adicionar-teste {
-    display: none !important;
-}
-
-
-/* =========================================
-   CARD DE RECOMPENSAS
-========================================= */
-
-.pagina-cliente .conteudo-recompensas {
-    width: 100%;
-}
-
-.pagina-cliente .recompensa-bloqueada {
-    width: 100%;
-    min-height: 114px;
-
-    padding: 15px;
-
-    display: flex;
-    align-items: center;
-    gap: 17px;
-
-    background: #fbfcff;
-    border: 1px solid #dfe5f0;
-    border-radius: 11px;
-}
-
-.pagina-cliente .icone-bloqueado {
-    width: 62px;
-    height: 62px;
-    min-width: 62px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #555d68;
-    background: #edf0f5;
-    border-radius: 50%;
-
-    font-size: 27px;
-}
-
-.pagina-cliente .recompensa-informacoes {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.pagina-cliente .recompensa-informacoes strong {
-    color: #1f1f1f;
-    font-size: 15px;
-    line-height: 1.25;
-}
-
-.pagina-cliente .recompensa-informacoes span {
-    color: #0758f8;
-    font-size: 14px;
-    font-weight: 700;
-}
-
-.pagina-cliente .barra-recompensa {
-    width: 100%;
-    height: 11px;
-
-    margin: 16px 0 9px;
-
-    overflow: hidden;
-
-    background: #e5e8ed;
-    border-radius: 999px;
-}
-
-.pagina-cliente .progresso-recompensa {
-    width: 0;
-    height: 100%;
-
-    background: #0758f8;
-    border-radius: 999px;
-}
-
-.pagina-cliente .texto-recompensa {
-    margin: 0;
-
-    color: #444444;
-    font-size: 14px;
-    line-height: 1.4;
-}
-
-.pagina-cliente .texto-recompensa strong {
-    color: #0758f8;
-}
-
-/* Conteúdo criado pelo recompensas.js */
-
-.pagina-cliente #recompensas>h3 {
-    margin: 12px 0 10px;
-
-    color: #171717;
-    font-size: 20px;
-    font-weight: 800;
-}
-
-.pagina-cliente #recompensas>p {
-    margin: 0 0 8px;
-
-    color: #555555;
-    font-size: 14px;
-}
-
-.pagina-cliente #recompensas>strong {
-    display: block;
-
-    margin: 15px 0 20px;
-
-    color: #171717;
-    font-size: 18px;
-}
-
-.pagina-cliente #recompensas .btn {
-    width: 100%;
-    min-height: 42px;
-
-    border: none;
-    border-radius: 10px;
-
-    color: #ffffff;
-    background: #0758f8;
-
-    font-size: 15px;
-    font-weight: 700;
-
-    cursor: pointer;
-}
-
-
-/* =========================================
-   CARD DE PEDIDOS
-========================================= */
 
 .pagina-cliente .lista-pedidos {
     min-height: 128px;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
 }
 
-.pagina-cliente .lista-pedidos>p {
+.pagina-cliente .lista-pedidos > .pedido {
     margin: 0;
-    padding: 20px 12px;
-
-    color: #666666;
-    font-size: 14px;
 }
+
+
+/* =========================================
+   CARTÃO DO PEDIDO
+========================================= */
 
 .pagina-cliente .pedido {
     width: 100%;
+    margin: 0 0 12px;
+    padding: 16px;
 
-    margin: 0 0 9px;
-    padding: 10px 12px;
-
-    background: #fbfcff;
-    border: 1px solid #e1e6ef;
-    border-left: 3px solid #0758f8;
-    border-radius: 9px;
+    overflow-wrap: anywhere;
 
     color: #252525;
+    background: #fbfcff;
+
+    border: 1px solid #dfe6f2;
+    border-left: 4px solid #0758f8;
+    border-radius: 12px;
+
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.5;
+
+    box-shadow:
+        0 5px 15px
+        rgba(29, 52, 91, 0.05);
 }
 
 .pagina-cliente .pedido:last-child {
@@ -589,840 +51,336 @@ body.pagina-cliente {
 }
 
 .pagina-cliente .pedido h4 {
-    margin: 0 0 5px;
+    margin: 0 0 10px;
 
-    color: #222222;
+    color: #171717;
+
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.pagina-cliente .pedido p {
+    margin: 6px 0;
+
+    color: #454b55;
+
     font-size: 13px;
+    line-height: 1.5;
 }
 
-.pagina-cliente .status-entregue {
-    color: #0da54a;
-    font-weight: 700;
-}
-
-.pagina-cliente .link-card {
-    padding: 0;
-
-    position: absolute;
-    right: 22px;
-    bottom: 23px;
-
-    color: #0758f8;
-    background: transparent;
-    border: none;
-
-    font-size: 14px;
-    font-weight: 700;
-
-    cursor: pointer;
+.pagina-cliente .pedido p strong {
+    color: #171717;
+    font-weight: 800;
 }
 
 
 /* =========================================
-   HISTÓRICO
+   COMPLEMENTOS
 ========================================= */
 
-.pagina-cliente .card-historico {
-    width: 100%;
-    min-height: 184px;
+.pagina-cliente .detalhes-complementos-pedido {
+    margin: 11px 0;
+    padding: 11px 12px;
 
-    padding: 24px 22px 26px;
+    background: #ffffff;
 
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr;
-    column-gap: 25px;
-
-    position: relative;
+    border: 1px solid #e3e8f0;
+    border-radius: 9px;
 }
 
-.pagina-cliente .historico-cabecalho {
-    grid-column: 1 / -1;
+.pagina-cliente .complementos-pedido {
+    margin: 5px 0 !important;
+
+    color: #4a505b !important;
+
+    font-size: 12px !important;
+    line-height: 1.5 !important;
 }
 
-.pagina-cliente .historico-cabecalho .card-titulo {
-    margin-bottom: 20px;
+
+/* =========================================
+   ENDEREÇO DO PEDIDO
+========================================= */
+
+.pagina-cliente .endereco-pedido-cliente {
+    margin: 11px 0;
+    padding: 12px;
+
+    background: #f3f7ff;
+
+    border: 1px solid #d7e3ff;
+    border-radius: 9px;
 }
 
-.pagina-cliente .lista-historico {
-    min-width: 0;
+.pagina-cliente .endereco-pedido-cliente p {
+    margin: 4px 0;
 
-    display: grid;
-    grid-template-columns: repeat(4, minmax(135px, 1fr));
-
-    overflow: hidden;
+    color: #3e4757;
 }
 
-.pagina-cliente .lista-historico>p,
-.pagina-cliente .lista-historico>div {
-    min-height: 78px;
 
-    margin: 0;
-    padding: 5px 23px;
+/* =========================================
+   VALORES E PAGAMENTO
+========================================= */
 
-    color: #242424;
-    border-right: 1px solid #e0e4eb;
+.pagina-cliente .valores-pedido-cliente {
+    margin: 11px 0;
+    padding: 12px;
 
-    font-size: 13px;
-    line-height: 1.65;
+    background: #ffffff;
+
+    border: 1px solid #dde4ef;
+    border-radius: 9px;
 }
 
-.pagina-cliente .lista-historico>p:first-child,
-.pagina-cliente .lista-historico>div:first-child {
-    padding-left: 7px;
+.pagina-cliente .valores-pedido-cliente p {
+    margin: 5px 0;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
 }
 
-.pagina-cliente .lista-historico>p:last-child,
-.pagina-cliente .lista-historico>div:last-child {
-    border-right: none;
-}
+.pagina-cliente .valores-pedido-cliente p strong {
+    color: #0758f8;
 
-.pagina-cliente .lista-historico small {
-    color: #5f636b;
-    font-size: 12px;
-}
-
-.pagina-cliente .historico-vazio {
-    grid-column: 1 / -1;
-
-    border-right: none !important;
-}
-
-.pagina-cliente .link-historico {
-    position: static;
-
-    align-self: center;
-    justify-self: end;
+    font-size: 14px;
+    font-weight: 900;
 
     white-space: nowrap;
 }
 
 
 /* =========================================
-   MODAL DO CUPOM
+   PONTOS DO PEDIDO
 ========================================= */
 
-.pagina-cliente .modal {
-    width: 100%;
-    height: 100%;
+.pagina-cliente .pontos-pedido-cliente {
+    margin: 10px 0 !important;
+    padding: 9px 11px;
 
-    padding: 20px;
+    color: #805b00 !important;
+    background: #fff9e8;
 
-    display: none;
-    align-items: center;
-    justify-content: center;
+    border: 1px solid #f1d98c;
+    border-radius: 8px;
 
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-
-    background: rgba(8, 18, 39, 0.62);
-    backdrop-filter: blur(4px);
-}
-
-.pagina-cliente .modal-content {
-    width: 100%;
-    max-width: 460px;
-
-    padding: 34px 30px;
-
-    background: #ffffff;
-    border-radius: 18px;
-
-    text-align: center;
-
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.24);
-}
-
-.pagina-cliente .modal-content h2 {
-    margin: 0 0 14px;
-
-    color: #171717;
-    font-size: 24px;
-}
-
-.pagina-cliente .modal-content p {
-    margin: 0 0 15px;
-
-    color: #595959;
-    font-size: 15px;
-}
-
-.pagina-cliente .modal-content #codigoCupom {
-    margin: 0 0 22px;
-    padding: 13px;
-
-    color: #0758f8;
-    background: #f2f6ff;
-    border: 1px dashed #0758f8;
-    border-radius: 10px;
-
-    font-size: 25px;
-    letter-spacing: 2px;
-}
-
-.pagina-cliente .modal-content .btn {
-    width: 100%;
-    min-height: 43px;
-
-    margin-top: 9px;
-
-    border: 1px solid #0758f8;
-    border-radius: 10px;
-
-    color: #ffffff;
-    background: #0758f8;
-
-    font-size: 15px;
     font-weight: 700;
-
-    cursor: pointer;
-}
-
-.pagina-cliente .modal-content .btn-outline {
-    color: #0758f8;
-    background: #ffffff;
 }
 
 
 /* =========================================
-   RESPONSIVIDADE
+   STATUS DOS PEDIDOS
 ========================================= */
 
-@media (max-width: 950px) {
-
-    .pagina-cliente .cliente-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .pagina-cliente .card-pedidos {
-        grid-column: 1 / -1;
-    }
-
-    .pagina-cliente .lista-historico {
-        grid-template-columns: repeat(2, minmax(150px, 1fr));
-    }
-
-    .pagina-cliente .lista-historico>p:nth-child(2),
-    .pagina-cliente .lista-historico>div:nth-child(2) {
-        border-right: none;
-    }
-}
-
-@media (max-width: 650px) {
-
-    .pagina-cliente .cliente-header {
-        height: 68px;
-        padding: 0 18px;
-    }
-
-    .pagina-cliente .cliente-logo {
-        font-size: 26px;
-    }
-
-    .pagina-cliente .cliente-logo img {
-        width: 25px;
-        height: 25px;
-    }
-
-    .pagina-cliente .painel-cliente {
-        width: calc(100% - 24px);
-        margin-top: 14px;
-    }
-
-    .pagina-cliente .perfil-cliente {
-        min-height: 280px;
-        padding: 139px 20px 26px;
-    }
-
-    .pagina-cliente .avatar-container {
-        width: 145px;
-        height: 145px;
-    }
-
-    .pagina-cliente .avatar-cliente {
-        width: 142px;
-        height: 142px;
-    }
-
-    .pagina-cliente .titulo-azury {
-        font-size: 38px;
-    }
-
-    .pagina-cliente .saudacao-cliente {
-        font-size: 21px;
-    }
-
-    .pagina-cliente .cliente-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .pagina-cliente .card-pedidos {
-        grid-column: auto;
-    }
-
-    .pagina-cliente .card {
-        min-height: auto;
-    }
-
-    .pagina-cliente .card-historico {
-        display: block;
-    }
-
-    .pagina-cliente .lista-historico {
-        display: block;
-    }
-
-    .pagina-cliente .lista-historico>p,
-    .pagina-cliente .lista-historico>div {
-        padding: 13px 5px;
-
-        border-right: none;
-        border-bottom: 1px solid #e0e4eb;
-    }
-
-    .pagina-cliente .link-historico {
-        margin-top: 20px;
-        float: right;
-    }
-}
-
-.pagina-cliente .avatar-cliente #avatarInicial {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 100%;
-    height: 100%;
-
-    color: #0758f8;
-    background: linear-gradient(145deg,
-            #ffffff,
-            #edf3ff);
-
-    font-size: 72px;
-    font-weight: 900;
-    line-height: 1;
-    text-transform: uppercase;
-}
-
-.pagina-cliente .selo-avatar {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 25px;
-    line-height: 1;
-}
-
-/* MODAL DO HISTÓRICO COMPLETO */
-
-.pagina-cliente .modal-historico {
-    width: 100%;
-    max-width: 620px;
-    max-height: 85vh;
-
-    display: flex;
-    flex-direction: column;
-
-    overflow: hidden;
-    text-align: left;
-}
-
-.pagina-cliente .modal-historico h2 {
-    flex-shrink: 0;
-    text-align: center;
-}
-
-.pagina-cliente #listaTodoHistorico {
-    flex: 1;
-
-    margin: 15px 0 20px;
-    padding-right: 10px;
-
-    overflow-y: auto;
-}
-
-.pagina-cliente #listaTodoHistorico .historico-item {
-    padding: 12px 5px;
-
-    border-bottom: 1px solid #e4e8ef;
-
-    line-height: 1.6;
-}
-
-.pagina-cliente #listaTodoHistorico .historico-item:last-child {
-    border-bottom: none;
-}
-
-.pagina-cliente .modal-historico #btnFecharTodoHistorico {
-    flex-shrink: 0;
-}
-
-/* AÇÕES DO CABEÇALHO DO CLIENTE */
-
-.pagina-cliente .acoes-cliente {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-}
-
-.pagina-cliente .btn-inicio-cliente,
-.pagina-cliente .btn-sair {
-    padding: 0;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #0758f8;
-    background: transparent;
-    border: none;
-
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 700;
-    text-decoration: none;
-
-    cursor: pointer;
-}
-
-.pagina-cliente .btn-inicio-cliente:hover,
-.pagina-cliente .btn-sair:hover {
-    color: #003fbd;
-}
-
-@media (max-width: 650px) {
-
-    .pagina-cliente .acoes-cliente {
-        gap: 13px;
-    }
-
-    .pagina-cliente .btn-inicio-cliente,
-    .pagina-cliente .btn-sair {
-        font-size: 14px;
-    }
-
-}
-
-/* CORREÇÃO DEFINITIVA DA LOGO NO CABEÇALHO */
-
-.pagina-cliente .cliente-header {
-    height: 82px;
-    min-height: 82px;
-    padding: 10px 6%;
-    overflow: hidden;
-}
-
-.pagina-cliente .cliente-logo,
-.pagina-cliente .cliente-header .logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-
-    color: #222;
-    font-size: 32px;
-    font-weight: 900;
-    text-decoration: none;
-}
-
-.pagina-cliente .cliente-logo img,
-.pagina-cliente .cliente-header .logo img {
-    width: 58px !important;
-    height: 58px !important;
-    max-width: 58px !important;
-    max-height: 58px !important;
-
-    display: block;
-    object-fit: contain;
-
-    margin: 0 !important;
-    transform: none !important;
-}
-
-.pagina-cliente .cliente-logo img {
-    width: 84px !important;
-    height: 56px !important;
-    max-width: none !important;
-    max-height: none !important;
-
-    display: block;
-    object-fit: contain;
-
-    margin: 0 !important;
-    transform: none !important;
-}
-
-/* =========================================
-   NOVO VISUAL DAS RECOMPENSAS
-========================================= */
-
-/* Organização principal:
-   Pontos e pedidos em cima,
-   recompensas ocupando a largura completa.
-*/
-
-.pagina-cliente .cliente-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-}
-
-.pagina-cliente .card-pontos {
-    grid-column: 1;
-    grid-row: 1;
-}
-
-.pagina-cliente .card-pedidos {
-    grid-column: 2;
-    grid-row: 1;
-
-    min-height: 276px;
-    padding-bottom: 68px;
-}
-
-.pagina-cliente .card-recompensas {
-    grid-column: 1 / -1;
-    grid-row: 2;
-
-    min-height: auto;
-}
-
-.pagina-cliente .card-recompensas .card-titulo {
-    margin-bottom: 16px;
-}
-
-
-/* =========================================
-   GRADE DAS QUATRO RECOMPENSAS
-========================================= */
-
-.pagina-cliente .conteudo-recompensas {
-    width: 100%;
-
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-}
-
-
-/* =========================================
-   CARD INDIVIDUAL DA RECOMPENSA
-========================================= */
-
-.pagina-cliente .recompensa-item {
-    min-width: 0;
-    min-height: 230px;
-    padding: 18px;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 16px;
-
-    background: #fbfcff;
-    border: 1px solid #dfe6f2;
-    border-radius: 14px;
-
-    box-shadow: 0 6px 18px rgba(29, 52, 91, 0.06);
-
-    transition:
-        transform 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.pagina-cliente .recompensa-item:hover {
-    transform: translateY(-2px);
-
-    border-color: #b9cdfd;
-
-    box-shadow: 0 10px 24px rgba(29, 52, 91, 0.1);
-}
-
-.pagina-cliente .recompensa-item .recompensa-informacoes {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-}
-
-.pagina-cliente .recompensa-item .recompensa-informacoes strong {
-    color: #1d1d1d;
-
-    font-size: 17px;
-    font-weight: 800;
-    line-height: 1.3;
-}
-
-.pagina-cliente .recompensa-item .recompensa-informacoes>span:not(.pontos-recompensa) {
-    color: #555d68;
-
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.45;
-}
-
-.pagina-cliente .recompensa-item .pontos-recompensa {
+.pagina-cliente .status-pedido,
+.pagina-cliente .status-preparacao,
+.pagina-cliente .status-entrega,
+.pagina-cliente .status-entregue,
+.pagina-cliente .status-cancelado {
     width: fit-content;
-    margin-top: 4px;
-    padding: 5px 10px;
 
-    color: #0758f8;
-    background: #edf3ff;
+    margin: 12px 0 0 !important;
+    padding: 7px 10px;
+
     border-radius: 999px;
 
-    font-size: 13px;
+    font-size: 12px !important;
     font-weight: 800;
+    line-height: 1.3 !important;
 }
 
-.pagina-cliente .recompensa-item .limite-recompensa {
-    color: #666d78;
-
-    font-size: 12px;
-    font-weight: 600;
+.pagina-cliente .status-pedido {
+    color: #8a6200 !important;
+    background: #fff8dc;
+    border: 1px solid #f0d67c;
 }
 
-.pagina-cliente .recompensa-item .status-recompensa {
-    margin: 3px 0 0;
+.pagina-cliente .status-preparacao {
+    color: #9a4c00 !important;
+    background: #fff2e5;
+    border: 1px solid #f1bd8b;
+}
 
-    color: #3d4653;
+.pagina-cliente .status-entrega {
+    color: #174ea6 !important;
+    background: #eaf2ff;
+    border: 1px solid #a9c7ff;
+}
 
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.4;
+.pagina-cliente .status-entregue {
+    color: #18713d !important;
+    background: #eafaf0;
+    border: 1px solid #9ed8b3;
+}
+
+.pagina-cliente .status-cancelado {
+    color: #ad2828 !important;
+    background: #fff0f0;
+    border: 1px solid #efb4b4;
 }
 
 
 /* =========================================
-   BOTÃO DE RESGATE
+   MODAL DE TODOS OS PEDIDOS
 ========================================= */
 
-.pagina-cliente .btn-resgatar-recompensa {
+.pagina-cliente .modal-pedidos {
     width: 100%;
-    min-height: 44px;
-    padding: 10px 16px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #ffffff;
-    background: #0758f8;
-    border: 1px solid #0758f8;
-    border-radius: 11px;
-
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 800;
-
-    cursor: pointer;
-
-    box-shadow: 0 8px 18px rgba(0, 81, 255, 0.18);
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.pagina-cliente .btn-resgatar-recompensa:hover:not(:disabled) {
-    background: #0048df;
-    transform: translateY(-1px);
-
-    box-shadow: 0 11px 22px rgba(0, 81, 255, 0.24);
-}
-
-.pagina-cliente .btn-resgatar-recompensa:disabled {
-    color: #737b87;
-    background: #e5e8ed;
-    border-color: #d8dce3;
-
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-
-/* =========================================
-   MODAL DE MONTAGEM DA RECOMPENSA
-========================================= */
-
-.pagina-cliente .modal-recompensa-acai {
-    width: 100%;
-    max-width: 760px;
+    max-width: 820px;
     max-height: 88vh;
 
     padding: 30px;
 
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
 
     text-align: left;
 }
 
-.pagina-cliente .modal-recompensa-acai h2,
-.pagina-cliente .modal-recompensa-acai>p {
+.pagina-cliente .modal-pedidos > h2 {
+    flex-shrink: 0;
+
     text-align: center;
 }
 
-.pagina-cliente .seletores-complementos {
+.pagina-cliente #listaTodosPedidos {
     width: 100%;
-    margin: 22px 0;
+    flex: 1;
+
+    margin: 15px 0 20px;
+    padding-right: 8px;
 
     display: grid;
     grid-template-columns:
-        repeat(auto-fit, minmax(270px, 1fr));
-    gap: 18px;
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+    align-items: start;
+    gap: 14px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-.pagina-cliente .grupo-complementos-recompensa {
-    min-width: 0;
-    margin: 0;
-    padding: 16px;
-
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-
-    background: #f8faff;
-    border: 1px solid #dce4f2;
-    border-radius: 13px;
-}
-
-.pagina-cliente .grupo-complementos-recompensa legend {
+.pagina-cliente #listaTodosPedidos > p {
     grid-column: 1 / -1;
 
-    margin: 0 0 5px;
-    padding: 0 6px;
-
-    color: #171717;
-
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.pagina-cliente .opcao-complemento-recompensa {
-    min-height: 42px;
-    padding: 9px 10px;
-
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    color: #343434;
-    background: #ffffff;
-    border: 1px solid #e1e6ef;
-    border-radius: 9px;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        border-color 0.2s ease,
-        background 0.2s ease;
-}
-
-.pagina-cliente .opcao-complemento-recompensa:hover {
-    background: #f1f5ff;
-    border-color: #b8ccfa;
-}
-
-.pagina-cliente .opcao-complemento-recompensa input {
-    width: 17px;
-    height: 17px;
-    margin: 0;
-
-    flex-shrink: 0;
-
-    accent-color: #0758f8;
-}
-
-.pagina-cliente .opcao-complemento-recompensa input:disabled+span {
-    color: #a0a5ad;
-}
-
-.pagina-cliente .acoes-modal-recompensa {
-    display: flex;
-    gap: 12px;
-}
-
-.pagina-cliente .acoes-modal-recompensa .btn {
-    flex: 1;
-}
-
-
-/* =========================================
-   MENSAGENS DO RESGATE
-========================================= */
-
-.pagina-cliente #mensagemRecompensa {
-    display: none;
-
-    margin: 0 0 14px;
-    padding: 12px 14px;
-
-    border-radius: 10px;
-
     text-align: center;
-
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.4;
 }
 
-.pagina-cliente #mensagemRecompensa.erro {
-    display: block;
-
-    color: #ad2626;
-    background: #fff0f0;
-    border: 1px solid #efb3b3;
+.pagina-cliente #listaTodosPedidos .pedido {
+    height: 100%;
+    margin: 0;
 }
 
-.pagina-cliente #mensagemRecompensa.sucesso {
-    display: block;
-
-    color: #187b43;
-    background: #eafff1;
-    border: 1px solid #a2dfb9;
+.pagina-cliente .modal-pedidos #btnFecharTodosPedidos {
+    flex-shrink: 0;
 }
 
 
 /* =========================================
-   RESPONSIVIDADE DAS RECOMPENSAS
+   BARRA DE ROLAGEM DOS MODAIS
 ========================================= */
 
-@media (max-width: 700px) {
-
-    .pagina-cliente .cliente-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .pagina-cliente .card-pontos,
-    .pagina-cliente .card-recompensas,
-    .pagina-cliente .card-pedidos {
-        grid-column: auto;
-        grid-row: auto;
-    }
-
-    .pagina-cliente .conteudo-recompensas {
-        grid-template-columns: 1fr;
-    }
-
-    .pagina-cliente .recompensa-item {
-        min-height: auto;
-    }
-
-    .pagina-cliente .grupo-complementos-recompensa {
-        grid-template-columns: 1fr;
-    }
-
-    .pagina-cliente .acoes-modal-recompensa {
-        flex-direction: column;
-    }
-
+.pagina-cliente #listaTodosPedidos,
+.pagina-cliente #listaTodoHistorico {
+    scrollbar-width: thin;
+    scrollbar-color:
+        #a9bce7
+        transparent;
 }
 
-.pagina-cliente #recompensas .btn-resgatar-recompensa:disabled {
-    color: #737b87;
-    background: #e5e8ed;
-    border-color: #d8dce3;
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
+.pagina-cliente #listaTodosPedidos::-webkit-scrollbar,
+.pagina-cliente #listaTodoHistorico::-webkit-scrollbar {
+    width: 7px;
+}
+
+.pagina-cliente #listaTodosPedidos::-webkit-scrollbar-thumb,
+.pagina-cliente #listaTodoHistorico::-webkit-scrollbar-thumb {
+    background: #a9bce7;
+    border-radius: 999px;
+}
+
+
+/* =========================================
+   RESPONSIVIDADE DOS PEDIDOS
+========================================= */
+
+@media (max-width: 760px) {
+
+    .pagina-cliente #listaTodosPedidos {
+        grid-template-columns: 1fr;
+    }
+
+    .pagina-cliente .modal-pedidos {
+        max-width: 620px;
+    }
+}
+
+
+@media (max-width: 650px) {
+
+    .pagina-cliente .card-pedidos {
+        min-height: auto;
+        padding-bottom: 68px;
+    }
+
+    .pagina-cliente .pedido {
+        padding: 14px;
+    }
+
+    .pagina-cliente .valores-pedido-cliente p {
+        display: block;
+    }
+
+    .pagina-cliente .valores-pedido-cliente p strong {
+        display: block;
+        margin-top: 3px;
+    }
+
+    .pagina-cliente .modal {
+        padding: 10px;
+    }
+
+    .pagina-cliente .modal-pedidos {
+        max-height:
+            calc(
+                100vh - 20px
+            );
+
+        padding:
+            24px
+            17px;
+
+        border-radius: 15px;
+    }
+}
+
+
+@media (max-width: 420px) {
+
+    .pagina-cliente .modal {
+        padding: 0;
+    }
+
+    .pagina-cliente .modal-pedidos {
+        min-height: 100vh;
+        max-height: 100vh;
+
+        padding:
+            22px
+            14px;
+
+        border-radius: 0;
+    }
+
+    .pagina-cliente .pedido h4 {
+        font-size: 14px;
+    }
 }
