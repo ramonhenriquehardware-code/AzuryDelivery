@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Painel administrativo da Azury"
+    >
+
+    <title>Painel Administrativo | Azury</title>
+
+    <link
+        rel="stylesheet"
+        href="css/admin.css"
+    >
+</head>
+
+<body class="pagina-admin">
+
+    <!-- =====================================
+         CABEÇALHO
+    ====================================== -->
+
+    <header class="admin-header">
+
+        <div class="admin-header-container">
+
+            <a
+                href="index.html"
+                class="admin-logo"
+                aria-label="Voltar para o início"
+            >
+                <span class="admin-coroa">👑</span>
+                <span>AZURY</span>
+            </a>
+
+            <nav class="admin-acoes">
+
+                <button
+                    type="button"
+                    id="btnAtualizarPedidos"
+                    class="btn-atualizar"
+                >
+                    Atualizar pedidos
+                </button>
+
+                <a
+                    href="index.html"
+                    class="btn-voltar"
+                >
+                    Voltar ao site
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================
+         CONTEÚDO PRINCIPAL
+    ====================================== -->
+
+    <main class="admin-container">
+
+        <section class="admin-apresentacao">
+
+            <div>
+
+                <span class="admin-etiqueta">
+                    Administração
+                </span>
+
+                <h1>
+                    Gerenciamento de pedidos
+                </h1>
+
+                <p>
+                    Acompanhe os pedidos e atualize cada etapa
+                    da preparação e entrega.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             RESUMO DOS PEDIDOS
+        ====================================== -->
+
+        <section
+            class="resumo-pedidos"
+            aria-label="Resumo dos pedidos"
+        >
+
+            <article class="resumo-card">
+
+                <span class="resumo-icone">
+                    📦
+                </span>
+
+                <div>
+
+                    <strong id="totalPedidos">
+                        0
+                    </strong>
+
+                    <span>
+                        Total de pedidos
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <article class="resumo-card">
+
+                <span class="resumo-icone">
+                    🟡
+                </span>
+
+                <div>
+
+                    <strong id="pedidosRecebidos">
+                        0
+                    </strong>
+
+                    <span>
+                        Pedidos recebidos
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <article class="resumo-card">
+
+                <span class="resumo-icone">
+                    👨‍🍳
+                </span>
+
+                <div>
+
+                    <strong id="pedidosEmAndamento">
+                        0
+                    </strong>
+
+                    <span>
+                        Em andamento
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <article class="resumo-card">
+
+                <span class="resumo-icone">
+                    ✅
+                </span>
+
+                <div>
+
+                    <strong id="pedidosEntregues">
+                        0
+                    </strong>
+
+                    <span>
+                        Entregues
+                    </span>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <!-- =====================================
+             LISTA DE PEDIDOS
+        ====================================== -->
+
+        <section class="secao-pedidos">
+
+            <div class="secao-pedidos-cabecalho">
+
+                <div>
+
+                    <h2>
+                        Pedidos
+                    </h2>
+
+                    <p>
+                        Altere o status conforme o andamento
+                        de cada pedido.
+                    </p>
+
+                </div>
+
+                <label class="campo-filtro">
+
+                    <span>
+                        Filtrar por status
+                    </span>
+
+                    <select id="filtroStatus">
+
+                        <option value="todos">
+                            Todos os pedidos
+                        </option>
+
+                        <option value="Pedido recebido">
+                            Pedido recebido
+                        </option>
+
+                        <option value="Em preparo">
+                            Em preparo
+                        </option>
+
+                        <option value="Pronto">
+                            Pronto
+                        </option>
+
+                        <option value="Saiu para entrega">
+                            Saiu para entrega
+                        </option>
+
+                        <option value="Entregue">
+                            Entregue
+                        </option>
+
+                        <option value="Cancelado">
+                            Cancelado
+                        </option>
+
+                    </select>
+
+                </label>
+
+            </div>
+
+
+            <div
+                id="mensagemAdmin"
+                class="mensagem-admin"
+                role="status"
+                aria-live="polite"
+            ></div>
+
+
+            <div
+                id="listaPedidosAdmin"
+                class="lista-pedidos-admin"
+            >
+
+                <div class="admin-carregando">
+
+                    <span>
+                        ⏳
+                    </span>
+
+                    <p>
+                        Carregando pedidos...
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================
+         SCRIPTS
+
+         A ordem é importante:
+         1. Pontuação
+         2. Pedidos
+         3. Painel administrativo
+    ====================================== -->
+
+    <script
+        src="js/pontuacao-servico.js"
+        defer
+    ></script>
+
+    <script
+        src="js/pedidos-servico.js"
+        defer
+    ></script>
+
+    <script
+        src="js/admin.js"
+        defer
+    ></script>
+
+</body>
+
+</html>

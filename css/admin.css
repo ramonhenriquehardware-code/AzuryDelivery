@@ -1,0 +1,679 @@
+/* =========================================
+   PAINEL ADMINISTRATIVO — AZURY
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --azul: #0758f8;
+    --azul-escuro: #0045c7;
+    --fundo: #f5f7fb;
+    --branco: #ffffff;
+    --texto: #181818;
+    --texto-secundario: #646b78;
+    --borda: #e2e7f0;
+    --verde: #159447;
+    --amarelo: #d99100;
+    --vermelho: #c83232;
+    --roxo: #6e40c9;
+    --sombra: 0 12px 32px rgba(25, 48, 88, 0.08);
+}
+
+body.pagina-admin {
+    min-height: 100vh;
+    margin: 0;
+
+    color: var(--texto);
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(7, 88, 248, 0.07),
+            transparent 32%
+        ),
+        var(--fundo);
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================
+   CABEÇALHO
+========================================= */
+
+.admin-header {
+    min-height: 76px;
+    padding: 10px 5%;
+
+    display: flex;
+    align-items: center;
+
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid var(--borda);
+
+    backdrop-filter: blur(8px);
+    box-shadow: 0 5px 18px rgba(25, 48, 88, 0.06);
+}
+
+.admin-header-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.admin-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    color: var(--azul);
+
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-decoration: none;
+}
+
+.admin-coroa {
+    font-size: 30px;
+}
+
+.admin-acoes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-atualizar,
+.btn-voltar {
+    min-height: 42px;
+    padding: 0 17px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.btn-atualizar {
+    color: var(--branco);
+    background: var(--azul);
+    border: 1px solid var(--azul);
+}
+
+.btn-atualizar:hover {
+    background: var(--azul-escuro);
+}
+
+.btn-voltar {
+    color: var(--azul);
+    background: var(--branco);
+    border: 1px solid #b8cbf7;
+}
+
+.btn-voltar:hover {
+    background: #f1f5ff;
+}
+
+
+/* =========================================
+   CONTEÚDO PRINCIPAL
+========================================= */
+
+.admin-container {
+    width: calc(100% - 32px);
+    max-width: 1280px;
+
+    margin: 28px auto 60px;
+}
+
+.admin-apresentacao {
+    margin-bottom: 22px;
+    padding: 28px 30px;
+
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 18px;
+
+    box-shadow: var(--sombra);
+}
+
+.admin-etiqueta {
+    display: inline-flex;
+
+    margin-bottom: 9px;
+    padding: 6px 11px;
+
+    color: var(--azul);
+    background: #edf3ff;
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-apresentacao h1 {
+    margin: 0 0 10px;
+
+    color: var(--texto);
+    font-size: clamp(27px, 4vw, 40px);
+    line-height: 1.1;
+}
+
+.admin-apresentacao p {
+    margin: 0;
+
+    color: var(--texto-secundario);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+
+/* =========================================
+   RESUMO DOS PEDIDOS
+========================================= */
+
+.resumo-pedidos {
+    margin-bottom: 22px;
+
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.resumo-card {
+    min-width: 0;
+    min-height: 112px;
+    padding: 20px;
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 15px;
+
+    box-shadow: var(--sombra);
+}
+
+.resumo-icone {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #edf3ff;
+    border-radius: 13px;
+
+    font-size: 25px;
+}
+
+.resumo-card strong {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: var(--azul);
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.resumo-card span:last-child {
+    color: var(--texto-secundario);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+
+/* =========================================
+   SEÇÃO DOS PEDIDOS
+========================================= */
+
+.secao-pedidos {
+    padding: 25px;
+
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 18px;
+
+    box-shadow: var(--sombra);
+}
+
+.secao-pedidos-cabecalho {
+    margin-bottom: 22px;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 22px;
+}
+
+.secao-pedidos-cabecalho h2 {
+    margin: 0 0 6px;
+
+    font-size: 24px;
+}
+
+.secao-pedidos-cabecalho p {
+    margin: 0;
+
+    color: var(--texto-secundario);
+    font-size: 14px;
+}
+
+.campo-filtro {
+    min-width: 225px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+
+    color: var(--texto-secundario);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.campo-filtro select {
+    width: 100%;
+    height: 42px;
+    padding: 0 37px 0 12px;
+
+    color: var(--texto);
+    background: var(--branco);
+    border: 1px solid #ccd5e4;
+    border-radius: 9px;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   MENSAGENS
+========================================= */
+
+.mensagem-admin {
+    display: none;
+
+    margin-bottom: 18px;
+    padding: 12px 15px;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.mensagem-admin.sucesso {
+    display: block;
+
+    color: #176d3a;
+    background: #eaf9f0;
+    border: 1px solid #aadabb;
+}
+
+.mensagem-admin.erro {
+    display: block;
+
+    color: #9f2727;
+    background: #fff0f0;
+    border: 1px solid #eab2b2;
+}
+
+.mensagem-admin.aviso {
+    display: block;
+
+    color: #846000;
+    background: #fff8df;
+    border: 1px solid #ecd78b;
+}
+
+
+/* =========================================
+   LISTA E CARD DOS PEDIDOS
+========================================= */
+
+.lista-pedidos-admin {
+    display: grid;
+    gap: 16px;
+}
+
+.admin-carregando,
+.admin-vazio {
+    min-height: 180px;
+    padding: 30px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--texto-secundario);
+    background: #fafbfe;
+    border: 1px dashed #ccd5e4;
+    border-radius: 13px;
+
+    text-align: center;
+}
+
+.admin-carregando span,
+.admin-vazio span {
+    margin-bottom: 8px;
+    font-size: 30px;
+}
+
+.admin-carregando p,
+.admin-vazio p {
+    margin: 0;
+}
+
+.pedido-admin {
+    padding: 20px;
+
+    background: #fbfcff;
+    border: 1px solid var(--borda);
+    border-left: 4px solid var(--azul);
+    border-radius: 13px;
+}
+
+.pedido-admin-cabecalho {
+    margin-bottom: 16px;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.pedido-admin-codigo {
+    margin: 0 0 6px;
+
+    color: var(--texto);
+    font-size: 17px;
+    font-weight: 900;
+    word-break: break-word;
+}
+
+.pedido-admin-data {
+    margin: 0;
+
+    color: var(--texto-secundario);
+    font-size: 12px;
+}
+
+.status-pedido-admin {
+    flex-shrink: 0;
+
+    padding: 7px 11px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.status-recebido {
+    color: #866100;
+    background: #fff4c7;
+}
+
+.status-preparo {
+    color: #864807;
+    background: #ffe5c7;
+}
+
+.status-pronto {
+    color: #5936a2;
+    background: #eee5ff;
+}
+
+.status-entrega {
+    color: #0758b0;
+    background: #ddedff;
+}
+
+.status-entregue {
+    color: #14723a;
+    background: #dff7e8;
+}
+
+.status-cancelado {
+    color: #a12b2b;
+    background: #ffe1e1;
+}
+
+.pedido-admin-detalhes {
+    margin-bottom: 17px;
+
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.detalhe-pedido-admin {
+    min-width: 0;
+    padding: 12px;
+
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 9px;
+}
+
+.detalhe-pedido-admin span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--texto-secundario);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.detalhe-pedido-admin strong {
+    display: block;
+
+    color: var(--texto);
+    font-size: 14px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.pedido-admin-itens {
+    margin: 0 0 17px;
+    padding: 14px;
+
+    color: #3d4550;
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 9px;
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.pedido-admin-acoes {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.campo-status {
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+
+    color: var(--texto-secundario);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.campo-status select {
+    width: 100%;
+    height: 43px;
+    padding: 0 12px;
+
+    color: var(--texto);
+    background: var(--branco);
+    border: 1px solid #ccd5e4;
+    border-radius: 9px;
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.btn-salvar-status {
+    min-height: 43px;
+    padding: 0 18px;
+
+    color: var(--branco);
+    background: var(--azul);
+    border: none;
+    border-radius: 9px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-salvar-status:hover {
+    background: var(--azul-escuro);
+}
+
+.btn-salvar-status:disabled {
+    color: #7c838d;
+    background: #e1e5eb;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+
+@media (max-width: 950px) {
+
+    .resumo-pedidos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pedido-admin-detalhes {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .admin-header {
+        padding: 10px 16px;
+    }
+
+    .admin-header-container {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-acoes {
+        width: 100%;
+    }
+
+    .btn-atualizar,
+    .btn-voltar {
+        flex: 1;
+    }
+
+    .admin-container {
+        width: calc(100% - 22px);
+        margin-top: 14px;
+    }
+
+    .admin-apresentacao,
+    .secao-pedidos {
+        padding: 20px 17px;
+    }
+
+    .secao-pedidos-cabecalho {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .campo-filtro {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .pedido-admin-cabecalho {
+        flex-direction: column;
+    }
+
+    .pedido-admin-detalhes {
+        grid-template-columns: 1fr;
+    }
+
+    .pedido-admin-acoes {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .btn-salvar-status {
+        width: 100%;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .resumo-pedidos {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-logo {
+        font-size: 24px;
+    }
+
+    .admin-acoes {
+        flex-direction: column;
+    }
+
+    .btn-atualizar,
+    .btn-voltar {
+        width: 100%;
+    }
+
+}
