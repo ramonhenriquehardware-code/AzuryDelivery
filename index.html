@@ -31,10 +31,8 @@
         .header-site .logo .coroa-header {
             width: 76px;
             height: 50px;
-
             display: block;
             flex-shrink: 0;
-
             overflow: visible;
         }
 
@@ -45,15 +43,11 @@
             }
         }
     </style>
-
 </head>
 
 <body>
 
-    <!-- =====================================
-         CABEÇALHO
-    ====================================== -->
-
+    <!-- CABEÇALHO -->
     <header class="header-site">
 
         <a
@@ -99,7 +93,6 @@
                         ></stop>
                     </linearGradient>
 
-
                     <linearGradient
                         id="azulHeader"
                         x1="0"
@@ -125,7 +118,6 @@
 
                 </defs>
 
-
                 <path
                     d="M25 116 L42 43 L91 87 L128 20 L165 87 L214 43 L231 116 Z"
                     fill="url(#ouroHeader)"
@@ -133,7 +125,6 @@
                     stroke-width="5"
                     stroke-linejoin="round"
                 ></path>
-
 
                 <path
                     d="M35 114 C68 102 98 105 128 116 C158 105 188 102 221 114
@@ -145,7 +136,6 @@
                     stroke-linejoin="round"
                 ></path>
 
-
                 <circle
                     cx="42"
                     cy="43"
@@ -154,7 +144,6 @@
                     stroke="#8f5700"
                     stroke-width="4"
                 ></circle>
-
 
                 <circle
                     cx="128"
@@ -165,7 +154,6 @@
                     stroke-width="4"
                 ></circle>
 
-
                 <circle
                     cx="214"
                     cy="43"
@@ -175,14 +163,12 @@
                     stroke-width="4"
                 ></circle>
 
-
                 <path
                     d="M128 74 L151 99 L128 125 L105 99 Z"
                     fill="url(#azulHeader)"
                     stroke="#ffffff"
                     stroke-width="3"
                 ></path>
-
 
                 <path
                     d="M128 75 L128 124 M106 99 H150"
@@ -197,7 +183,6 @@
             <span>AZURY</span>
 
         </a>
-
 
         <nav class="menu-principal">
 
@@ -226,7 +211,6 @@
 
         </nav>
 
-
         <a
             href="#Cardapio"
             class="btn btn-header"
@@ -237,10 +221,7 @@
     </header>
 
 
-    <!-- =====================================
-         HERO
-    ====================================== -->
-
+    <!-- HERO -->
     <section
         id="home"
         class="hero-wrapper"
@@ -258,7 +239,6 @@
                     Ingredientes selecionados para oferecer
                     o melhor açaí da região.
                 </p>
-
 
                 <nav class="hero-buttons">
 
@@ -280,51 +260,35 @@
 
                 </nav>
 
-
                 <ul class="hero-stats">
 
                     <li>
-
-                        <strong>
-                            +500
-                        </strong>
+                        <strong>+500</strong>
 
                         <span>
                             Clientes felizes ♥️
                         </span>
-
                     </li>
 
-
                     <li>
-
-                        <strong>
-                            4.9
-                        </strong>
+                        <strong>4.9</strong>
 
                         <span>
                             Avaliação 🌟
                         </span>
-
                     </li>
 
-
                     <li>
-
-                        <strong>
-                            40 Min
-                        </strong>
+                        <strong>40 Min</strong>
 
                         <span>
                             Entrega Média 🏍️
                         </span>
-
                     </li>
 
                 </ul>
 
             </div>
-
 
             <div>
 
@@ -340,10 +304,7 @@
     </section>
 
 
-    <!-- =====================================
-         CARDÁPIO
-    ====================================== -->
-
+    <!-- CARDÁPIO -->
     <section
         id="Cardapio"
         class="cardapio"
@@ -357,9 +318,7 @@
             Escolha o seu favorito e faça seu pedido no WhatsApp
         </p>
 
-
         <!-- FILTROS -->
-
         <div
             class="filtros-cardapio"
             aria-label="Categorias do cardápio"
@@ -373,7 +332,6 @@
                 Tradicionais
             </button>
 
-
             <button
                 type="button"
                 class="filtro-cardapio"
@@ -381,7 +339,6 @@
             >
                 Especiais
             </button>
-
 
             <button
                 type="button"
@@ -395,16 +352,11 @@
 
 
         <!-- PRODUTOS -->
-
         <ul class="menu-grid">
 
-            <!-- =====================================
-                 TRADICIONAIS
-            ====================================== -->
-
+            <!-- TRADICIONAIS -->
 
             <!-- AZURY ORIGINAL -->
-
             <li data-categoria="tradicionais">
 
                 <img
@@ -425,24 +377,25 @@
                 </p>
 
                 <strong>
-                    R$ 29,90
+                    A partir de R$ 19,90
                 </strong>
 
                 <button
                     type="button"
                     class="btn btn-pedir-produto"
                     data-produto="Azury Original"
-                    data-preco="29.90"
+                    data-preco-300="19.90"
+                    data-preco-400="23.90"
+                    data-preco-700="29.90"
                     data-descricao="Açaí, banana, leite condensado e granola."
                 >
-                    Pedir
+                    Escolher tamanho
                 </button>
 
             </li>
 
 
             <!-- AZURY PAÇOCA CROCANTE -->
-
             <li data-categoria="tradicionais">
 
                 <img
@@ -459,24 +412,25 @@
                 </p>
 
                 <strong>
-                    R$ 30,90
+                    A partir de R$ 20,90
                 </strong>
 
                 <button
                     type="button"
                     class="btn btn-pedir-produto"
                     data-produto="Azury Paçoca Crocante"
-                    data-preco="30.90"
+                    data-preco-300="20.90"
+                    data-preco-400="24.90"
+                    data-preco-700="30.90"
                     data-descricao="Açaí, paçoca, granola e leite condensado."
                 >
-                    Pedir
+                    Escolher tamanho
                 </button>
 
             </li>
 
 
             <!-- AZURY UVA CREMOSA -->
-
             <li data-categoria="tradicionais">
 
                 <img
@@ -494,29 +448,27 @@
                 </p>
 
                 <strong>
-                    R$ 32,90
+                    A partir de R$ 21,90
                 </strong>
 
                 <button
                     type="button"
                     class="btn btn-pedir-produto"
                     data-produto="Azury Uva Cremosa"
-                    data-preco="32.90"
+                    data-preco-300="21.90"
+                    data-preco-400="26.90"
+                    data-preco-700="32.90"
                     data-descricao="Açaí, uva verde, leite em pó e leite condensado."
                 >
-                    Pedir
+                    Escolher tamanho
                 </button>
 
             </li>
 
 
-            <!-- =====================================
-                 ESPECIAIS
-            ====================================== -->
-
+            <!-- ESPECIAIS -->
 
             <!-- AZURY TROPICAL -->
-
             <li data-categoria="especiais">
 
                 <img
@@ -534,24 +486,25 @@
                 </p>
 
                 <strong>
-                    R$ 34,90
+                    A partir de R$ 22,90
                 </strong>
 
                 <button
                     type="button"
                     class="btn btn-pedir-produto"
                     data-produto="Azury Tropical"
-                    data-preco="34.90"
+                    data-preco-300="22.90"
+                    data-preco-400="28.90"
+                    data-preco-700="34.90"
                     data-descricao="Açaí, manga, morangos frescos, coco ralado e leite condensado."
                 >
-                    Pedir
+                    Escolher tamanho
                 </button>
 
             </li>
 
 
             <!-- AZURY ESMERALDA -->
-
             <li data-categoria="especiais">
 
                 <img
@@ -568,24 +521,25 @@
                 </p>
 
                 <strong>
-                    R$ 34,90
+                    A partir de R$ 22,90
                 </strong>
 
                 <button
                     type="button"
                     class="btn btn-pedir-produto"
                     data-produto="Azury Esmeralda"
-                    data-preco="34.90"
+                    data-preco-300="22.90"
+                    data-preco-400="28.90"
+                    data-preco-700="34.90"
                     data-descricao="Açaí, Nutella e uva verde."
                 >
-                    Pedir
+                    Escolher tamanho
                 </button>
 
             </li>
 
 
             <!-- AZURY SUPREME -->
-
             <li data-categoria="especiais">
 
                 <img
@@ -603,29 +557,27 @@
                 </p>
 
                 <strong>
-                    R$ 29,99
+                    A partir de R$ 21,90
                 </strong>
 
                 <button
                     type="button"
                     class="btn btn-pedir-produto"
                     data-produto="Azury Supreme"
-                    data-preco="29.99"
+                    data-preco-300="21.90"
+                    data-preco-400="26.90"
+                    data-preco-700="32.90"
                     data-descricao="Açaí, creme branco, granola, banana, creme de avelã e coco ralado."
                 >
-                    Pedir
+                    Escolher tamanho
                 </button>
 
             </li>
 
 
-            <!-- =====================================
-                 MONTE O SEU
-            ====================================== -->
-
+            <!-- MONTE O SEU -->
 
             <!-- MONTE O SEU 300ML -->
-
             <li data-categoria="monte-seu">
 
                 <div class="monte-seu-imagem">
@@ -667,7 +619,6 @@
 
 
             <!-- MONTE O SEU 400ML -->
-
             <li data-categoria="monte-seu">
 
                 <div class="monte-seu-imagem">
@@ -709,7 +660,6 @@
 
 
             <!-- MONTE O SEU 700ML -->
-
             <li data-categoria="monte-seu">
 
                 <div class="monte-seu-imagem">
@@ -754,10 +704,7 @@
     </section>
 
 
-    <!-- =====================================
-         SOBRE
-    ====================================== -->
-
+    <!-- SOBRE -->
     <section
         id="Sobre"
         class="sobre"
@@ -768,7 +715,6 @@
             alt="Preparação de um açaí Azury"
         >
 
-
         <article>
 
             <h2>
@@ -778,7 +724,6 @@
             <p>
                 Qualidade, cuidado e sabor em cada pedido.
             </p>
-
 
             <ul>
 
@@ -813,10 +758,7 @@
     </section>
 
 
-    <!-- =====================================
-         CHAMADA
-    ====================================== -->
-
+    <!-- CHAMADA -->
     <section
         id="cta"
         class="cta"
@@ -842,10 +784,7 @@
     </section>
 
 
-    <!-- =====================================
-         RODAPÉ
-    ====================================== -->
-
+    <!-- RODAPÉ -->
     <footer id="Contato">
 
         <div class="footer-conteudo">
@@ -861,7 +800,6 @@
                 </p>
 
             </section>
-
 
             <section class="footer-coluna">
 
@@ -882,7 +820,6 @@
                 </p>
 
             </section>
-
 
             <section class="footer-coluna">
 
@@ -933,7 +870,6 @@
 
         </div>
 
-
         <p class="copy">
             © 2026 - AZURY
         </p>
@@ -941,10 +877,7 @@
     </footer>
 
 
-    <!-- =====================================
-         MODAL DOS PRODUTOS PRONTOS
-    ====================================== -->
-
+    <!-- MODAL DOS PRODUTOS PRONTOS -->
     <div
         id="modalProduto"
         class="modal-monte-seu"
@@ -961,16 +894,13 @@
                 ×
             </button>
 
-
             <h2>
                 🥤 Finalizar Pedido
             </h2>
 
-
             <p id="produtoSelecionado">
                 Produto selecionado
             </p>
-
 
             <input
                 type="hidden"
@@ -981,6 +911,92 @@
                 type="hidden"
                 id="precoProdutoPedido"
             >
+
+            <input
+                type="hidden"
+                id="tamanhoProdutoPedido"
+                value="300"
+            >
+
+
+            <!-- ESCOLHA DO TAMANHO -->
+            <div class="grupo-monte-seu">
+
+                <h3>
+                    Escolha o tamanho
+                </h3>
+
+                <div
+                    id="opcoesTamanhoProduto"
+                    class="opcoes-tamanho-produto"
+                >
+
+                    <label class="opcao-tamanho-produto">
+
+                        <input
+                            type="radio"
+                            name="tamanhoProduto"
+                            value="300"
+                            checked
+                        >
+
+                        <span>
+                            <strong>
+                                300 ml
+                            </strong>
+
+                            <small id="precoProduto300">
+                                R$ 0,00
+                            </small>
+                        </span>
+
+                    </label>
+
+
+                    <label class="opcao-tamanho-produto">
+
+                        <input
+                            type="radio"
+                            name="tamanhoProduto"
+                            value="400"
+                        >
+
+                        <span>
+                            <strong>
+                                400 ml
+                            </strong>
+
+                            <small id="precoProduto400">
+                                R$ 0,00
+                            </small>
+                        </span>
+
+                    </label>
+
+
+                    <label class="opcao-tamanho-produto">
+
+                        <input
+                            type="radio"
+                            name="tamanhoProduto"
+                            value="700"
+                        >
+
+                        <span>
+                            <strong>
+                                700 ml
+                            </strong>
+
+                            <small id="precoProduto700">
+                                R$ 0,00
+                            </small>
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </div>
 
 
             <div class="grupo-monte-seu estrutura-acai">
@@ -1002,9 +1018,7 @@
                     Dados para entrega
                 </h3>
 
-
                 <label>
-
                     Nome completo
 
                     <input
@@ -1013,14 +1027,11 @@
                         placeholder="Digite seu nome completo"
                         autocomplete="name"
                     >
-
                 </label>
-
 
                 <div class="linha-entrega">
 
                     <label>
-
                         CEP
 
                         <input
@@ -1031,12 +1042,9 @@
                             inputmode="numeric"
                             autocomplete="postal-code"
                         >
-
                     </label>
 
-
                     <label>
-
                         Número
 
                         <input
@@ -1045,14 +1053,11 @@
                             placeholder="123"
                             autocomplete="address-line2"
                         >
-
                     </label>
 
                 </div>
 
-
                 <label>
-
                     Rua ou Avenida
 
                     <input
@@ -1061,12 +1066,9 @@
                         placeholder="Nome da rua ou avenida"
                         autocomplete="address-line1"
                     >
-
                 </label>
 
-
                 <label>
-
                     Bairro
 
                     <input
@@ -1075,12 +1077,9 @@
                         placeholder="Digite o bairro"
                         autocomplete="address-level3"
                     >
-
                 </label>
 
-
                 <label>
-
                     Complemento — opcional
 
                     <input
@@ -1088,11 +1087,9 @@
                         id="complementoClienteProduto"
                         placeholder="Apartamento, bloco, casa, referência..."
                     >
-
                 </label>
 
             </div>
-
 
             <div class="total-monte-seu">
 
@@ -1105,7 +1102,6 @@
                 </strong>
 
             </div>
-
 
             <button
                 type="button"
@@ -1120,10 +1116,7 @@
     </div>
 
 
-    <!-- =====================================
-         CONFIGURADOR MONTE O SEU
-    ====================================== -->
-
+    <!-- CONFIGURADOR MONTE O SEU -->
     <div
         id="modalMonteSeu"
         class="modal-monte-seu"
@@ -1140,16 +1133,13 @@
                 ×
             </button>
 
-
             <h2>
                 🥤 Monte o Seu Açaí
             </h2>
 
-
             <p id="tamanhoSelecionado">
                 Copo selecionado: 300ml
             </p>
-
 
             <input
                 type="hidden"
@@ -1162,7 +1152,6 @@
                 id="precoBaseMonteSeu"
                 value="14.90"
             >
-
 
             <div class="grupo-monte-seu estrutura-acai">
 
@@ -1182,7 +1171,6 @@
 
             </div>
 
-
             <div class="grupo-monte-seu">
 
                 <h3>
@@ -1195,7 +1183,6 @@
                 ></div>
 
             </div>
-
 
             <div class="grupo-monte-seu">
 
@@ -1210,16 +1197,13 @@
 
             </div>
 
-
             <div class="grupo-monte-seu dados-entrega">
 
                 <h3>
                     Dados para entrega
                 </h3>
 
-
                 <label>
-
                     Nome completo
 
                     <input
@@ -1228,14 +1212,11 @@
                         placeholder="Digite seu nome completo"
                         autocomplete="name"
                     >
-
                 </label>
-
 
                 <div class="linha-entrega">
 
                     <label>
-
                         CEP
 
                         <input
@@ -1246,12 +1227,9 @@
                             inputmode="numeric"
                             autocomplete="postal-code"
                         >
-
                     </label>
 
-
                     <label>
-
                         Número
 
                         <input
@@ -1260,14 +1238,11 @@
                             placeholder="123"
                             autocomplete="address-line2"
                         >
-
                     </label>
 
                 </div>
 
-
                 <label>
-
                     Rua ou Avenida
 
                     <input
@@ -1276,12 +1251,9 @@
                         placeholder="Nome da rua ou avenida"
                         autocomplete="address-line1"
                     >
-
                 </label>
 
-
                 <label>
-
                     Bairro
 
                     <input
@@ -1290,12 +1262,9 @@
                         placeholder="Digite o bairro"
                         autocomplete="address-level3"
                     >
-
                 </label>
 
-
                 <label>
-
                     Complemento — opcional
 
                     <input
@@ -1303,11 +1272,9 @@
                         id="complementoCliente"
                         placeholder="Apartamento, bloco, casa, referência..."
                     >
-
                 </label>
 
             </div>
-
 
             <div class="total-monte-seu">
 
@@ -1320,7 +1287,6 @@
                 </strong>
 
             </div>
-
 
             <button
                 type="button"
@@ -1335,22 +1301,10 @@
     </div>
 
 
-    <!-- =====================================
-         SCRIPTS
-
-         Ordem:
-         1. Sessão
-         2. Pontuação
-         3. Pedidos
-         4. Cardápio
-    ====================================== -->
-
+    <!-- SCRIPTS -->
     <script src="../js/sessao.js"></script>
-
     <script src="../js/pontuacao-servico.js"></script>
-
     <script src="../js/pedidos-servico.js"></script>
-
     <script src="../js/cardapio.js"></script>
 
 </body>

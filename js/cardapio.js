@@ -5,40 +5,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let enviandoPedido = false;
 
+    const selecionar = seletor =>
+        document.querySelector(seletor);
+
+    const selecionarTodos = seletor =>
+        Array.from(
+            document.querySelectorAll(seletor)
+        );
+
 
     /* =====================================
        FILTROS DO CARDÁPIO
     ====================================== */
 
     const filtros =
-        document.querySelectorAll(".filtro-cardapio");
+        selecionarTodos(".filtro-cardapio");
 
     const produtos =
-        document.querySelectorAll(
+        selecionarTodos(
             ".menu-grid li[data-categoria]"
         );
 
     function mostrarCategoria(categoria) {
         produtos.forEach(produto => {
             produto.style.display =
-                produto.dataset.categoria === categoria
+                produto.dataset.categoria ===
+                categoria
                     ? "flex"
                     : "none";
         });
     }
 
     filtros.forEach(filtro => {
-        filtro.addEventListener("click", () => {
-            filtros.forEach(botao => {
-                botao.classList.remove("ativo");
-            });
+        filtro.addEventListener(
+            "click",
+            () => {
+                filtros.forEach(botao => {
+                    botao.classList.remove(
+                        "ativo"
+                    );
+                });
 
-            filtro.classList.add("ativo");
+                filtro.classList.add(
+                    "ativo"
+                );
 
-            mostrarCategoria(
-                filtro.dataset.categoria
-            );
-        });
+                mostrarCategoria(
+                    filtro.dataset.categoria
+                );
+            }
+        );
     });
 
     mostrarCategoria("tradicionais");
@@ -50,36 +66,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function formatarPreco(valor) {
         return Number(valor || 0)
-            .toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL"
-            });
+            .toLocaleString(
+                "pt-BR",
+                {
+                    style: "currency",
+                    currency: "BRL"
+                }
+            );
     }
 
+
     function obterSessaoCliente() {
-        const sessaoSalva =
-            localStorage.getItem("usuarioAzury");
-
-        if (!sessaoSalva) {
-            return null;
-        }
-
         try {
             const sessao =
-                JSON.parse(sessaoSalva);
+                JSON.parse(
+                    localStorage.getItem(
+                        "usuarioAzury"
+                    ) || "null"
+                );
 
             return sessao?.autenticado
                 ? sessao
                 : null;
+
         } catch (erro) {
             console.error(
-                "Não foi possível ler a sessão:",
+                "Erro ao ler a sessão:",
                 erro
             );
 
             return null;
         }
     }
+
 
     function registrarPedidoNoSistema(
         dadosPedido
@@ -89,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!sessao) {
             alert(
-                "O pedido será enviado ao WhatsApp, mas os pontos só poderão ser registrados quando você estiver conectado à sua conta Azury."
+                "O pedido será enviado ao WhatsApp, mas os pontos só serão registrados quando você estiver conectado à sua conta Azury."
             );
 
             return null;
@@ -98,12 +117,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (
             !window.AzuryPedidos ||
             typeof window.AzuryPedidos
-                .criarPedido !== "function"
+                .criarPedido !==
+                "function"
         ) {
-            console.error(
-                "O serviço de pedidos não foi carregado."
-            );
-
             alert(
                 "O pedido será enviado ao WhatsApp, mas não foi possível registrá-lo na Área do Cliente."
             );
@@ -113,10 +129,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             return window.AzuryPedidos
-                .criarPedido(dadosPedido);
+                .criarPedido(
+                    dadosPedido
+                );
+
         } catch (erro) {
             console.error(
-                "Erro ao registrar o pedido:",
+                "Erro ao registrar pedido:",
                 erro
             );
 
@@ -128,10 +147,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+
     function abrirWhatsApp(mensagem) {
         const link =
             `https://wa.me/${NUMERO_WHATSAPP}?text=` +
-            encodeURIComponent(mensagem);
+            encodeURIComponent(
+                mensagem
+            );
 
         window.open(
             link,
@@ -140,39 +162,32 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     }
 
-    function iniciarEnvio(botao) {
-        enviandoPedido = true;
-
-        botao.disabled = true;
-        botao.textContent =
-            "Preparando pedido...";
-    }
-
-    function finalizarEnvio(
-        botao,
-        textoOriginal
-    ) {
-        setTimeout(() => {
-            enviandoPedido = false;
-
-            botao.disabled = false;
-            botao.textContent =
-                textoOriginal;
-        }, 1200);
-    }
-
-    function fecharModal(modal) {
-        modal.style.display = "none";
-
-        document.body.style.overflow = "";
-    }
 
     function abrirModal(modal) {
-        modal.style.display = "flex";
+        if (!modal) {
+            return;
+        }
+
+        modal.style.display =
+            "flex";
 
         document.body.style.overflow =
             "hidden";
     }
+
+
+    function fecharModal(modal) {
+        if (!modal) {
+            return;
+        }
+
+        modal.style.display =
+            "none";
+
+        document.body.style.overflow =
+            "";
+    }
+
 
     function preencherNomeDaSessao(
         campoNome
@@ -181,6 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
             obterSessaoCliente();
 
         if (
+            campoNome &&
             sessao?.nome &&
             !campoNome.value.trim()
         ) {
@@ -190,282 +206,466 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    function iniciarEnvio(botao) {
+        enviandoPedido = true;
+
+        botao.disabled = true;
+
+        botao.textContent =
+            "Preparando pedido...";
+    }
+
+
+    function finalizarEnvio(
+        botao,
+        textoOriginal
+    ) {
+        setTimeout(() => {
+            enviandoPedido = false;
+
+            botao.disabled = false;
+
+            botao.textContent =
+                textoOriginal;
+
+        }, 1000);
+    }
+
+
+    function aplicarMascaraCEP(campo) {
+        if (!campo) {
+            return;
+        }
+
+        campo.addEventListener(
+            "input",
+            () => {
+                const numeros =
+                    campo.value
+                        .replace(/\D/g, "")
+                        .slice(0, 8);
+
+                campo.value =
+                    numeros.length > 5
+                        ? `${numeros.slice(
+                              0,
+                              5
+                          )}-${numeros.slice(
+                              5
+                          )}`
+                        : numeros;
+            }
+        );
+    }
+
+
     /* =====================================
-       PRODUTOS PRONTOS
+       PRODUTOS TRADICIONAIS E ESPECIAIS
     ====================================== */
 
     const modalProduto =
-        document.getElementById(
-            "modalProduto"
-        );
-
-    const botoesProdutos =
-        document.querySelectorAll(
-            ".btn-pedir-produto"
+        selecionar(
+            "#modalProduto"
         );
 
     const btnFecharProduto =
-        document.getElementById(
-            "btnFecharProduto"
+        selecionar(
+            "#btnFecharProduto"
         );
 
     const btnEnviarProduto =
-        document.getElementById(
-            "btnEnviarProduto"
+        selecionar(
+            "#btnEnviarProduto"
         );
 
     const produtoSelecionado =
-        document.getElementById(
-            "produtoSelecionado"
+        selecionar(
+            "#produtoSelecionado"
         );
 
     const nomeProdutoPedido =
-        document.getElementById(
-            "nomeProdutoPedido"
+        selecionar(
+            "#nomeProdutoPedido"
         );
 
     const precoProdutoPedido =
-        document.getElementById(
-            "precoProdutoPedido"
+        selecionar(
+            "#precoProdutoPedido"
+        );
+
+    const tamanhoProdutoPedido =
+        selecionar(
+            "#tamanhoProdutoPedido"
         );
 
     const tituloProdutoPedido =
-        document.getElementById(
-            "tituloProdutoPedido"
+        selecionar(
+            "#tituloProdutoPedido"
         );
 
     const descricaoProdutoPedido =
-        document.getElementById(
-            "descricaoProdutoPedido"
+        selecionar(
+            "#descricaoProdutoPedido"
         );
 
     const totalProdutoPedido =
-        document.getElementById(
-            "totalProdutoPedido"
+        selecionar(
+            "#totalProdutoPedido"
+        );
+
+    const precoProduto300 =
+        selecionar(
+            "#precoProduto300"
+        );
+
+    const precoProduto400 =
+        selecionar(
+            "#precoProduto400"
+        );
+
+    const precoProduto700 =
+        selecionar(
+            "#precoProduto700"
         );
 
     const nomeClienteProduto =
-        document.getElementById(
-            "nomeClienteProduto"
+        selecionar(
+            "#nomeClienteProduto"
         );
 
     const cepClienteProduto =
-        document.getElementById(
-            "cepClienteProduto"
+        selecionar(
+            "#cepClienteProduto"
         );
 
     const ruaClienteProduto =
-        document.getElementById(
-            "ruaClienteProduto"
+        selecionar(
+            "#ruaClienteProduto"
         );
 
     const numeroClienteProduto =
-        document.getElementById(
-            "numeroClienteProduto"
+        selecionar(
+            "#numeroClienteProduto"
         );
 
     const bairroClienteProduto =
-        document.getElementById(
-            "bairroClienteProduto"
+        selecionar(
+            "#bairroClienteProduto"
         );
 
     const complementoClienteProduto =
-        document.getElementById(
-            "complementoClienteProduto"
+        selecionar(
+            "#complementoClienteProduto"
         );
 
+    const opcoesTamanhoProduto =
+        selecionarTodos(
+            'input[name="tamanhoProduto"]'
+        );
 
-    if (
-        modalProduto &&
-        btnFecharProduto &&
-        btnEnviarProduto &&
-        produtoSelecionado &&
-        nomeProdutoPedido &&
-        precoProdutoPedido &&
-        tituloProdutoPedido &&
-        descricaoProdutoPedido &&
-        totalProdutoPedido
+    let precosProdutoAtual = {
+        300: 0,
+        400: 0,
+        700: 0
+    };
+
+
+    function atualizarTamanhoProduto(
+        tamanhoEscolhido
     ) {
-        botoesProdutos.forEach(botao => {
-            botao.addEventListener(
-                "click",
-                () => {
-                    const produto =
-                        botao.dataset.produto || "";
+        const tamanhosValidos = [
+            "300",
+            "400",
+            "700"
+        ];
 
-                    const preco =
-                        Number(
-                            botao.dataset.preco
-                        ) || 0;
+        const tamanho =
+            tamanhosValidos.includes(
+                String(
+                    tamanhoEscolhido
+                )
+            )
+                ? String(
+                      tamanhoEscolhido
+                  )
+                : "300";
 
-                    const descricao =
-                        botao.dataset.descricao || "";
+        const preco =
+            Number(
+                precosProdutoAtual[
+                    tamanho
+                ]
+            ) || 0;
 
-                    nomeProdutoPedido.value =
-                        produto;
+        tamanhoProdutoPedido.value =
+            tamanho;
 
-                    precoProdutoPedido.value =
-                        String(preco);
+        precoProdutoPedido.value =
+            String(preco);
 
-                    produtoSelecionado.textContent =
-                        `Produto selecionado: ${produto}`;
+        totalProdutoPedido.textContent =
+            formatarPreco(preco);
 
-                    tituloProdutoPedido.textContent =
-                        produto;
-
-                    descricaoProdutoPedido.textContent =
-                        descricao;
-
-                    totalProdutoPedido.textContent =
-                        formatarPreco(preco);
-
-                    preencherNomeDaSessao(
-                        nomeClienteProduto
-                    );
-
-                    abrirModal(modalProduto);
-                }
-            );
-        });
+        produtoSelecionado.textContent =
+            `Produto selecionado: ${nomeProdutoPedido.value} • ${tamanho} ml`;
+    }
 
 
-        btnFecharProduto.addEventListener(
+    selecionarTodos(
+        ".btn-pedir-produto"
+    ).forEach(botao => {
+        botao.addEventListener(
             "click",
             () => {
-                fecharModal(modalProduto);
-            }
-        );
-
-
-        modalProduto.addEventListener(
-            "click",
-            evento => {
-                if (
-                    evento.target ===
-                    modalProduto
-                ) {
-                    fecharModal(
-                        modalProduto
-                    );
-                }
-            }
-        );
-
-
-        btnEnviarProduto.addEventListener(
-            "click",
-            () => {
-                if (enviandoPedido) {
-                    return;
-                }
-
                 const produto =
-                    nomeProdutoPedido.value
-                        .trim();
+                    botao.dataset
+                        .produto || "";
 
                 const descricao =
-                    descricaoProdutoPedido
-                        .textContent
-                        .trim();
+                    botao.dataset
+                        .descricao || "";
 
-                const valorTotal =
-                    Number(
-                        precoProdutoPedido.value
-                    ) || 0;
+                precosProdutoAtual = {
+                    300:
+                        Number(
+                            botao.dataset
+                                .preco300
+                        ) || 0,
 
-                const nome =
-                    nomeClienteProduto.value
-                        .trim();
+                    400:
+                        Number(
+                            botao.dataset
+                                .preco400
+                        ) || 0,
 
-                const cep =
-                    cepClienteProduto.value
-                        .trim();
+                    700:
+                        Number(
+                            botao.dataset
+                                .preco700
+                        ) || 0
+                };
 
-                const rua =
-                    ruaClienteProduto.value
-                        .trim();
+                nomeProdutoPedido.value =
+                    produto;
 
-                const numero =
-                    numeroClienteProduto.value
-                        .trim();
+                tituloProdutoPedido.textContent =
+                    produto;
 
-                const bairro =
-                    bairroClienteProduto.value
-                        .trim();
+                descricaoProdutoPedido.textContent =
+                    descricao;
 
-                const complemento =
-                    complementoClienteProduto
-                        .value
-                        .trim();
-
-                if (
-                    !produto ||
-                    !nome ||
-                    !cep ||
-                    !rua ||
-                    !numero ||
-                    !bairro
-                ) {
-                    alert(
-                        "Preencha seu nome, CEP, rua, número e bairro para continuar."
+                precoProduto300.textContent =
+                    formatarPreco(
+                        precosProdutoAtual[
+                            300
+                        ]
                     );
 
-                    return;
-                }
+                precoProduto400.textContent =
+                    formatarPreco(
+                        precosProdutoAtual[
+                            400
+                        ]
+                    );
 
-                iniciarEnvio(
-                    btnEnviarProduto
+                precoProduto700.textContent =
+                    formatarPreco(
+                        precosProdutoAtual[
+                            700
+                        ]
+                    );
+
+                opcoesTamanhoProduto.forEach(
+                    opcao => {
+                        opcao.checked =
+                            opcao.value ===
+                            "300";
+                    }
                 );
 
-                const sessao =
-                    obterSessaoCliente();
+                atualizarTamanhoProduto(
+                    "300"
+                );
 
-                const pedidoCriado =
-                    registrarPedidoNoSistema({
-                        tipo: "compra",
+                preencherNomeDaSessao(
+                    nomeClienteProduto
+                );
 
-                        produto,
+                abrirModal(
+                    modalProduto
+                );
+            }
+        );
+    });
 
-                        quantidade: 1,
 
-                        itens: [
-                            {
-                                nome: produto,
-                                quantidade: 1
-                            }
-                        ],
+    opcoesTamanhoProduto.forEach(
+        opcao => {
+            opcao.addEventListener(
+                "change",
+                () => {
+                    if (
+                        opcao.checked
+                    ) {
+                        atualizarTamanhoProduto(
+                            opcao.value
+                        );
+                    }
+                }
+            );
+        }
+    );
 
-                        complementos: [],
 
-                        valorTotal,
+    btnFecharProduto?.addEventListener(
+        "click",
+        () => {
+            fecharModal(
+                modalProduto
+            );
+        }
+    );
 
-                        cliente: {
-                            nome,
 
-                            email:
-                                sessao?.email || ""
-                        },
+    modalProduto?.addEventListener(
+        "click",
+        evento => {
+            if (
+                evento.target ===
+                modalProduto
+            ) {
+                fecharModal(
+                    modalProduto
+                );
+            }
+        }
+    );
 
-                        enderecoEntrega: {
-                            cep,
-                            rua,
-                            numero,
-                            bairro,
-                            complemento
-                        },
 
-                        canal:
-                            "Site / WhatsApp"
-                    });
+    btnEnviarProduto?.addEventListener(
+        "click",
+        () => {
+            if (enviandoPedido) {
+                return;
+            }
 
-                const codigoPedido =
-                    pedidoCriado?.id
-                        ? `
-🧾 *Pedido:* ${pedidoCriado.id}
-`
-                        : "";
+            const produto =
+                nomeProdutoPedido.value
+                    .trim();
 
-                const mensagem = `
+            const descricao =
+                descricaoProdutoPedido
+                    .textContent
+                    .trim();
+
+            const tamanho =
+                tamanhoProdutoPedido.value
+                    .trim();
+
+            const valorTotal =
+                Number(
+                    precoProdutoPedido.value
+                ) || 0;
+
+            const nome =
+                nomeClienteProduto.value
+                    .trim();
+
+            const cep =
+                cepClienteProduto.value
+                    .trim();
+
+            const rua =
+                ruaClienteProduto.value
+                    .trim();
+
+            const numero =
+                numeroClienteProduto.value
+                    .trim();
+
+            const bairro =
+                bairroClienteProduto.value
+                    .trim();
+
+            const complemento =
+                complementoClienteProduto
+                    .value
+                    .trim();
+
+            if (
+                !produto ||
+                !tamanho ||
+                valorTotal <= 0 ||
+                !nome ||
+                !cep ||
+                !rua ||
+                !numero ||
+                !bairro
+            ) {
+                alert(
+                    "Escolha o tamanho e preencha nome, CEP, rua, número e bairro."
+                );
+
+                return;
+            }
+
+            iniciarEnvio(
+                btnEnviarProduto
+            );
+
+            const sessao =
+                obterSessaoCliente();
+
+            const pedidoCriado =
+                registrarPedidoNoSistema({
+                    tipo: "compra",
+
+                    produto,
+
+                    tamanho:
+                        `${tamanho} ml`,
+
+                    quantidade: 1,
+
+                    itens: [
+                        {
+                            nome:
+                                `${produto} • ${tamanho} ml`,
+
+                            quantidade: 1
+                        }
+                    ],
+
+                    complementos: [],
+
+                    valorTotal,
+
+                    cliente: {
+                        nome,
+
+                        email:
+                            sessao?.email ||
+                            ""
+                    },
+
+                    enderecoEntrega: {
+                        cep,
+                        rua,
+                        numero,
+                        bairro,
+                        complemento
+                    },
+
+                    canal:
+                        "Site / WhatsApp"
+                });
+
+            const codigoPedido =
+                pedidoCriado?.id
+                    ? `\n🧾 *Pedido:* ${pedidoCriado.id}\n`
+                    : "";
+
+            const mensagem = `
 Olá! Quero fazer este pedido na AZURY:
 ${codigoPedido}
 👤 *Cliente:*
@@ -480,26 +680,34 @@ Complemento: ${complemento || "Não informado"}
 🥤 *Produto:*
 ${produto}
 
+📏 *Tamanho:*
+${tamanho} ml
+
 📝 *Descrição:*
 ${descricao}
 
 💰 *Total:*
 ${formatarPreco(valorTotal)}
-                `.trim();
+            `.trim();
 
-                abrirWhatsApp(mensagem);
+            abrirWhatsApp(
+                mensagem
+            );
 
-                fecharModal(
-                    modalProduto
-                );
+            fecharModal(
+                modalProduto
+            );
 
-                finalizarEnvio(
-                    btnEnviarProduto,
-                    "Pedir pelo WhatsApp"
-                );
-            }
-        );
-    }
+            finalizarEnvio(
+                btnEnviarProduto,
+                "Pedir pelo WhatsApp"
+            );
+        }
+    );
+
+    aplicarMascaraCEP(
+        cepClienteProduto
+    );
 
 
     /* =====================================
@@ -575,413 +783,419 @@ ${formatarPreco(valorTotal)}
     ====================================== */
 
     const modalMonteSeu =
-        document.getElementById(
-            "modalMonteSeu"
-        );
-
-    const botoesMontar =
-        document.querySelectorAll(
-            ".btn-montar"
+        selecionar(
+            "#modalMonteSeu"
         );
 
     const btnFecharMonteSeu =
-        document.getElementById(
-            "btnFecharMonteSeu"
+        selecionar(
+            "#btnFecharMonteSeu"
         );
 
     const btnEnviarMonteSeu =
-        document.getElementById(
-            "btnEnviarMonteSeu"
+        selecionar(
+            "#btnEnviarMonteSeu"
         );
 
     const tamanhoSelecionado =
-        document.getElementById(
-            "tamanhoSelecionado"
+        selecionar(
+            "#tamanhoSelecionado"
         );
 
     const tamanhoMonteSeu =
-        document.getElementById(
-            "tamanhoMonteSeu"
+        selecionar(
+            "#tamanhoMonteSeu"
         );
 
     const precoBaseMonteSeu =
-        document.getElementById(
-            "precoBaseMonteSeu"
+        selecionar(
+            "#precoBaseMonteSeu"
         );
 
     const totalMonteSeu =
-        document.getElementById(
-            "totalMonteSeu"
+        selecionar(
+            "#totalMonteSeu"
         );
 
     const complementosMeio =
-        document.getElementById(
-            "complementosMeio"
+        selecionar(
+            "#complementosMeio"
         );
 
     const complementosTopo =
-        document.getElementById(
-            "complementosTopo"
+        selecionar(
+            "#complementosTopo"
         );
 
     const nomeCliente =
-        document.getElementById(
-            "nomeCliente"
+        selecionar(
+            "#nomeCliente"
         );
 
     const cepCliente =
-        document.getElementById(
-            "cepCliente"
+        selecionar(
+            "#cepCliente"
         );
 
     const ruaCliente =
-        document.getElementById(
-            "ruaCliente"
+        selecionar(
+            "#ruaCliente"
         );
 
     const numeroCliente =
-        document.getElementById(
-            "numeroCliente"
+        selecionar(
+            "#numeroCliente"
         );
 
     const bairroCliente =
-        document.getElementById(
-            "bairroCliente"
+        selecionar(
+            "#bairroCliente"
         );
 
     const complementoCliente =
-        document.getElementById(
-            "complementoCliente"
+        selecionar(
+            "#complementoCliente"
         );
 
 
-    if (
-        modalMonteSeu &&
-        btnFecharMonteSeu &&
-        btnEnviarMonteSeu &&
-        tamanhoSelecionado &&
-        tamanhoMonteSeu &&
-        precoBaseMonteSeu &&
-        totalMonteSeu &&
-        complementosMeio &&
-        complementosTopo
+    function criarComplementos(
+        container,
+        camada
     ) {
-        function criarComplementos(
-            container,
-            camada
-        ) {
-            container.innerHTML =
-                complementosDisponiveis
-                    .map(
-                        (item, indice) => {
-                            const preco =
-                                item.preco
-                                    .toFixed(2);
-
-                            return `
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        class="complemento-monte-seu"
-                                        value="${item.nome}"
-                                        data-preco="${preco}"
-                                        data-camada="${camada}"
-                                        id="${camada}-${indice}"
-                                    >
-
-                                    ${item.nome} —
-                                    R$ ${preco.replace(".", ",")}
-                                </label>
-                            `;
-                        }
-                    )
-                    .join("");
+        if (!container) {
+            return;
         }
 
-        criarComplementos(
-            complementosMeio,
-            "meio"
-        );
+        container.innerHTML =
+            complementosDisponiveis
+                .map(
+                    (
+                        item,
+                        indice
+                    ) => {
+                        const preco =
+                            item.preco
+                                .toFixed(2);
 
-        criarComplementos(
-            complementosTopo,
-            "cobertura"
-        );
+                        return `
+                            <label>
 
-        const todosComplementos =
-            document.querySelectorAll(
-                ".complemento-monte-seu"
-            );
+                                <input
+                                    type="checkbox"
+                                    class="complemento-monte-seu"
+                                    value="${item.nome}"
+                                    data-preco="${preco}"
+                                    data-camada="${camada}"
+                                    id="${camada}-${indice}"
+                                >
 
+                                ${item.nome} —
+                                R$ ${preco.replace(
+                                    ".",
+                                    ","
+                                )}
 
-        function calcularTotalMonteSeu() {
-            let total =
-                Number(
-                    precoBaseMonteSeu.value
-                ) || 0;
-
-            todosComplementos.forEach(
-                complemento => {
-                    if (
-                        complemento.checked
-                    ) {
-                        total +=
-                            Number(
-                                complemento.dataset
-                                    .preco
-                            ) || 0;
+                            </label>
+                        `;
                     }
-                }
-            );
-
-            totalMonteSeu.textContent =
-                formatarPreco(total);
-
-            return total;
-        }
-
-
-        function limparComplementos() {
-            todosComplementos.forEach(
-                complemento => {
-                    complemento.checked =
-                        false;
-                }
-            );
-        }
-
-
-        function obterComplementos(
-            camada
-        ) {
-            return Array
-                .from(todosComplementos)
-                .filter(
-                    complemento =>
-                        complemento.checked &&
-                        complemento.dataset
-                            .camada === camada
                 )
-                .map(
-                    complemento =>
-                        complemento.value
-                );
-        }
+                .join("");
+    }
 
 
-        function transformarEmLista(
-            itens
-        ) {
-            if (itens.length === 0) {
-                return "• Nenhum complemento";
-            }
+    criarComplementos(
+        complementosMeio,
+        "meio"
+    );
 
-            return itens
-                .map(
-                    item =>
-                        `• ${item}`
-                )
-                .join("\n");
-        }
+    criarComplementos(
+        complementosTopo,
+        "cobertura"
+    );
 
+    const todosComplementos =
+        selecionarTodos(
+            ".complemento-monte-seu"
+        );
+
+
+    function calcularTotalMonteSeu() {
+        let total =
+            Number(
+                precoBaseMonteSeu
+                    ?.value
+            ) || 0;
 
         todosComplementos.forEach(
             complemento => {
-                complemento.addEventListener(
-                    "change",
-                    calcularTotalMonteSeu
-                );
+                if (
+                    complemento.checked
+                ) {
+                    total +=
+                        Number(
+                            complemento
+                                .dataset
+                                .preco
+                        ) || 0;
+                }
             }
         );
 
+        if (totalMonteSeu) {
+            totalMonteSeu.textContent =
+                formatarPreco(total);
+        }
 
-        botoesMontar.forEach(botao => {
-            botao.addEventListener(
-                "click",
-                () => {
-                    limparComplementos();
+        return total;
+    }
 
-                    tamanhoMonteSeu.value =
-                        botao.dataset.tamanho;
 
-                    precoBaseMonteSeu.value =
-                        botao.dataset.precoBase;
+    function limparComplementos() {
+        todosComplementos.forEach(
+            complemento => {
+                complemento.checked =
+                    false;
+            }
+        );
+    }
 
-                    tamanhoSelecionado.textContent =
-                        `Copo selecionado: ${botao.dataset.tamanho}ml`;
 
-                    calcularTotalMonteSeu();
-
-                    preencherNomeDaSessao(
-                        nomeCliente
-                    );
-
-                    abrirModal(
-                        modalMonteSeu
-                    );
-                }
+    function obterComplementos(
+        camada
+    ) {
+        return todosComplementos
+            .filter(
+                complemento =>
+                    complemento.checked &&
+                    complemento.dataset
+                        .camada ===
+                        camada
+            )
+            .map(
+                complemento =>
+                    complemento.value
             );
-        });
+    }
 
 
-        btnFecharMonteSeu.addEventListener(
+    function transformarEmLista(
+        itens
+    ) {
+        if (
+            itens.length === 0
+        ) {
+            return "• Nenhum complemento";
+        }
+
+        return itens
+            .map(
+                item =>
+                    `• ${item}`
+            )
+            .join("\n");
+    }
+
+
+    todosComplementos.forEach(
+        complemento => {
+            complemento.addEventListener(
+                "change",
+                calcularTotalMonteSeu
+            );
+        }
+    );
+
+
+    selecionarTodos(
+        ".btn-montar"
+    ).forEach(botao => {
+        botao.addEventListener(
             "click",
             () => {
+                limparComplementos();
+
+                tamanhoMonteSeu.value =
+                    botao.dataset
+                        .tamanho;
+
+                precoBaseMonteSeu.value =
+                    botao.dataset
+                        .precoBase;
+
+                tamanhoSelecionado.textContent =
+                    `Copo selecionado: ${botao.dataset.tamanho}ml`;
+
+                calcularTotalMonteSeu();
+
+                preencherNomeDaSessao(
+                    nomeCliente
+                );
+
+                abrirModal(
+                    modalMonteSeu
+                );
+            }
+        );
+    });
+
+
+    btnFecharMonteSeu?.addEventListener(
+        "click",
+        () => {
+            fecharModal(
+                modalMonteSeu
+            );
+        }
+    );
+
+
+    modalMonteSeu?.addEventListener(
+        "click",
+        evento => {
+            if (
+                evento.target ===
+                modalMonteSeu
+            ) {
                 fecharModal(
                     modalMonteSeu
                 );
             }
-        );
+        }
+    );
 
 
-        modalMonteSeu.addEventListener(
-            "click",
-            evento => {
-                if (
-                    evento.target ===
-                    modalMonteSeu
-                ) {
-                    fecharModal(
-                        modalMonteSeu
-                    );
-                }
+    btnEnviarMonteSeu?.addEventListener(
+        "click",
+        () => {
+            if (enviandoPedido) {
+                return;
             }
-        );
 
+            const nome =
+                nomeCliente.value
+                    .trim();
 
-        btnEnviarMonteSeu.addEventListener(
-            "click",
-            () => {
-                if (enviandoPedido) {
-                    return;
-                }
+            const cep =
+                cepCliente.value
+                    .trim();
 
-                const nome =
-                    nomeCliente.value
-                        .trim();
+            const rua =
+                ruaCliente.value
+                    .trim();
 
-                const cep =
-                    cepCliente.value
-                        .trim();
+            const numero =
+                numeroCliente.value
+                    .trim();
 
-                const rua =
-                    ruaCliente.value
-                        .trim();
+            const bairro =
+                bairroCliente.value
+                    .trim();
 
-                const numero =
-                    numeroCliente.value
-                        .trim();
+            const complemento =
+                complementoCliente.value
+                    .trim();
 
-                const bairro =
-                    bairroCliente.value
-                        .trim();
-
-                const complemento =
-                    complementoCliente.value
-                        .trim();
-
-                if (
-                    !nome ||
-                    !cep ||
-                    !rua ||
-                    !numero ||
-                    !bairro
-                ) {
-                    alert(
-                        "Preencha seu nome, CEP, rua, número e bairro para continuar."
-                    );
-
-                    return;
-                }
-
-                iniciarEnvio(
-                    btnEnviarMonteSeu
+            if (
+                !nome ||
+                !cep ||
+                !rua ||
+                !numero ||
+                !bairro
+            ) {
+                alert(
+                    "Preencha nome, CEP, rua, número e bairro."
                 );
 
-                const tamanho =
-                    tamanhoMonteSeu.value;
+                return;
+            }
 
-                const valorTotal =
-                    calcularTotalMonteSeu();
+            iniciarEnvio(
+                btnEnviarMonteSeu
+            );
 
-                const itensMeio =
-                    obterComplementos(
-                        "meio"
-                    );
+            const tamanho =
+                tamanhoMonteSeu.value;
 
-                const itensCobertura =
-                    obterComplementos(
-                        "cobertura"
-                    );
+            const valorTotal =
+                calcularTotalMonteSeu();
 
-                const sessao =
-                    obterSessaoCliente();
+            const itensMeio =
+                obterComplementos(
+                    "meio"
+                );
 
-                const complementosPedido = [
-                    ...itensMeio.map(
-                        item =>
-                            `Meio: ${item}`
-                    ),
+            const itensCobertura =
+                obterComplementos(
+                    "cobertura"
+                );
 
-                    ...itensCobertura.map(
-                        item =>
-                            `Cobertura: ${item}`
-                    )
-                ];
+            const complementosPedido = [
+                ...itensMeio.map(
+                    item =>
+                        `Meio: ${item}`
+                ),
 
-                const pedidoCriado =
-                    registrarPedidoNoSistema({
-                        tipo: "compra",
+                ...itensCobertura.map(
+                    item =>
+                        `Cobertura: ${item}`
+                )
+            ];
 
-                        produto:
-                            `Monte o Seu • ${tamanho}ml`,
+            const sessao =
+                obterSessaoCliente();
 
-                        tamanho:
-                            `${tamanho} ml`,
+            const pedidoCriado =
+                registrarPedidoNoSistema({
+                    tipo: "compra",
 
-                        quantidade: 1,
+                    produto:
+                        `Monte o Seu • ${tamanho}ml`,
 
-                        itens: [
-                            {
-                                nome:
-                                    `Monte o Seu • ${tamanho}ml`,
+                    tamanho:
+                        `${tamanho} ml`,
 
-                                quantidade: 1
-                            }
-                        ],
+                    quantidade: 1,
 
-                        complementos:
-                            complementosPedido,
+                    itens: [
+                        {
+                            nome:
+                                `Monte o Seu • ${tamanho}ml`,
 
-                        valorTotal,
+                            quantidade: 1
+                        }
+                    ],
 
-                        cliente: {
-                            nome,
+                    complementos:
+                        complementosPedido,
 
-                            email:
-                                sessao?.email || ""
-                        },
+                    valorTotal,
 
-                        enderecoEntrega: {
-                            cep,
-                            rua,
-                            numero,
-                            bairro,
-                            complemento
-                        },
+                    cliente: {
+                        nome,
 
-                        canal:
-                            "Site / WhatsApp"
-                    });
+                        email:
+                            sessao?.email ||
+                            ""
+                    },
 
-                const codigoPedido =
-                    pedidoCriado?.id
-                        ? `
-🧾 *Pedido:* ${pedidoCriado.id}
-`
-                        : "";
+                    enderecoEntrega: {
+                        cep,
+                        rua,
+                        numero,
+                        bairro,
+                        complemento
+                    },
 
-                const mensagem = `
+                    canal:
+                        "Site / WhatsApp"
+                });
+
+            const codigoPedido =
+                pedidoCriado?.id
+                    ? `\n🧾 *Pedido:* ${pedidoCriado.id}\n`
+                    : "";
+
+            const mensagem = `
 Olá! Quero fazer este pedido na AZURY:
 ${codigoPedido}
 👤 *Cliente:*
@@ -1009,21 +1223,26 @@ ${transformarEmLista(itensCobertura)}
 
 💰 *Total:*
 ${formatarPreco(valorTotal)}
-                `.trim();
+            `.trim();
 
-                abrirWhatsApp(mensagem);
+            abrirWhatsApp(
+                mensagem
+            );
 
-                fecharModal(
-                    modalMonteSeu
-                );
+            fecharModal(
+                modalMonteSeu
+            );
 
-                finalizarEnvio(
-                    btnEnviarMonteSeu,
-                    "Pedir pelo WhatsApp"
-                );
-            }
-        );
-    }
+            finalizarEnvio(
+                btnEnviarMonteSeu,
+                "Pedir pelo WhatsApp"
+            );
+        }
+    );
+
+    aplicarMascaraCEP(
+        cepCliente
+    );
 
 
     /* =====================================
@@ -1033,30 +1252,20 @@ ${formatarPreco(valorTotal)}
     document.addEventListener(
         "keydown",
         evento => {
-            if (evento.key !== "Escape") {
+            if (
+                evento.key !==
+                "Escape"
+            ) {
                 return;
             }
 
-            if (
-                modalProduto &&
-                modalProduto.style.display ===
-                "flex"
-            ) {
-                fecharModal(
-                    modalProduto
-                );
-            }
+            fecharModal(
+                modalProduto
+            );
 
-            if (
-                modalMonteSeu &&
-                modalMonteSeu.style.display ===
-                "flex"
-            ) {
-                fecharModal(
-                    modalMonteSeu
-                );
-            }
+            fecharModal(
+                modalMonteSeu
+            );
         }
     );
-
 });
