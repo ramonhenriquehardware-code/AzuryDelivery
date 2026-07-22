@@ -14,6 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================
+       FUNÇÕES G(seletor)
+        );
+
+
+    /* =====================================
        FUNÇÕES GERAIS
     ====================================== */
 
@@ -71,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
             !window.AzuryPedidos ||
             typeof window.AzuryPedidos
                 .criarPedido !==
-                "function"
+            "function"
         ) {
             alert(
                 "O pedido será enviado ao WhatsApp, mas não foi possível registrá-lo na Área do Cliente."
@@ -201,11 +206,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 campo.value =
                     numeros.length > 5
                         ? `${numeros.slice(
-                              0,
-                              5
-                          )}-${numeros.slice(
-                              5
-                          )}`
+                            0,
+                            5
+                        )}-${numeros.slice(
+                            5
+                        )}`
                         : numeros;
             }
         );
@@ -232,6 +237,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    function obterFormaPagamento(
+        nomeGrupo
+    ) {
+        return (
+            document.querySelector(
+                `input[name="${nomeGrupo}"]:checked`
+            )?.value || ""
+        );
+    }
+
+
+    function limparFormaPagamento(
+        nomeGrupo
+    ) {
+        $$(
+            `input[name="${nomeGrupo}"]`
+        ).forEach(opcao => {
+            opcao.checked =
+                false;
+        });
+    }
+
+
     /* =====================================
        FILTROS DO CARDÁPIO
     ====================================== */
@@ -252,7 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
             produto.style.display =
                 produto.dataset
                     .categoria ===
-                categoria
+                    categoria
                     ? "flex"
                     : "none";
         });
@@ -290,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================
-       PRODUTOS TRADICIONAIS E ESPECIAIS
+       PRODUTOS PRONTOS
     ====================================== */
 
     const modalProduto =
@@ -377,16 +405,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 )
             )
                 ? String(
-                      tamanhoEscolhido
-                  )
+                    tamanhoEscolhido
+                )
                 : "300";
 
         const preco =
             Number(
                 precosProdutoAtual[
-                    tamanho
+                tamanho
                 ]
             ) || 0;
+
 
         if (
             tamanhoProdutoPedido
@@ -395,6 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 tamanho;
         }
 
+
         if (
             precoProdutoPedido
         ) {
@@ -402,12 +432,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 String(preco);
         }
 
+
         if (
             totalProdutoPedido
         ) {
             totalProdutoPedido.textContent =
-                formatarPreco(preco);
+                formatarPreco(
+                    preco
+                );
         }
+
 
         if (
             produtoSelecionado &&
@@ -431,6 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const descricao =
                         botao.dataset
                             .descricao || "";
+
 
                     precosProdutoAtual = {
                         "300":
@@ -463,12 +498,14 @@ document.addEventListener("DOMContentLoaded", () => {
                             produto;
                     }
 
+
                     if (
                         tituloProdutoPedido
                     ) {
                         tituloProdutoPedido.textContent =
                             produto;
                     }
+
 
                     if (
                         descricaoProdutoPedido
@@ -484,10 +521,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         precoProduto300.textContent =
                             formatarPreco(
                                 precosProdutoAtual[
-                                    "300"
+                                "300"
                                 ]
                             );
                     }
+
 
                     if (
                         precoProduto400
@@ -495,10 +533,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         precoProduto400.textContent =
                             formatarPreco(
                                 precosProdutoAtual[
-                                    "400"
+                                "400"
                                 ]
                             );
                     }
+
 
                     if (
                         precoProduto700
@@ -506,7 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         precoProduto700.textContent =
                             formatarPreco(
                                 precosProdutoAtual[
-                                    "700"
+                                "700"
                                 ]
                             );
                     }
@@ -526,9 +565,16 @@ document.addEventListener("DOMContentLoaded", () => {
                         "300"
                     );
 
+
                     preencherNomeDaSessao(
                         nomeClienteProduto
                     );
+
+
+                    limparFormaPagamento(
+                        "formaPagamentoProduto"
+                    );
+
 
                     abrirModal(
                         modalProduto
@@ -645,11 +691,17 @@ document.addEventListener("DOMContentLoaded", () => {
                         ?.value
                         .trim() || "";
 
+                const formaPagamento =
+                    obterFormaPagamento(
+                        "formaPagamentoProduto"
+                    );
+
 
                 if (
                     !produto ||
                     !tamanho ||
                     valorTotal <= 0 ||
+                    !formaPagamento ||
                     !dadosEntregaValidos({
                         nome,
                         cep,
@@ -659,7 +711,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     })
                 ) {
                     alert(
-                        "Escolha o tamanho e preencha nome, CEP válido, rua, número e bairro."
+                        "Escolha o tamanho, a forma de pagamento e preencha nome, CEP válido, rua, número e bairro."
                     );
 
                     return;
@@ -703,6 +755,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         valorTotal,
 
+                        formaPagamento,
+
                         cliente: {
                             nome,
 
@@ -742,6 +796,9 @@ Bairro: ${bairro}
 CEP: ${cep}
 Complemento: ${complemento || "Não informado"}
 
+💳 *Forma de pagamento:*
+${formaPagamento}
+
 🥤 *Produto:*
 ${produto}
 
@@ -760,9 +817,11 @@ ${formatarPreco(valorTotal)}
                     mensagem
                 );
 
+
                 fecharModal(
                     modalProduto
                 );
+
 
                 finalizarEnvio(
                     btnEnviarProduto,
@@ -895,9 +954,12 @@ ${formatarPreco(valorTotal)}
         container,
         camada
     ) {
-        if (!container) {
+        if (
+            !container
+        ) {
             return;
         }
+
 
         container.innerHTML =
             complementosDisponiveis
@@ -924,9 +986,9 @@ ${formatarPreco(valorTotal)}
 
                                 ${item.nome} —
                                 R$ ${preco.replace(
-                                    ".",
-                                    ","
-                                )}
+                            ".",
+                            ","
+                        )}
 
                             </label>
                         `;
@@ -940,6 +1002,7 @@ ${formatarPreco(valorTotal)}
         complementosMeio,
         "meio"
     );
+
 
     criarComplementos(
         complementosTopo,
@@ -987,6 +1050,7 @@ ${formatarPreco(valorTotal)}
                 );
         }
 
+
         return total;
     }
 
@@ -1011,7 +1075,7 @@ ${formatarPreco(valorTotal)}
                     complemento.checked &&
                     complemento.dataset
                         .camada ===
-                        camada
+                    camada
             )
             .map(
                 complemento =>
@@ -1025,11 +1089,11 @@ ${formatarPreco(valorTotal)}
     ) {
         return itens.length
             ? itens
-                  .map(
-                      item =>
-                          `• ${item}`
-                  )
-                  .join("\n")
+                .map(
+                    item =>
+                        `• ${item}`
+                )
+                .join("\n")
             : "• Nenhum complemento";
     }
 
@@ -1083,9 +1147,16 @@ ${formatarPreco(valorTotal)}
 
                     calcularTotalMonteSeu();
 
+
                     preencherNomeDaSessao(
                         nomeCliente
                     );
+
+
+                    limparFormaPagamento(
+                        "formaPagamentoMonteSeu"
+                    );
+
 
                     abrirModal(
                         modalMonteSeu
@@ -1163,8 +1234,14 @@ ${formatarPreco(valorTotal)}
                         ?.value
                         .trim() || "";
 
+                const formaPagamento =
+                    obterFormaPagamento(
+                        "formaPagamentoMonteSeu"
+                    );
+
 
                 if (
+                    !formaPagamento ||
                     !dadosEntregaValidos({
                         nome,
                         cep,
@@ -1174,7 +1251,7 @@ ${formatarPreco(valorTotal)}
                     })
                 ) {
                     alert(
-                        "Preencha nome, CEP válido, rua, número e bairro."
+                        "Escolha a forma de pagamento e preencha nome, CEP válido, rua, número e bairro."
                     );
 
                     return;
@@ -1254,6 +1331,8 @@ ${formatarPreco(valorTotal)}
 
                         valorTotal,
 
+                        formaPagamento,
+
                         cliente: {
                             nome,
 
@@ -1293,6 +1372,9 @@ Bairro: ${bairro}
 CEP: ${cep}
 Complemento: ${complemento || "Não informado"}
 
+💳 *Forma de pagamento:*
+${formaPagamento}
+
 🥤 *Monte o Seu • ${tamanho}ml*
 
 *Montagem do copo:*
@@ -1316,9 +1398,11 @@ ${formatarPreco(valorTotal)}
                     mensagem
                 );
 
+
                 fecharModal(
                     modalMonteSeu
                 );
+
 
                 finalizarEnvio(
                     btnEnviarMonteSeu,
@@ -1347,9 +1431,11 @@ ${formatarPreco(valorTotal)}
                 return;
             }
 
+
             fecharModal(
                 modalProduto
             );
+
 
             fecharModal(
                 modalMonteSeu
