@@ -3,6 +3,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let sessao = null;
     let usuario = null;
 
+
+    /* =====================================
+       LER DADOS SALVOS
+    ===================================== */
+
     try {
 
         sessao = JSON.parse(
@@ -14,6 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
     } catch (erro) {
+
+        console.error(
+            "Erro ao carregar os dados do cliente:",
+            erro
+        );
 
         sessao = null;
         usuario = null;
@@ -43,10 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /*
-     * Se os dados cadastrados não forem encontrados,
-     * usa os dados que estão na sessão.
+     * Caso os dados principais do cliente não existam,
+     * utiliza os dados encontrados na sessão.
      */
-    if (!usuario) {
+    if (!usuario || typeof usuario !== "object") {
 
         usuario = {
             ...sessao
@@ -55,14 +65,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /*
-     * Impede que uma sessão de outro e-mail
-     * abra uma conta diferente.
-     */
+    /* =====================================
+       VALIDAR A CONTA DA SESSÃO
+    ===================================== */
+
+    const emailUsuario =
+        String(usuario.email || "")
+            .trim()
+            .toLowerCase();
+
+    const emailSessao =
+        String(sessao.email || "")
+            .trim()
+            .toLowerCase();
+
     if (
-        usuario.email &&
-        sessao.email &&
-        usuario.email !== sessao.email
+        emailUsuario &&
+        emailSessao &&
+        emailUsuario !== emailSessao
     ) {
 
         localStorage.removeItem("usuarioAzury");
@@ -71,6 +91,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return;
 
+    }
+
+    usuario.email = emailSessao || emailUsuario;
+
+    if (!usuario.nome && sessao.nome) {
+        usuario.nome = sessao.nome;
     }
 
 
@@ -87,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             /*
              * Remove somente a sessão.
-             * A conta cadastrada continua salva.
+             * A conta continua salva.
              */
             localStorage.removeItem("usuarioAzury");
 
@@ -99,37 +125,123 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================
-       ATUALIZAR CONTAS ANTIGAS
+       CONVERTER CONTAS ANTIGAS
+    ===================================== */
+
+    const pontosAntigos =
+        Number.isFinite(Number(usuario.pontos))
+            ? Math.max(0, Math.trunc(Number(usuario.pontos)))
+            : 0;
+
+
+    /*
+     * Pontos acumulados:
+     * determinam o nível e nunca diminuem.
+     */
+    if (
+        usuario.pontosAcumulados === undefined ||
+        !Number.isFinite(Number(usuario.pontosAcumulados))
+    ) {
+
+        usuario.pontosAcumulados = pontosAntigos;
+
+    } else {
+
+        usuario.pontosAcumulados =
+            Math.max(
+                0,
+                Math.trunc(Number(usuario.pontosAcumulados))
+            );
+
+    }
+
+
+    /*
+     * Saldo de pontos:
+     * diminui quando uma recompensa é resgatada.
+     */
+    if (
+        usuario.saldoPontos === undefined ||
+        !Number.isFinite(Number(usuario.saldoPontos))
+    ) {
+
+        usuario.saldoPontos = pontosAntigos;
+
+    } else {
+
+        usuario.saldoPontos =
+            Math.max(
+                0,
+                Math.trunc(Number(usuario.saldoPontos))
+            );
+
+    }
+
+
+    /*
+     * Mantido temporariamente para compatibilidade
+     * com códigos antigos durante a atualização.
+     */
+    usuario.pontos = usuario.saldoPontos;
+
+
+    /* =====================================
+       DEFINIR O NÍVEL PELOS PONTOS ACUMULADOS
+    ===================================== */
+
+    const totalAcumulado =
+        usuario.pontosAcumulados;
+
+    let nivel = "Bronze";
+
+    if (totalAcumulado >= 100) {
+        nivel = "Prata";
+    }
+
+    if (totalAcumulado >= 300) {
+        nivel = "Ouro";
+    }
+
+    if (totalAcumulado >= 600) {
+        nivel = "Diamante";
+    }
+
+    usuario.nivel = nivel;
+
+
+    /* =====================================
+       ESTRUTURA DOS PEDIDOS
     ===================================== */
 
     if (!Array.isArray(usuario.pedidos)) {
 
-        usuario.pedidos = [
+        usuario.pedidos = [];
 
-            {
-                produto: "Azury Supreme",
-                valor: "29,99",
-                data: "18/07/2026",
-                status: "Entregue"
-            }
+    } else {
 
-        ];
+        /*
+         * Remove somente o pedido falso usado
+         * anteriormente como demonstração.
+         */
+        usuario.pedidos = usuario.pedidos.filter(pedido => {
 
-    }
+            const pedidoTeste =
+                pedido &&
+                pedido.produto === "Azury Supreme" &&
+                pedido.valor === "29,99" &&
+                pedido.data === "18/07/2026" &&
+                pedido.status === "Entregue";
 
-    if (
-        usuario.recompensaDisponivel === undefined
-    ) {
+            return !pedidoTeste;
 
-        usuario.recompensaDisponivel = false;
-
-    }
-
-    if (usuario.cupom === undefined) {
-
-        usuario.cupom = null;
+        });
 
     }
+
+
+    /* =====================================
+       ESTRUTURA DO HISTÓRICO
+    ===================================== */
 
     if (!Array.isArray(usuario.historico)) {
 
@@ -137,18 +249,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-    if (
-        usuario.pontos === undefined ||
-        Number.isNaN(Number(usuario.pontos))
-    ) {
 
-        usuario.pontos = 0;
+    /* =====================================
+       RECOMPENSAS RESGATADAS
+    ===================================== */
+
+    if (!Array.isArray(usuario.recompensasResgatadas)) {
+
+        usuario.recompensasResgatadas = [];
 
     }
 
 
     /* =====================================
-       SALVAR E INICIALIZAR
+       CÓDIGOS DE DESCONTO
+    ===================================== */
+
+    if (!Array.isArray(usuario.codigosDesconto)) {
+
+        usuario.codigosDesconto = [];
+
+    }
+
+
+    /* =====================================
+       CONTROLE MENSAL DOS RESGATES
+    ===================================== */
+
+    const agora = new Date();
+
+    const mesAtual =
+        `${agora.getFullYear()}-` +
+        `${String(agora.getMonth() + 1).padStart(2, "0")}`;
+
+
+    if (
+        !usuario.controleResgates ||
+        typeof usuario.controleResgates !== "object" ||
+        usuario.controleResgates.mesReferencia !== mesAtual
+    ) {
+
+        usuario.controleResgates = {
+
+            mesReferencia: mesAtual,
+
+            recompensa100: 0,
+
+            recompensa300: 0
+
+        };
+
+    } else {
+
+        usuario.controleResgates.recompensa100 =
+            Number(usuario.controleResgates.recompensa100) || 0;
+
+        usuario.controleResgates.recompensa300 =
+            Number(usuario.controleResgates.recompensa300) || 0;
+
+    }
+
+
+    /* =====================================
+       SALVAR OS DADOS ATUALIZADOS
     ===================================== */
 
     localStorage.setItem(
@@ -156,9 +319,6 @@ document.addEventListener("DOMContentLoaded", () => {
         JSON.stringify(usuario)
     );
 
-    /*
-     * Mantém a sessão ativa com os dados atualizados.
-     */
     localStorage.setItem(
         "usuarioAzury",
         JSON.stringify({
@@ -168,11 +328,20 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
+    /* =====================================
+       INICIALIZAR A ÁREA DO CLIENTE
+    ===================================== */
+
     inicializarPerfil(usuario);
+
     inicializarPontos(usuario);
+
     inicializarRecompensas(usuario);
+
     inicializarPedidos(usuario);
+
     inicializarHistorico(usuario);
+
     inicializarUI();
 
 });

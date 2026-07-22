@@ -24,8 +24,14 @@
         <div class="cliente-header-container">
 
             <a href="cliente.html" class="cliente-logo">
-                <img src="Imagens/coroa-azury-header.svg" alt="Coroa Azury">
+
+                <img
+                    src="Imagens/coroa-azury-header.svg"
+                    alt="Coroa Azury"
+                >
+
                 <span>AZURY</span>
+
             </a>
 
             <div class="acoes-cliente">
@@ -43,6 +49,7 @@
         </div>
 
     </header>
+
 
     <main class="painel-cliente">
 
@@ -109,10 +116,20 @@
                     </strong>
 
                     <span>
-                        PONTOS
+                        PONTOS DISPONÍVEIS
                     </span>
 
                 </div>
+
+                <p class="pontos-acumulados-resumo">
+
+                    Total acumulado:
+
+                    <strong id="pontosAcumuladosResumo">
+                        0
+                    </strong>
+
+                </p>
 
                 <div class="barra-pontos">
 
@@ -121,15 +138,23 @@
                 </div>
 
                 <p id="faltam" class="texto-progresso">
-                    Faltam 100 pontos para o nível Prata
+                    Faltam 100 pontos para a primeira recompensa.
                 </p>
 
-                <button type="button" class="btn btn-detalhes" id="btnVerDetalhes">
+                <button
+                    type="button"
+                    class="btn btn-detalhes"
+                    id="btnVerDetalhes"
+                >
                     Ver detalhes
                 </button>
 
-                <!-- Botão temporário para testes -->
-                <button type="button" id="btnAdicionarPontos" class="btn btn-detalhes">
+                <!-- Mantido temporariamente para testarmos as recompensas -->
+                <button
+                    type="button"
+                    id="btnAdicionarPontos"
+                    class="btn btn-detalhes"
+                >
                     +10 Pontos (Teste)
                 </button>
 
@@ -151,36 +176,8 @@
 
                 <div id="recompensas" class="conteudo-recompensas">
 
-                    <div class="recompensa-bloqueada">
-
-                        <div class="icone-bloqueado">
-                            🔒
-                        </div>
-
-                        <div class="recompensa-informacoes">
-
-                            <strong>
-                                Açaí 300ml Grátis
-                            </strong>
-
-                            <span>
-                                100 pontos
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <div class="barra-recompensa">
-
-                        <div class="progresso-recompensa"></div>
-
-                    </div>
-
-                    <p class="texto-recompensa">
-                        Faltam
-                        <strong>100 pontos</strong>
-                        para desbloquear
+                    <p>
+                        Carregando recompensas...
                     </p>
 
                 </div>
@@ -209,7 +206,11 @@
 
                 </div>
 
-                <button type="button" class="link-card" id="btnVerTodosPedidos">
+                <button
+                    type="button"
+                    class="link-card"
+                    id="btnVerTodosPedidos"
+                >
                     Ver todos os pedidos
                 </button>
 
@@ -243,14 +244,18 @@
 
             </div>
 
-            <button type="button" class="link-card link-historico" id="btnVerTodoHistorico">
+            <button
+                type="button"
+                class="link-card link-historico"
+                id="btnVerTodoHistorico"
+            >
                 Ver todo histórico
             </button>
 
         </section>
 
 
-        <!-- INFORMAÇÃO INTERNA DOS PONTOS -->
+        <!-- COMPATIBILIDADE COM O SISTEMA ATUAL -->
         <span id="pontosCard" hidden>
             0
         </span>
@@ -263,23 +268,37 @@
 
         <div class="modal-content modal-pontos">
 
-            <h2>⭐ Detalhes dos Pontos</h2>
+            <h2>
+                ⭐ Detalhes dos Pontos
+            </h2>
 
             <div class="resumo-pontos-modal">
+
+                <strong id="pontosDisponiveisModal">
+                    0
+                </strong>
+
+                <span>
+                    pontos disponíveis
+                </span>
+
+            </div>
+
+            <p class="pontos-acumulados-modal">
+
+                Total acumulado:
 
                 <strong id="pontosModal">
                     0
                 </strong>
 
-                <span>
-                    pontos acumulados
-                </span>
-
-            </div>
+            </p>
 
             <div class="nivel-modal">
 
-                <span>Nível atual</span>
+                <span>
+                    Nível atual
+                </span>
 
                 <strong id="nivelModal">
                     🥉 Bronze
@@ -294,22 +313,73 @@
             </div>
 
             <p id="faltamModal">
-                Faltam 100 pontos para o próximo nível.
+                Faltam 100 pontos para o nível Prata.
             </p>
 
+
+            <!-- NÍVEIS E BENEFÍCIOS -->
             <div class="lista-niveis">
 
-                <p>🥉 Bronze — de 0 a 99 pontos</p>
+                <p>
 
-                <p>🥈 Prata — de 100 a 299 pontos</p>
+                    <strong>
+                        🥉 Bronze — de 0 a 99 pontos
+                    </strong>
 
-                <p>🥇 Ouro — de 300 a 599 pontos</p>
+                    <br>
 
-                <p>💎 Diamante — a partir de 600 pontos</p>
+                    Continue acumulando para liberar sua primeira recompensa.
+
+                </p>
+
+                <p>
+
+                    <strong>
+                        🥈 Prata — de 100 a 299 pontos
+                    </strong>
+
+                    <br>
+
+                    Libera 1 Açaí de 400 ml com 2 complementos.
+
+                </p>
+
+                <p>
+
+                    <strong>
+                        🥇 Ouro — de 300 a 599 pontos
+                    </strong>
+
+                    <br>
+
+                    Libera também 1 código de 50% de desconto.
+
+                </p>
+
+                <p>
+
+                    <strong>
+                        💎 Diamante — de 600 a 800 pontos
+                    </strong>
+
+                    <br>
+
+                    Libera 1 Açaí de 700 ml com 4 complementos e a
+                    recompensa máxima com 2 copos de 700 ml.
+
+                    <br>
+
+                    Acima de 800 pontos, o cliente permanece Diamante.
+
+                </p>
 
             </div>
 
-            <button type="button" class="btn btn-outline" id="btnFecharDetalhes">
+            <button
+                type="button"
+                class="btn btn-outline"
+                id="btnFecharDetalhes"
+            >
                 Fechar
             </button>
 
@@ -317,20 +387,29 @@
 
     </div>
 
+
     <!-- MODAL DE TODOS OS PEDIDOS -->
     <div id="modalTodosPedidos" class="modal">
 
         <div class="modal-content modal-pedidos">
 
-            <h2>📦 Todos os Pedidos</h2>
+            <h2>
+                📦 Todos os Pedidos
+            </h2>
 
             <div id="listaTodosPedidos">
 
-                <p>Nenhum pedido realizado.</p>
+                <p>
+                    Nenhum pedido realizado.
+                </p>
 
             </div>
 
-            <button type="button" class="btn btn-outline" id="btnFecharTodosPedidos">
+            <button
+                type="button"
+                class="btn btn-outline"
+                id="btnFecharTodosPedidos"
+            >
                 Fechar
             </button>
 
@@ -344,15 +423,23 @@
 
         <div class="modal-content modal-historico">
 
-            <h2>📜 Todo o Histórico</h2>
+            <h2>
+                📜 Todo o Histórico
+            </h2>
 
             <div id="listaTodoHistorico">
 
-                <p>Nenhuma atividade encontrada.</p>
+                <p>
+                    Nenhuma atividade encontrada.
+                </p>
 
             </div>
 
-            <button type="button" class="btn btn-outline" id="btnFecharTodoHistorico">
+            <button
+                type="button"
+                class="btn btn-outline"
+                id="btnFecharTodoHistorico"
+            >
                 Fechar
             </button>
 
@@ -360,28 +447,87 @@
 
     </div>
 
-    <!-- MODAL DO CUPOM -->
+
+    <!-- MODAL DO CÓDIGO DE 50% -->
     <div id="modalCupom" class="modal">
 
         <div class="modal-content">
 
             <h2>
-                🎉 Recompensa Resgatada!
+                🎉 Código de desconto resgatado!
             </h2>
 
             <p>
-                Seu cupom exclusivo é:
+                Seu código exclusivo de 50% é:
             </p>
 
             <h1 id="codigoCupom"></h1>
 
-            <button type="button" class="btn" id="btnCopiarCupom">
-                📋 Copiar Cupom
+            <button
+                type="button"
+                class="btn"
+                id="btnCopiarCupom"
+            >
+                📋 Copiar código
             </button>
 
-            <button type="button" class="btn btn-outline" id="btnFecharModal">
+            <button
+                type="button"
+                class="btn btn-outline"
+                id="btnFecharModal"
+            >
                 Fechar
             </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- MODAL PARA MONTAR A RECOMPENSA DE AÇAÍ -->
+    <div id="modalRecompensaAcai" class="modal">
+
+        <div class="modal-content modal-recompensa-acai">
+
+            <h2 id="tituloModalRecompensa">
+                Monte sua recompensa
+            </h2>
+
+            <p id="descricaoModalRecompensa">
+                Escolha os complementos da sua recompensa.
+            </p>
+
+            <div
+                id="seletoresComplementos"
+                class="seletores-complementos"
+            ></div>
+
+            <div
+                id="mensagemRecompensa"
+                class="mensagem"
+                role="alert"
+                aria-live="polite"
+            ></div>
+
+            <div class="acoes-modal-recompensa">
+
+                <button
+                    type="button"
+                    class="btn"
+                    id="btnConfirmarResgate"
+                >
+                    Confirmar resgate
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-outline"
+                    id="btnFecharRecompensa"
+                >
+                    Cancelar
+                </button>
+
+            </div>
 
         </div>
 

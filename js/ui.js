@@ -1,291 +1,696 @@
-function inicializarUI() {
+/* =========================================
+   INTERFACE DA ÁREA DO CLIENTE — AZURY
+========================================= */
 
-    const btnCopiar =
-        document.getElementById("btnCopiarCupom");
+function obterUsuarioAtualizado() {
 
-    if (btnCopiar) {
+    try {
 
-        btnCopiar.addEventListener("click", () => {
+        return JSON.parse(
+            localStorage.getItem("clienteAzury")
+        );
 
-            const codigo =
-                document.getElementById("codigoCupom").innerText;
+    } catch (erro) {
 
-            navigator.clipboard.writeText(codigo);
+        console.error(
+            "Erro ao carregar os dados do cliente:",
+            erro
+        );
 
-            btnCopiar.innerHTML =
-                "✅ Cupom Copiado";
-
-        });
-
-    }
-
-    const btnFechar =
-        document.getElementById("btnFecharModal");
-
-    if (btnFechar) {
-
-        btnFechar.addEventListener("click", () => {
-
-            document.getElementById("modalCupom").style.display =
-                "none";
-
-            location.reload();
-
-        });
+        return null;
 
     }
 
-    const btnVerDetalhes =
-        document.getElementById("btnVerDetalhes");
+}
 
-    const modalDetalhes =
-        document.getElementById("modalDetalhesPontos");
 
-    const btnFecharDetalhes =
-        document.getElementById("btnFecharDetalhes");
+function abrirModal(modal) {
 
-    if (btnVerDetalhes && modalDetalhes) {
+    if (!modal) return;
 
-        btnVerDetalhes.addEventListener("click", () => {
+    modal.style.display = "flex";
 
-            const usuario =
-                JSON.parse(localStorage.getItem("clienteAzury"));
+}
 
-            if (!usuario) return;
 
-            const pontos =
-                Number(usuario.pontos) || 0;
+function fecharModal(modal) {
 
-            let nivel = "Bronze";
-            let icone = "🥉";
-            let meta = 100;
-            let inicioNivel = 0;
-            let proximoNivel = "Prata";
+    if (!modal) return;
 
-            if (pontos >= 100) {
-                nivel = "Prata";
-                icone = "🥈";
-                inicioNivel = 100;
-                meta = 300;
-                proximoNivel = "Ouro";
-            }
+    modal.style.display = "none";
 
-            if (pontos >= 300) {
-                nivel = "Ouro";
-                icone = "🥇";
-                inicioNivel = 300;
-                meta = 600;
-                proximoNivel = "Diamante";
-            }
+}
 
-            if (pontos >= 600) {
-                nivel = "Diamante";
-                icone = "💎";
-            }
 
-            document.getElementById("pontosModal").textContent =
-                pontos;
+/* =========================================
+   COPIAR TEXTO
+========================================= */
 
-            document.getElementById("nivelModal").textContent =
-                `${icone} ${nivel}`;
-
-            const progressoModal =
-                document.getElementById("progressoModal");
-
-            const faltamModal =
-                document.getElementById("faltamModal");
-
-            if (nivel === "Diamante") {
-
-                progressoModal.style.width = "100%";
-
-                faltamModal.textContent =
-                    "🏆 Você atingiu o nível máximo!";
-
-            } else {
-
-                const porcentagem =
-                    ((pontos - inicioNivel) /
-                        (meta - inicioNivel)) * 100;
-
-                progressoModal.style.width =
-                    Math.min(Math.max(porcentagem, 0), 100) + "%";
-
-                faltamModal.textContent =
-                    `Faltam ${meta - pontos} pontos para o nível ${proximoNivel}.`;
-
-            }
-
-            modalDetalhes.style.display = "flex";
-
-        });
-
-    }
-
-    if (btnFecharDetalhes && modalDetalhes) {
-
-        btnFecharDetalhes.addEventListener("click", () => {
-
-            modalDetalhes.style.display = "none";
-
-        });
-
-    }
-
-    const btnVerTodosPedidos =
-        document.getElementById("btnVerTodosPedidos");
-
-    const modalTodosPedidos =
-        document.getElementById("modalTodosPedidos");
-
-    const btnFecharTodosPedidos =
-        document.getElementById("btnFecharTodosPedidos");
-
-    const listaTodosPedidos =
-        document.getElementById("listaTodosPedidos");
+async function copiarTexto(texto) {
 
     if (
-        btnVerTodosPedidos &&
-        modalTodosPedidos &&
-        listaTodosPedidos
+        navigator.clipboard &&
+        window.isSecureContext
     ) {
 
-        btnVerTodosPedidos.addEventListener("click", () => {
+        await navigator.clipboard.writeText(texto);
 
-            const usuario =
-                JSON.parse(localStorage.getItem("clienteAzury"));
+        return;
 
-            listaTodosPedidos.innerHTML = "";
+    }
 
-            if (
-                !usuario ||
-                !Array.isArray(usuario.pedidos) ||
-                usuario.pedidos.length === 0
-            ) {
+    const campoTemporario =
+        document.createElement("textarea");
 
-                listaTodosPedidos.innerHTML =
-                    "<p>Nenhum pedido realizado.</p>";
+    campoTemporario.value = texto;
+    campoTemporario.style.position = "fixed";
+    campoTemporario.style.opacity = "0";
 
-            } else {
+    document.body.appendChild(campoTemporario);
 
-                const pedidosRecentes =
-                    [...usuario.pedidos].reverse();
+    campoTemporario.select();
 
-                pedidosRecentes.forEach(pedido => {
+    document.execCommand("copy");
 
-                    listaTodosPedidos.innerHTML += `
+    campoTemporario.remove();
+
+}
+
+
+/* =========================================
+   MODAL DE DETALHES DOS PONTOS
+========================================= */
+
+function atualizarModalPontos(usuario) {
+
+    const pontosAcumulados =
+        Math.max(
+            0,
+            Math.trunc(
+                Number(usuario.pontosAcumulados) || 0
+            )
+        );
+
+    const saldoPontos =
+        Math.max(
+            0,
+            Math.trunc(
+                Number(usuario.saldoPontos) || 0
+            )
+        );
+
+
+    let nivel = "Bronze";
+    let icone = "🥉";
+
+    let inicioNivel = 0;
+    let fimNivel = 100;
+
+    let textoProgresso =
+        `Faltam ${100 - pontosAcumulados} pontos ` +
+        `para o nível Prata.`;
+
+
+    if (pontosAcumulados >= 100) {
+
+        nivel = "Prata";
+        icone = "🥈";
+
+        inicioNivel = 100;
+        fimNivel = 300;
+
+        textoProgresso =
+            `Faltam ${300 - pontosAcumulados} pontos ` +
+            `para o nível Ouro.`;
+
+    }
+
+
+    if (pontosAcumulados >= 300) {
+
+        nivel = "Ouro";
+        icone = "🥇";
+
+        inicioNivel = 300;
+        fimNivel = 600;
+
+        textoProgresso =
+            `Faltam ${600 - pontosAcumulados} pontos ` +
+            `para o nível Diamante.`;
+
+    }
+
+
+    if (pontosAcumulados >= 600) {
+
+        nivel = "Diamante";
+        icone = "💎";
+
+        inicioNivel = 600;
+        fimNivel = 800;
+
+        textoProgresso =
+            `Faltam ${Math.max(
+                800 - pontosAcumulados,
+                0
+            )} pontos para completar a faixa Diamante.`;
+
+    }
+
+
+    if (pontosAcumulados >= 800) {
+
+        textoProgresso =
+            "🏆 Você completou a faixa Diamante e permanece no nível máximo.";
+
+    }
+
+
+    const pontosDisponiveisModal =
+        document.getElementById(
+            "pontosDisponiveisModal"
+        );
+
+    const pontosModal =
+        document.getElementById("pontosModal");
+
+    const nivelModal =
+        document.getElementById("nivelModal");
+
+    const progressoModal =
+        document.getElementById("progressoModal");
+
+    const faltamModal =
+        document.getElementById("faltamModal");
+
+
+    if (pontosDisponiveisModal) {
+
+        pontosDisponiveisModal.textContent =
+            saldoPontos;
+
+    }
+
+
+    if (pontosModal) {
+
+        pontosModal.textContent =
+            pontosAcumulados;
+
+    }
+
+
+    if (nivelModal) {
+
+        nivelModal.textContent =
+            `${icone} ${nivel}`;
+
+    }
+
+
+    let porcentagem = 100;
+
+
+    if (pontosAcumulados < 800) {
+
+        porcentagem =
+            (
+                (pontosAcumulados - inicioNivel) /
+                (fimNivel - inicioNivel)
+            ) * 100;
+
+    }
+
+
+    if (progressoModal) {
+
+        progressoModal.style.width =
+            `${Math.min(
+                Math.max(porcentagem, 0),
+                100
+            )}%`;
+
+    }
+
+
+    if (faltamModal) {
+
+        faltamModal.textContent =
+            textoProgresso;
+
+    }
+
+}
+
+
+/* =========================================
+   TODOS OS PEDIDOS
+========================================= */
+
+function renderizarTodosPedidos(usuario) {
+
+    const listaTodosPedidos =
+        document.getElementById(
+            "listaTodosPedidos"
+        );
+
+    if (!listaTodosPedidos) return;
+
+
+    listaTodosPedidos.innerHTML = "";
+
+
+    if (
+        !usuario ||
+        !Array.isArray(usuario.pedidos) ||
+        usuario.pedidos.length === 0
+    ) {
+
+        listaTodosPedidos.innerHTML =
+            "<p>Nenhum pedido realizado.</p>";
+
+        return;
+
+    }
+
+
+    if (
+        typeof criarHtmlPedido === "function"
+    ) {
+
+        listaTodosPedidos.innerHTML =
+            usuario.pedidos
+                .map(criarHtmlPedido)
+                .join("");
+
+        return;
+
+    }
+
+
+    listaTodosPedidos.innerHTML =
+        usuario.pedidos
+            .map(pedido => {
+
+                const produto =
+                    pedido.produto ||
+                    "Pedido Azury";
+
+                const data =
+                    pedido.data ||
+                    "Data não informada";
+
+                const valor =
+                    pedido.valor ||
+                    "0,00";
+
+                const status =
+                    pedido.status ||
+                    "Pedido recebido";
+
+                return `
 
                     <div class="pedido">
 
                         <h4>
-                            🥤 ${pedido.produto}
+                            🥤 ${produto}
                         </h4>
 
                         <p>
-                            📅 ${pedido.data}
+                            📅 ${data}
                         </p>
 
                         <p>
-                            💰 R$ ${pedido.valor}
+                            💰 R$ ${valor}
                         </p>
 
-                        <p class="status-entregue">
-                            🟢 ${pedido.status}
+                        <p class="status-pedido">
+                            ${status}
                         </p>
 
                     </div>
 
                 `;
 
-                });
+            })
+            .join("");
 
-            }
+}
 
-            modalTodosPedidos.style.display = "flex";
 
-        });
+/* =========================================
+   TODO O HISTÓRICO
+========================================= */
 
-    }
-
-    if (btnFecharTodosPedidos && modalTodosPedidos) {
-
-        btnFecharTodosPedidos.addEventListener("click", () => {
-
-            modalTodosPedidos.style.display = "none";
-
-        });
-
-    }
-
-    const btnVerTodoHistorico =
-        document.getElementById("btnVerTodoHistorico");
-
-    const modalTodoHistorico =
-        document.getElementById("modalTodoHistorico");
-
-    const btnFecharTodoHistorico =
-        document.getElementById("btnFecharTodoHistorico");
+function renderizarTodoHistorico(usuario) {
 
     const listaTodoHistorico =
-        document.getElementById("listaTodoHistorico");
+        document.getElementById(
+            "listaTodoHistorico"
+        );
+
+    if (!listaTodoHistorico) return;
+
+
+    listaTodoHistorico.innerHTML = "";
+
+
+    if (
+        !usuario ||
+        !Array.isArray(usuario.historico) ||
+        usuario.historico.length === 0
+    ) {
+
+        listaTodoHistorico.innerHTML =
+            "<p>Nenhuma atividade encontrada.</p>";
+
+        return;
+
+    }
+
+
+    listaTodoHistorico.innerHTML =
+        usuario.historico
+            .map(item => `
+
+                <div class="historico-item">
+
+                    ${item}
+
+                </div>
+
+            `)
+            .join("");
+
+}
+
+
+/* =========================================
+   INICIALIZAR INTERFACE
+========================================= */
+
+function inicializarUI() {
+
+    /* =====================================
+       MODAL DO CÓDIGO DE DESCONTO
+    ===================================== */
+
+    const modalCupom =
+        document.getElementById("modalCupom");
+
+    const btnCopiarCupom =
+        document.getElementById(
+            "btnCopiarCupom"
+        );
+
+    const btnFecharModal =
+        document.getElementById(
+            "btnFecharModal"
+        );
+
+
+    if (btnCopiarCupom) {
+
+        btnCopiarCupom.addEventListener(
+            "click",
+            async () => {
+
+                const codigoCupom =
+                    document.getElementById(
+                        "codigoCupom"
+                    );
+
+                const codigo =
+                    codigoCupom
+                        ? codigoCupom.textContent.trim()
+                        : "";
+
+
+                if (!codigo) return;
+
+
+                try {
+
+                    await copiarTexto(codigo);
+
+                    btnCopiarCupom.textContent =
+                        "✅ Código copiado";
+
+                } catch (erro) {
+
+                    console.error(
+                        "Erro ao copiar o código:",
+                        erro
+                    );
+
+                    btnCopiarCupom.textContent =
+                        "Não foi possível copiar";
+
+                }
+
+            }
+        );
+
+    }
+
+
+    if (btnFecharModal && modalCupom) {
+
+        btnFecharModal.addEventListener(
+            "click",
+            () => {
+
+                fecharModal(modalCupom);
+
+                window.location.reload();
+
+            }
+        );
+
+    }
+
+
+    /* =====================================
+       DETALHES DOS PONTOS
+    ===================================== */
+
+    const btnVerDetalhes =
+        document.getElementById(
+            "btnVerDetalhes"
+        );
+
+    const modalDetalhes =
+        document.getElementById(
+            "modalDetalhesPontos"
+        );
+
+    const btnFecharDetalhes =
+        document.getElementById(
+            "btnFecharDetalhes"
+        );
+
+
+    if (btnVerDetalhes && modalDetalhes) {
+
+        btnVerDetalhes.addEventListener(
+            "click",
+            () => {
+
+                const usuario =
+                    obterUsuarioAtualizado();
+
+                if (!usuario) return;
+
+                atualizarModalPontos(usuario);
+
+                abrirModal(modalDetalhes);
+
+            }
+        );
+
+    }
+
+
+    if (
+        btnFecharDetalhes &&
+        modalDetalhes
+    ) {
+
+        btnFecharDetalhes.addEventListener(
+            "click",
+            () => {
+
+                fecharModal(modalDetalhes);
+
+            }
+        );
+
+    }
+
+
+    /* =====================================
+       TODOS OS PEDIDOS
+    ===================================== */
+
+    const btnVerTodosPedidos =
+        document.getElementById(
+            "btnVerTodosPedidos"
+        );
+
+    const modalTodosPedidos =
+        document.getElementById(
+            "modalTodosPedidos"
+        );
+
+    const btnFecharTodosPedidos =
+        document.getElementById(
+            "btnFecharTodosPedidos"
+        );
+
+
+    if (
+        btnVerTodosPedidos &&
+        modalTodosPedidos
+    ) {
+
+        btnVerTodosPedidos.addEventListener(
+            "click",
+            () => {
+
+                const usuario =
+                    obterUsuarioAtualizado();
+
+                renderizarTodosPedidos(usuario);
+
+                abrirModal(modalTodosPedidos);
+
+            }
+        );
+
+    }
+
+
+    if (
+        btnFecharTodosPedidos &&
+        modalTodosPedidos
+    ) {
+
+        btnFecharTodosPedidos.addEventListener(
+            "click",
+            () => {
+
+                fecharModal(modalTodosPedidos);
+
+            }
+        );
+
+    }
+
+
+    /* =====================================
+       TODO O HISTÓRICO
+    ===================================== */
+
+    const btnVerTodoHistorico =
+        document.getElementById(
+            "btnVerTodoHistorico"
+        );
+
+    const modalTodoHistorico =
+        document.getElementById(
+            "modalTodoHistorico"
+        );
+
+    const btnFecharTodoHistorico =
+        document.getElementById(
+            "btnFecharTodoHistorico"
+        );
+
 
     if (
         btnVerTodoHistorico &&
-        modalTodoHistorico &&
-        listaTodoHistorico
+        modalTodoHistorico
     ) {
 
-        btnVerTodoHistorico.addEventListener("click", () => {
+        btnVerTodoHistorico.addEventListener(
+            "click",
+            () => {
 
-            const usuario =
-                JSON.parse(localStorage.getItem("clienteAzury"));
+                const usuario =
+                    obterUsuarioAtualizado();
 
-            listaTodoHistorico.innerHTML = "";
+                renderizarTodoHistorico(usuario);
 
-            if (
-                !usuario ||
-                !Array.isArray(usuario.historico) ||
-                usuario.historico.length === 0
-            ) {
-
-                listaTodoHistorico.innerHTML =
-                    "<p>Nenhuma atividade encontrada.</p>";
-
-            } else {
-
-                const historicoCompleto =
-                    [...usuario.historico];
-
-                historicoCompleto.forEach(item => {
-
-                    listaTodoHistorico.innerHTML += `
-
-                    <div class="historico-item">
-
-                        ${item}
-
-                    </div>
-
-                `;
-
-                });
+                abrirModal(modalTodoHistorico);
 
             }
-
-            modalTodoHistorico.style.display = "flex";
-
-        });
+        );
 
     }
 
-    if (btnFecharTodoHistorico && modalTodoHistorico) {
 
-        btnFecharTodoHistorico.addEventListener("click", () => {
+    if (
+        btnFecharTodoHistorico &&
+        modalTodoHistorico
+    ) {
 
-            modalTodoHistorico.style.display = "none";
+        btnFecharTodoHistorico.addEventListener(
+            "click",
+            () => {
 
-        });
+                fecharModal(modalTodoHistorico);
+
+            }
+        );
 
     }
+
+
+    /* =====================================
+       FECHAR MODAIS CLICANDO FORA
+    ===================================== */
+
+    const modais =
+        document.querySelectorAll(".modal");
+
+
+    modais.forEach(modal => {
+
+        modal.addEventListener(
+            "click",
+            evento => {
+
+                if (evento.target === modal) {
+
+                    fecharModal(modal);
+
+                }
+
+            }
+        );
+
+    });
+
+
+    /* =====================================
+       FECHAR MODAIS COM ESC
+    ===================================== */
+
+    document.addEventListener(
+        "keydown",
+        evento => {
+
+            if (evento.key !== "Escape") {
+                return;
+            }
+
+            modais.forEach(modal => {
+
+                fecharModal(modal);
+
+            });
+
+        }
+    );
 
 }
