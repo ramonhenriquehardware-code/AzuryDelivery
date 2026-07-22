@@ -4,28 +4,50 @@
 
 footer {
     width: 100%;
-    padding: 42px 6% 24px;
+
+    padding:
+        46px
+        6%
+        24px;
 
     color: #ffffff;
+
     background: #050505;
 
     text-align: center;
 }
 
+
+/* =========================================
+   COLUNAS DO RODAPÉ
+========================================= */
+
 .footer-conteudo {
     width: 100%;
-    max-width: 1050px;
+    max-width: 1220px;
 
-    margin: 0 auto 34px;
+    margin:
+        0
+        auto
+        34px;
 
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0, 1fr)
+        );
+
     align-items: start;
-    justify-content: center;
-    gap: 60px;
+
+    gap: 42px;
 }
 
+
 .footer-coluna {
+    min-width: 0;
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -33,29 +55,111 @@ footer {
     text-align: center;
 }
 
+
 .footer-coluna h2,
 .footer-coluna h3 {
-    margin: 0 0 12px;
+    margin:
+        0
+        0
+        12px;
 
     color: #ffffff;
 }
+
 
 .footer-coluna h2 {
     font-size: 23px;
 }
 
+
 .footer-coluna h3 {
     font-size: 19px;
 }
 
+
 .footer-coluna p {
-    margin: 4px 0;
+    margin:
+        4px
+        0;
 
     color: #e0e0e0;
 
     font-size: 14px;
     line-height: 1.5;
 }
+
+
+/* =========================================
+   AVISO EXCLUSIVO PARA DELIVERY
+========================================= */
+
+.aviso-delivery-rodape {
+    width: 100%;
+    max-width: 270px;
+
+    margin-top: 16px;
+    padding: 14px 13px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+
+    color: #ffffff;
+
+    background:
+        rgba(
+            0,
+            81,
+            255,
+            0.18
+        );
+
+    border:
+        1px solid
+        rgba(
+            103,
+            154,
+            255,
+            0.65
+        );
+
+    border-radius: 12px;
+
+    box-shadow:
+        0
+        8px
+        22px
+        rgba(
+            0,
+            81,
+            255,
+            0.16
+        );
+}
+
+
+.aviso-delivery-rodape strong {
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.35;
+}
+
+
+.aviso-delivery-rodape span {
+    color: #dce7ff;
+
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+
+/* =========================================
+   INSTAGRAM
+========================================= */
 
 .instagram-link {
     display: inline-flex;
@@ -67,6 +171,7 @@ footer {
 
     font-size: 15px;
     font-weight: 600;
+
     text-decoration: none;
 
     transition:
@@ -74,24 +179,138 @@ footer {
         transform 0.2s ease;
 }
 
+
 .instagram-link svg {
     width: 22px;
     height: 22px;
 
     fill: none;
+
     stroke: currentColor;
     stroke-width: 1.8;
 }
 
+
 .instagram-link .instagram-ponto {
     fill: currentColor;
+
     stroke: none;
 }
 
+
 .instagram-link:hover {
     color: #d9a7ff;
-    transform: translateY(-2px);
+
+    transform:
+        translateY(-2px);
 }
+
+
+.instagram-link:focus-visible {
+    outline:
+        3px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.3
+        );
+
+    outline-offset: 5px;
+
+    border-radius: 6px;
+}
+
+
+/* =========================================
+   PARCERIA KASA SURF
+========================================= */
+
+.footer-parceria {
+    justify-content: flex-start;
+}
+
+
+.parceria-kasa-surf {
+    min-width: 150px;
+
+    padding: 15px 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    color: #ffffff;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.06
+        );
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.16
+        );
+
+    border-radius: 14px;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.parceria-kasa-surf:hover {
+    background:
+        rgba(
+            0,
+            81,
+            255,
+            0.15
+        );
+
+    border-color:
+        rgba(
+            103,
+            154,
+            255,
+            0.65
+        );
+
+    transform:
+        translateY(-3px);
+}
+
+
+.parceria-emoji {
+    display: block;
+
+    font-size: 38px;
+    line-height: 1;
+}
+
+
+.parceria-kasa-surf strong {
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 800;
+}
+
+
+/* =========================================
+   DIREITOS AUTORAIS
+========================================= */
 
 .copy {
     margin: 0;
@@ -99,17 +318,63 @@ footer {
     color: #cfcfcf;
 
     font-size: 13px;
+
     text-align: center;
 }
 
 
-/* RESPONSIVIDADE */
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
 
-@media (max-width: 750px) {
+@media (max-width: 980px) {
 
     .footer-conteudo {
-        grid-template-columns: 1fr;
-        gap: 28px;
+        max-width: 760px;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap:
+            38px
+            30px;
+    }
+}
+
+
+@media (max-width: 620px) {
+
+    footer {
+        padding:
+            40px
+            20px
+            22px;
     }
 
+
+    .footer-conteudo {
+        grid-template-columns:
+            1fr;
+
+        gap: 30px;
+    }
+
+
+    .footer-coluna {
+        width: 100%;
+    }
+
+
+    .aviso-delivery-rodape {
+        max-width: 310px;
+    }
+
+
+    .parceria-kasa-surf {
+        width: 100%;
+        max-width: 230px;
+    }
 }
