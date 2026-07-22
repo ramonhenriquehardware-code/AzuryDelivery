@@ -4,43 +4,310 @@
 <head>
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Área do Cliente Azury"
+    >
 
     <title>Área do Cliente - AZURY</title>
 
-    <link rel="stylesheet" href="css/reset.css">
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/buttons.css">
-    <link rel="stylesheet" href="css/header.css">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="css/cliente.css">
+    <!-- ARQUIVOS DE ESTILO -->
+    <link
+        rel="stylesheet"
+        href="./css/reset.css?v=20260722-3"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/variables.css?v=20260722-3"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/buttons.css?v=20260722-3"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/header.css?v=20260722-3"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./styles.css?v=20260722-3"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/cliente.css?v=20260722-3"
+    >
+
+
+    <!-- CORREÇÃO DE SEGURANÇA DO CABEÇALHO -->
+    <style>
+        html,
+        body {
+            width: 100%;
+            min-width: 320px;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        body.pagina-cliente {
+            min-height: 100vh;
+        }
+
+        .pagina-cliente .cliente-header {
+            width: 100% !important;
+            height: 82px !important;
+            min-height: 82px !important;
+
+            padding: 10px 6% !important;
+
+            display: flex !important;
+            align-items: center !important;
+
+            overflow: hidden !important;
+
+            background: #ffffff !important;
+            border-bottom: 1px solid #edf0f5 !important;
+
+            position: relative !important;
+            z-index: 100 !important;
+        }
+
+        .pagina-cliente .cliente-header-container {
+            width: 100% !important;
+            max-width: 1500px !important;
+
+            margin: 0 auto !important;
+
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 20px !important;
+        }
+
+        .pagina-cliente .cliente-logo {
+            width: auto !important;
+            height: 62px !important;
+            max-width: 240px !important;
+
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+
+            overflow: hidden !important;
+
+            color: #0758f8 !important;
+
+            font-size: 30px !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+
+            text-decoration: none !important;
+        }
+
+        .pagina-cliente .cliente-logo img {
+            width: 78px !important;
+            height: 54px !important;
+
+            min-width: 78px !important;
+            max-width: 78px !important;
+
+            min-height: 54px !important;
+            max-height: 54px !important;
+
+            display: block !important;
+            flex: 0 0 78px !important;
+
+            object-fit: contain !important;
+            object-position: center !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+
+            transform: none !important;
+        }
+
+        .pagina-cliente .cliente-logo span {
+            display: inline-block !important;
+            flex-shrink: 0 !important;
+        }
+
+        .pagina-cliente .acoes-cliente {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 18px !important;
+        }
+
+        .pagina-cliente .btn-inicio-cliente,
+        .pagina-cliente .btn-sair {
+            min-height: 40px !important;
+            padding: 0 4px !important;
+
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+
+            color: #0758f8 !important;
+            background: transparent !important;
+
+            border: none !important;
+
+            font-family: inherit !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+
+            text-decoration: none !important;
+            white-space: nowrap !important;
+
+            cursor: pointer !important;
+        }
+
+        .pagina-cliente .btn-inicio-cliente:hover,
+        .pagina-cliente .btn-sair:hover {
+            color: #003fbd !important;
+        }
+
+        .pagina-cliente .painel-cliente {
+            width: calc(100% - 40px) !important;
+            max-width: 1135px !important;
+
+            margin: 20px auto 50px !important;
+
+            display: block !important;
+        }
+
+        @media (max-width: 650px) {
+            .pagina-cliente .cliente-header {
+                height: 70px !important;
+                min-height: 70px !important;
+
+                padding: 7px 14px !important;
+            }
+
+            .pagina-cliente .cliente-logo {
+                height: 54px !important;
+                max-width: 170px !important;
+
+                gap: 6px !important;
+
+                font-size: 22px !important;
+            }
+
+            .pagina-cliente .cliente-logo img {
+                width: 58px !important;
+                height: 44px !important;
+
+                min-width: 58px !important;
+                max-width: 58px !important;
+
+                min-height: 44px !important;
+                max-height: 44px !important;
+
+                flex-basis: 58px !important;
+            }
+
+            .pagina-cliente .acoes-cliente {
+                gap: 8px !important;
+            }
+
+            .pagina-cliente .btn-inicio-cliente,
+            .pagina-cliente .btn-sair {
+                font-size: 12px !important;
+            }
+
+            .pagina-cliente .painel-cliente {
+                width: calc(100% - 24px) !important;
+
+                margin-top: 14px !important;
+            }
+        }
+
+        @media (max-width: 390px) {
+            .pagina-cliente .cliente-logo span {
+                font-size: 18px !important;
+            }
+
+            .pagina-cliente .cliente-logo img {
+                width: 50px !important;
+                height: 40px !important;
+
+                min-width: 50px !important;
+                max-width: 50px !important;
+
+                min-height: 40px !important;
+                max-height: 40px !important;
+
+                flex-basis: 50px !important;
+            }
+        }
+    </style>
 </head>
 
 <body class="pagina-cliente">
 
-    <!-- CABEÇALHO -->
+    <!-- =====================================
+         CABEÇALHO
+    ====================================== -->
+
     <header class="cliente-header">
 
         <div class="cliente-header-container">
 
-            <a href="cliente.html" class="cliente-logo">
+            <a
+                href="cliente.html"
+                class="cliente-logo"
+                aria-label="Área do Cliente Azury"
+            >
 
                 <img
-                    src="Imagens/coroa-azury-header.svg"
+                    src="./Imagens/coroa-azury-header.svg"
                     alt="Coroa Azury"
+                    width="78"
+                    height="54"
+                    style="
+                        width: 78px !important;
+                        height: 54px !important;
+                        min-width: 78px !important;
+                        max-width: 78px !important;
+                        min-height: 54px !important;
+                        max-height: 54px !important;
+                        display: block !important;
+                        object-fit: contain !important;
+                        margin: 0 !important;
+                        transform: none !important;
+                    "
                 >
 
-                <span>AZURY</span>
+                <span>
+                    AZURY
+                </span>
 
             </a>
 
+
             <div class="acoes-cliente">
 
-                <a href="index.html" class="btn-inicio-cliente">
+                <a
+                    href="index.html"
+                    class="btn-inicio-cliente"
+                >
                     ← Início
                 </a>
 
-                <button type="button" id="btnSair" class="btn-sair">
+                <button
+                    type="button"
+                    id="btnSair"
+                    class="btn-sair"
+                >
                     Sair
                 </button>
 
@@ -51,9 +318,14 @@
     </header>
 
 
+    <!-- =====================================
+         CONTEÚDO PRINCIPAL
+    ====================================== -->
+
     <main class="painel-cliente">
 
         <!-- PERFIL -->
+
         <section class="perfil-cliente">
 
             <div class="avatar-container">
@@ -66,7 +338,10 @@
 
                 </div>
 
-                <span class="selo-avatar" aria-hidden="true">
+                <span
+                    class="selo-avatar"
+                    aria-hidden="true"
+                >
                     ♕
                 </span>
 
@@ -82,21 +357,32 @@
 
                 <strong id="nomeCliente">
                     Cliente
-                </strong><strong aria-hidden="true">!</strong>
+                </strong>
+
+                <strong aria-hidden="true">
+                    !
+                </strong>
 
             </h2>
 
-            <span id="nivelClienteCard" class="nivel-cliente">
+            <span
+                id="nivelClienteCard"
+                class="nivel-cliente"
+            >
                 🥉 Cliente Bronze
             </span>
 
         </section>
 
 
-        <!-- CARDS PRINCIPAIS -->
+        <!-- =====================================
+             CARDS PRINCIPAIS
+        ====================================== -->
+
         <section class="cliente-grid">
 
             <!-- MEUS PONTOS -->
+
             <article class="card card-pontos">
 
                 <h2 class="card-titulo">
@@ -133,11 +419,17 @@
 
                 <div class="barra-pontos">
 
-                    <div class="progresso" id="progresso"></div>
+                    <div
+                        class="progresso"
+                        id="progresso"
+                    ></div>
 
                 </div>
 
-                <p id="faltam" class="texto-progresso">
+                <p
+                    id="faltam"
+                    class="texto-progresso"
+                >
                     Faltam 100 pontos para a primeira recompensa.
                 </p>
 
@@ -149,36 +441,11 @@
                     Ver detalhes
                 </button>
 
-                
-
-            </article>
-
-
-            <!-- RECOMPENSAS -->
-            <article class="card card-recompensas">
-
-                <h2 class="card-titulo">
-
-                    <span class="icone-card icone-recompensa">
-                        🎁
-                    </span>
-
-                    Recompensas
-
-                </h2>
-
-                <div id="recompensas" class="conteudo-recompensas">
-
-                    <p>
-                        Carregando recompensas...
-                    </p>
-
-                </div>
-
             </article>
 
 
             <!-- MEUS PEDIDOS -->
+
             <article class="card card-pedidos">
 
                 <h2 class="card-titulo">
@@ -191,7 +458,10 @@
 
                 </h2>
 
-                <div id="pedidos" class="lista-pedidos">
+                <div
+                    id="pedidos"
+                    class="lista-pedidos"
+                >
 
                     <p>
                         Nenhum pedido realizado.
@@ -209,10 +479,41 @@
 
             </article>
 
+
+            <!-- RECOMPENSAS -->
+
+            <article class="card card-recompensas">
+
+                <h2 class="card-titulo">
+
+                    <span class="icone-card icone-recompensa">
+                        🎁
+                    </span>
+
+                    Recompensas
+
+                </h2>
+
+                <div
+                    id="recompensas"
+                    class="conteudo-recompensas"
+                >
+
+                    <p>
+                        Carregando recompensas...
+                    </p>
+
+                </div>
+
+            </article>
+
         </section>
 
 
-        <!-- HISTÓRICO -->
+        <!-- =====================================
+             HISTÓRICO
+        ====================================== -->
+
         <section class="card card-historico">
 
             <div class="historico-cabecalho">
@@ -229,7 +530,10 @@
 
             </div>
 
-            <div id="listaHistorico" class="lista-historico">
+            <div
+                id="listaHistorico"
+                class="lista-historico"
+            >
 
                 <p class="historico-vazio">
                     Nenhuma atividade ainda.
@@ -248,16 +552,25 @@
         </section>
 
 
-        <!-- COMPATIBILIDADE COM O SISTEMA ATUAL -->
-        <span id="pontosCard" hidden>
+        <span
+            id="pontosCard"
+            hidden
+        >
             0
         </span>
 
     </main>
 
 
-    <!-- MODAL DE DETALHES DOS PONTOS -->
-    <div id="modalDetalhesPontos" class="modal">
+    <!-- =====================================
+         MODAL DE DETALHES DOS PONTOS
+    ====================================== -->
+
+    <div
+        id="modalDetalhesPontos"
+        class="modal"
+        aria-hidden="true"
+    >
 
         <div class="modal-content modal-pontos">
 
@@ -301,7 +614,10 @@
 
             <div class="barra-pontos">
 
-                <div class="progresso" id="progressoModal"></div>
+                <div
+                    class="progresso"
+                    id="progressoModal"
+                ></div>
 
             </div>
 
@@ -310,11 +626,9 @@
             </p>
 
 
-            <!-- NÍVEIS E BENEFÍCIOS -->
             <div class="lista-niveis">
 
                 <p>
-
                     <strong>
                         🥉 Bronze — de 0 a 99 pontos
                     </strong>
@@ -322,11 +636,9 @@
                     <br>
 
                     Continue acumulando para liberar sua primeira recompensa.
-
                 </p>
 
                 <p>
-
                     <strong>
                         🥈 Prata — de 100 a 299 pontos
                     </strong>
@@ -334,11 +646,9 @@
                     <br>
 
                     Libera 1 Açaí de 400 ml com 2 complementos.
-
                 </p>
 
                 <p>
-
                     <strong>
                         🥇 Ouro — de 300 a 599 pontos
                     </strong>
@@ -346,24 +656,17 @@
                     <br>
 
                     Libera também 1 código de 50% de desconto.
-
                 </p>
 
                 <p>
-
                     <strong>
-                        💎 Diamante — de 600 a 800 pontos
+                        💎 Diamante — a partir de 600 pontos
                     </strong>
 
                     <br>
 
-                    Libera 1 Açaí de 700 ml com 4 complementos e a
-                    recompensa máxima com 2 copos de 700 ml.
-
-                    <br>
-
-                    Acima de 800 pontos, o cliente permanece Diamante.
-
+                    Libera 1 Açaí de 700 ml com 4 complementos
+                    e, aos 800 pontos, 2 copos de 700 ml.
                 </p>
 
             </div>
@@ -381,8 +684,15 @@
     </div>
 
 
-    <!-- MODAL DE TODOS OS PEDIDOS -->
-    <div id="modalTodosPedidos" class="modal">
+    <!-- =====================================
+         MODAL DE TODOS OS PEDIDOS
+    ====================================== -->
+
+    <div
+        id="modalTodosPedidos"
+        class="modal"
+        aria-hidden="true"
+    >
 
         <div class="modal-content modal-pedidos">
 
@@ -411,8 +721,15 @@
     </div>
 
 
-    <!-- MODAL DE TODO O HISTÓRICO -->
-    <div id="modalTodoHistorico" class="modal">
+    <!-- =====================================
+         MODAL DO HISTÓRICO
+    ====================================== -->
+
+    <div
+        id="modalTodoHistorico"
+        class="modal"
+        aria-hidden="true"
+    >
 
         <div class="modal-content modal-historico">
 
@@ -441,8 +758,15 @@
     </div>
 
 
-    <!-- MODAL DO CÓDIGO DE 50% -->
-    <div id="modalCupom" class="modal">
+    <!-- =====================================
+         MODAL DO CUPOM
+    ====================================== -->
+
+    <div
+        id="modalCupom"
+        class="modal"
+        aria-hidden="true"
+    >
 
         <div class="modal-content">
 
@@ -477,8 +801,15 @@
     </div>
 
 
-    <!-- MODAL PARA MONTAR A RECOMPENSA DE AÇAÍ -->
-    <div id="modalRecompensaAcai" class="modal">
+    <!-- =====================================
+         MODAL DA RECOMPENSA
+    ====================================== -->
+
+    <div
+        id="modalRecompensaAcai"
+        class="modal"
+        aria-hidden="true"
+    >
 
         <div class="modal-content modal-recompensa-acai">
 
@@ -527,13 +858,23 @@
     </div>
 
 
-    <script src="./js/perfil.js"></script>
-    <script src="./js/pontos.js"></script>
-    <script src="./js/pedidos.js"></script>
-    <script src="./js/historico.js"></script>
-    <script src="./js/recompensas.js"></script>
-    <script src="./js/ui.js"></script>
-    <script src="./js/cliente.js"></script>
+    <!-- =====================================
+         SCRIPTS
+    ====================================== -->
+
+    <script src="./js/perfil.js?v=20260722-3"></script>
+
+    <script src="./js/pontos.js?v=20260722-3"></script>
+
+    <script src="./js/pedidos.js?v=20260722-3"></script>
+
+    <script src="./js/historico.js?v=20260722-3"></script>
+
+    <script src="./js/recompensas.js?v=20260722-3"></script>
+
+    <script src="./js/ui.js?v=20260722-3"></script>
+
+    <script src="./js/cliente.js?v=20260722-3"></script>
 
 </body>
 
