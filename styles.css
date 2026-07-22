@@ -15,8 +15,112 @@ body {
 
 }
 
+/* =========================================
+   CORREÇÃO FINAL DO RODAPÉ
+========================================= */
+
+footer .footer-conteudo {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto 34px;
+
+    display: grid !important;
+    grid-template-columns: 1.1fr 1.6fr 1fr 1fr !important;
+    align-items: start !important;
+    gap: 35px !important;
+}
+
+footer .footer-coluna {
+    width: 100%;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    text-align: center;
+}
 
 
+/* AVISO DELIVERY */
+
+footer .aviso-delivery-rodape {
+    width: 100%;
+    max-width: 300px;
+
+    margin-top: 14px;
+    padding: 12px 14px;
+
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    background: rgba(0, 81, 255, 0.18);
+    border: 1px solid rgba(103, 154, 255, 0.65);
+    border-radius: 12px;
+}
+
+footer .aviso-delivery-rodape strong {
+    display: block;
+
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+footer .aviso-delivery-rodape span {
+    display: block;
+
+    color: #dce7ff;
+    font-size: 12px;
+}
 
 
+/* PARCERIA */
 
+footer .parceria-kasa-surf {
+    min-width: 150px;
+    padding: 14px 20px;
+
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+}
+
+footer .parceria-emoji {
+    display: block;
+    font-size: 34px;
+}
+
+footer .parceria-kasa-surf strong {
+    color: #ffffff;
+    font-size: 16px;
+}
+
+
+/* TABLET */
+
+@media (max-width: 900px) {
+
+    footer .footer-conteudo {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+
+/* CELULAR */
+
+@media (max-width: 620px) {
+
+    footer .footer-conteudo {
+        grid-template-columns: 1fr !important;
+        gap: 30px !important;
+    }
+}
