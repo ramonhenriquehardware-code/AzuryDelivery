@@ -1,28 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
     "use strict";
 
-    let sessao = null;
-    let usuario = null;
-
-
-    /* =====================================
-       FUNÇÕES AUXILIARES
-    ====================================== */
-
     function lerJSON(chave) {
-        const valorSalvo =
-            localStorage.getItem(chave);
-
-        if (!valorSalvo) {
-            return null;
-        }
-
         try {
-            return JSON.parse(valorSalvo);
+            const valor = localStorage.getItem(chave);
+
+            return valor
+                ? JSON.parse(valor)
+                : null;
 
         } catch (erro) {
             console.error(
-                `Erro ao ler ${chave}:`,
+                `Erro ao carregar ${chave}:`,
                 erro
             );
 
@@ -32,50 +21,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     function converterValor(valor) {
-        if (
-            window.AzuryPontuacao &&
-            typeof window.AzuryPontuacao
-                .converterValorParaNumero ===
-                "function"
-        ) {
-            return window.AzuryPontuacao
-                .converterValorParaNumero(valor);
-        }
-
         if (typeof valor === "number") {
             return Number.isFinite(valor)
                 ? valor
                 : 0;
         }
 
-        const texto =
+        let texto =
             String(valor ?? "")
-                .trim()
                 .replace(/\s/g, "")
                 .replace("R$", "");
 
-        if (!texto) {
-            return 0;
-        }
-
-        let valorLimpo =
-            texto;
-
         if (
-            valorLimpo.includes(".") &&
-            valorLimpo.includes(",")
+            texto.includes(".") &&
+            texto.includes(",")
         ) {
-            valorLimpo = valorLimpo
+            texto = texto
                 .replace(/\./g, "")
                 .replace(",", ".");
 
         } else {
-            valorLimpo =
-                valorLimpo.replace(",", ".");
+            texto =
+                texto.replace(",", ".");
         }
 
         const numero =
-            Number(valorLimpo);
+            Number(texto);
 
         return Number.isFinite(numero)
             ? numero
@@ -83,15 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function formatarValorSimples(valor) {
-        return converterValor(valor)
-            .toFixed(2)
-            .replace(".", ",");
-    }
-
-
     function normalizarPedido(pedido) {
-        const pedidoSeguro =
+        const seguro =
             pedido &&
             typeof pedido === "object"
                 ? { ...pedido }
@@ -102,8 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 0,
 
                 converterValor(
-                    pedidoSeguro.taxaEntrega ??
-                    pedidoSeguro.entrega ??
+                    seguro.taxaEntrega ??
+                    seguro.entrega ??
                     0
                 )
             );
@@ -113,9 +77,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 0,
 
                 converterValor(
-                    pedidoSeguro.valorTotal ??
-                    pedidoSeguro.total ??
-                    pedidoSeguro.valor ??
+                    seguro.valorTotal ??
+                    seguro.total ??
+                    seguro.valor ??
                     0
                 )
             );
@@ -125,9 +89,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 0,
 
                 converterValor(
-                    pedidoSeguro.valorProdutos ??
-                    pedidoSeguro.subtotal ??
-                    pedidoSeguro.valorPedido ??
+                    seguro.valorProdutos ??
+                    seguro.subtotal ??
+                    seguro.valorPedido ??
                     0
                 )
             );
@@ -147,70 +111,65 @@ document.addEventListener("DOMContentLoaded", () => {
                 : valorProdutos +
                   taxaEntrega;
 
-        const enderecoOriginal =
-            pedidoSeguro.enderecoEntrega &&
-            typeof pedidoSeguro.enderecoEntrega ===
+        const endereco =
+            seguro.enderecoEntrega &&
+            typeof seguro.enderecoEntrega ===
                 "object"
-                ? pedidoSeguro.enderecoEntrega
+                ? seguro.enderecoEntrega
                 : {};
 
         return {
-            ...pedidoSeguro,
+            ...seguro,
 
             itens:
                 Array.isArray(
-                    pedidoSeguro.itens
+                    seguro.itens
                 )
-                    ? pedidoSeguro.itens
+                    ? seguro.itens
                     : [],
 
             complementos:
                 Array.isArray(
-                    pedidoSeguro.complementos
+                    seguro.complementos
                 )
-                    ? pedidoSeguro.complementos
+                    ? seguro.complementos
                     : [],
 
             formaPagamento:
                 String(
-                    pedidoSeguro.formaPagamento ||
-                    pedidoSeguro.pagamento ||
+                    seguro.formaPagamento ||
+                    seguro.pagamento ||
                     ""
                 ).trim(),
 
             enderecoEntrega: {
                 cep:
                     String(
-                        enderecoOriginal.cep ||
-                        ""
+                        endereco.cep || ""
                     ).trim(),
 
                 rua:
                     String(
-                        enderecoOriginal.rua ||
-                        ""
+                        endereco.rua || ""
                     ).trim(),
 
                 numero:
                     String(
-                        enderecoOriginal.numero ||
-                        ""
+                        endereco.numero || ""
                     ).trim(),
 
                 bairro:
                     String(
-                        enderecoOriginal.bairro ||
-                        ""
+                        endereco.bairro || ""
                     ).trim(),
 
                 complemento:
                     String(
-                        enderecoOriginal.complemento ||
-                        ""
+                        endereco.complemento || ""
                     ).trim(),
 
                 validado:
-                    enderecoOriginal.validado ===
+                    endereco.validado ===
                     true
             },
 
@@ -224,32 +183,22 @@ document.addEventListener("DOMContentLoaded", () => {
             valorTotal,
 
             valor:
-                formatarValorSimples(
-                    valorTotal
-                ),
-
-            valorProdutosFormatado:
-                formatarValorSimples(
-                    valorProdutos
-                ),
-
-            taxaEntregaFormatada:
-                formatarValorSimples(
-                    taxaEntrega
-                ),
+                valorTotal
+                    .toFixed(2)
+                    .replace(".", ","),
 
             valorPontuavel:
                 Math.max(
                     0,
 
                     converterValor(
-                        pedidoSeguro.valorPontuavel ??
+                        seguro.valorPontuavel ??
                         valorProdutos
                     )
                 ),
 
             pontosCreditados:
-                pedidoSeguro.pontosCreditados ===
+                seguro.pontosCreditados ===
                 true,
 
             pontosGerados:
@@ -257,61 +206,36 @@ document.addEventListener("DOMContentLoaded", () => {
                     0,
 
                     Number(
-                        pedidoSeguro.pontosGerados
+                        seguro.pontosGerados
                     ) || 0
                 ),
 
             historicoStatus:
                 Array.isArray(
-                    pedidoSeguro.historicoStatus
+                    seguro.historicoStatus
                 )
-                    ? pedidoSeguro.historicoStatus
+                    ? seguro.historicoStatus
                     : []
         };
     }
 
 
-    function executarInicializador(
-        nomeDaFuncao,
-        dados
-    ) {
-        const funcao =
-            window[nomeDaFuncao];
-
-        if (
-            typeof funcao ===
-            "function"
-        ) {
-            funcao(dados);
-
-            return;
-        }
-
-        console.warn(
-            `A função ${nomeDaFuncao} não foi encontrada.`
+    let sessao =
+        lerJSON(
+            "usuarioAzury"
         );
-    }
 
+    let usuario =
+        lerJSON(
+            "clienteAzury"
+        );
 
-    /* =====================================
-       LER DADOS SALVOS
-    ====================================== */
-
-    sessao =
-        lerJSON("usuarioAzury");
-
-    usuario =
-        lerJSON("clienteAzury");
-
-
-    /* =====================================
-       PROTEGER A ÁREA DO CLIENTE
-    ====================================== */
 
     const sessaoValida =
         Boolean(
             sessao &&
-            sessao.autenticado === true &&
+            sessao.autenticado ===
+                true &&
             sessao.email
         );
 
@@ -328,10 +252,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /*
-     * Caso os dados principais do cliente
-     * não existam, utiliza os dados da sessão.
-     */
     if (
         !usuario ||
         typeof usuario !==
@@ -343,19 +263,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* =====================================
-       VALIDAR A CONTA DA SESSÃO
-    ====================================== */
-
     const emailUsuario =
-        String(usuario.email || "")
+        String(
+            usuario.email || ""
+        )
             .trim()
             .toLowerCase();
 
     const emailSessao =
-        String(sessao.email || "")
+        String(
+            sessao.email || ""
+        )
             .trim()
             .toLowerCase();
+
 
     if (
         emailUsuario &&
@@ -374,83 +295,44 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
+
     usuario.email =
         emailSessao ||
         emailUsuario;
 
-    if (
-        !usuario.nome &&
-        sessao.nome
-    ) {
-        usuario.nome =
-            sessao.nome;
-    }
+    usuario.nome =
+        String(
+            usuario.nome ||
+            sessao.nome ||
+            "Cliente"
+        ).trim();
 
-
-    /* =====================================
-       BOTÃO SAIR
-    ====================================== */
-
-    const btnSair =
-        document.getElementById(
-            "btnSair"
-        );
-
-    btnSair?.addEventListener(
-        "click",
-        () => {
-            /*
-             * Remove somente a sessão.
-             * A conta continua salva.
-             */
-            localStorage.removeItem(
-                "usuarioAzury"
-            );
-
-            window.location.replace(
-                "index.html"
-            );
-        }
-    );
-
-
-    /* =====================================
-       CONVERTER CONTAS ANTIGAS
-    ====================================== */
 
     const pontosAntigos =
         Number.isFinite(
-            Number(usuario.pontos)
+            Number(
+                usuario.pontos
+            )
         )
             ? Math.max(
                 0,
 
                 Math.trunc(
-                    Number(usuario.pontos)
+                    Number(
+                        usuario.pontos
+                    )
                 )
             )
             : 0;
 
 
-    /*
-     * Pontos acumulados determinam o nível
-     * e nunca diminuem.
-     */
-    if (
-        usuario.pontosAcumulados ===
-            undefined ||
-        !Number.isFinite(
+    usuario.pontosAcumulados =
+        Number.isFinite(
             Number(
                 usuario.pontosAcumulados
             )
         )
-    ) {
-        usuario.pontosAcumulados =
-            pontosAntigos;
-
-    } else {
-        usuario.pontosAcumulados =
-            Math.max(
+            ? Math.max(
                 0,
 
                 Math.trunc(
@@ -458,29 +340,17 @@ document.addEventListener("DOMContentLoaded", () => {
                         usuario.pontosAcumulados
                     )
                 )
-            );
-    }
+            )
+            : pontosAntigos;
 
 
-    /*
-     * Saldo de pontos diminui quando uma
-     * recompensa é resgatada.
-     */
-    if (
-        usuario.saldoPontos ===
-            undefined ||
-        !Number.isFinite(
+    usuario.saldoPontos =
+        Number.isFinite(
             Number(
                 usuario.saldoPontos
             )
         )
-    ) {
-        usuario.saldoPontos =
-            pontosAntigos;
-
-    } else {
-        usuario.saldoPontos =
-            Math.max(
+            ? Math.max(
                 0,
 
                 Math.trunc(
@@ -488,86 +358,46 @@ document.addEventListener("DOMContentLoaded", () => {
                         usuario.saldoPontos
                     )
                 )
-            );
-    }
+            )
+            : pontosAntigos;
 
 
-    /*
-     * Compatibilidade temporária com
-     * códigos antigos.
-     */
     usuario.pontos =
         usuario.saldoPontos;
 
 
-    /* =====================================
-       DEFINIR O NÍVEL
-    ====================================== */
-
     if (
-        window.AzuryPontuacao &&
-        typeof window.AzuryPontuacao
-            .calcularNivel ===
-            "function"
+        usuario.pontosAcumulados >=
+        600
     ) {
         usuario.nivel =
-            window.AzuryPontuacao
-                .calcularNivel(
-                    usuario.pontosAcumulados
-                );
+            "Diamante";
+
+    } else if (
+        usuario.pontosAcumulados >=
+        300
+    ) {
+        usuario.nivel =
+            "Ouro";
+
+    } else if (
+        usuario.pontosAcumulados >=
+        100
+    ) {
+        usuario.nivel =
+            "Prata";
 
     } else {
-        const totalAcumulado =
-            usuario.pontosAcumulados;
-
-        let nivel =
-            "Bronze";
-
-        if (
-            totalAcumulado >=
-            100
-        ) {
-            nivel = "Prata";
-        }
-
-        if (
-            totalAcumulado >=
-            300
-        ) {
-            nivel = "Ouro";
-        }
-
-        if (
-            totalAcumulado >=
-            600
-        ) {
-            nivel = "Diamante";
-        }
-
         usuario.nivel =
-            nivel;
+            "Bronze";
     }
 
 
-    /* =====================================
-       ESTRUTURA E MIGRAÇÃO DOS PEDIDOS
-    ====================================== */
-
-    if (
-        !Array.isArray(
+    usuario.pedidos =
+        Array.isArray(
             usuario.pedidos
         )
-    ) {
-        usuario.pedidos =
-            [];
-
-    } else {
-        /*
-         * Remove somente o pedido falso
-         * usado anteriormente como exemplo.
-         */
-        usuario.pedidos =
-            usuario.pedidos
+            ? usuario.pedidos
                 .filter(
                     pedido => {
                         const pedidoTeste =
@@ -586,13 +416,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 )
                 .map(
                     normalizarPedido
-                );
-    }
+                )
+            : [];
 
-
-    /* =====================================
-       OUTRAS ESTRUTURAS
-    ====================================== */
 
     usuario.historico =
         Array.isArray(
@@ -601,12 +427,14 @@ document.addEventListener("DOMContentLoaded", () => {
             ? usuario.historico
             : [];
 
+
     usuario.recompensasResgatadas =
         Array.isArray(
             usuario.recompensasResgatadas
         )
             ? usuario.recompensasResgatadas
             : [];
+
 
     usuario.codigosDesconto =
         Array.isArray(
@@ -616,18 +444,17 @@ document.addEventListener("DOMContentLoaded", () => {
             : [];
 
 
-    /* =====================================
-       CONTROLE MENSAL DOS RESGATES
-    ====================================== */
-
     const agora =
         new Date();
 
     const mesAtual =
         `${agora.getFullYear()}-` +
-        `${String(
+        String(
             agora.getMonth() + 1
-        ).padStart(2, "0")}`;
+        ).padStart(
+            2,
+            "0"
+        );
 
 
     if (
@@ -653,27 +480,28 @@ document.addEventListener("DOMContentLoaded", () => {
         usuario.controleResgates
             .recompensa100 =
             Number(
-                usuario.controleResgates
+                usuario
+                    .controleResgates
                     .recompensa100
             ) || 0;
 
         usuario.controleResgates
             .recompensa300 =
             Number(
-                usuario.controleResgates
+                usuario
+                    .controleResgates
                     .recompensa300
             ) || 0;
     }
 
 
-    /* =====================================
-       SALVAR OS DADOS ATUALIZADOS
-    ====================================== */
-
     localStorage.setItem(
         "clienteAzury",
-        JSON.stringify(usuario)
+        JSON.stringify(
+            usuario
+        )
     );
+
 
     localStorage.setItem(
         "usuarioAzury",
@@ -686,37 +514,90 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-    /* =====================================
-       INICIALIZAR A ÁREA DO CLIENTE
-    ====================================== */
+    const btnSair =
+        document.getElementById(
+            "btnSair"
+        );
 
-    executarInicializador(
-        "inicializarPerfil",
-        usuario
+
+    btnSair?.addEventListener(
+        "click",
+        () => {
+            localStorage.removeItem(
+                "usuarioAzury"
+            );
+
+            window.location.replace(
+                "index.html"
+            );
+        }
     );
 
-    executarInicializador(
-        "inicializarPontos",
-        usuario
-    );
 
-    executarInicializador(
-        "inicializarRecompensas",
-        usuario
-    );
+    try {
+        if (
+            typeof inicializarPerfil ===
+            "function"
+        ) {
+            inicializarPerfil(
+                usuario
+            );
+        }
 
-    executarInicializador(
-        "inicializarPedidos",
-        usuario
-    );
 
-    executarInicializador(
-        "inicializarHistorico",
-        usuario
-    );
+        if (
+            typeof inicializarPontos ===
+            "function"
+        ) {
+            inicializarPontos(
+                usuario
+            );
+        }
 
-    executarInicializador(
-        "inicializarUI",
-        usuario
-    );
+
+        if (
+            typeof inicializarRecompensas ===
+            "function"
+        ) {
+            inicializarRecompensas(
+                usuario
+            );
+        }
+
+
+        if (
+            typeof inicializarPedidos ===
+            "function"
+        ) {
+            inicializarPedidos(
+                usuario
+            );
+        }
+
+
+        if (
+            typeof inicializarHistorico ===
+            "function"
+        ) {
+            inicializarHistorico(
+                usuario
+            );
+        }
+
+
+        if (
+            typeof inicializarUI ===
+            "function"
+        ) {
+            inicializarUI(
+                usuario
+            );
+        }
+
+    } catch (erro) {
+        console.error(
+            "Erro ao iniciar a Área do Cliente:",
+            erro
+        );
+    }
 });
