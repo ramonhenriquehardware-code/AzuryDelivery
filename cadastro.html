@@ -4,30 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro - AZURY</title>
+
+    <title>Criar Conta - AZURY</title>
 
     <link rel="stylesheet" href="css/reset.css">
-    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/cadastro.css">
 </head>
 
 <body>
 
-    <header>
-        <a href="index.html" class="logo">
-            <img src="Imagens/Coroa.png" alt="Azury">
-            AZURY
+    <header class="login-header">
+
+        <a href="index.html" class="login-logo">
+            <img
+                src="Imagens/Coroa.png"
+                alt="Coroa Azury"
+                class="coroa-topo"
+            >
+
+            <span>AZURY</span>
         </a>
+
+        <nav class="login-nav">
+            <a href="login.html">
+                Já tenho uma conta
+            </a>
+        </nav>
+
     </header>
 
     <main class="login-container">
 
-        <div class="login-card">
+        <section class="login-card">
 
-            <div class="marca-dagua">👑</div>
+            <div class="marca-dagua" aria-hidden="true">
+                <img
+                    src="Imagens/Coroa.png"
+                    alt=""
+                    class="coroa-marca"
+                >
+            </div>
 
             <div class="logo-login">
-                👑
+                <img
+                    src="Imagens/Coroa.png"
+                    alt="Coroa Azury"
+                    class="coroa-login"
+                >
             </div>
 
             <h1>AZURY</h1>
@@ -42,28 +67,64 @@
                 Cadastre-se para participar do programa de fidelidade Azury.
             </p>
 
-            <form class="login-form">
-                
-                <div id="mensagemCadastro" class="mensagem"></div>
+            <form class="login-form" id="formCadastro">
 
-                <input type="text" id="nome" placeholder="Nome completo" required>
+                <div
+                    id="mensagemCadastro"
+                    class="mensagem"
+                    role="alert"
+                    aria-live="polite"
+                ></div>
 
-                <input type="email" id="email" placeholder="Seu e-mail" required>
+                <input
+                    type="text"
+                    id="nome"
+                    name="nome"
+                    placeholder="Nome completo"
+                    autocomplete="name"
+                    required
+                >
 
-                <input type="password" id="senha" placeholder="Crie uma senha" required>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Seu e-mail"
+                    autocomplete="email"
+                    required
+                >
 
-                <button type="button" class="btn" id="btnCadastrar">
+                <input
+                    type="password"
+                    id="senha"
+                    name="senha"
+                    placeholder="Crie uma senha"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required
+                >
 
+                <button
+                    type="submit"
+                    class="btn"
+                    id="btnCadastrar"
+                >
                     ✨ Criar Conta
-
                 </button>
+
+                <p class="texto-cadastro">
+                    Já possui cadastro?
+                    <a href="login.html">Entrar na minha conta</a>
+                </p>
 
             </form>
 
-        </div>
+        </section>
 
     </main>
-    <script src="./js/cadastro.js"></script>
+
+    <script src="js/cadastro.js"></script>
+
 </body>
 
 </html>

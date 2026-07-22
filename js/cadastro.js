@@ -1,48 +1,133 @@
-const btnCadastrar = document.getElementById("btnCadastrar");
+document.addEventListener("DOMContentLoaded", () => {
 
-btnCadastrar.addEventListener("click", () => {
-
-    const nome = document.getElementById("nome").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-
+    const formCadastro = document.getElementById("formCadastro");
+    const btnCadastrar = document.getElementById("btnCadastrar");
     const mensagem = document.getElementById("mensagemCadastro");
 
-    if (!nome || !email || !senha) {
+    const nomeInput = document.getElementById("nome");
+    const emailInput = document.getElementById("email");
+    const senhaInput = document.getElementById("senha");
 
-        mensagem.className = "mensagem erro";
-        mensagem.textContent = "Preencha todos os campos.";
-
+    if (
+        !formCadastro ||
+        !btnCadastrar ||
+        !mensagem ||
+        !nomeInput ||
+        !emailInput ||
+        !senhaInput
+    ) {
+        console.error("Elementos do formulário de cadastro não encontrados.");
         return;
     }
 
-    const clienteExistente = JSON.parse(localStorage.getItem("clienteAzury"));
-
-    if (clienteExistente && clienteExistente.email === email) {
-
-        mensagem.className = "mensagem erro";
-        mensagem.textContent = "Este e-mail já está cadastrado.";
-
-        return;
+    function exibirMensagem(tipo, texto) {
+        mensagem.className = `mensagem ${tipo}`;
+        mensagem.textContent = texto;
     }
 
-    const cliente = {
-        nome,
-        email,
-        senha,
-        pontos: 0,
-        nivel: "Bronze"
-    };
+    function limparMensagem() {
+        mensagem.className = "mensagem";
+        mensagem.textContent = "";
+    }
 
-    localStorage.setItem("clienteAzury", JSON.stringify(cliente));
+    formCadastro.addEventListener("submit", (event) => {
 
-    mensagem.className = "mensagem sucesso";
-    mensagem.textContent = "Conta criada com sucesso! Redirecionando...";
+        event.preventDefault();
+        limparMensagem();
 
-    setTimeout(() => {
+        const nome = nomeInput.value.trim();
+        const email = emailInput.value.trim().toLowerCase();
+        const senha = senhaInput.value;
 
-        window.location.href = "login.html";
+        if (!nome || !email || !senha) {
+            exibirMensagem("erro", "Preencha todos os campos.");
+            return;
+        }
 
-    }, 1500);
+        if (nome.length < 3) {
+            exibirMensagem("erro", "Digite seu nome completo.");
+            nomeInput.focus();
+            return;
+        }
+
+        if (!emailInput.checkValidity()) {
+            exibirMensagem("erro", "Digite um e-mail válido.");
+            emailInput.focus();
+            return;
+        }
+
+        if (senha.length < 6) {
+            exibirMensagem(
+                "erro",
+                "A senha precisa ter pelo menos 6 caracteres."
+            );
+
+            senhaInput.focus();
+            return;
+        }
+
+        let clienteExistente = null;
+
+        try {
+            clienteExistente = JSON.parse(
+                localStorage.getItem("clienteAzury")
+            );
+        } catch (erro) {
+            console.error("Erro ao ler cadastro existente:", erro);
+        }
+
+        if (
+            clienteExistente &&
+            clienteExistente.email?.toLowerCase() === email
+        ) {
+            exibirMensagem(
+                "erro",
+                "Este e-mail já está cadastrado."
+            );
+
+            emailInput.focus();
+            return;
+        }
+
+        const cliente = {
+            nome,
+            email,
+            senha,
+            pontos: 0,
+            pontosAcumulados: 0,
+            saldoPontos: 0,
+            nivel: "Bronze",
+            criadoEm: new Date().toISOString()
+        };
+
+        try {
+            localStorage.setItem(
+                "clienteAzury",
+                JSON.stringify(cliente)
+            );
+        } catch (erro) {
+            console.error("Erro ao salvar cadastro:", erro);
+
+            exibirMensagem(
+                "erro",
+                "Não foi possível criar sua conta. Tente novamente."
+            );
+
+            return;
+        }
+
+        btnCadastrar.disabled = true;
+        btnCadastrar.textContent = "Conta criada ✓";
+
+        exibirMensagem(
+            "sucesso",
+            "Conta criada com sucesso! Redirecionando..."
+        );
+
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 1500);
+
+    });
 
 });
