@@ -1,17 +1,25 @@
 function inicializarRecompensas(usuario) {
+    "use strict";
 
     const recompensas =
-        document.getElementById("recompensas");
+        document.getElementById(
+            "recompensas"
+        );
 
-    if (!recompensas) return;
+    if (
+        !recompensas ||
+        !usuario ||
+        typeof usuario !== "object"
+    ) {
+        return;
+    }
 
 
     /* =====================================
        COMPLEMENTOS DISPONÍVEIS
-    ===================================== */
+    ====================================== */
 
     const complementosDisponiveis = [
-
         "Granola",
         "Leite condensado",
         "Paçoca",
@@ -20,51 +28,54 @@ function inicializarRecompensas(usuario) {
         "Coco ralado",
         "Leite em pó",
         "Creme branco",
-        "Doce de leite",
         "Oreo",
         "Ovomaltine",
         "Morango",
         "Uva verde",
         "Creme de avelã",
         "Nutella"
-
     ];
 
 
     /* =====================================
-       RECOMPENSAS OFICIAIS
-    ===================================== */
+       RECOMPENSAS
+    ====================================== */
 
     const catalogoRecompensas = [
-
         {
             id: "100",
             pontos: 100,
             titulo: "1 Açaí de 400 ml",
-            descricao: "Escolha 2 complementos.",
+            descricao:
+                "Escolha 2 complementos.",
             tipo: "acai",
             tamanho: 400,
             quantidadeCopos: 1,
             limiteComplementos: 2,
             limiteMensal: 2,
-            chaveControle: "recompensa100"
+            chaveControle:
+                "recompensa100"
         },
 
         {
             id: "300",
             pontos: 300,
-            titulo: "Código de 50% de desconto",
-            descricao: "Receba um código exclusivo para utilizar em uma compra.",
+            titulo:
+                "Código de 50% de desconto",
+            descricao:
+                "Receba um código exclusivo para utilizar em uma compra.",
             tipo: "cupom",
             limiteMensal: 2,
-            chaveControle: "recompensa300"
+            chaveControle:
+                "recompensa300"
         },
 
         {
             id: "600",
             pontos: 600,
             titulo: "1 Açaí de 700 ml",
-            descricao: "Escolha 4 complementos.",
+            descricao:
+                "Escolha 4 complementos.",
             tipo: "acai",
             tamanho: 700,
             quantidadeCopos: 1,
@@ -77,7 +88,8 @@ function inicializarRecompensas(usuario) {
             id: "800",
             pontos: 800,
             titulo: "2 Açaís de 700 ml",
-            descricao: "Escolha 4 complementos para cada copo.",
+            descricao:
+                "Escolha 4 complementos para cada copo.",
             tipo: "acai",
             tamanho: 700,
             quantidadeCopos: 2,
@@ -85,98 +97,80 @@ function inicializarRecompensas(usuario) {
             limiteMensal: null,
             chaveControle: null
         }
-
     ];
 
 
     /* =====================================
-       NORMALIZAR OS DADOS
-    ===================================== */
-
-    usuario.saldoPontos =
-        Math.max(
-            0,
-            Math.trunc(Number(usuario.saldoPontos) || 0)
-        );
-
-    usuario.pontosAcumulados =
-        Math.max(
-            0,
-            Math.trunc(Number(usuario.pontosAcumulados) || 0)
-        );
-
-    usuario.pontos = usuario.saldoPontos;
-
-    if (!Array.isArray(usuario.historico)) {
-        usuario.historico = [];
-    }
-
-    if (!Array.isArray(usuario.pedidos)) {
-        usuario.pedidos = [];
-    }
-
-    if (!Array.isArray(usuario.recompensasResgatadas)) {
-        usuario.recompensasResgatadas = [];
-    }
-
-    if (!Array.isArray(usuario.codigosDesconto)) {
-        usuario.codigosDesconto = [];
-    }
-
-    if (
-        !usuario.controleResgates ||
-        typeof usuario.controleResgates !== "object"
-    ) {
-
-        usuario.controleResgates = {
-            mesReferencia: obterMesAtual(),
-            recompensa100: 0,
-            recompensa300: 0
-        };
-
-    }
-
-
-    /* =====================================
-       FUNÇÕES AUXILIARES
-    ===================================== */
+       FUNÇÕES GERAIS
+    ====================================== */
 
     function obterMesAtual() {
-
-        const agora = new Date();
+        const agora =
+            new Date();
 
         return (
-            agora.getFullYear() +
-            "-" +
-            String(agora.getMonth() + 1).padStart(2, "0")
+            `${agora.getFullYear()}-` +
+            String(
+                agora.getMonth() + 1
+            ).padStart(
+                2,
+                "0"
+            )
         );
-
     }
 
 
     function obterDataHora() {
+        return new Date()
+            .toLocaleString(
+                "pt-BR",
+                {
+                    dateStyle:
+                        "short",
 
-        const agora = new Date();
+                    timeStyle:
+                        "short"
+                }
+            );
+    }
+
+
+    function gerarCodigoDesconto() {
+        const parteAleatoria =
+            Math.random()
+                .toString(36)
+                .slice(2, 8)
+                .toUpperCase();
 
         return (
-            agora.toLocaleDateString("pt-BR") +
-            " às " +
-            agora.toLocaleTimeString("pt-BR", {
-                hour: "2-digit",
-                minute: "2-digit"
-            })
+            `AZURY50-${parteAleatoria}`
         );
+    }
 
+
+    function gerarIdPedido() {
+        const parteAleatoria =
+            Math.random()
+                .toString(36)
+                .slice(2, 7)
+                .toUpperCase();
+
+        return (
+            `AZR-${Date.now()}-` +
+            parteAleatoria
+        );
     }
 
 
     function salvarUsuario() {
-
-        usuario.pontos = usuario.saldoPontos;
+        usuario.pontos =
+            usuario.saldoPontos;
 
         localStorage.setItem(
             "clienteAzury",
-            JSON.stringify(usuario)
+            JSON.stringify(
+                usuario
+            )
         );
 
         localStorage.setItem(
@@ -186,246 +180,452 @@ function inicializarRecompensas(usuario) {
                 autenticado: true
             })
         );
-
     }
 
 
-    function gerarCodigoDesconto() {
+    function abrirModalElemento(
+        modal
+    ) {
+        if (!modal) {
+            return;
+        }
 
-        const codigoAleatorio =
-            Math.random()
-                .toString(36)
-                .substring(2, 8)
-                .toUpperCase();
+        modal.style.display =
+            "flex";
 
-        return `AZURY50-${codigoAleatorio}`;
+        modal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
 
+        document.body.style.overflow =
+            "hidden";
     }
 
 
-    function gerarIdPedido() {
+    function fecharModalElemento(
+        modal
+    ) {
+        if (!modal) {
+            return;
+        }
 
-        const parteAleatoria =
-            Math.random()
-                .toString(36)
-                .substring(2, 7)
-                .toUpperCase();
+        modal.style.display =
+            "none";
 
-        return `AZR-${Date.now()}-${parteAleatoria}`;
+        modal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
 
+        document.body.style.overflow =
+            "";
     }
 
 
-    function obterQuantidadeResgatadaNoMes(recompensa) {
+    /* =====================================
+       NORMALIZAR DADOS DO CLIENTE
+    ====================================== */
 
-        if (!recompensa.chaveControle) {
+    function normalizarDadosUsuario() {
+        usuario.saldoPontos =
+            Math.max(
+                0,
+
+                Math.trunc(
+                    Number(
+                        usuario.saldoPontos
+                    ) || 0
+                )
+            );
+
+        usuario.pontosAcumulados =
+            Math.max(
+                0,
+
+                Math.trunc(
+                    Number(
+                        usuario.pontosAcumulados
+                    ) || 0
+                )
+            );
+
+        usuario.pontos =
+            usuario.saldoPontos;
+
+
+        usuario.historico =
+            Array.isArray(
+                usuario.historico
+            )
+                ? usuario.historico
+                : [];
+
+
+        usuario.pedidos =
+            Array.isArray(
+                usuario.pedidos
+            )
+                ? usuario.pedidos
+                : [];
+
+
+        usuario.recompensasResgatadas =
+            Array.isArray(
+                usuario
+                    .recompensasResgatadas
+            )
+                ? usuario
+                    .recompensasResgatadas
+                : [];
+
+
+        usuario.codigosDesconto =
+            Array.isArray(
+                usuario.codigosDesconto
+            )
+                ? usuario.codigosDesconto
+                : [];
+
+
+        const mesAtual =
+            obterMesAtual();
+
+
+        const controleValido =
+            usuario.controleResgates &&
+            typeof usuario
+                .controleResgates ===
+                "object" &&
+            usuario.controleResgates
+                .mesReferencia ===
+                mesAtual;
+
+
+        if (!controleValido) {
+            usuario.controleResgates = {
+                mesReferencia:
+                    mesAtual,
+
+                recompensa100:
+                    0,
+
+                recompensa300:
+                    0
+            };
+
+            return;
+        }
+
+
+        usuario.controleResgates
+            .recompensa100 =
+            Math.max(
+                0,
+
+                Number(
+                    usuario
+                        .controleResgates
+                        .recompensa100
+                ) || 0
+            );
+
+
+        usuario.controleResgates
+            .recompensa300 =
+            Math.max(
+                0,
+
+                Number(
+                    usuario
+                        .controleResgates
+                        .recompensa300
+                ) || 0
+            );
+    }
+
+
+    /* =====================================
+       VERIFICAR RECOMPENSA
+    ====================================== */
+
+    function obterQuantidadeResgatadaNoMes(
+        recompensa
+    ) {
+        if (
+            !recompensa
+                .chaveControle
+        ) {
             return 0;
         }
 
         return (
             Number(
-                usuario.controleResgates[
-                recompensa.chaveControle
-                ]
+                usuario
+                    .controleResgates[
+                        recompensa
+                            .chaveControle
+                    ]
             ) || 0
         );
-
     }
 
 
-    function verificarRecompensa(recompensa) {
-
-        if (usuario.saldoPontos < recompensa.pontos) {
-
+    function verificarRecompensa(
+        recompensa
+    ) {
+        if (
+            usuario.saldoPontos <
+            recompensa.pontos
+        ) {
             return {
-                disponivel: false,
-                mensagem:
-                    `Faltam ${recompensa.pontos - usuario.saldoPontos} pontos`
-            };
+                disponivel:
+                    false,
 
+                mensagem:
+                    `Faltam ${
+                        recompensa.pontos -
+                        usuario.saldoPontos
+                    } pontos`
+            };
         }
 
-        if (recompensa.limiteMensal !== null) {
 
-            const quantidadeMensal =
-                obterQuantidadeResgatadaNoMes(recompensa);
-
-            if (
-                quantidadeMensal >=
-                recompensa.limiteMensal
-            ) {
-
-                return {
-                    disponivel: false,
-                    mensagem: "Limite mensal atingido"
-                };
-
-            }
-
+        if (
+            recompensa
+                .limiteMensal ===
+            null
+        ) {
             return {
-                disponivel: true,
-                mensagem:
-                    `Disponível — ${quantidadeMensal} de ` +
-                    `${recompensa.limiteMensal} resgates neste mês`
-            };
+                disponivel:
+                    true,
 
+                mensagem:
+                    "Disponível para resgate"
+            };
         }
+
+
+        const quantidadeMensal =
+            obterQuantidadeResgatadaNoMes(
+                recompensa
+            );
+
+
+        if (
+            quantidadeMensal >=
+            recompensa.limiteMensal
+        ) {
+            return {
+                disponivel:
+                    false,
+
+                mensagem:
+                    "Limite mensal atingido"
+            };
+        }
+
 
         return {
-            disponivel: true,
-            mensagem: "Disponível para resgate"
-        };
+            disponivel:
+                true,
 
+            mensagem:
+                `Disponível — ` +
+                `${quantidadeMensal} de ` +
+                `${recompensa.limiteMensal} ` +
+                `resgates neste mês`
+        };
     }
 
 
     /* =====================================
-       EXIBIR AS RECOMPENSAS
-    ===================================== */
+       RENDERIZAR RECOMPENSAS
+    ====================================== */
 
     function renderizarRecompensas() {
-
         recompensas.innerHTML =
             catalogoRecompensas
-                .map(recompensa => {
+                .map(
+                    recompensa => {
+                        const situacao =
+                            verificarRecompensa(
+                                recompensa
+                            );
 
-                    const situacao =
-                        verificarRecompensa(recompensa);
+                        const quantidadeMensal =
+                            obterQuantidadeResgatadaNoMes(
+                                recompensa
+                            );
 
-                    const quantidadeMensal =
-                        obterQuantidadeResgatadaNoMes(
+
+                        const informacaoLimite =
                             recompensa
-                        );
+                                .limiteMensal ===
+                            null
+                                ? ""
+                                : `
+                                    <small
+                                        class="limite-recompensa"
+                                    >
+                                        Limite mensal:
+                                        ${quantidadeMensal}
+                                        de
+                                        ${recompensa.limiteMensal}
+                                    </small>
+                                `;
 
-                    let informacaoLimite = "";
 
-                    if (
-                        recompensa.limiteMensal !== null
-                    ) {
+                        return `
+                            <div
+                                class="recompensa-item"
+                            >
 
-                        informacaoLimite = `
+                                <div
+                                    class="recompensa-informacoes"
+                                >
 
-                            <small class="limite-recompensa">
+                                    <strong>
+                                        🎁
+                                        ${recompensa.titulo}
+                                    </strong>
 
-                                Limite mensal:
-                                ${quantidadeMensal} de
-                                ${recompensa.limiteMensal}
+                                    <span>
+                                        ${recompensa.descricao}
+                                    </span>
 
-                            </small>
+                                    <span
+                                        class="pontos-recompensa"
+                                    >
+                                        ${recompensa.pontos}
+                                        pontos
+                                    </span>
 
-                        `;
+                                    ${informacaoLimite}
 
-                    }
+                                    <p
+                                        class="status-recompensa"
+                                    >
+                                        ${
+                                            situacao
+                                                .disponivel
+                                                ? "🎉"
+                                                : "🔒"
+                                        }
 
-                    return `
+                                        ${
+                                            situacao
+                                                .mensagem
+                                        }
+                                    </p>
 
-                        <div class="recompensa-item">
+                                </div>
 
-                            <div class="recompensa-informacoes">
-
-                                <strong>
-                                    🎁 ${recompensa.titulo}
-                                </strong>
-
-                                <span>
-                                    ${recompensa.descricao}
-                                </span>
-
-                                <span class="pontos-recompensa">
-                                    ${recompensa.pontos} pontos
-                                </span>
-
-                                ${informacaoLimite}
-
-                                <p class="status-recompensa">
-
-                                    ${situacao.disponivel
-                            ? "🎉"
-                            : "🔒"
-                        }
-
-                                    ${situacao.mensagem}
-
-                                </p>
+                                <button
+                                    type="button"
+                                    class="btn btn-resgatar-recompensa"
+                                    data-recompensa="${recompensa.id}"
+                                    ${
+                                        situacao
+                                            .disponivel
+                                            ? ""
+                                            : "disabled"
+                                    }
+                                >
+                                    ${
+                                        situacao
+                                            .disponivel
+                                            ? "Resgatar"
+                                            : "Indisponível"
+                                    }
+                                </button>
 
                             </div>
-
-                            <button
-                                type="button"
-                                class="btn btn-resgatar-recompensa"
-                                data-recompensa="${recompensa.id}"
-                                ${situacao.disponivel
-                            ? ""
-                            : "disabled"
-                        }
-                            >
-                                ${situacao.disponivel
-                            ? "Resgatar"
-                            : "Indisponível"
-                        }
-                            </button>
-
-                        </div>
-
-                    `;
-
-                })
+                        `;
+                    }
+                )
                 .join("");
 
 
-        const botoesResgate =
-            document.querySelectorAll(
+        document
+            .querySelectorAll(
                 ".btn-resgatar-recompensa"
-            );
+            )
+            .forEach(
+                botao => {
+                    botao.addEventListener(
+                        "click",
+                        () => {
+                            const recompensa =
+                                catalogoRecompensas
+                                    .find(
+                                        item =>
+                                            item.id ===
+                                            botao.dataset
+                                                .recompensa
+                                    );
 
-        botoesResgate.forEach(botao => {
 
-            botao.addEventListener("click", () => {
+                            if (!recompensa) {
+                                return;
+                            }
 
-                const idRecompensa =
-                    botao.dataset.recompensa;
 
-                const recompensa =
-                    catalogoRecompensas.find(
-                        item => item.id === idRecompensa
+                            const situacao =
+                                verificarRecompensa(
+                                    recompensa
+                                );
+
+
+                            if (
+                                !situacao
+                                    .disponivel
+                            ) {
+                                return;
+                            }
+
+
+                            if (
+                                recompensa.tipo ===
+                                "cupom"
+                            ) {
+                                resgatarCodigoDesconto(
+                                    recompensa
+                                );
+
+                                return;
+                            }
+
+
+                            abrirModalRecompensaAcai(
+                                recompensa
+                            );
+                        }
                     );
-
-                if (!recompensa) return;
-
-                const situacao =
-                    verificarRecompensa(recompensa);
-
-                if (!situacao.disponivel) {
-                    return;
                 }
-
-                if (recompensa.tipo === "cupom") {
-
-                    resgatarCodigoDesconto(recompensa);
-
-                    return;
-
-                }
-
-                abrirModalRecompensaAcai(recompensa);
-
-            });
-
-        });
-
+            );
     }
 
 
     /* =====================================
-       RESGATAR CÓDIGO DE 50%
-    ===================================== */
+       RESGATAR CÓDIGO DE DESCONTO
+    ====================================== */
 
-    function resgatarCodigoDesconto(recompensa) {
-
+    function resgatarCodigoDesconto(
+        recompensa
+    ) {
         const situacao =
-            verificarRecompensa(recompensa);
+            verificarRecompensa(
+                recompensa
+            );
 
-        if (!situacao.disponivel) return;
+
+        if (
+            !situacao.disponivel
+        ) {
+            return;
+        }
+
 
         const codigo =
             gerarCodigoDesconto();
@@ -433,70 +633,196 @@ function inicializarRecompensas(usuario) {
         const dataHora =
             obterDataHora();
 
-        usuario.saldoPontos -= recompensa.pontos;
-        usuario.pontos = usuario.saldoPontos;
 
-        usuario.controleResgates.recompensa300 += 1;
+        usuario.saldoPontos -=
+            recompensa.pontos;
 
-        usuario.codigosDesconto.unshift({
+        usuario.pontos =
+            usuario.saldoPontos;
 
-            codigo,
-            desconto: 50,
-            pontosUtilizados: recompensa.pontos,
-            utilizado: false,
-            criadoEm: new Date().toISOString()
 
-        });
+        usuario.controleResgates
+            .recompensa300 +=
+            1;
 
-        usuario.recompensasResgatadas.unshift({
 
-            id: `RESGATE-${Date.now()}`,
-            tipo: "codigo-desconto",
-            recompensa: recompensa.titulo,
-            pontosUtilizados: recompensa.pontos,
-            codigo,
-            data: dataHora
+        usuario.codigosDesconto
+            .unshift({
+                codigo,
 
-        });
+                desconto:
+                    50,
+
+                pontosUtilizados:
+                    recompensa.pontos,
+
+                utilizado:
+                    false,
+
+                criadoEm:
+                    new Date()
+                        .toISOString()
+            });
+
+
+        usuario
+            .recompensasResgatadas
+            .unshift({
+                id:
+                    `RESGATE-${Date.now()}`,
+
+                tipo:
+                    "codigo-desconto",
+
+                recompensa:
+                    recompensa.titulo,
+
+                pontosUtilizados:
+                    recompensa.pontos,
+
+                codigo,
+
+                data:
+                    dataHora
+            });
+
 
         usuario.historico.unshift(`
-
-            🎟️ Resgatou um código de 50% de desconto
+            🎟️ Resgatou um código de
+            50% de desconto
 
             <br>
 
             <small>
-                ${recompensa.pontos} pontos utilizados —
+                ${recompensa.pontos}
+                pontos utilizados —
                 ${dataHora}
             </small>
-
         `);
+
 
         salvarUsuario();
 
+
         const codigoCupom =
-            document.getElementById("codigoCupom");
+            document.getElementById(
+                "codigoCupom"
+            );
 
         const modalCupom =
-            document.getElementById("modalCupom");
+            document.getElementById(
+                "modalCupom"
+            );
+
 
         if (codigoCupom) {
-            codigoCupom.textContent = codigo;
+            codigoCupom.textContent =
+                codigo;
         }
 
-        if (modalCupom) {
-            modalCupom.style.display = "flex";
-        }
 
+        abrirModalElemento(
+            modalCupom
+        );
     }
 
 
     /* =====================================
-       ABRIR MODAL DO AÇAÍ
-    ===================================== */
+       CRIAR OPÇÃO DE COMPLEMENTO
+    ====================================== */
 
-    function abrirModalRecompensaAcai(recompensa) {
+    function criarOpcaoComplemento(
+        recompensa,
+        numeroCopo,
+        complemento
+    ) {
+        const identificador =
+            `recompensa-${recompensa.id}-` +
+            `copo-${numeroCopo}-` +
+            complemento
+                .toLowerCase()
+                .replace(
+                    /\s+/g,
+                    "-"
+                )
+                .normalize(
+                    "NFD"
+                )
+                .replace(
+                    /[\u0300-\u036f]/g,
+                    ""
+                );
 
+
+        const label =
+            document.createElement(
+                "label"
+            );
+
+        const input =
+            document.createElement(
+                "input"
+            );
+
+        const texto =
+            document.createElement(
+                "span"
+            );
+
+
+        label.className =
+            "opcao-complemento-recompensa";
+
+
+        input.type =
+            "checkbox";
+
+        input.value =
+            complemento;
+
+        input.id =
+            identificador;
+
+        input.dataset.copo =
+            String(numeroCopo);
+
+
+        texto.textContent =
+            complemento;
+
+
+        label.appendChild(
+            input
+        );
+
+        label.appendChild(
+            texto
+        );
+
+
+        input.addEventListener(
+            "change",
+            () => {
+                controlarLimiteComplementos(
+                    numeroCopo,
+                    recompensa
+                        .limiteComplementos
+                );
+            }
+        );
+
+
+        return label;
+    }
+
+
+    /* =====================================
+       ABRIR MODAL DA RECOMPENSA
+    ====================================== */
+
+    function abrirModalRecompensaAcai(
+        recompensa
+    ) {
         const modal =
             document.getElementById(
                 "modalRecompensaAcai"
@@ -527,6 +853,7 @@ function inicializarRecompensas(usuario) {
                 "btnConfirmarResgate"
             );
 
+
         if (
             !modal ||
             !titulo ||
@@ -537,167 +864,367 @@ function inicializarRecompensas(usuario) {
             return;
         }
 
+
         titulo.textContent =
             `🎁 ${recompensa.titulo}`;
 
+
         descricao.textContent =
-            recompensa.quantidadeCopos === 1
+            recompensa.quantidadeCopos ===
+            1
                 ? `Escolha exatamente ${recompensa.limiteComplementos} complementos.`
                 : `Escolha exatamente ${recompensa.limiteComplementos} complementos para cada copo.`;
 
+
         if (mensagem) {
-            mensagem.className = "mensagem";
-            mensagem.textContent = "";
+            mensagem.className =
+                "mensagem";
+
+            mensagem.textContent =
+                "";
         }
 
-        btnConfirmar.disabled = false;
-        btnConfirmar.textContent = "Confirmar resgate";
 
-        seletores.innerHTML = "";
+        btnConfirmar.disabled =
+            false;
+
+        btnConfirmar.textContent =
+            "Confirmar resgate";
+
+
+        seletores.innerHTML =
+            "";
 
 
         for (
             let numeroCopo = 1;
-            numeroCopo <= recompensa.quantidadeCopos;
-            numeroCopo++
+            numeroCopo <=
+                recompensa.quantidadeCopos;
+            numeroCopo += 1
         ) {
-
             const grupo =
-                document.createElement("fieldset");
+                document.createElement(
+                    "fieldset"
+                );
+
+            const tituloGrupo =
+                document.createElement(
+                    "legend"
+                );
+
 
             grupo.className =
                 "grupo-complementos-recompensa";
 
-            const tituloGrupo =
-                document.createElement("legend");
 
             tituloGrupo.textContent =
-                recompensa.quantidadeCopos === 1
+                recompensa.quantidadeCopos ===
+                1
                     ? "Complementos do Açaí"
                     : `Complementos do copo ${numeroCopo}`;
 
-            grupo.appendChild(tituloGrupo);
 
-
-            complementosDisponiveis.forEach(
-                complemento => {
-
-                    const identificador =
-                        `recompensa-${recompensa.id}-` +
-                        `copo-${numeroCopo}-` +
-                        complemento
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")
-                            .normalize("NFD")
-                            .replace(
-                                /[\u0300-\u036f]/g,
-                                ""
-                            );
-
-                    const label =
-                        document.createElement("label");
-
-                    label.className =
-                        "opcao-complemento-recompensa";
-
-                    const input =
-                        document.createElement("input");
-
-                    input.type = "checkbox";
-                    input.value = complemento;
-                    input.id = identificador;
-                    input.dataset.copo =
-                        String(numeroCopo);
-
-                    const texto =
-                        document.createElement("span");
-
-                    texto.textContent = complemento;
-
-                    label.appendChild(input);
-                    label.appendChild(texto);
-
-                    grupo.appendChild(label);
-
-
-                    input.addEventListener(
-                        "change",
-                        () => {
-
-                            controlarLimiteComplementos(
-                                numeroCopo,
-                                recompensa.limiteComplementos
-                            );
-
-                        }
-                    );
-
-                }
+            grupo.appendChild(
+                tituloGrupo
             );
 
-            seletores.appendChild(grupo);
 
+            complementosDisponiveis
+                .forEach(
+                    complemento => {
+                        grupo.appendChild(
+                            criarOpcaoComplemento(
+                                recompensa,
+                                numeroCopo,
+                                complemento
+                            )
+                        );
+                    }
+                );
+
+
+            seletores.appendChild(
+                grupo
+            );
         }
 
 
-        btnConfirmar.onclick = () => {
+        btnConfirmar.onclick =
+            () => {
+                confirmarResgateAcai(
+                    recompensa
+                );
+            };
 
-            confirmarResgateAcai(recompensa);
 
-        };
-
-        modal.style.display = "flex";
-
+        abrirModalElemento(
+            modal
+        );
     }
 
 
     /* =====================================
-       CONTROLAR LIMITE DE COMPLEMENTOS
-    ===================================== */
+       LIMITE DE COMPLEMENTOS
+    ====================================== */
 
     function controlarLimiteComplementos(
         numeroCopo,
         limite
     ) {
-
         const opcoes =
-            document.querySelectorAll(
-                `#seletoresComplementos ` +
-                `input[data-copo="${numeroCopo}"]`
+            Array.from(
+                document
+                    .querySelectorAll(
+                        `#seletoresComplementos ` +
+                        `input[data-copo="${numeroCopo}"]`
+                    )
             );
 
-        const selecionadas =
-            Array.from(opcoes)
-                .filter(opcao => opcao.checked);
 
-        opcoes.forEach(opcao => {
+        const selecionadas =
+            opcoes.filter(
+                opcao =>
+                    opcao.checked
+            );
+
+
+        opcoes.forEach(
+            opcao => {
+                opcao.disabled =
+                    selecionadas.length >=
+                        limite &&
+                    !opcao.checked;
+            }
+        );
+    }
+
+
+    function obterComplementosSelecionados(
+        recompensa
+    ) {
+        const complementosPorCopo =
+            [];
+
+
+        for (
+            let numeroCopo = 1;
+            numeroCopo <=
+                recompensa.quantidadeCopos;
+            numeroCopo += 1
+        ) {
+            const selecionados =
+                Array.from(
+                    document
+                        .querySelectorAll(
+                            `#seletoresComplementos ` +
+                            `input[data-copo="${numeroCopo}"]:checked`
+                        )
+                )
+                    .map(
+                        input =>
+                            input.value
+                    );
+
 
             if (
-                selecionadas.length >= limite &&
-                !opcao.checked
+                selecionados.length !==
+                recompensa
+                    .limiteComplementos
             ) {
+                return {
+                    valido:
+                        false,
 
-                opcao.disabled = true;
+                    numeroCopo,
 
-            } else {
-
-                opcao.disabled = false;
-
+                    complementosPorCopo:
+                        []
+                };
             }
 
-        });
 
+            complementosPorCopo
+                .push(
+                    selecionados
+                );
+        }
+
+
+        return {
+            valido:
+                true,
+
+            numeroCopo:
+                null,
+
+            complementosPorCopo
+        };
     }
 
 
     /* =====================================
-       CONFIRMAR RESGATE DE AÇAÍ
-    ===================================== */
+       CRIAR PEDIDO DE RECOMPENSA
+    ====================================== */
 
-    function confirmarResgateAcai(recompensa) {
+    function criarPedidoRecompensa(
+        recompensa,
+        complementosPorCopo
+    ) {
+        const agoraPedido =
+            new Date();
 
+
+        return {
+            id:
+                gerarIdPedido(),
+
+            tipo:
+                "recompensa",
+
+            produto:
+                recompensa.titulo,
+
+            itens: [
+                {
+                    nome:
+                        recompensa.titulo,
+
+                    quantidade:
+                        recompensa
+                            .quantidadeCopos
+                }
+            ],
+
+            tamanho:
+                `${recompensa.tamanho} ml`,
+
+            quantidade:
+                recompensa
+                    .quantidadeCopos,
+
+            complementos:
+                complementosPorCopo,
+
+            pontosUtilizados:
+                recompensa.pontos,
+
+
+            valorProdutos:
+                0,
+
+            subtotal:
+                0,
+
+            taxaEntrega:
+                0,
+
+            valorTotal:
+                0,
+
+            valorPontuavel:
+                0,
+
+            valor:
+                "0,00",
+
+
+            formaPagamento:
+                "Recompensa por pontos",
+
+
+            cliente: {
+                nome:
+                    String(
+                        usuario.nome ||
+                        ""
+                    ).trim(),
+
+                email:
+                    String(
+                        usuario.email ||
+                        ""
+                    ).trim()
+            },
+
+
+            enderecoEntrega: {
+                cep:
+                    "",
+
+                rua:
+                    "",
+
+                numero:
+                    "",
+
+                bairro:
+                    "",
+
+                complemento:
+                    "",
+
+                validado:
+                    false
+            },
+
+
+            canal:
+                "Área do Cliente",
+
+
+            pontosCreditados:
+                false,
+
+            pontosGerados:
+                0,
+
+            dataCreditoPontos:
+                null,
+
+
+            data:
+                agoraPedido
+                    .toLocaleDateString(
+                        "pt-BR"
+                    ),
+
+            criadoEm:
+                agoraPedido
+                    .toISOString(),
+
+            atualizadoEm:
+                agoraPedido
+                    .toISOString(),
+
+            status:
+                "Pedido recebido",
+
+
+            historicoStatus: [
+                {
+                    status:
+                        "Pedido recebido",
+
+                    data:
+                        agoraPedido
+                            .toISOString()
+                }
+            ]
+        };
+    }
+
+
+    /* =====================================
+       CONFIRMAR RESGATE
+    ====================================== */
+
+    function confirmarResgateAcai(
+        recompensa
+    ) {
         const situacao =
-            verificarRecompensa(recompensa);
+            verificarRecompensa(
+                recompensa
+            );
 
         const mensagem =
             document.getElementById(
@@ -709,159 +1236,136 @@ function inicializarRecompensas(usuario) {
                 "btnConfirmarResgate"
             );
 
-        if (!situacao.disponivel) {
 
+        if (
+            !situacao.disponivel
+        ) {
             if (mensagem) {
-
                 mensagem.className =
                     "mensagem erro";
 
                 mensagem.textContent =
                     situacao.mensagem;
-
             }
 
             return;
-
         }
 
 
-        const complementosPorCopo = [];
+        const selecao =
+            obterComplementosSelecionados(
+                recompensa
+            );
 
 
-        for (
-            let numeroCopo = 1;
-            numeroCopo <= recompensa.quantidadeCopos;
-            numeroCopo++
-        ) {
+        if (!selecao.valido) {
+            if (mensagem) {
+                mensagem.className =
+                    "mensagem erro";
 
-            const selecionados =
-                Array.from(
-                    document.querySelectorAll(
-                        `#seletoresComplementos ` +
-                        `input[data-copo="${numeroCopo}"]:checked`
-                    )
-                )
-                    .map(input => input.value);
-
-
-            if (
-                selecionados.length !==
-                recompensa.limiteComplementos
-            ) {
-
-                if (mensagem) {
-
-                    mensagem.className =
-                        "mensagem erro";
-
-                    mensagem.textContent =
-                        recompensa.quantidadeCopos === 1
-                            ? `Escolha exatamente ${recompensa.limiteComplementos} complementos.`
-                            : `Escolha exatamente ${recompensa.limiteComplementos} complementos para o copo ${numeroCopo}.`;
-
-                }
-
-                return;
-
+                mensagem.textContent =
+                    recompensa.quantidadeCopos ===
+                    1
+                        ? `Escolha exatamente ${recompensa.limiteComplementos} complementos.`
+                        : `Escolha exatamente ${recompensa.limiteComplementos} complementos para o copo ${selecao.numeroCopo}.`;
             }
 
-            complementosPorCopo.push(selecionados);
-
+            return;
         }
 
 
         const dataHora =
             obterDataHora();
 
-        usuario.saldoPontos -= recompensa.pontos;
-        usuario.pontos = usuario.saldoPontos;
+
+        const pedido =
+            criarPedidoRecompensa(
+                recompensa,
+                selecao
+                    .complementosPorCopo
+            );
 
 
-        if (recompensa.chaveControle) {
+        usuario.saldoPontos -=
+            recompensa.pontos;
 
+        usuario.pontos =
+            usuario.saldoPontos;
+
+
+        if (
+            recompensa
+                .chaveControle
+        ) {
             usuario.controleResgates[
-                recompensa.chaveControle
+                recompensa
+                    .chaveControle
             ] += 1;
-
         }
 
 
-        const pedido = {
-
-            id: gerarIdPedido(),
-
-            tipo: "recompensa",
-
-            produto: recompensa.titulo,
-
-            tamanho: `${recompensa.tamanho} ml`,
-
-            quantidade: recompensa.quantidadeCopos,
-
-            complementos: complementosPorCopo,
-
-            pontosUtilizados: recompensa.pontos,
-
-            valor: "0,00",
-
-            data: new Date().toLocaleDateString(
-                "pt-BR"
-            ),
-
-            criadoEm: new Date().toISOString(),
-
-            status: "Pedido recebido"
-
-        };
+        usuario.pedidos.unshift(
+            pedido
+        );
 
 
-        usuario.pedidos.unshift(pedido);
+        usuario
+            .recompensasResgatadas
+            .unshift({
+                id:
+                    `RESGATE-${Date.now()}`,
 
+                tipo:
+                    "acai",
 
-        usuario.recompensasResgatadas.unshift({
+                recompensa:
+                    recompensa.titulo,
 
-            id: `RESGATE-${Date.now()}`,
+                pontosUtilizados:
+                    recompensa.pontos,
 
-            tipo: "acai",
+                complementos:
+                    selecao
+                        .complementosPorCopo,
 
-            recompensa: recompensa.titulo,
+                pedidoId:
+                    pedido.id,
 
-            pontosUtilizados: recompensa.pontos,
-
-            complementos: complementosPorCopo,
-
-            pedidoId: pedido.id,
-
-            data: dataHora
-
-        });
+                data:
+                    dataHora
+            });
 
 
         const textoComplementos =
-            complementosPorCopo
-                .map((lista, indice) => {
+            selecao
+                .complementosPorCopo
+                .map(
+                    (
+                        lista,
+                        indice
+                    ) => {
+                        if (
+                            recompensa
+                                .quantidadeCopos ===
+                            1
+                        ) {
+                            return lista.join(
+                                ", "
+                            );
+                        }
 
-                    if (
-                        recompensa.quantidadeCopos === 1
-                    ) {
-
-                        return lista.join(", ");
-
+                        return (
+                            `Copo ${indice + 1}: ` +
+                            lista.join(", ")
+                        );
                     }
-
-                    return (
-                        `Copo ${indice + 1}: ` +
-                        lista.join(", ")
-                    );
-
-                })
+                )
                 .join("<br>");
 
 
         usuario.historico.unshift(`
-
-            🎁 Resgatou ${recompensa.titulo}
+            🎁 Resgatou
+            ${recompensa.titulo}
 
             <br>
 
@@ -872,10 +1376,10 @@ function inicializarRecompensas(usuario) {
             <br>
 
             <small>
-                ${recompensa.pontos} pontos utilizados —
+                ${recompensa.pontos}
+                pontos utilizados —
                 ${dataHora}
             </small>
-
         `);
 
 
@@ -883,38 +1387,35 @@ function inicializarRecompensas(usuario) {
 
 
         if (mensagem) {
-
             mensagem.className =
                 "mensagem sucesso";
 
             mensagem.textContent =
                 "Recompensa resgatada! O pedido foi criado com sucesso.";
-
         }
 
 
         if (btnConfirmar) {
-
-            btnConfirmar.disabled = true;
+            btnConfirmar.disabled =
+                true;
 
             btnConfirmar.textContent =
                 "Pedido criado ✓";
-
         }
 
 
-        setTimeout(() => {
-
-            window.location.reload();
-
-        }, 1400);
-
+        setTimeout(
+            () => {
+                window.location.reload();
+            },
+            1400
+        );
     }
 
 
     /* =====================================
-       FECHAR O MODAL DO AÇAÍ
-    ===================================== */
+       FECHAR MODAL
+    ====================================== */
 
     const btnFecharRecompensa =
         document.getElementById(
@@ -926,33 +1427,25 @@ function inicializarRecompensas(usuario) {
             "modalRecompensaAcai"
         );
 
-    if (
-        btnFecharRecompensa &&
-        modalRecompensaAcai
-    ) {
 
-        btnFecharRecompensa.addEventListener(
+    btnFecharRecompensa
+        ?.addEventListener(
             "click",
             () => {
-
-                modalRecompensaAcai.style.display =
-                    "none";
-
+                fecharModalElemento(
+                    modalRecompensaAcai
+                );
             }
         );
-
-    }
-
-
-
 
 
     /* =====================================
        INICIAR
-    ===================================== */
+    ====================================== */
+
+    normalizarDadosUsuario();
 
     salvarUsuario();
 
     renderizarRecompensas();
-
 }
