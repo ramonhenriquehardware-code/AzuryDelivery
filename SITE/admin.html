@@ -14,7 +14,17 @@
         content="Painel administrativo da Azury"
     >
 
+    <meta
+        name="robots"
+        content="noindex, nofollow"
+    >
+
     <title>Painel Administrativo | Azury</title>
+
+    <link
+        rel="stylesheet"
+        href="css/reset.css"
+    >
 
     <link
         rel="stylesheet"
@@ -33,29 +43,41 @@
         <div class="admin-header-container">
 
             <a
-                href="index.html"
+                href="admin.html"
                 class="admin-logo"
-                aria-label="Voltar para o início"
+                aria-label="Painel administrativo da Azury"
             >
-                <span class="admin-coroa">👑</span>
-                <span>AZURY</span>
+                <span
+                    class="admin-coroa"
+                    aria-hidden="true"
+                >
+                    👑
+                </span>
+
+                <span>
+                    AZURY ADMIN
+                </span>
             </a>
 
-            <nav class="admin-acoes">
+
+            <nav
+                class="admin-acoes"
+                aria-label="Ações administrativas"
+            >
 
                 <button
                     type="button"
                     id="btnAtualizarPedidos"
                     class="btn-atualizar"
                 >
-                    Atualizar pedidos
+                    ↻ Atualizar pedidos
                 </button>
 
                 <a
                     href="index.html"
                     class="btn-voltar"
                 >
-                    Voltar ao site
+                    ← Voltar ao site
                 </a>
 
             </nav>
@@ -71,26 +93,35 @@
 
     <main class="admin-container">
 
+        <!-- APRESENTAÇÃO -->
+
         <section class="admin-apresentacao">
 
-            <div>
+            <span class="admin-etiqueta">
+                Administração
+            </span>
 
-                <span class="admin-etiqueta">
-                    Administração
-                </span>
+            <h1>
+                Gerenciamento de pedidos
+            </h1>
 
-                <h1>
-                    Gerenciamento de pedidos
-                </h1>
-
-                <p>
-                    Acompanhe os pedidos e atualize cada etapa
-                    da preparação e entrega.
-                </p>
-
-            </div>
+            <p>
+                Acompanhe os pedidos, confira os produtos,
+                a taxa de entrega, o endereço, o pagamento
+                e atualize cada etapa da preparação.
+            </p>
 
         </section>
+
+
+        <!-- MENSAGENS DO PAINEL -->
+
+        <div
+            id="mensagemAdmin"
+            class="mensagem-admin"
+            role="status"
+            aria-live="polite"
+        ></div>
 
 
         <!-- =====================================
@@ -104,7 +135,10 @@
 
             <article class="resumo-card">
 
-                <span class="resumo-icone">
+                <span
+                    class="resumo-icone"
+                    aria-hidden="true"
+                >
                     📦
                 </span>
 
@@ -125,7 +159,10 @@
 
             <article class="resumo-card">
 
-                <span class="resumo-icone">
+                <span
+                    class="resumo-icone"
+                    aria-hidden="true"
+                >
                     🟡
                 </span>
 
@@ -146,7 +183,10 @@
 
             <article class="resumo-card">
 
-                <span class="resumo-icone">
+                <span
+                    class="resumo-icone"
+                    aria-hidden="true"
+                >
                     👨‍🍳
                 </span>
 
@@ -167,7 +207,10 @@
 
             <article class="resumo-card">
 
-                <span class="resumo-icone">
+                <span
+                    class="resumo-icone"
+                    aria-hidden="true"
+                >
                     ✅
                 </span>
 
@@ -178,7 +221,7 @@
                     </strong>
 
                     <span>
-                        Entregues
+                        Pedidos entregues
                     </span>
 
                 </div>
@@ -189,7 +232,7 @@
 
 
         <!-- =====================================
-             LISTA DE PEDIDOS
+             LISTA DOS PEDIDOS
         ====================================== -->
 
         <section class="secao-pedidos">
@@ -203,11 +246,12 @@
                     </h2>
 
                     <p>
-                        Altere o status conforme o andamento
-                        de cada pedido.
+                        Confira todos os dados e altere o
+                        status conforme o andamento.
                     </p>
 
                 </div>
+
 
                 <label class="campo-filtro">
 
@@ -253,21 +297,13 @@
 
 
             <div
-                id="mensagemAdmin"
-                class="mensagem-admin"
-                role="status"
-                aria-live="polite"
-            ></div>
-
-
-            <div
                 id="listaPedidosAdmin"
                 class="lista-pedidos-admin"
             >
 
                 <div class="admin-carregando">
 
-                    <span>
+                    <span aria-hidden="true">
                         ⏳
                     </span>
 
@@ -287,9 +323,9 @@
     <!-- =====================================
          SCRIPTS
 
-         A ordem é importante:
-         1. Pontuação
-         2. Pedidos
+         Esta ordem deve ser mantida:
+         1. Serviço de pontuação
+         2. Serviço de pedidos
          3. Painel administrativo
     ====================================== -->
 
