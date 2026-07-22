@@ -1417,3 +1417,12 @@ body.pagina-cliente {
     }
 
 }
+
+.pagina-cliente #recompensas .btn-resgatar-recompensa:disabled {
+    color: #737b87;
+    background: #e5e8ed;
+    border-color: #d8dce3;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
