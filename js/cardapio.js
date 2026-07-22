@@ -3,72 +3,346 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const NUMERO_WHATSAPP = "5511960220402";
 
-    const BAIRROS_ATENDIDOS = {
-        americanopolis: {
+    const AREAS_ENTREGA = [
+        {
             nome: "Americanópolis",
-            taxa: 5.00
+            taxa: 5.00,
+            aliases: [
+                "americanopolis"
+            ]
         },
 
-        "vila clara": {
+        {
             nome: "Vila Clara",
-            taxa: 7.00
+            taxa: 7.00,
+            aliases: [
+                "vila clara"
+            ]
         },
 
-        pantanal: {
-            nome: "Vila Clara",
-            taxa: 7.00
-        },
-
-        pantanal: {
+        {
             nome: "Pantanal",
-            taxa: 9.00
+            taxa: 9.00,
+            aliases: [
+                "pantanal"
+            ]
         },
 
-        "cidade julia": {
+        {
             nome: "Cidade Júlia",
-            taxa: 9.00
+            taxa: 9.00,
+            aliases: [
+                "cidade julia"
+            ]
         },
 
-        joaniza: {
+        {
             nome: "Joaniza",
-            taxa: 5.00
+            taxa: 5.00,
+            aliases: [
+                "joaniza"
+            ]
         },
 
-        "jardim orly": {
+        {
             nome: "Jardim Orly",
-            taxa: 5.00
+            taxa: 5.00,
+            aliases: [
+                "jardim orly",
+                "jd orly"
+            ]
         },
 
-        "jd orly": {
-            nome: "Jardim Orly",
-            taxa: 5.00
-        },
-
-        "jardim sao jorge": {
+        {
             nome: "Jardim São Jorge",
-            taxa: 5.00
+            taxa: 5.00,
+            aliases: [
+                "jardim sao jorge",
+                "jd sao jorge"
+            ]
         },
 
-        "jd sao jorge": {
-            nome: "Jardim São Jorge",
-            taxa: 5.00
-        },
-
-        interlagos: {
+        {
             nome: "Interlagos",
-            taxa: 7.00
+            taxa: 7.00,
+            aliases: [
+                "interlagos"
+            ]
         },
 
-        "jardim miriam": {
+        {
             nome: "Jardim Miriam",
-            taxa: 8.00
+            taxa: 8.00,
+            aliases: [
+                "jardim miriam",
+                "jd miriam"
+            ]
         },
 
-        "jd miriam": {
-            nome: "Jardim Miriam",
-            taxa: 8.00
+        {
+            nome: "Jardim Itapura",
+            taxa: 5.00,
+            aliases: [
+                "jardim itapura",
+                "jd itapura"
+            ]
+        },
+
+        {
+            nome: "Jardim Domitila",
+            taxa: 5.00,
+            aliases: [
+                "jardim domitila",
+                "jd domitila"
+            ]
+        },
+
+        {
+            nome: "Pedreira",
+            taxa: 8.00,
+            aliases: [
+                "pedreira"
+            ]
+        },
+
+        {
+            nome: "Jardim Uberaba",
+            taxa: 5.00,
+            aliases: [
+                "jardim uberaba",
+                "jd uberaba"
+            ]
+        },
+
+        {
+            nome: "Cidade Ademar",
+            taxa: 5.00,
+            aliases: [
+                "cidade ademar"
+            ]
+        },
+
+        {
+            nome: "Vila Missionária",
+            taxa: 6.00,
+            aliases: [
+                "vila missionaria"
+            ]
+        },
+
+        {
+            nome: "Campo Grande",
+            taxa: 6.00,
+            aliases: [
+                "campo grande"
+            ]
+        },
+
+        {
+            nome: "Vila Campo Grande",
+            taxa: 5.00,
+            aliases: [
+                "vila campo grande"
+            ]
+        },
+
+        {
+            nome: "Vila Capela",
+            taxa: 7.00,
+            aliases: [
+                "vila capela"
+            ]
+        },
+
+        {
+            nome: "Jardim Sul",
+            taxa: 8.00,
+            aliases: [
+                "jardim sul",
+                "jd sul"
+            ]
+        },
+
+        {
+            nome: "Jardim Melo",
+            taxa: 8.00,
+            aliases: [
+                "jardim melo",
+                "jd melo"
+            ]
+        },
+
+        {
+            nome: "Vila Guacuri",
+            taxa: 8.00,
+            aliases: [
+                "vila guacuri",
+                "guacuri"
+            ]
+        },
+
+        {
+            nome: "Jardim Selma",
+            taxa: 5.00,
+            aliases: [
+                "jardim selma",
+                "jd selma"
+            ]
+        },
+
+        {
+            nome: "Vila Império",
+            taxa: 5.00,
+            aliases: [
+                "vila imperio"
+            ]
+        },
+
+        {
+            nome: "Vila Marari",
+            taxa: 5.00,
+            aliases: [
+                "vila marari"
+            ]
+        },
+
+        {
+            nome: "Vila Constância",
+            taxa: 5.00,
+            aliases: [
+                "vila constancia",
+                "vila constanca"
+            ]
+        },
+
+        {
+            nome: "Vila Santana",
+            taxa: 6.00,
+            aliases: [
+                "vila santana"
+            ]
+        },
+
+        {
+            nome: "Cupecê",
+            taxa: 6.00,
+            aliases: [
+                "cupece"
+            ]
+        },
+
+        {
+            nome: "Jardim Itacolomi",
+            taxa: 6.00,
+            aliases: [
+                "jardim itacolomi",
+                "jd itacolomi"
+            ]
+        },
+
+        {
+            nome: "Vila Campestre",
+            taxa: 7.00,
+            aliases: [
+                "vila campestre"
+            ]
+        },
+
+        {
+            nome: "Vila Santa Catarina",
+            taxa: 7.00,
+            aliases: [
+                "vila santa catarina"
+            ]
+        },
+
+        {
+            nome: "Chácara Flora",
+            taxa: 8.00,
+            aliases: [
+                "chacara flora"
+            ]
+        },
+
+        {
+            nome: "Jardim Marajoara",
+            taxa: 8.00,
+            aliases: [
+                "jardim marajoara",
+                "jd marajoara"
+            ]
+        },
+
+        {
+            nome: "Vila Sofia",
+            taxa: 9.00,
+            aliases: [
+                "vila sofia"
+            ]
+        },
+
+        {
+            nome: "Jardim Taquaral",
+            taxa: 6.00,
+            aliases: [
+                "jardim taquaral",
+                "jd taquaral"
+            ]
+        },
+
+        {
+            nome: "Balneário Mar Paulista",
+            taxa: 6.00,
+            aliases: [
+                "balneario mar paulista"
+            ]
+        },
+
+        {
+            nome: "Vila dos Andradas",
+            taxa: 5.00,
+            aliases: [
+                "vila dos andradas"
+            ]
+        },
+
+        {
+            nome: "Vila Baby",
+            taxa: 5.00,
+            aliases: [
+                "vila baby"
+            ]
+        },
+
+        {
+            nome: "Jardim Palmares (Zona Sul)",
+            taxa: 5.00,
+            aliases: [
+                "jardim palmares zona sul",
+                "jardim palmares",
+                "jd palmares"
+            ]
+        },
+
+        {
+            nome: "Jardim Ubirajara (Zona Sul)",
+            taxa: 5.00,
+            aliases: [
+                "jardim ubirajara zona sul",
+                "jardim ubirajara",
+                "jd ubirajara"
+            ]
+        },
+
+        {
+            nome: "Jardim Martini",
+            taxa: 5.00,
+            aliases: [
+                "jardim martini",
+                "jd martini"
+            ]
         }
-    };
+    ];
 
 
     const COMPLEMENTOS = [
@@ -145,11 +419,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const $ = seletor =>
-        document.querySelector(seletor);
+        document.querySelector(
+            seletor
+        );
+
 
     const $$ = seletor =>
         Array.from(
-            document.querySelectorAll(seletor)
+            document.querySelectorAll(
+                seletor
+            )
         );
 
 
@@ -193,7 +472,6 @@ document.addEventListener("DOMContentLoaded", () => {
         $$(
             "input[name='tamanhoMonteSeuOpcao']"
         );
-
 
     const complementosMeio =
         $("#complementosMeio");
@@ -295,6 +573,101 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    /* =====================================
+       MAPA DOS BAIRROS
+    ====================================== */
+
+    const MAPA_BAIRROS =
+        new Map();
+
+
+    AREAS_ENTREGA.forEach(
+        area => {
+            area.aliases.forEach(
+                alias => {
+                    MAPA_BAIRROS.set(
+                        normalizarTexto(
+                            alias
+                        ),
+
+                        {
+                            nome:
+                                area.nome,
+
+                            taxa:
+                                area.taxa
+                        }
+                    );
+                }
+            );
+        }
+    );
+
+
+    /*
+     * Os nomes maiores são verificados primeiro.
+     * Assim, Vila Campo Grande não é confundida
+     * com Campo Grande.
+     */
+    const ALIASES_ORDENADOS =
+        Array.from(
+            MAPA_BAIRROS.keys()
+        ).sort(
+            (
+                primeiro,
+                segundo
+            ) =>
+                segundo.length -
+                primeiro.length
+        );
+
+
+    function localizarTaxaBairro(
+        bairro
+    ) {
+        const bairroNormalizado =
+            normalizarTexto(
+                bairro
+            );
+
+
+        if (!bairroNormalizado) {
+            return null;
+        }
+
+
+        const correspondenciaExata =
+            MAPA_BAIRROS.get(
+                bairroNormalizado
+            );
+
+
+        if (correspondenciaExata) {
+            return correspondenciaExata;
+        }
+
+
+        const aliasEncontrado =
+            ALIASES_ORDENADOS.find(
+                alias =>
+                    bairroNormalizado
+                        .includes(
+                            alias
+                        ) ||
+                    alias.includes(
+                        bairroNormalizado
+                    )
+            );
+
+
+        return aliasEncontrado
+            ? MAPA_BAIRROS.get(
+                aliasEncontrado
+            )
+            : null;
+    }
+
+
     function obterSessaoCliente() {
         try {
             const sessao =
@@ -303,6 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         "usuarioAzury"
                     ) || "null"
                 );
+
 
             return sessao?.autenticado
                 ? sessao
@@ -322,6 +696,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function preencherNomeDaSessao() {
         const sessao =
             obterSessaoCliente();
+
 
         if (
             nomeInput &&
@@ -355,7 +730,7 @@ document.addEventListener("DOMContentLoaded", () => {
             typeof window
                 .AzuryPedidos
                 .criarPedido !==
-            "function"
+                "function"
         ) {
             alert(
                 "O pedido será enviado ao WhatsApp, mas não foi possível registrá-lo na Área do Cliente."
@@ -396,6 +771,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 mensagem
             );
 
+
         window.open(
             link,
             "_blank",
@@ -409,6 +785,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+
         modal.style.display =
             "flex";
 
@@ -421,6 +798,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!modal) {
             return;
         }
+
 
         modal.style.display =
             "none";
@@ -467,10 +845,12 @@ document.addEventListener("DOMContentLoaded", () => {
                             .indicadorEtapa
                     );
 
+
                 indicador.classList.toggle(
                     "ativa",
                     numero === etapa
                 );
+
 
                 indicador.classList.toggle(
                     "concluida",
@@ -512,6 +892,7 @@ document.addEventListener("DOMContentLoaded", () => {
         enviando =
             true;
 
+
         if (btnEnviar) {
             btnEnviar.disabled =
                 true;
@@ -527,6 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
             () => {
                 enviando =
                     false;
+
 
                 if (btnEnviar) {
                     btnEnviar.disabled =
@@ -564,6 +946,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         item.preco
                             .toFixed(2);
 
+
                     return `
                         <label>
 
@@ -577,10 +960,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             >
 
                             ${item.nome} —
-                            R$ ${preco.replace(
-                        ".",
-                        ","
-                    )}
+                            R$ ${preco.replace(".", ",")}
 
                         </label>
                     `;
@@ -628,7 +1008,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     item.checked &&
                     item.dataset
                         .camada ===
-                    camada
+                        camada
             )
             .map(
                 item =>
@@ -652,7 +1032,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================
-       TAMANHO E VALORES
+       TAMANHOS E VALORES
     ====================================== */
 
     function atualizarTamanho(
@@ -719,9 +1099,7 @@ document.addEventListener("DOMContentLoaded", () => {
         todosComplementos()
             .forEach(
                 item => {
-                    if (
-                        item.checked
-                    ) {
+                    if (item.checked) {
                         total +=
                             Number(
                                 item.dataset
@@ -753,6 +1131,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         atualizarTotalFinal();
+
 
         return total;
     }
@@ -788,11 +1167,10 @@ document.addEventListener("DOMContentLoaded", () => {
             opcao.addEventListener(
                 "change",
                 () => {
-                    if (
-                        !opcao.checked
-                    ) {
+                    if (!opcao.checked) {
                         return;
                     }
+
 
                     atualizarTamanho(
                         opcao.value,
@@ -875,25 +1253,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        if (
-            ruaInput
-        ) {
+        if (ruaInput) {
             ruaInput.value =
                 "";
         }
 
 
-        if (
-            bairroInput
-        ) {
+        if (bairroInput) {
             bairroInput.value =
                 "";
         }
 
 
-        if (
-            resumoTaxaEl
-        ) {
+        if (resumoTaxaEl) {
             resumoTaxaEl.textContent =
                 "A calcular";
         }
@@ -909,52 +1281,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function localizarTaxaBairro(
-        bairro
-    ) {
-        const bairroNormalizado =
-            normalizarTexto(
-                bairro
-            );
-
-
-        if (
-            BAIRROS_ATENDIDOS[
-            bairroNormalizado
-            ]
-        ) {
-            return BAIRROS_ATENDIDOS[
-                bairroNormalizado
-            ];
-        }
-
-
-        const chave =
-            Object.keys(
-                BAIRROS_ATENDIDOS
-            ).find(
-                item =>
-                    bairroNormalizado
-                        .includes(item) ||
-                    item.includes(
-                        bairroNormalizado
-                    )
-            );
-
-
-        return chave
-            ? BAIRROS_ATENDIDOS[
-            chave
-            ]
-            : null;
-    }
-
-
     async function consultarCEP(
         cep
     ) {
         if (
-            cep.length !== 8
+            cep.length !==
+            8
         ) {
             return;
         }
@@ -1030,7 +1362,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!entrega) {
                 invalidarEndereco(
-                    `Ainda não entregamos no bairro ${dados.bairro}. Atendemos somente os bairros cadastrados, dentro do limite máximo de 8 km.`,
+                    `Ainda não entregamos no bairro ${dados.bairro}. Atendemos somente os bairros cadastrados.`,
                     "erro"
                 );
 
@@ -1068,9 +1400,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            if (
-                resumoTaxaEl
-            ) {
+            if (resumoTaxaEl) {
                 resumoTaxaEl.textContent =
                     formatarPreco(
                         entrega.taxa
@@ -1204,7 +1534,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return Boolean(
             enderecoValidadoInput
                 ?.value ===
-            "true" &&
+                "true" &&
             nome &&
             cep.length === 8 &&
             rua &&
@@ -1224,25 +1554,19 @@ document.addEventListener("DOMContentLoaded", () => {
         limparFormaPagamento();
 
 
-        if (
-            cepInput
-        ) {
+        if (cepInput) {
             cepInput.value =
                 "";
         }
 
 
-        if (
-            numeroInput
-        ) {
+        if (numeroInput) {
             numeroInput.value =
                 "";
         }
 
 
-        if (
-            complementoInput
-        ) {
+        if (complementoInput) {
             complementoInput.value =
                 "";
         }
@@ -1270,11 +1594,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         atualizarTamanho(
                             botao.dataset
                                 .tamanho ||
-                            "300",
+                                "300",
 
                             botao.dataset
                                 .precoBase ||
-                            "14.90"
+                                "14.90"
                         );
 
 
@@ -1349,9 +1673,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
 
-                if (
-                    consultandoCEP
-                ) {
+                if (consultandoCEP) {
                     alert(
                         "Aguarde a validação do CEP."
                     );
@@ -1375,9 +1697,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
 
-                if (
-                    !formaPagamento
-                ) {
+                if (!formaPagamento) {
                     alert(
                         "Escolha a forma de pagamento."
                     );
@@ -1420,7 +1740,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const tamanho =
                     tamanhoInput
                         ?.value ||
-                    "300";
+                        "300";
 
 
                 const valorProdutos =
