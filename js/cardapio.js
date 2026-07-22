@@ -2,7 +2,147 @@ document.addEventListener("DOMContentLoaded", () => {
     "use strict";
 
     const NUMERO_WHATSAPP = "5511960220402";
-    let enviandoPedido = false;
+
+    const BAIRROS_ATENDIDOS = {
+        americanopolis: {
+            nome: "Americanópolis",
+            taxa: 5.00
+        },
+
+        "vila clara": {
+            nome: "Vila Clara",
+            taxa: 7.00
+        },
+
+        pantanal: {
+            nome: "Vila Clara",
+            taxa: 7.00
+        },
+
+        pantanal: {
+            nome: "Pantanal",
+            taxa: 9.00
+        },
+
+        "cidade julia": {
+            nome: "Cidade Júlia",
+            taxa: 9.00
+        },
+
+        joaniza: {
+            nome: "Joaniza",
+            taxa: 5.00
+        },
+
+        "jardim orly": {
+            nome: "Jardim Orly",
+            taxa: 5.00
+        },
+
+        "jd orly": {
+            nome: "Jardim Orly",
+            taxa: 5.00
+        },
+
+        "jardim sao jorge": {
+            nome: "Jardim São Jorge",
+            taxa: 5.00
+        },
+
+        "jd sao jorge": {
+            nome: "Jardim São Jorge",
+            taxa: 5.00
+        },
+
+        interlagos: {
+            nome: "Interlagos",
+            taxa: 7.00
+        },
+
+        "jardim miriam": {
+            nome: "Jardim Miriam",
+            taxa: 8.00
+        },
+
+        "jd miriam": {
+            nome: "Jardim Miriam",
+            taxa: 8.00
+        }
+    };
+
+
+    const COMPLEMENTOS = [
+        {
+            nome: "Granola",
+            preco: 1.50
+        },
+
+        {
+            nome: "Leite condensado",
+            preco: 1.50
+        },
+
+        {
+            nome: "Paçoca",
+            preco: 2.00
+        },
+
+        {
+            nome: "Banana",
+            preco: 2.00
+        },
+
+        {
+            nome: "Manga",
+            preco: 2.00
+        },
+
+        {
+            nome: "Coco ralado",
+            preco: 2.50
+        },
+
+        {
+            nome: "Leite em pó",
+            preco: 2.50
+        },
+
+        {
+            nome: "Creme branco",
+            preco: 2.50
+        },
+
+        {
+            nome: "Oreo",
+            preco: 3.00
+        },
+
+        {
+            nome: "Ovomaltine",
+            preco: 3.00
+        },
+
+        {
+            nome: "Morango",
+            preco: 3.50
+        },
+
+        {
+            nome: "Uva verde",
+            preco: 3.50
+        },
+
+        {
+            nome: "Creme de avelã",
+            preco: 3.50
+        },
+
+        {
+            nome: "Nutella",
+            preco: 4.50
+        }
+    ];
+
 
     const $ = seletor =>
         document.querySelector(seletor);
@@ -13,9 +153,107 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-    /* =====================================
-       FUNÇÕES G(seletor)
+    const modal =
+        $("#modalMonteSeu");
+
+    const conteudoModal =
+        modal?.querySelector(
+            ".conteudo-monte-seu"
         );
+
+    const btnFechar =
+        $("#btnFecharMonteSeu");
+
+    const painelPedido =
+        $("#painelPedido");
+
+    const painelEntrega =
+        $("#painelEntrega");
+
+    const indicadores =
+        $$(".etapa-indicador");
+
+    const btnContinuar =
+        $("#btnContinuarPedido");
+
+    const btnVoltar =
+        $("#btnVoltarPedido");
+
+    const btnEnviar =
+        $("#btnEnviarMonteSeu");
+
+
+    const tamanhoInput =
+        $("#tamanhoMonteSeu");
+
+    const precoBaseInput =
+        $("#precoBaseMonteSeu");
+
+    const opcoesTamanho =
+        $$(
+            "input[name='tamanhoMonteSeuOpcao']"
+        );
+
+
+    const complementosMeio =
+        $("#complementosMeio");
+
+    const complementosTopo =
+        $("#complementosTopo");
+
+
+    const subtotalEl =
+        $("#subtotalMonteSeu");
+
+    const resumoSubtotalEl =
+        $("#resumoSubtotalPedido");
+
+    const resumoTaxaEl =
+        $("#resumoTaxaEntrega");
+
+    const totalEl =
+        $("#totalMonteSeu");
+
+
+    const nomeInput =
+        $("#nomeCliente");
+
+    const cepInput =
+        $("#cepCliente");
+
+    const ruaInput =
+        $("#ruaCliente");
+
+    const numeroInput =
+        $("#numeroCliente");
+
+    const bairroInput =
+        $("#bairroCliente");
+
+    const complementoInput =
+        $("#complementoCliente");
+
+    const statusEndereco =
+        $("#statusEndereco");
+
+    const enderecoValidadoInput =
+        $("#enderecoValidado");
+
+    const taxaEntregaInput =
+        $("#taxaEntrega");
+
+
+    let enviando =
+        false;
+
+    let consultandoCEP =
+        false;
+
+    let subtotalPedido =
+        14.90;
+
+    let idConsultaCEP =
+        0;
 
 
     /* =====================================
@@ -23,14 +261,37 @@ document.addEventListener("DOMContentLoaded", () => {
     ====================================== */
 
     function formatarPreco(valor) {
-        return Number(valor || 0)
-            .toLocaleString(
-                "pt-BR",
-                {
-                    style: "currency",
-                    currency: "BRL"
-                }
-            );
+        return Number(
+            valor || 0
+        ).toLocaleString(
+            "pt-BR",
+            {
+                style: "currency",
+                currency: "BRL"
+            }
+        );
+    }
+
+
+    function normalizarTexto(texto) {
+        return String(
+            texto || ""
+        )
+            .normalize("NFD")
+            .replace(
+                /[\u0300-\u036f]/g,
+                ""
+            )
+            .toLowerCase()
+            .replace(
+                /[^a-z0-9\s]/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
     }
 
 
@@ -58,11 +319,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    function preencherNomeDaSessao() {
+        const sessao =
+            obterSessaoCliente();
+
+        if (
+            nomeInput &&
+            sessao?.nome &&
+            !nomeInput.value.trim()
+        ) {
+            nomeInput.value =
+                sessao.nome;
+        }
+    }
+
+
     function registrarPedidoNoSistema(
         dadosPedido
     ) {
         const sessao =
             obterSessaoCliente();
+
 
         if (!sessao) {
             alert(
@@ -72,9 +349,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return null;
         }
 
+
         if (
             !window.AzuryPedidos ||
-            typeof window.AzuryPedidos
+            typeof window
+                .AzuryPedidos
                 .criarPedido !==
             "function"
         ) {
@@ -85,8 +364,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return null;
         }
 
+
         try {
-            return window.AzuryPedidos
+            return window
+                .AzuryPedidos
                 .criarPedido(
                     dadosPedido
                 );
@@ -106,7 +387,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function abrirWhatsApp(mensagem) {
+    function abrirWhatsApp(
+        mensagem
+    ) {
         const link =
             `https://wa.me/${NUMERO_WHATSAPP}?text=` +
             encodeURIComponent(
@@ -121,7 +404,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function abrirModal(modal) {
+    function abrirModal() {
         if (!modal) {
             return;
         }
@@ -134,7 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function fecharModal(modal) {
+    function fecharModal() {
         if (!modal) {
             return;
         }
@@ -147,854 +430,162 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function preencherNomeDaSessao(
-        campoNome
+    function mostrarEtapa(
+        etapa
     ) {
-        const sessao =
-            obterSessaoCliente();
-
-        if (
-            campoNome &&
-            sessao?.nome &&
-            !campoNome.value.trim()
-        ) {
-            campoNome.value =
-                sessao.nome;
-        }
-    }
+        const primeiraEtapa =
+            etapa === 1;
 
 
-    function iniciarEnvio(botao) {
-        enviandoPedido = true;
+        if (painelPedido) {
+            painelPedido.hidden =
+                !primeiraEtapa;
 
-        botao.disabled = true;
-
-        botao.textContent =
-            "Preparando pedido...";
-    }
-
-
-    function finalizarEnvio(
-        botao,
-        textoOriginal
-    ) {
-        setTimeout(() => {
-            enviandoPedido = false;
-
-            botao.disabled = false;
-
-            botao.textContent =
-                textoOriginal;
-
-        }, 1000);
-    }
-
-
-    function aplicarMascaraCEP(campo) {
-        if (!campo) {
-            return;
+            painelPedido.classList.toggle(
+                "ativo",
+                primeiraEtapa
+            );
         }
 
-        campo.addEventListener(
-            "input",
-            () => {
-                const numeros =
-                    campo.value
-                        .replace(/\D/g, "")
-                        .slice(0, 8);
 
-                campo.value =
-                    numeros.length > 5
-                        ? `${numeros.slice(
-                            0,
-                            5
-                        )}-${numeros.slice(
-                            5
-                        )}`
-                        : numeros;
+        if (painelEntrega) {
+            painelEntrega.hidden =
+                primeiraEtapa;
+
+            painelEntrega.classList.toggle(
+                "ativo",
+                !primeiraEtapa
+            );
+        }
+
+
+        indicadores.forEach(
+            indicador => {
+                const numero =
+                    Number(
+                        indicador.dataset
+                            .indicadorEtapa
+                    );
+
+                indicador.classList.toggle(
+                    "ativa",
+                    numero === etapa
+                );
+
+                indicador.classList.toggle(
+                    "concluida",
+                    numero < etapa
+                );
             }
         );
+
+
+        if (conteudoModal) {
+            conteudoModal.scrollTop =
+                0;
+        }
     }
 
 
-    function dadosEntregaValidos({
-        nome,
-        cep,
-        rua,
-        numero,
-        bairro
-    }) {
-        return Boolean(
-            nome &&
-            cep.replace(
-                /\D/g,
-                ""
-            ).length === 8 &&
-            rua &&
-            numero &&
-            bairro
-        );
-    }
-
-
-    function obterFormaPagamento(
-        nomeGrupo
-    ) {
+    function obterFormaPagamento() {
         return (
             document.querySelector(
-                `input[name="${nomeGrupo}"]:checked`
+                "input[name='formaPagamentoMonteSeu']:checked"
             )?.value || ""
         );
     }
 
 
-    function limparFormaPagamento(
-        nomeGrupo
-    ) {
+    function limparFormaPagamento() {
         $$(
-            `input[name="${nomeGrupo}"]`
-        ).forEach(opcao => {
-            opcao.checked =
-                false;
-        });
-    }
-
-
-    /* =====================================
-       FILTROS DO CARDÁPIO
-    ====================================== */
-
-    const filtros =
-        $$(".filtro-cardapio");
-
-    const produtos =
-        $$(
-            ".menu-grid li[data-categoria]"
-        );
-
-
-    function mostrarCategoria(
-        categoria
-    ) {
-        produtos.forEach(produto => {
-            produto.style.display =
-                produto.dataset
-                    .categoria ===
-                    categoria
-                    ? "flex"
-                    : "none";
-        });
-    }
-
-
-    filtros.forEach(filtro => {
-        filtro.addEventListener(
-            "click",
-            () => {
-                filtros.forEach(
-                    botao =>
-                        botao.classList
-                            .remove(
-                                "ativo"
-                            )
-                );
-
-                filtro.classList.add(
-                    "ativo"
-                );
-
-                mostrarCategoria(
-                    filtro.dataset
-                        .categoria
-                );
+            "input[name='formaPagamentoMonteSeu']"
+        ).forEach(
+            opcao => {
+                opcao.checked =
+                    false;
             }
         );
-    });
+    }
 
 
-    mostrarCategoria(
-        "tradicionais"
-    );
+    function iniciarEnvio() {
+        enviando =
+            true;
 
+        if (btnEnviar) {
+            btnEnviar.disabled =
+                true;
 
-    /* =====================================
-       PRODUTOS PRONTOS
-    ====================================== */
-
-    const modalProduto =
-        $("#modalProduto");
-
-    const btnFecharProduto =
-        $("#btnFecharProduto");
-
-    const btnEnviarProduto =
-        $("#btnEnviarProduto");
-
-    const produtoSelecionado =
-        $("#produtoSelecionado");
-
-    const nomeProdutoPedido =
-        $("#nomeProdutoPedido");
-
-    const precoProdutoPedido =
-        $("#precoProdutoPedido");
-
-    const tamanhoProdutoPedido =
-        $("#tamanhoProdutoPedido");
-
-    const tituloProdutoPedido =
-        $("#tituloProdutoPedido");
-
-    const descricaoProdutoPedido =
-        $("#descricaoProdutoPedido");
-
-    const totalProdutoPedido =
-        $("#totalProdutoPedido");
-
-    const precoProduto300 =
-        $("#precoProduto300");
-
-    const precoProduto400 =
-        $("#precoProduto400");
-
-    const precoProduto700 =
-        $("#precoProduto700");
-
-    const opcoesTamanhoProduto =
-        $$(
-            'input[name="tamanhoProduto"]'
-        );
-
-    const nomeClienteProduto =
-        $("#nomeClienteProduto");
-
-    const cepClienteProduto =
-        $("#cepClienteProduto");
-
-    const ruaClienteProduto =
-        $("#ruaClienteProduto");
-
-    const numeroClienteProduto =
-        $("#numeroClienteProduto");
-
-    const bairroClienteProduto =
-        $("#bairroClienteProduto");
-
-    const complementoClienteProduto =
-        $("#complementoClienteProduto");
-
-
-    let precosProdutoAtual = {
-        "300": 0,
-        "400": 0,
-        "700": 0
-    };
-
-
-    function atualizarTamanhoProduto(
-        tamanhoEscolhido
-    ) {
-        const tamanho =
-            [
-                "300",
-                "400",
-                "700"
-            ].includes(
-                String(
-                    tamanhoEscolhido
-                )
-            )
-                ? String(
-                    tamanhoEscolhido
-                )
-                : "300";
-
-        const preco =
-            Number(
-                precosProdutoAtual[
-                tamanho
-                ]
-            ) || 0;
-
-
-        if (
-            tamanhoProdutoPedido
-        ) {
-            tamanhoProdutoPedido.value =
-                tamanho;
-        }
-
-
-        if (
-            precoProdutoPedido
-        ) {
-            precoProdutoPedido.value =
-                String(preco);
-        }
-
-
-        if (
-            totalProdutoPedido
-        ) {
-            totalProdutoPedido.textContent =
-                formatarPreco(
-                    preco
-                );
-        }
-
-
-        if (
-            produtoSelecionado &&
-            nomeProdutoPedido
-        ) {
-            produtoSelecionado.textContent =
-                `Produto selecionado: ${nomeProdutoPedido.value} • ${tamanho} ml`;
+            btnEnviar.textContent =
+                "Preparando pedido...";
         }
     }
 
 
-    $$(".btn-pedir-produto")
-        .forEach(botao => {
-            botao.addEventListener(
-                "click",
-                () => {
-                    const produto =
-                        botao.dataset
-                            .produto || "";
-
-                    const descricao =
-                        botao.dataset
-                            .descricao || "";
-
-
-                    precosProdutoAtual = {
-                        "300":
-                            Number(
-                                botao.getAttribute(
-                                    "data-preco-300"
-                                )
-                            ) || 0,
-
-                        "400":
-                            Number(
-                                botao.getAttribute(
-                                    "data-preco-400"
-                                )
-                            ) || 0,
-
-                        "700":
-                            Number(
-                                botao.getAttribute(
-                                    "data-preco-700"
-                                )
-                            ) || 0
-                    };
-
-
-                    if (
-                        nomeProdutoPedido
-                    ) {
-                        nomeProdutoPedido.value =
-                            produto;
-                    }
-
-
-                    if (
-                        tituloProdutoPedido
-                    ) {
-                        tituloProdutoPedido.textContent =
-                            produto;
-                    }
-
-
-                    if (
-                        descricaoProdutoPedido
-                    ) {
-                        descricaoProdutoPedido.textContent =
-                            descricao;
-                    }
-
-
-                    if (
-                        precoProduto300
-                    ) {
-                        precoProduto300.textContent =
-                            formatarPreco(
-                                precosProdutoAtual[
-                                "300"
-                                ]
-                            );
-                    }
-
-
-                    if (
-                        precoProduto400
-                    ) {
-                        precoProduto400.textContent =
-                            formatarPreco(
-                                precosProdutoAtual[
-                                "400"
-                                ]
-                            );
-                    }
-
-
-                    if (
-                        precoProduto700
-                    ) {
-                        precoProduto700.textContent =
-                            formatarPreco(
-                                precosProdutoAtual[
-                                "700"
-                                ]
-                            );
-                    }
-
-
-                    opcoesTamanhoProduto
-                        .forEach(
-                            opcao => {
-                                opcao.checked =
-                                    opcao.value ===
-                                    "300";
-                            }
-                        );
-
-
-                    atualizarTamanhoProduto(
-                        "300"
-                    );
-
-
-                    preencherNomeDaSessao(
-                        nomeClienteProduto
-                    );
-
-
-                    limparFormaPagamento(
-                        "formaPagamentoProduto"
-                    );
-
-
-                    abrirModal(
-                        modalProduto
-                    );
-                }
-            );
-        });
-
-
-    opcoesTamanhoProduto
-        .forEach(opcao => {
-            opcao.addEventListener(
-                "change",
-                () => {
-                    if (
-                        opcao.checked
-                    ) {
-                        atualizarTamanhoProduto(
-                            opcao.value
-                        );
-                    }
-                }
-            );
-        });
-
-
-    btnFecharProduto
-        ?.addEventListener(
-            "click",
+    function finalizarEnvio() {
+        setTimeout(
             () => {
-                fecharModal(
-                    modalProduto
-                );
-            }
-        );
+                enviando =
+                    false;
 
+                if (btnEnviar) {
+                    btnEnviar.disabled =
+                        false;
 
-    modalProduto
-        ?.addEventListener(
-            "click",
-            evento => {
-                if (
-                    evento.target ===
-                    modalProduto
-                ) {
-                    fecharModal(
-                        modalProduto
-                    );
+                    btnEnviar.textContent =
+                        "Pedir pelo WhatsApp";
                 }
-            }
+            },
+            1000
         );
-
-
-    btnEnviarProduto
-        ?.addEventListener(
-            "click",
-            () => {
-                if (
-                    enviandoPedido
-                ) {
-                    return;
-                }
-
-
-                const produto =
-                    nomeProdutoPedido
-                        ?.value
-                        .trim() || "";
-
-                const descricao =
-                    descricaoProdutoPedido
-                        ?.textContent
-                        .trim() || "";
-
-                const tamanho =
-                    tamanhoProdutoPedido
-                        ?.value
-                        .trim() || "";
-
-                const valorTotal =
-                    Number(
-                        precoProdutoPedido
-                            ?.value
-                    ) || 0;
-
-
-                const nome =
-                    nomeClienteProduto
-                        ?.value
-                        .trim() || "";
-
-                const cep =
-                    cepClienteProduto
-                        ?.value
-                        .trim() || "";
-
-                const rua =
-                    ruaClienteProduto
-                        ?.value
-                        .trim() || "";
-
-                const numero =
-                    numeroClienteProduto
-                        ?.value
-                        .trim() || "";
-
-                const bairro =
-                    bairroClienteProduto
-                        ?.value
-                        .trim() || "";
-
-                const complemento =
-                    complementoClienteProduto
-                        ?.value
-                        .trim() || "";
-
-                const formaPagamento =
-                    obterFormaPagamento(
-                        "formaPagamentoProduto"
-                    );
-
-
-                if (
-                    !produto ||
-                    !tamanho ||
-                    valorTotal <= 0 ||
-                    !formaPagamento ||
-                    !dadosEntregaValidos({
-                        nome,
-                        cep,
-                        rua,
-                        numero,
-                        bairro
-                    })
-                ) {
-                    alert(
-                        "Escolha o tamanho, a forma de pagamento e preencha nome, CEP válido, rua, número e bairro."
-                    );
-
-                    return;
-                }
-
-
-                iniciarEnvio(
-                    btnEnviarProduto
-                );
-
-
-                const sessao =
-                    obterSessaoCliente();
-
-
-                const pedidoCriado =
-                    registrarPedidoNoSistema({
-                        tipo:
-                            "compra",
-
-                        produto,
-
-                        tamanho:
-                            `${tamanho} ml`,
-
-                        quantidade:
-                            1,
-
-                        itens: [
-                            {
-                                nome:
-                                    `${produto} • ${tamanho} ml`,
-
-                                quantidade:
-                                    1
-                            }
-                        ],
-
-                        complementos:
-                            [],
-
-                        valorTotal,
-
-                        formaPagamento,
-
-                        cliente: {
-                            nome,
-
-                            email:
-                                sessao?.email ||
-                                ""
-                        },
-
-                        enderecoEntrega: {
-                            cep,
-                            rua,
-                            numero,
-                            bairro,
-                            complemento
-                        },
-
-                        canal:
-                            "Site / WhatsApp"
-                    });
-
-
-                const codigoPedido =
-                    pedidoCriado?.id
-                        ? `\n🧾 *Pedido:* ${pedidoCriado.id}\n`
-                        : "";
-
-
-                const mensagem = `
-Olá! Quero fazer este pedido na AZURY:
-${codigoPedido}
-👤 *Cliente:*
-${nome}
-
-📍 *Endereço de entrega:*
-${rua}, nº ${numero}
-Bairro: ${bairro}
-CEP: ${cep}
-Complemento: ${complemento || "Não informado"}
-
-💳 *Forma de pagamento:*
-${formaPagamento}
-
-🥤 *Produto:*
-${produto}
-
-📏 *Tamanho:*
-${tamanho} ml
-
-📝 *Descrição:*
-${descricao}
-
-💰 *Total:*
-${formatarPreco(valorTotal)}
-                `.trim();
-
-
-                abrirWhatsApp(
-                    mensagem
-                );
-
-
-                fecharModal(
-                    modalProduto
-                );
-
-
-                finalizarEnvio(
-                    btnEnviarProduto,
-                    "Pedir pelo WhatsApp"
-                );
-            }
-        );
-
-
-    aplicarMascaraCEP(
-        cepClienteProduto
-    );
+    }
 
 
     /* =====================================
-       MONTE O SEU
+       COMPLEMENTOS
     ====================================== */
-
-    const complementosDisponiveis = [
-        {
-            nome: "Granola",
-            preco: 1.50
-        },
-        {
-            nome: "Leite condensado",
-            preco: 1.50
-        },
-        {
-            nome: "Paçoca",
-            preco: 2.00
-        },
-        {
-            nome: "Banana",
-            preco: 2.00
-        },
-        {
-            nome: "Manga",
-            preco: 2.00
-        },
-        {
-            nome: "Coco ralado",
-            preco: 2.50
-        },
-        {
-            nome: "Leite em pó",
-            preco: 2.50
-        },
-        {
-            nome: "Creme branco",
-            preco: 2.50
-        },
-        {
-            nome: "Doce de leite",
-            preco: 2.50
-        },
-        {
-            nome: "Oreo",
-            preco: 3.00
-        },
-        {
-            nome: "Ovomaltine",
-            preco: 3.00
-        },
-        {
-            nome: "Morango",
-            preco: 3.50
-        },
-        {
-            nome: "Uva verde",
-            preco: 3.50
-        },
-        {
-            nome: "Creme de avelã",
-            preco: 3.50
-        },
-        {
-            nome: "Nutella",
-            preco: 4.50
-        }
-    ];
-
-
-    const modalMonteSeu =
-        $("#modalMonteSeu");
-
-    const btnFecharMonteSeu =
-        $("#btnFecharMonteSeu");
-
-    const btnEnviarMonteSeu =
-        $("#btnEnviarMonteSeu");
-
-    const tamanhoSelecionado =
-        $("#tamanhoSelecionado");
-
-    const tamanhoMonteSeu =
-        $("#tamanhoMonteSeu");
-
-    const precoBaseMonteSeu =
-        $("#precoBaseMonteSeu");
-
-    const totalMonteSeu =
-        $("#totalMonteSeu");
-
-    const complementosMeio =
-        $("#complementosMeio");
-
-    const complementosTopo =
-        $("#complementosTopo");
-
-    const nomeCliente =
-        $("#nomeCliente");
-
-    const cepCliente =
-        $("#cepCliente");
-
-    const ruaCliente =
-        $("#ruaCliente");
-
-    const numeroCliente =
-        $("#numeroCliente");
-
-    const bairroCliente =
-        $("#bairroCliente");
-
-    const complementoCliente =
-        $("#complementoCliente");
-
 
     function criarComplementos(
         container,
         camada
     ) {
-        if (
-            !container
-        ) {
+        if (!container) {
             return;
         }
 
 
         container.innerHTML =
-            complementosDisponiveis
-                .map(
-                    (
-                        item,
-                        indice
-                    ) => {
-                        const preco =
-                            item.preco
-                                .toFixed(2);
+            COMPLEMENTOS.map(
+                (
+                    item,
+                    indice
+                ) => {
+                    const preco =
+                        item.preco
+                            .toFixed(2);
 
-                        return `
-                            <label>
+                    return `
+                        <label>
 
-                                <input
-                                    type="checkbox"
-                                    class="complemento-monte-seu"
-                                    value="${item.nome}"
-                                    data-preco="${preco}"
-                                    data-camada="${camada}"
-                                    id="${camada}-${indice}"
-                                >
+                            <input
+                                type="checkbox"
+                                class="complemento-monte-seu"
+                                value="${item.nome}"
+                                data-preco="${preco}"
+                                data-camada="${camada}"
+                                id="${camada}-${indice}"
+                            >
 
-                                ${item.nome} —
-                                R$ ${preco.replace(
-                            ".",
-                            ","
-                        )}
+                            ${item.nome} —
+                            R$ ${preco.replace(
+                        ".",
+                        ","
+                    )}
 
-                            </label>
-                        `;
-                    }
-                )
-                .join("");
+                        </label>
+                    `;
+                }
+            ).join("");
     }
 
 
@@ -1010,56 +601,18 @@ ${formatarPreco(valorTotal)}
     );
 
 
-    const todosComplementos =
-        $$(
+    function todosComplementos() {
+        return $$(
             ".complemento-monte-seu"
         );
-
-
-    function calcularTotalMonteSeu() {
-        let total =
-            Number(
-                precoBaseMonteSeu
-                    ?.value
-            ) || 0;
-
-
-        todosComplementos
-            .forEach(
-                complemento => {
-                    if (
-                        complemento.checked
-                    ) {
-                        total +=
-                            Number(
-                                complemento
-                                    .dataset
-                                    .preco
-                            ) || 0;
-                    }
-                }
-            );
-
-
-        if (
-            totalMonteSeu
-        ) {
-            totalMonteSeu.textContent =
-                formatarPreco(
-                    total
-                );
-        }
-
-
-        return total;
     }
 
 
     function limparComplementos() {
-        todosComplementos
+        todosComplementos()
             .forEach(
-                complemento => {
-                    complemento.checked =
+                item => {
+                    item.checked =
                         false;
                 }
             );
@@ -1069,17 +622,17 @@ ${formatarPreco(valorTotal)}
     function obterComplementos(
         camada
     ) {
-        return todosComplementos
+        return todosComplementos()
             .filter(
-                complemento =>
-                    complemento.checked &&
-                    complemento.dataset
+                item =>
+                    item.checked &&
+                    item.dataset
                         .camada ===
                     camada
             )
             .map(
-                complemento =>
-                    complemento.value
+                item =>
+                    item.value
             );
     }
 
@@ -1098,179 +651,792 @@ ${formatarPreco(valorTotal)}
     }
 
 
-    todosComplementos
-        .forEach(
-            complemento => {
-                complemento.addEventListener(
-                    "change",
-                    calcularTotalMonteSeu
+    /* =====================================
+       TAMANHO E VALORES
+    ====================================== */
+
+    function atualizarTamanho(
+        tamanho,
+        precoBase
+    ) {
+        const tamanhoSeguro =
+            [
+                "300",
+                "400",
+                "700"
+            ].includes(
+                String(
+                    tamanho
+                )
+            )
+                ? String(
+                    tamanho
+                )
+                : "300";
+
+
+        const precoSeguro =
+            Number(
+                precoBase
+            ) || 14.90;
+
+
+        if (tamanhoInput) {
+            tamanhoInput.value =
+                tamanhoSeguro;
+        }
+
+
+        if (precoBaseInput) {
+            precoBaseInput.value =
+                String(
+                    precoSeguro
                 );
+        }
+
+
+        opcoesTamanho.forEach(
+            opcao => {
+                opcao.checked =
+                    opcao.value ===
+                    tamanhoSeguro;
             }
         );
 
 
-    $$(".btn-montar")
-        .forEach(botao => {
-            botao.addEventListener(
-                "click",
+        calcularSubtotal();
+    }
+
+
+    function calcularSubtotal() {
+        let total =
+            Number(
+                precoBaseInput
+                    ?.value
+            ) || 0;
+
+
+        todosComplementos()
+            .forEach(
+                item => {
+                    if (
+                        item.checked
+                    ) {
+                        total +=
+                            Number(
+                                item.dataset
+                                    .preco
+                            ) || 0;
+                    }
+                }
+            );
+
+
+        subtotalPedido =
+            total;
+
+
+        if (subtotalEl) {
+            subtotalEl.textContent =
+                formatarPreco(
+                    total
+                );
+        }
+
+
+        if (resumoSubtotalEl) {
+            resumoSubtotalEl.textContent =
+                formatarPreco(
+                    total
+                );
+        }
+
+
+        atualizarTotalFinal();
+
+        return total;
+    }
+
+
+    function atualizarTotalFinal() {
+        const taxa =
+            Number(
+                taxaEntregaInput
+                    ?.value
+            ) || 0;
+
+
+        const total =
+            subtotalPedido +
+            taxa;
+
+
+        if (totalEl) {
+            totalEl.textContent =
+                formatarPreco(
+                    total
+                );
+        }
+
+
+        return total;
+    }
+
+
+    opcoesTamanho.forEach(
+        opcao => {
+            opcao.addEventListener(
+                "change",
                 () => {
-                    limparComplementos();
-
-
                     if (
-                        tamanhoMonteSeu
+                        !opcao.checked
                     ) {
-                        tamanhoMonteSeu.value =
-                            botao.dataset
-                                .tamanho ||
-                            "300";
+                        return;
                     }
 
-
-                    if (
-                        precoBaseMonteSeu
-                    ) {
-                        precoBaseMonteSeu.value =
-                            botao.dataset
-                                .precoBase ||
-                            "0";
-                    }
-
-
-                    if (
-                        tamanhoSelecionado
-                    ) {
-                        tamanhoSelecionado.textContent =
-                            `Copo selecionado: ${botao.dataset.tamanho}ml`;
-                    }
-
-
-                    calcularTotalMonteSeu();
-
-
-                    preencherNomeDaSessao(
-                        nomeCliente
-                    );
-
-
-                    limparFormaPagamento(
-                        "formaPagamentoMonteSeu"
-                    );
-
-
-                    abrirModal(
-                        modalMonteSeu
+                    atualizarTamanho(
+                        opcao.value,
+                        opcao.dataset
+                            .precoBase
                     );
                 }
             );
-        });
+        }
+    );
 
 
-    btnFecharMonteSeu
-        ?.addEventListener(
-            "click",
-            () => {
-                fecharModal(
-                    modalMonteSeu
+    todosComplementos()
+        .forEach(
+            item => {
+                item.addEventListener(
+                    "change",
+                    calcularSubtotal
                 );
             }
         );
 
 
-    modalMonteSeu
+    /* =====================================
+       ENDEREÇO E TAXA
+    ====================================== */
+
+    function definirStatusEndereco(
+        mensagem,
+        tipo = ""
+    ) {
+        if (!statusEndereco) {
+            return;
+        }
+
+
+        statusEndereco.textContent =
+            mensagem;
+
+
+        statusEndereco.classList.remove(
+            "sucesso",
+            "erro",
+            "carregando"
+        );
+
+
+        if (tipo) {
+            statusEndereco.classList.add(
+                tipo
+            );
+        }
+    }
+
+
+    function invalidarEndereco(
+        mensagem,
+        tipo = ""
+    ) {
+        idConsultaCEP +=
+            1;
+
+        consultandoCEP =
+            false;
+
+
+        if (
+            enderecoValidadoInput
+        ) {
+            enderecoValidadoInput.value =
+                "false";
+        }
+
+
+        if (
+            taxaEntregaInput
+        ) {
+            taxaEntregaInput.value =
+                "0";
+        }
+
+
+        if (
+            ruaInput
+        ) {
+            ruaInput.value =
+                "";
+        }
+
+
+        if (
+            bairroInput
+        ) {
+            bairroInput.value =
+                "";
+        }
+
+
+        if (
+            resumoTaxaEl
+        ) {
+            resumoTaxaEl.textContent =
+                "A calcular";
+        }
+
+
+        definirStatusEndereco(
+            mensagem,
+            tipo
+        );
+
+
+        atualizarTotalFinal();
+    }
+
+
+    function localizarTaxaBairro(
+        bairro
+    ) {
+        const bairroNormalizado =
+            normalizarTexto(
+                bairro
+            );
+
+
+        if (
+            BAIRROS_ATENDIDOS[
+            bairroNormalizado
+            ]
+        ) {
+            return BAIRROS_ATENDIDOS[
+                bairroNormalizado
+            ];
+        }
+
+
+        const chave =
+            Object.keys(
+                BAIRROS_ATENDIDOS
+            ).find(
+                item =>
+                    bairroNormalizado
+                        .includes(item) ||
+                    item.includes(
+                        bairroNormalizado
+                    )
+            );
+
+
+        return chave
+            ? BAIRROS_ATENDIDOS[
+            chave
+            ]
+            : null;
+    }
+
+
+    async function consultarCEP(
+        cep
+    ) {
+        if (
+            cep.length !== 8
+        ) {
+            return;
+        }
+
+
+        const consultaAtual =
+            ++idConsultaCEP;
+
+
+        consultandoCEP =
+            true;
+
+
+        definirStatusEndereco(
+            "Consultando o CEP...",
+            "carregando"
+        );
+
+
+        try {
+            const resposta =
+                await fetch(
+                    `https://viacep.com.br/ws/${cep}/json/`
+                );
+
+
+            if (
+                consultaAtual !==
+                idConsultaCEP
+            ) {
+                return;
+            }
+
+
+            if (!resposta.ok) {
+                throw new Error(
+                    "Falha ao consultar o CEP."
+                );
+            }
+
+
+            const dados =
+                await resposta.json();
+
+
+            if (
+                consultaAtual !==
+                idConsultaCEP
+            ) {
+                return;
+            }
+
+
+            if (
+                dados.erro ||
+                !dados.bairro ||
+                !dados.logradouro
+            ) {
+                invalidarEndereco(
+                    "CEP inexistente ou sem endereço completo. Confira o número digitado.",
+                    "erro"
+                );
+
+                return;
+            }
+
+
+            const entrega =
+                localizarTaxaBairro(
+                    dados.bairro
+                );
+
+
+            if (!entrega) {
+                invalidarEndereco(
+                    `Ainda não entregamos no bairro ${dados.bairro}. Atendemos somente os bairros cadastrados, dentro do limite máximo de 8 km.`,
+                    "erro"
+                );
+
+                return;
+            }
+
+
+            if (ruaInput) {
+                ruaInput.value =
+                    dados.logradouro;
+            }
+
+
+            if (bairroInput) {
+                bairroInput.value =
+                    entrega.nome;
+            }
+
+
+            if (
+                enderecoValidadoInput
+            ) {
+                enderecoValidadoInput.value =
+                    "true";
+            }
+
+
+            if (
+                taxaEntregaInput
+            ) {
+                taxaEntregaInput.value =
+                    String(
+                        entrega.taxa
+                    );
+            }
+
+
+            if (
+                resumoTaxaEl
+            ) {
+                resumoTaxaEl.textContent =
+                    formatarPreco(
+                        entrega.taxa
+                    );
+            }
+
+
+            definirStatusEndereco(
+                `Endereço validado. Entrega para ${entrega.nome}: ${formatarPreco(entrega.taxa)}.`,
+                "sucesso"
+            );
+
+
+            atualizarTotalFinal();
+
+        } catch (erro) {
+            if (
+                consultaAtual !==
+                idConsultaCEP
+            ) {
+                return;
+            }
+
+
+            console.error(
+                "Erro ao consultar o CEP:",
+                erro
+            );
+
+
+            invalidarEndereco(
+                "Não foi possível validar o CEP agora. Verifique sua conexão e tente novamente.",
+                "erro"
+            );
+
+        } finally {
+            if (
+                consultaAtual ===
+                idConsultaCEP
+            ) {
+                consultandoCEP =
+                    false;
+            }
+        }
+    }
+
+
+    function aplicarMascaraCEP() {
+        if (!cepInput) {
+            return;
+        }
+
+
+        cepInput.addEventListener(
+            "input",
+            () => {
+                const numeros =
+                    cepInput.value
+                        .replace(
+                            /\D/g,
+                            ""
+                        )
+                        .slice(
+                            0,
+                            8
+                        );
+
+
+                cepInput.value =
+                    numeros.length > 5
+                        ? `${numeros.slice(
+                            0,
+                            5
+                        )}-${numeros.slice(
+                            5
+                        )}`
+                        : numeros;
+
+
+                invalidarEndereco(
+                    "Informe um CEP válido para calcular a entrega."
+                );
+
+
+                if (
+                    numeros.length === 8
+                ) {
+                    consultarCEP(
+                        numeros
+                    );
+                }
+            }
+        );
+    }
+
+
+    function enderecoEstaValido() {
+        const nome =
+            nomeInput
+                ?.value
+                .trim() || "";
+
+
+        const cep =
+            cepInput
+                ?.value
+                .replace(
+                    /\D/g,
+                    ""
+                ) || "";
+
+
+        const rua =
+            ruaInput
+                ?.value
+                .trim() || "";
+
+
+        const numero =
+            numeroInput
+                ?.value
+                .trim() || "";
+
+
+        const bairro =
+            bairroInput
+                ?.value
+                .trim() || "";
+
+
+        return Boolean(
+            enderecoValidadoInput
+                ?.value ===
+            "true" &&
+            nome &&
+            cep.length === 8 &&
+            rua &&
+            numero &&
+            bairro &&
+            Number(
+                taxaEntregaInput
+                    ?.value
+            ) > 0
+        );
+    }
+
+
+    function limparNovoPedido() {
+        limparComplementos();
+
+        limparFormaPagamento();
+
+
+        if (
+            cepInput
+        ) {
+            cepInput.value =
+                "";
+        }
+
+
+        if (
+            numeroInput
+        ) {
+            numeroInput.value =
+                "";
+        }
+
+
+        if (
+            complementoInput
+        ) {
+            complementoInput.value =
+                "";
+        }
+
+
+        invalidarEndereco(
+            "Informe um CEP válido para calcular a entrega."
+        );
+    }
+
+
+    /* =====================================
+       ABRIR E NAVEGAR NO PEDIDO
+    ====================================== */
+
+    $$(".btn-montar")
+        .forEach(
+            botao => {
+                botao.addEventListener(
+                    "click",
+                    () => {
+                        limparNovoPedido();
+
+
+                        atualizarTamanho(
+                            botao.dataset
+                                .tamanho ||
+                            "300",
+
+                            botao.dataset
+                                .precoBase ||
+                            "14.90"
+                        );
+
+
+                        preencherNomeDaSessao();
+
+                        mostrarEtapa(
+                            1
+                        );
+
+                        abrirModal();
+                    }
+                );
+            }
+        );
+
+
+    btnContinuar
+        ?.addEventListener(
+            "click",
+            () => {
+                calcularSubtotal();
+
+                mostrarEtapa(
+                    2
+                );
+            }
+        );
+
+
+    btnVoltar
+        ?.addEventListener(
+            "click",
+            () => {
+                mostrarEtapa(
+                    1
+                );
+            }
+        );
+
+
+    btnFechar
+        ?.addEventListener(
+            "click",
+            fecharModal
+        );
+
+
+    modal
         ?.addEventListener(
             "click",
             evento => {
                 if (
                     evento.target ===
-                    modalMonteSeu
+                    modal
                 ) {
-                    fecharModal(
-                        modalMonteSeu
-                    );
+                    fecharModal();
                 }
             }
         );
 
 
-    btnEnviarMonteSeu
+    /* =====================================
+       ENVIAR PEDIDO
+    ====================================== */
+
+    btnEnviar
         ?.addEventListener(
             "click",
             () => {
+                if (enviando) {
+                    return;
+                }
+
+
                 if (
-                    enviandoPedido
+                    consultandoCEP
                 ) {
+                    alert(
+                        "Aguarde a validação do CEP."
+                    );
+
+                    return;
+                }
+
+
+                const formaPagamento =
+                    obterFormaPagamento();
+
+
+                if (
+                    !enderecoEstaValido()
+                ) {
+                    alert(
+                        "Informe um endereço válido de um bairro atendido e aguarde a confirmação da taxa de entrega."
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    !formaPagamento
+                ) {
+                    alert(
+                        "Escolha a forma de pagamento."
+                    );
+
                     return;
                 }
 
 
                 const nome =
-                    nomeCliente
-                        ?.value
-                        .trim() || "";
+                    nomeInput.value
+                        .trim();
+
 
                 const cep =
-                    cepCliente
-                        ?.value
-                        .trim() || "";
+                    cepInput.value
+                        .trim();
+
 
                 const rua =
-                    ruaCliente
-                        ?.value
-                        .trim() || "";
+                    ruaInput.value
+                        .trim();
+
 
                 const numero =
-                    numeroCliente
-                        ?.value
-                        .trim() || "";
+                    numeroInput.value
+                        .trim();
+
 
                 const bairro =
-                    bairroCliente
-                        ?.value
-                        .trim() || "";
+                    bairroInput.value
+                        .trim();
+
 
                 const complemento =
-                    complementoCliente
+                    complementoInput
                         ?.value
                         .trim() || "";
-
-                const formaPagamento =
-                    obterFormaPagamento(
-                        "formaPagamentoMonteSeu"
-                    );
-
-
-                if (
-                    !formaPagamento ||
-                    !dadosEntregaValidos({
-                        nome,
-                        cep,
-                        rua,
-                        numero,
-                        bairro
-                    })
-                ) {
-                    alert(
-                        "Escolha a forma de pagamento e preencha nome, CEP válido, rua, número e bairro."
-                    );
-
-                    return;
-                }
-
-
-                iniciarEnvio(
-                    btnEnviarMonteSeu
-                );
 
 
                 const tamanho =
-                    tamanhoMonteSeu
+                    tamanhoInput
                         ?.value ||
                     "300";
 
 
+                const valorProdutos =
+                    calcularSubtotal();
+
+
+                const valorEntrega =
+                    Number(
+                        taxaEntregaInput
+                            ?.value
+                    ) || 0;
+
+
                 const valorTotal =
-                    calcularTotalMonteSeu();
+                    valorProdutos +
+                    valorEntrega;
 
 
                 const itensMeio =
@@ -1296,6 +1462,9 @@ ${formatarPreco(valorTotal)}
                             `Cobertura: ${item}`
                     )
                 ];
+
+
+                iniciarEnvio();
 
 
                 const sessao =
@@ -1329,6 +1498,11 @@ ${formatarPreco(valorTotal)}
                         complementos:
                             complementosPedido,
 
+                        valorProdutos,
+
+                        taxaEntrega:
+                            valorEntrega,
+
                         valorTotal,
 
                         formaPagamento,
@@ -1346,7 +1520,10 @@ ${formatarPreco(valorTotal)}
                             rua,
                             numero,
                             bairro,
-                            complemento
+                            complemento,
+
+                            validado:
+                                true
                         },
 
                         canal:
@@ -1389,6 +1566,10 @@ ${transformarEmLista(itensMeio)}
 *Complementos na cobertura:*
 ${transformarEmLista(itensCobertura)}
 
+🧾 *Resumo dos valores:*
+Pedido: ${formatarPreco(valorProdutos)}
+Taxa de entrega: ${formatarPreco(valorEntrega)}
+
 💰 *Total:*
 ${formatarPreco(valorTotal)}
                 `.trim();
@@ -1399,47 +1580,35 @@ ${formatarPreco(valorTotal)}
                 );
 
 
-                fecharModal(
-                    modalMonteSeu
-                );
+                fecharModal();
 
-
-                finalizarEnvio(
-                    btnEnviarMonteSeu,
-                    "Pedir pelo WhatsApp"
-                );
+                finalizarEnvio();
             }
         );
 
 
-    aplicarMascaraCEP(
-        cepCliente
+    /* =====================================
+       INICIALIZAÇÃO
+    ====================================== */
+
+    aplicarMascaraCEP();
+
+    calcularSubtotal();
+
+    mostrarEtapa(
+        1
     );
 
-
-    /* =====================================
-       TECLA ESCAPE
-    ====================================== */
 
     document.addEventListener(
         "keydown",
         evento => {
             if (
-                evento.key !==
+                evento.key ===
                 "Escape"
             ) {
-                return;
+                fecharModal();
             }
-
-
-            fecharModal(
-                modalProduto
-            );
-
-
-            fecharModal(
-                modalMonteSeu
-            );
         }
     );
 });
