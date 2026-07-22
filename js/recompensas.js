@@ -947,49 +947,7 @@ function inicializarRecompensas(usuario) {
     }
 
 
-    /* =====================================
-       BOTÃO TEMPORÁRIO DE TESTE
-    ===================================== */
-
-    const btnAdicionarPontos =
-        document.getElementById(
-            "btnAdicionarPontos"
-        );
-
-    if (btnAdicionarPontos) {
-
-        btnAdicionarPontos.addEventListener(
-            "click",
-            () => {
-
-                usuario.pontosAcumulados += 10;
-                usuario.saldoPontos += 10;
-                usuario.pontos =
-                    usuario.saldoPontos;
-
-                const dataHora =
-                    obterDataHora();
-
-                usuario.historico.unshift(`
-
-                    ⭐ Recebeu 10 pontos de teste
-
-                    <br>
-
-                    <small>
-                        ${dataHora}
-                    </small>
-
-                `);
-
-                salvarUsuario();
-
-                window.location.reload();
-
-            }
-        );
-
-    }
+    
 
 
     /* =====================================
