@@ -97,7 +97,7 @@
             window.AzuryPontuacao &&
             typeof window.AzuryPontuacao
                 .converterValorParaNumero ===
-                "function"
+            "function"
         ) {
             return window.AzuryPontuacao
                 .converterValorParaNumero(valor);
@@ -226,6 +226,51 @@
                     ? dadosPedido.complementos
                     : [],
 
+            cliente: {
+                nome: String(
+                    dadosPedido.cliente?.nome ||
+                    cliente.nome ||
+                    ""
+                ).trim(),
+
+                email: String(
+                    dadosPedido.cliente?.email ||
+                    cliente.email ||
+                    ""
+                ).trim()
+            },
+
+            enderecoEntrega: {
+                cep: String(
+                    dadosPedido.enderecoEntrega?.cep ||
+                    ""
+                ).trim(),
+
+                rua: String(
+                    dadosPedido.enderecoEntrega?.rua ||
+                    ""
+                ).trim(),
+
+                numero: String(
+                    dadosPedido.enderecoEntrega?.numero ||
+                    ""
+                ).trim(),
+
+                bairro: String(
+                    dadosPedido.enderecoEntrega?.bairro ||
+                    ""
+                ).trim(),
+
+                complemento: String(
+                    dadosPedido.enderecoEntrega?.complemento ||
+                    ""
+                ).trim()
+            },
+
+            canal:
+                dadosPedido.canal ||
+                "Site",
+
             valorTotal,
 
             valor:
@@ -234,8 +279,8 @@
             status:
                 dadosPedido.status
                     ? resolverStatus(
-                          dadosPedido.status
-                      )
+                        dadosPedido.status
+                    )
                     : "Pedido recebido",
 
             pontosCreditados: false,
@@ -258,8 +303,8 @@
                     status:
                         dadosPedido.status
                             ? resolverStatus(
-                                  dadosPedido.status
-                              )
+                                dadosPedido.status
+                            )
                             : "Pedido recebido",
 
                     data:
@@ -365,13 +410,13 @@
 
         const ultimoStatus =
             pedido.historicoStatus[
-                pedido.historicoStatus.length - 1
+            pedido.historicoStatus.length - 1
             ];
 
         if (
             !ultimoStatus ||
             ultimoStatus.status !==
-                statusResolvido
+            statusResolvido
         ) {
             pedido.historicoStatus.push({
                 status:
@@ -392,7 +437,7 @@
                 !window.AzuryPontuacao ||
                 typeof window.AzuryPontuacao
                     .creditarPontosDoPedido !==
-                    "function"
+                "function"
             ) {
                 throw new Error(
                     "O serviço de pontuação não foi carregado."

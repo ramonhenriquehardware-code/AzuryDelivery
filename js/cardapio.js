@@ -1,17 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    const filtros = document.querySelectorAll(".filtro-cardapio");
+    let enviandoPedido = false;
 
-    const produtos = document.querySelectorAll(
-        ".menu-grid li[data-categoria]"
-    );
+    const filtros =
+        document.querySelectorAll(
+            ".filtro-cardapio"
+        );
+
+    const produtos =
+        document.querySelectorAll(
+            ".menu-grid li[data-categoria]"
+        );
+
+
+    /* =====================================
+       FILTROS DO CARDÁPIO
+    ===================================== */
 
     function mostrarCategoria(categoria) {
 
         produtos.forEach(produto => {
 
             produto.style.display =
-                produto.dataset.categoria === categoria
+                produto.dataset.categoria ===
+                categoria
                     ? "flex"
                     : "none";
 
@@ -19,23 +31,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+
     filtros.forEach(filtro => {
 
-        filtro.addEventListener("click", () => {
+        filtro.addEventListener(
+            "click",
+            () => {
 
-            filtros.forEach(botao => {
-                botao.classList.remove("ativo");
-            });
+                filtros.forEach(botao => {
 
-            filtro.classList.add("ativo");
+                    botao.classList.remove(
+                        "ativo"
+                    );
 
-            mostrarCategoria(
-                filtro.dataset.categoria
-            );
+                });
 
-        });
+                filtro.classList.add(
+                    "ativo"
+                );
+
+                mostrarCategoria(
+                    filtro.dataset.categoria
+                );
+
+            }
+        );
 
     });
+
 
     mostrarCategoria("tradicionais");
 
@@ -129,34 +152,54 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================== */
 
     const modal =
-        document.getElementById("modalMonteSeu");
+        document.getElementById(
+            "modalMonteSeu"
+        );
 
     const botoesMontar =
-        document.querySelectorAll(".btn-montar");
+        document.querySelectorAll(
+            ".btn-montar"
+        );
 
     const btnFechar =
-        document.getElementById("btnFecharMonteSeu");
+        document.getElementById(
+            "btnFecharMonteSeu"
+        );
 
     const btnEnviar =
-        document.getElementById("btnEnviarMonteSeu");
+        document.getElementById(
+            "btnEnviarMonteSeu"
+        );
 
     const tamanhoSelecionado =
-        document.getElementById("tamanhoSelecionado");
+        document.getElementById(
+            "tamanhoSelecionado"
+        );
 
     const tamanhoInput =
-        document.getElementById("tamanhoMonteSeu");
+        document.getElementById(
+            "tamanhoMonteSeu"
+        );
 
     const precoBaseInput =
-        document.getElementById("precoBaseMonteSeu");
+        document.getElementById(
+            "precoBaseMonteSeu"
+        );
 
     const totalElemento =
-        document.getElementById("totalMonteSeu");
+        document.getElementById(
+            "totalMonteSeu"
+        );
 
     const listaMeio =
-        document.getElementById("complementosMeio");
+        document.getElementById(
+            "complementosMeio"
+        );
 
     const listaTopo =
-        document.getElementById("complementosTopo");
+        document.getElementById(
+            "complementosTopo"
+        );
 
 
     if (
@@ -177,15 +220,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================
-       PREÇOS
+       FORMATAÇÃO DE PREÇOS
     ===================================== */
 
     function formatarPreco(valor) {
 
-        return valor.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
+        return valor.toLocaleString(
+            "pt-BR",
+            {
+                style: "currency",
+                currency: "BRL"
+            }
+        );
 
     }
 
@@ -201,32 +247,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
         container.innerHTML =
             complementosDisponiveis
-                .map((item, indice) => {
+                .map(
+                    (item, indice) => {
 
-                    const preco =
-                        item.preco.toFixed(2);
+                        const preco =
+                            item.preco.toFixed(2);
 
-                    return `
+                        return `
+                            <label>
 
-                        <label>
+                                <input
+                                    type="checkbox"
+                                    class="complemento-monte-seu"
+                                    value="${item.nome}"
+                                    data-preco="${preco}"
+                                    data-camada="${camada}"
+                                    id="${camada}-${indice}"
+                                >
 
-                            <input
-                                type="checkbox"
-                                class="complemento-monte-seu"
-                                value="${item.nome}"
-                                data-preco="${preco}"
-                                data-camada="${camada}"
-                                id="${camada}-${indice}"
-                            >
+                                ${item.nome} —
+                                R$ ${preco.replace(
+                                    ".",
+                                    ","
+                                )}
 
-                            ${item.nome} —
-                            R$ ${preco.replace(".", ",")}
+                            </label>
+                        `;
 
-                        </label>
-
-                    `;
-
-                })
+                    }
+                )
                 .join("");
 
     }
@@ -256,20 +305,28 @@ document.addEventListener("DOMContentLoaded", () => {
     function calcularTotal() {
 
         let total =
-            Number(precoBaseInput.value) || 0;
+            Number(
+                precoBaseInput.value
+            ) || 0;
 
-        complementos.forEach(complemento => {
+        complementos.forEach(
+            complemento => {
 
-            if (complemento.checked) {
+                if (
+                    complemento.checked
+                ) {
 
-                total +=
-                    Number(
-                        complemento.dataset.preco
-                    ) || 0;
+                    total +=
+                        Number(
+                            complemento
+                                .dataset
+                                .preco
+                        ) || 0;
+
+                }
 
             }
-
-        });
+        );
 
         totalElemento.textContent =
             formatarPreco(total);
@@ -281,23 +338,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function limparConfigurador() {
 
-        complementos.forEach(complemento => {
+        complementos.forEach(
+            complemento => {
 
-            complemento.checked = false;
+                complemento.checked =
+                    false;
 
-        });
+            }
+        );
 
     }
 
 
-    complementos.forEach(complemento => {
+    complementos.forEach(
+        complemento => {
 
-        complemento.addEventListener(
-            "change",
-            calcularTotal
-        );
+            complemento.addEventListener(
+                "change",
+                calcularTotal
+            );
 
-    });
+        }
+    );
 
 
     /* =====================================
@@ -306,27 +368,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     botoesMontar.forEach(botao => {
 
-        botao.addEventListener("click", () => {
+        botao.addEventListener(
+            "click",
+            () => {
 
-            limparConfigurador();
+                limparConfigurador();
 
-            tamanhoInput.value =
-                botao.dataset.tamanho;
+                tamanhoInput.value =
+                    botao.dataset.tamanho;
 
-            precoBaseInput.value =
-                botao.dataset.precoBase;
+                precoBaseInput.value =
+                    botao.dataset.precoBase;
 
-            tamanhoSelecionado.textContent =
-                `Copo selecionado: ${botao.dataset.tamanho}ml`;
+                tamanhoSelecionado
+                    .textContent =
+                    `Copo selecionado: ${botao.dataset.tamanho}ml`;
 
-            calcularTotal();
+                calcularTotal();
 
-            modal.style.display = "flex";
+                modal.style.display =
+                    "flex";
 
-            document.body.style.overflow =
-                "hidden";
+                document.body.style
+                    .overflow =
+                    "hidden";
 
-        });
+            }
+        );
 
     });
 
@@ -337,9 +405,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function fecharModal() {
 
-        modal.style.display = "none";
+        modal.style.display =
+            "none";
 
-        document.body.style.overflow = "";
+        document.body.style
+            .overflow =
+            "";
 
     }
 
@@ -350,15 +421,20 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-    modal.addEventListener("click", evento => {
+    modal.addEventListener(
+        "click",
+        evento => {
 
-        if (evento.target === modal) {
+            if (
+                evento.target === modal
+            ) {
 
-            fecharModal();
+                fecharModal();
+
+            }
 
         }
-
-    });
+    );
 
 
     document.addEventListener(
@@ -366,8 +442,10 @@ document.addEventListener("DOMContentLoaded", () => {
         evento => {
 
             if (
-                evento.key === "Escape" &&
-                modal.style.display === "flex"
+                evento.key ===
+                    "Escape" &&
+                modal.style.display ===
+                    "flex"
             ) {
 
                 fecharModal();
@@ -382,39 +460,158 @@ document.addEventListener("DOMContentLoaded", () => {
        COMPLEMENTOS ESCOLHIDOS
     ===================================== */
 
-    function obterComplementos(camada) {
+    function obterComplementos(
+        camada
+    ) {
 
-        return Array.from(complementos)
+        return Array
+            .from(complementos)
+            .filter(
+                complemento => {
 
-            .filter(complemento => {
+                    return (
+                        complemento.checked &&
+                        complemento
+                            .dataset
+                            .camada ===
+                            camada
+                    );
 
-                return (
-                    complemento.checked &&
-                    complemento.dataset.camada === camada
-                );
-
-            })
-
-            .map(complemento => {
-                return complemento.value;
-            });
+                }
+            )
+            .map(
+                complemento =>
+                    complemento.value
+            );
 
     }
 
 
-    function transformarEmLista(itens) {
+    function transformarEmLista(
+        itens
+    ) {
 
-        if (itens.length === 0) {
+        if (
+            itens.length === 0
+        ) {
 
             return "• Nenhum complemento";
 
         }
 
         return itens
-
-            .map(item => `• ${item}`)
-
+            .map(
+                item =>
+                    `• ${item}`
+            )
             .join("\n");
+
+    }
+
+
+    /* =====================================
+       SESSÃO DO CLIENTE
+    ===================================== */
+
+    function obterSessaoCliente() {
+
+        const sessaoSalva =
+            localStorage.getItem(
+                "usuarioAzury"
+            );
+
+        if (!sessaoSalva) {
+
+            return null;
+
+        }
+
+        try {
+
+            const sessao =
+                JSON.parse(
+                    sessaoSalva
+                );
+
+            return sessao?.autenticado
+                ? sessao
+                : null;
+
+        } catch (erro) {
+
+            console.error(
+                "Não foi possível ler a sessão do cliente:",
+                erro
+            );
+
+            return null;
+
+        }
+
+    }
+
+
+    /* =====================================
+       REGISTRAR PEDIDO NO SISTEMA
+    ===================================== */
+
+    function registrarPedidoNoSistema(
+        dados
+    ) {
+
+        const sessao =
+            obterSessaoCliente();
+
+        if (!sessao) {
+
+            alert(
+                "O pedido será enviado ao WhatsApp, mas os pontos só poderão ser registrados quando você estiver conectado à sua conta Azury."
+            );
+
+            return null;
+
+        }
+
+        if (
+            !window.AzuryPedidos ||
+            typeof window
+                .AzuryPedidos
+                .criarPedido !==
+                "function"
+        ) {
+
+            console.error(
+                "O serviço de pedidos não foi carregado."
+            );
+
+            alert(
+                "Não foi possível registrar o pedido na Área do Cliente. O WhatsApp será aberto normalmente."
+            );
+
+            return null;
+
+        }
+
+        try {
+
+            return window
+                .AzuryPedidos
+                .criarPedido(dados);
+
+        } catch (erro) {
+
+            console.error(
+                "Não foi possível registrar o pedido:",
+                erro
+            );
+
+            alert(
+                "Não foi possível registrar o pedido na Área do Cliente. O WhatsApp será aberto normalmente."
+            );
+
+            return null;
+
+        }
 
     }
 
@@ -423,79 +620,209 @@ document.addEventListener("DOMContentLoaded", () => {
        ENVIAR PARA O WHATSAPP
     ===================================== */
 
-    btnEnviar.addEventListener("click", () => {
+    btnEnviar.addEventListener(
+        "click",
+        () => {
+
+            if (enviandoPedido) {
+
+                return;
+
+            }
 
 
-        const nomeCliente =
-            document
-                .getElementById("nomeCliente")
-                .value
-                .trim();
-
-        const cepCliente =
-            document
-                .getElementById("cepCliente")
-                .value
-                .trim();
-
-        const ruaCliente =
-            document
-                .getElementById("ruaCliente")
-                .value
-                .trim();
-
-        const numeroCliente =
-            document
-                .getElementById("numeroCliente")
-                .value
-                .trim();
-
-        const bairroCliente =
-            document
-                .getElementById("bairroCliente")
-                .value
-                .trim();
-
-        const complementoCliente =
-            document
-                .getElementById("complementoCliente")
-                .value
-                .trim();
+            const nomeCliente =
+                document
+                    .getElementById(
+                        "nomeCliente"
+                    )
+                    .value
+                    .trim();
 
 
-        if (
-            !nomeCliente ||
-            !cepCliente ||
-            !ruaCliente ||
-            !numeroCliente ||
-            !bairroCliente
-        ) {
-
-            alert(
-                "Preencha seu nome, CEP, rua, número e bairro para continuar."
-            );
-
-            return;
-
-        }
-
-        const tamanho =
-            tamanhoInput.value;
-
-        const total =
-            calcularTotal();
-
-        const complementosMeio =
-            obterComplementos("meio");
-
-        const complementosCobertura =
-            obterComplementos("cobertura");
+            const cepCliente =
+                document
+                    .getElementById(
+                        "cepCliente"
+                    )
+                    .value
+                    .trim();
 
 
-        const mensagem = `
+            const ruaCliente =
+                document
+                    .getElementById(
+                        "ruaCliente"
+                    )
+                    .value
+                    .trim();
+
+
+            const numeroCliente =
+                document
+                    .getElementById(
+                        "numeroCliente"
+                    )
+                    .value
+                    .trim();
+
+
+            const bairroCliente =
+                document
+                    .getElementById(
+                        "bairroCliente"
+                    )
+                    .value
+                    .trim();
+
+
+            const complementoCliente =
+                document
+                    .getElementById(
+                        "complementoCliente"
+                    )
+                    .value
+                    .trim();
+
+
+            if (
+                !nomeCliente ||
+                !cepCliente ||
+                !ruaCliente ||
+                !numeroCliente ||
+                !bairroCliente
+            ) {
+
+                alert(
+                    "Preencha seu nome, CEP, rua, número e bairro para continuar."
+                );
+
+                return;
+
+            }
+
+
+            enviandoPedido = true;
+
+            btnEnviar.disabled =
+                true;
+
+            btnEnviar.textContent =
+                "Preparando pedido...";
+
+
+            const tamanho =
+                tamanhoInput.value;
+
+
+            const total =
+                calcularTotal();
+
+
+            const complementosMeio =
+                obterComplementos(
+                    "meio"
+                );
+
+
+            const complementosCobertura =
+                obterComplementos(
+                    "cobertura"
+                );
+
+
+            const sessao =
+                obterSessaoCliente();
+
+
+            const complementosPedido = [
+
+                ...complementosMeio.map(
+                    item =>
+                        `Meio: ${item}`
+                ),
+
+                ...complementosCobertura.map(
+                    item =>
+                        `Cobertura: ${item}`
+                )
+
+            ];
+
+
+            const pedidoCriado =
+                registrarPedidoNoSistema({
+
+                    tipo:
+                        "compra",
+
+                    produto:
+                        `Monte o Seu • ${tamanho}ml`,
+
+                    tamanho:
+                        `${tamanho} ml`,
+
+                    quantidade:
+                        1,
+
+                    complementos:
+                        complementosPedido,
+
+                    itens: [
+                        {
+                            nome:
+                                `Monte o Seu • ${tamanho}ml`,
+
+                            quantidade:
+                                1
+                        }
+                    ],
+
+                    valorTotal:
+                        total,
+
+                    cliente: {
+                        nome:
+                            nomeCliente,
+
+                        email:
+                            sessao?.email ||
+                            ""
+                    },
+
+                    enderecoEntrega: {
+                        cep:
+                            cepCliente,
+
+                        rua:
+                            ruaCliente,
+
+                        numero:
+                            numeroCliente,
+
+                        bairro:
+                            bairroCliente,
+
+                        complemento:
+                            complementoCliente
+                    },
+
+                    canal:
+                        "Site / WhatsApp"
+
+                });
+
+
+            const identificacaoPedido =
+                pedidoCriado?.id
+                    ? `\n🧾 *Pedido:* ${pedidoCriado.id}\n`
+                    : "";
+
+
+            const mensagem = `
 
 Olá! Quero fazer este pedido na AZURY:
-
+${identificacaoPedido}
 👤 *Cliente:*
 ${nomeCliente}
 
@@ -521,32 +848,47 @@ ${transformarEmLista(complementosCobertura)}
 
 *Total: ${formatarPreco(total)}*
 
-        `.trim();
+            `.trim();
 
 
-        /*
-            TROQUE PELO NÚMERO REAL DA AZURY
-
-            Formato:
-            55 + DDD + número
-
-            Use somente números.
-        */
-
-        const numeroWhatsApp =
-            "5511958620266";
+            const numeroWhatsApp =
+                "5511958620266";
 
 
-        const linkWhatsApp =
-            `https://wa.me/${numeroWhatsApp}?text=` +
-            encodeURIComponent(mensagem);
+            const linkWhatsApp =
+                `https://wa.me/${numeroWhatsApp}?text=` +
+                encodeURIComponent(
+                    mensagem
+                );
 
 
-        window.open(
-            linkWhatsApp,
-            "_blank"
-        );
+            window.open(
+                linkWhatsApp,
+                "_blank",
+                "noopener,noreferrer"
+            );
 
-    });
+
+            fecharModal();
+
+
+            setTimeout(
+                () => {
+
+                    enviandoPedido =
+                        false;
+
+                    btnEnviar.disabled =
+                        false;
+
+                    btnEnviar.textContent =
+                        "Pedir pelo WhatsApp";
+
+                },
+                1200
+            );
+
+        }
+    );
 
 });

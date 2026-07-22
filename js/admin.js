@@ -113,7 +113,7 @@
             window.AzuryPontuacao &&
             typeof window.AzuryPontuacao
                 .converterValorParaNumero ===
-            "function"
+                "function"
         ) {
             return window.AzuryPontuacao
                 .converterValorParaNumero(
@@ -121,13 +121,27 @@
                 );
         }
 
+        if (typeof valor === "number") {
+            return Number.isFinite(valor)
+                ? valor
+                : 0;
+        }
+
+        const valorLimpo =
+            String(valor || "")
+                .replace(/\s/g, "")
+                .replace("R$", "")
+                .replace(/\./g, "")
+                .replace(",", ".");
+
         const numero =
-            Number(valor);
+            Number(valorLimpo);
 
         return Number.isFinite(numero)
             ? numero
             : 0;
     }
+
 
     function formatarMoeda(valor) {
         return converterValor(valor)
@@ -167,8 +181,10 @@
             }
         }
 
-        return pedido.data ||
-            "Data não informada";
+        return (
+            pedido.data ||
+            "Data não informada"
+        );
     }
 
 
@@ -204,9 +220,7 @@
         };
 
         return (
-            classes[
-            statusNormalizado
-            ] ||
+            classes[statusNormalizado] ||
             "status-recebido"
         );
     }
@@ -251,6 +265,152 @@
 
 
     /* =====================================
+       DADOS DO CLIENTE
+    ====================================== */
+
+    function obterNomeCliente(pedido) {
+        return String(
+            pedido.cliente?.nome ||
+            pedido.nomeCliente ||
+            "Não informado"
+        ).trim();
+    }
+
+
+    function obterEmailCliente(pedido) {
+        return String(
+            pedido.cliente?.email ||
+            pedido.emailCliente ||
+            "Não informado"
+        ).trim();
+    }
+
+
+    function obterCanalPedido(pedido) {
+        return String(
+            pedido.canal ||
+            "Não informado"
+        ).trim();
+    }
+
+
+    /* =====================================
+       ENDEREÇO DO PEDIDO
+    ====================================== */
+
+    function criarHtmlEndereco(pedido) {
+        const endereco =
+            pedido.enderecoEntrega || {};
+
+        const rua =
+            String(
+                endereco.rua || ""
+            ).trim();
+
+        const numero =
+            String(
+                endereco.numero || ""
+            ).trim();
+
+        const bairro =
+            String(
+                endereco.bairro || ""
+            ).trim();
+
+        const cep =
+            String(
+                endereco.cep || ""
+            ).trim();
+
+        const complemento =
+            String(
+                endereco.complemento || ""
+            ).trim();
+
+        const possuiEndereco =
+            rua ||
+            numero ||
+            bairro ||
+            cep ||
+            complemento;
+
+        if (!possuiEndereco) {
+            return `
+                <div>
+                    <strong>
+                        Endereço de entrega:
+                    </strong>
+
+                    Não informado.
+                </div>
+            `;
+        }
+
+        const linhaRua =
+            [
+                rua,
+                numero
+                    ? `nº ${numero}`
+                    : ""
+            ]
+                .filter(Boolean)
+                .map(escaparTexto)
+                .join(", ");
+
+        const linhaBairroCep =
+            [
+                bairro,
+                cep
+                    ? `CEP ${cep}`
+                    : ""
+            ]
+                .filter(Boolean)
+                .map(escaparTexto)
+                .join(" • ");
+
+        const linhaComplemento =
+            complemento
+                ? `
+                    <div>
+                        <strong>
+                            Complemento:
+                        </strong>
+
+                        ${escaparTexto(
+                            complemento
+                        )}
+                    </div>
+                `
+                : "";
+
+        return `
+            <div>
+                <strong>
+                    Endereço de entrega:
+                </strong>
+
+                ${
+                    linhaRua ||
+                    "Rua não informada"
+                }
+            </div>
+
+            ${
+                linhaBairroCep
+                    ? `
+                        <div>
+                            ${linhaBairroCep}
+                        </div>
+                    `
+                    : ""
+            }
+
+            ${linhaComplemento}
+        `;
+    }
+
+
+    /* =====================================
        COMPLEMENTOS
     ====================================== */
 
@@ -285,9 +445,9 @@
                             </strong>
 
                             ${escaparTexto(
-                        complementosCopo
-                            .join(", ")
-                    )}
+                                complementosCopo
+                                    .join(", ")
+                            )}
                         </div>
                     `
                 )
@@ -301,8 +461,8 @@
                 </strong>
 
                 ${escaparTexto(
-            complementos.join(", ")
-        )}
+                    complementos.join(", ")
+                )}
             </div>
         `;
     }
@@ -323,8 +483,8 @@
                     </strong>
 
                     ${escaparTexto(
-                pedido.produto
-            )}
+                        pedido.produto
+                    )}
                 </div>
             `);
         }
@@ -337,14 +497,16 @@
                     </strong>
 
                     ${escaparTexto(
-                pedido.tamanho
-            )}
+                        pedido.tamanho
+                    )}
                 </div>
             `);
         }
 
         if (
-            Number(pedido.quantidade) > 1
+            Number(
+                pedido.quantidade
+            ) > 1
         ) {
             partes.push(`
                 <div>
@@ -353,14 +515,16 @@
                     </strong>
 
                     ${escaparTexto(
-                pedido.quantidade
-            )}
+                        pedido.quantidade
+                    )}
                 </div>
             `);
         }
 
         if (
-            Array.isArray(pedido.itens) &&
+            Array.isArray(
+                pedido.itens
+            ) &&
             pedido.itens.length > 0
         ) {
             pedido.itens.forEach(
@@ -374,16 +538,17 @@
                         <div>
                             <strong>
                                 ${escaparTexto(
-                        nomeItem
-                    )}
+                                    nomeItem
+                                )}
                             </strong>
 
-                            ${item.quantidade
-                            ? ` — ${escaparTexto(
+                            ${
                                 item.quantidade
-                            )} unidade(s)`
-                            : ""
-                        }
+                                    ? ` — ${escaparTexto(
+                                          item.quantidade
+                                      )} unidade(s)`
+                                    : ""
+                            }
                         </div>
                     `);
                 }
@@ -433,12 +598,21 @@
                 ? "Recompensa"
                 : "Compra";
 
+        const nomeCliente =
+            obterNomeCliente(pedido);
+
+        const emailCliente =
+            obterEmailCliente(pedido);
+
+        const canalPedido =
+            obterCanalPedido(pedido);
+
         return `
             <article
                 class="pedido-admin"
                 data-pedido-id="${escaparTexto(
-            idPedido
-        )}"
+                    idPedido
+                )}"
             >
 
                 <div
@@ -452,18 +626,18 @@
                         >
                             Pedido
                             ${escaparTexto(
-            idPedido
-        )}
+                                idPedido
+                            )}
                         </h3>
 
                         <p
                             class="pedido-admin-data"
                         >
                             ${escaparTexto(
-            formatarDataPedido(
-                pedido
-            )
-        )}
+                                formatarDataPedido(
+                                    pedido
+                                )
+                            )}
                         </p>
 
                     </div>
@@ -472,14 +646,14 @@
                         class="
                             status-pedido-admin
                             ${obterClasseStatus(
-            pedido.status
-        )}
+                                pedido.status
+                            )}
                         "
                     >
                         ${escaparTexto(
-            pedido.status ||
-            "Pedido recebido"
-        )}
+                            pedido.status ||
+                            "Pedido recebido"
+                        )}
                     </span>
 
                 </div>
@@ -492,50 +666,92 @@
                     <div
                         class="detalhe-pedido-admin"
                     >
-
                         <span>
                             Tipo
                         </span>
 
                         <strong>
-                            ${tipoPedido}
+                            ${escaparTexto(
+                                tipoPedido
+                            )}
                         </strong>
-
                     </div>
 
 
                     <div
                         class="detalhe-pedido-admin"
                     >
-
                         <span>
                             Valor
                         </span>
 
                         <strong>
                             ${formatarMoeda(
-            valorPedido
-        )}
+                                valorPedido
+                            )}
                         </strong>
-
                     </div>
 
 
                     <div
                         class="detalhe-pedido-admin"
                     >
-
                         <span>
                             Pontos
                         </span>
 
                         <strong>
-                            ${pedido.pontosCreditados
-                ? `${pontosGerados} creditados`
-                : "Aguardando entrega"
-            }
+                            ${
+                                pedido.pontosCreditados
+                                    ? `${pontosGerados} creditados`
+                                    : "Aguardando entrega"
+                            }
                         </strong>
+                    </div>
 
+
+                    <div
+                        class="detalhe-pedido-admin"
+                    >
+                        <span>
+                            Cliente
+                        </span>
+
+                        <strong>
+                            ${escaparTexto(
+                                nomeCliente
+                            )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        class="detalhe-pedido-admin"
+                    >
+                        <span>
+                            E-mail
+                        </span>
+
+                        <strong>
+                            ${escaparTexto(
+                                emailCliente
+                            )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        class="detalhe-pedido-admin"
+                    >
+                        <span>
+                            Canal
+                        </span>
+
+                        <strong>
+                            ${escaparTexto(
+                                canalPedido
+                            )}
+                        </strong>
                     </div>
 
                 </div>
@@ -544,9 +760,18 @@
                 <div
                     class="pedido-admin-itens"
                 >
+                    ${criarHtmlEndereco(
+                        pedido
+                    )}
+                </div>
+
+
+                <div
+                    class="pedido-admin-itens"
+                >
                     ${criarHtmlItens(
-                pedido
-            )}
+                        pedido
+                    )}
                 </div>
 
 
@@ -565,12 +790,12 @@
                         <select
                             class="select-status-pedido"
                             data-status-original="${escaparTexto(
-                pedido.status
-            )}"
+                                pedido.status
+                            )}"
                         >
                             ${criarOpcoesStatus(
-                pedido.status
-            )}
+                                pedido.status
+                            )}
                         </select>
 
                     </label>
@@ -633,9 +858,9 @@
 
                     return (
                         status ===
-                        "entregue" ||
+                            "entregue" ||
                         status ===
-                        "pedido entregue"
+                            "pedido entregue"
                     );
                 }
             ).length;
@@ -671,7 +896,7 @@
             !window.AzuryPedidos ||
             typeof window.AzuryPedidos
                 .listarPedidos !==
-            "function"
+                "function"
         ) {
             throw new Error(
                 "O serviço de pedidos não foi carregado."
@@ -708,10 +933,10 @@
                 filtro === "todos"
                     ? todosPedidos
                     : todosPedidos.filter(
-                        pedido =>
-                            pedido.status ===
-                            filtro
-                    );
+                          pedido =>
+                              pedido.status ===
+                              filtro
+                      );
 
             if (
                 pedidosFiltrados.length ===
