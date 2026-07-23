@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "use strict";
 
     const NUMERO_WHATSAPP = "5511960220402";
+    const FUSO_HORARIO_LOJA = "America/Sao_Paulo";
+    const HORA_ABERTURA = 15;
 
     const AREAS_ENTREGA = [
         {
@@ -462,6 +464,22 @@ document.addEventListener("DOMContentLoaded", () => {
         $("#btnEnviarMonteSeu");
 
 
+    const statusLoja =
+        $("#statusLoja");
+
+    const statusLojaTitulo =
+        $("#statusLojaTitulo");
+
+    const statusLojaMensagem =
+        $("#statusLojaMensagem");
+
+    const botoesMontar =
+        $$(".btn-montar");
+
+    const linksPedidoHorario =
+        $$(".js-pedido-horario");
+
+
     const tamanhoInput =
         $("#tamanhoMonteSeu");
 
@@ -528,7 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
         false;
 
     let subtotalPedido =
-        14.90;
+        10.00;
 
     let idConsultaCEP =
         0;
@@ -570,6 +588,285 @@ document.addEventListener("DOMContentLoaded", () => {
                 " "
             )
             .trim();
+    }
+
+
+    /* =====================================
+       HORÁRIO DE FUNCIONAMENTO
+    ====================================== */
+
+    function obterDataHoraSaoPaulo(
+        data = new Date()
+    ) {
+        const partes =
+            new Intl.DateTimeFormat(
+                "en-CA",
+                {
+                    timeZone:
+                        FUSO_HORARIO_LOJA,
+
+                    year:
+                        "numeric",
+
+                    month:
+                        "2-digit",
+
+                    day:
+                        "2-digit",
+
+                    hour:
+                        "2-digit",
+
+                    minute:
+                        "2-digit",
+
+                    second:
+                        "2-digit",
+
+                    hourCycle:
+                        "h23"
+                }
+            ).formatToParts(
+                data
+            );
+
+
+        const valores = {};
+
+
+        partes.forEach(
+            parte => {
+                if (
+                    parte.type !==
+                    "literal"
+                ) {
+                    valores[parte.type] =
+                        Number(
+                            parte.value
+                        );
+                }
+            }
+        );
+
+
+        const diaSemana =
+            new Date(
+                Date.UTC(
+                    valores.year,
+                    valores.month - 1,
+                    valores.day
+                )
+            ).getUTCDay();
+
+
+        return {
+            diaSemana,
+            hora:
+                valores.hour,
+            minuto:
+                valores.minute
+        };
+    }
+
+
+    function obterEstadoLoja() {
+        const agora =
+            obterDataHoraSaoPaulo();
+
+
+        const segundaFeira =
+            agora.diaSemana === 1;
+
+
+        const aberta =
+            !segundaFeira &&
+            agora.hora >=
+            HORA_ABERTURA;
+
+
+        if (aberta) {
+            return {
+                aberta:
+                    true,
+
+                titulo:
+                    "ABERTO AGORA",
+
+                mensagem:
+                    "Faça seu pedido — atendimento até 00:00.",
+
+                avisoBloqueio:
+                    ""
+            };
+        }
+
+
+        if (segundaFeira) {
+            return {
+                aberta:
+                    false,
+
+                titulo:
+                    "FECHADO HOJE",
+
+                mensagem:
+                    "Abrimos terça-feira às 15:00.",
+
+                avisoBloqueio:
+                    "A Azury não funciona às segundas-feiras. Abrimos terça-feira às 15:00."
+            };
+        }
+
+
+        return {
+            aberta:
+                false,
+
+            titulo:
+                "FECHADO NO MOMENTO",
+
+            mensagem:
+                "Abrimos hoje às 15:00.",
+
+            avisoBloqueio:
+                "A Azury está fechada no momento. Os pedidos são liberados de terça a domingo, das 15:00 às 00:00."
+        };
+    }
+
+
+    function atualizarEstadoLoja() {
+        const estado =
+            obterEstadoLoja();
+
+
+        if (statusLoja) {
+            statusLoja.classList.toggle(
+                "aberta",
+                estado.aberta
+            );
+
+            statusLoja.classList.toggle(
+                "fechada",
+                !estado.aberta
+            );
+        }
+
+
+        if (statusLojaTitulo) {
+            statusLojaTitulo.textContent =
+                estado.titulo;
+        }
+
+
+        if (statusLojaMensagem) {
+            statusLojaMensagem.textContent =
+                estado.mensagem;
+        }
+
+
+        botoesMontar.forEach(
+            botao => {
+                const emBreve =
+                    botao.dataset
+                        .disponibilidade ===
+                    "em-breve";
+
+
+                if (emBreve) {
+                    botao.disabled =
+                        true;
+
+                    botao.textContent =
+                        "Disponível em breve";
+
+                    botao.classList.remove(
+                        "btn-loja-fechada"
+                    );
+
+                    return;
+                }
+
+
+                botao.disabled =
+                    !estado.aberta;
+
+                botao.classList.toggle(
+                    "btn-loja-fechada",
+                    !estado.aberta
+                );
+
+                botao.textContent =
+                    estado.aberta
+                        ? botao.dataset
+                            .textoAberto ||
+                        "Montar meu açaí"
+                        : "Loja fechada";
+            }
+        );
+
+
+        linksPedidoHorario.forEach(
+            link => {
+                link.classList.toggle(
+                    "pedido-bloqueado",
+                    !estado.aberta
+                );
+
+                link.setAttribute(
+                    "aria-disabled",
+                    String(
+                        !estado.aberta
+                    )
+                );
+            }
+        );
+
+
+        if (btnContinuar) {
+            btnContinuar.disabled =
+                !estado.aberta;
+
+            btnContinuar.textContent =
+                estado.aberta
+                    ? "Continuar para entrega"
+                    : "Loja fechada";
+        }
+
+
+        if (
+            btnEnviar &&
+            !enviando
+        ) {
+            btnEnviar.disabled =
+                !estado.aberta;
+
+            btnEnviar.textContent =
+                estado.aberta
+                    ? "Pedir pelo WhatsApp"
+                    : "Loja fechada";
+        }
+
+
+        return estado;
+    }
+
+
+    function bloquearPedidoForaDoHorario() {
+        const estado =
+            atualizarEstadoLoja();
+
+
+        if (estado.aberta) {
+            return false;
+        }
+
+
+        alert(
+            estado.avisoBloqueio
+        );
+
+
+        return true;
     }
 
 
@@ -730,7 +1027,7 @@ document.addEventListener("DOMContentLoaded", () => {
             typeof window
                 .AzuryPedidos
                 .criarPedido !==
-                "function"
+            "function"
         ) {
             alert(
                 "O pedido será enviado ao WhatsApp, mas não foi possível registrá-lo na Área do Cliente."
@@ -911,11 +1208,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                 if (btnEnviar) {
+                    const estado =
+                        obterEstadoLoja();
+
+
                     btnEnviar.disabled =
-                        false;
+                        !estado.aberta;
 
                     btnEnviar.textContent =
-                        "Pedir pelo WhatsApp";
+                        estado.aberta
+                            ? "Pedir pelo WhatsApp"
+                            : "Loja fechada";
                 }
             },
             1000
@@ -1008,7 +1311,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     item.checked &&
                     item.dataset
                         .camada ===
-                        camada
+                    camada
             )
             .map(
                 item =>
@@ -1058,7 +1361,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const precoSeguro =
             Number(
                 precoBase
-            ) || 14.90;
+            ) || 10.00;
 
 
         if (tamanhoInput) {
@@ -1534,7 +1837,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return Boolean(
             enderecoValidadoInput
                 ?.value ===
-                "true" &&
+            "true" &&
             nome &&
             cep.length === 8 &&
             rua &&
@@ -1582,23 +1885,39 @@ document.addEventListener("DOMContentLoaded", () => {
        ABRIR E NAVEGAR NO PEDIDO
     ====================================== */
 
-    $$(".btn-montar")
+    botoesMontar
         .forEach(
             botao => {
                 botao.addEventListener(
                     "click",
                     () => {
+                        if (
+                            botao.dataset
+                                .disponibilidade ===
+                            "em-breve"
+                        ) {
+                            return;
+                        }
+
+
+                        if (
+                            bloquearPedidoForaDoHorario()
+                        ) {
+                            return;
+                        }
+
+
                         limparNovoPedido();
 
 
                         atualizarTamanho(
                             botao.dataset
                                 .tamanho ||
-                                "300",
+                            "300",
 
                             botao.dataset
                                 .precoBase ||
-                                "14.90"
+                            "10.00"
                         );
 
 
@@ -1615,10 +1934,45 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
+    linksPedidoHorario.forEach(
+        link => {
+            link.addEventListener(
+                "click",
+                evento => {
+                    if (
+                        bloquearPedidoForaDoHorario()
+                    ) {
+                        evento.preventDefault();
+
+                        document
+                            .querySelector(
+                                "#Cardapio"
+                            )
+                            ?.scrollIntoView({
+                                behavior:
+                                    "smooth",
+                                block:
+                                    "start"
+                            });
+                    }
+                }
+            );
+        }
+    );
+
+
     btnContinuar
         ?.addEventListener(
             "click",
             () => {
+                if (
+                    bloquearPedidoForaDoHorario()
+                ) {
+                    fecharModal();
+                    return;
+                }
+
+
                 calcularSubtotal();
 
                 mostrarEtapa(
@@ -1669,6 +2023,14 @@ document.addEventListener("DOMContentLoaded", () => {
             "click",
             () => {
                 if (enviando) {
+                    return;
+                }
+
+
+                if (
+                    bloquearPedidoForaDoHorario()
+                ) {
+                    fecharModal();
                     return;
                 }
 
@@ -1740,7 +2102,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const tamanho =
                     tamanhoInput
                         ?.value ||
-                        "300";
+                    "300";
 
 
                 const valorProdutos =
@@ -1912,6 +2274,13 @@ ${formatarPreco(valorTotal)}
     ====================================== */
 
     aplicarMascaraCEP();
+
+    atualizarEstadoLoja();
+
+    window.setInterval(
+        atualizarEstadoLoja,
+        30000
+    );
 
     calcularSubtotal();
 

@@ -150,8 +150,8 @@
                         Ver Cardápio
                     </a>
 
-                    <a href="https://wa.me/5511960220402" class="btn btn-outline" target="_blank"
-                        rel="noopener noreferrer">
+                    <a href="https://wa.me/5511960220402" class="btn btn-outline js-pedido-horario"
+                        data-texto-aberto="🟢 WhatsApp" target="_blank" rel="noopener noreferrer">
                         🟢 WhatsApp
                     </a>
 
@@ -207,15 +207,25 @@
             Escolha o tamanho e monte cada camada do seu jeito.
         </p>
 
+        <div id="statusLoja" class="status-loja" role="status" aria-live="polite">
+            <span class="status-loja-indicador" aria-hidden="true"></span>
+
+            <div>
+                <strong id="statusLojaTitulo">Consultando horário...</strong>
+                <small id="statusLojaMensagem">
+                    Atendimento de terça a domingo, das 15:00 às 00:00.
+                </small>
+            </div>
+        </div>
+
         <ul class="menu-grid">
 
             <li data-categoria="monte-seu">
                 <div class="monte-seu-imagem">
-                    <img src="../Imagens/Copo vazio de 300ml.png"
-                         alt="Copo personalizado de açaí de 300 ml">
+                    <img src="../Imagens/Copo vazio de 300ml.png" alt="Copo personalizado de açaí de 300 ml">
                 </div>
 
-                <span class="badge">Alta demanda</span>
+                <span class="badge">Preço especial</span>
 
                 <h3>Monte o Seu • 300ml</h3>
 
@@ -224,20 +234,17 @@
                     As duas camadas de açaí já estão incluídas.
                 </p>
 
-                <strong>A partir de R$ 14,90</strong>
+                <strong>A partir de R$ 10,00</strong>
 
-                <button type="button"
-                        class="btn btn-montar"
-                        data-tamanho="300"
-                        data-preco-base="14.90">
+                <button type="button" class="btn btn-montar" data-tamanho="300" data-preco-base="10.00"
+                    data-texto-aberto="Montar meu açaí">
                     Montar meu açaí
                 </button>
             </li>
 
             <li data-categoria="monte-seu">
                 <div class="monte-seu-imagem">
-                    <img src="../Imagens/Copo Vazio 400 ml.png"
-                         alt="Copo personalizado de açaí de 400 ml">
+                    <img src="../Imagens/Copo Vazio 400 ml.png" alt="Copo personalizado de açaí de 400 ml">
                 </div>
 
                 <span class="badge">Alta demanda</span>
@@ -249,23 +256,42 @@
                     As duas camadas de açaí já estão incluídas.
                 </p>
 
-                <strong>A partir de R$ 18,90</strong>
+                <strong>A partir de R$ 14,90</strong>
 
-                <button type="button"
-                        class="btn btn-montar"
-                        data-tamanho="400"
-                        data-preco-base="18.90">
+                <button type="button" class="btn btn-montar" data-tamanho="400" data-preco-base="14.90"
+                    data-texto-aberto="Montar meu açaí">
                     Montar meu açaí
+                </button>
+            </li>
+
+            <li class="produto-em-breve" data-categoria="monte-seu" aria-label="Copo de 500 ml disponível em breve">
+                <div class="monte-seu-imagem">
+                    <img src="../Imagens/Copo vazio 500ml.png" alt="Copo personalizado de açaí de 500 ml">
+                </div>
+
+                <span class="badge badge-em-breve">Em breve</span>
+
+                <h3>Monte o Seu • 500ml</h3>
+
+                <p>
+                    Esse novo tamanho está chegando à Azury.
+                    Em breve estará disponível para pedidos.
+                </p>
+
+                <strong>Preço previsto: R$ 18,90</strong>
+
+                <button type="button" class="btn btn-montar" data-tamanho="500" data-preco-base="18.90"
+                    data-disponibilidade="em-breve" disabled>
+                    Disponível em breve
                 </button>
             </li>
 
             <li data-categoria="monte-seu">
                 <div class="monte-seu-imagem">
-                    <img src="../Imagens/Copo vazio 700ml.png"
-                         alt="Copo personalizado de açaí de 700 ml">
+                    <img src="../Imagens/Copo vazio 700ml.png" alt="Copo personalizado de açaí de 700 ml">
                 </div>
 
-                <span class="badge">Alta demanda</span>
+                <span class="badge">Tamanho família</span>
 
                 <h3>Monte o Seu • 700ml</h3>
 
@@ -274,12 +300,10 @@
                     As duas camadas de açaí já estão incluídas.
                 </p>
 
-                <strong>A partir de R$ 25,90</strong>
+                <strong>A partir de R$ 24,90</strong>
 
-                <button type="button"
-                        class="btn btn-montar"
-                        data-tamanho="700"
-                        data-preco-base="25.90">
+                <button type="button" class="btn btn-montar" data-tamanho="700" data-preco-base="24.90"
+                    data-texto-aberto="Montar meu açaí">
                     Montar meu açaí
                 </button>
             </li>
@@ -348,7 +372,8 @@
             Faça seu pedido agora e receba em casa!
         </p>
 
-        <a href="https://wa.me/5511960220402" class="btn btn-light" target="_blank" rel="noopener noreferrer">
+        <a href="https://wa.me/5511960220402" class="btn btn-light js-pedido-horario"
+            data-texto-aberto="Pedir pelo WhatsApp" target="_blank" rel="noopener noreferrer">
             Pedir pelo WhatsApp
         </a>
 
@@ -381,6 +406,10 @@
 
                 <p>
                     📲 (11) 96022-0402
+                </p>
+
+                <p>
+                    🕒 Terça a domingo, das 15:00 às 00:00
                 </p>
 
                 <p>
@@ -436,11 +465,8 @@
 
                 <h3>Parceria</h3>
 
-                <a href="https://wa.me/message/K3XMWHT77GE2C1"
-                   class="parceria-kasa-surf parceria-link"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   aria-label="Abrir o WhatsApp da Ksa Do Surf">
+                <a href="https://wa.me/message/K3XMWHT77GE2C1" class="parceria-kasa-surf parceria-link" target="_blank"
+                    rel="noopener noreferrer" aria-label="Abrir o WhatsApp da Ksa Do Surf">
 
                     <span class="parceria-emoji" aria-hidden="true">🏄</span>
 
@@ -463,10 +489,7 @@
 
         <div class="conteudo-monte-seu pedido-etapas">
 
-            <button type="button"
-                    id="btnFecharMonteSeu"
-                    class="fechar-monte-seu"
-                    aria-label="Fechar pedido">
+            <button type="button" id="btnFecharMonteSeu" class="fechar-monte-seu" aria-label="Fechar pedido">
                 ×
             </button>
 
@@ -490,9 +513,7 @@
                 </ol>
             </header>
 
-            <section id="painelPedido"
-                     class="painel-pedido ativo"
-                     data-etapa="1">
+            <section id="painelPedido" class="painel-pedido ativo" data-etapa="1">
 
                 <div class="grupo-monte-seu">
                     <h3>Escolha o tamanho do copo</h3>
@@ -500,46 +521,46 @@
                     <div class="opcoes-tamanho-produto opcoes-tamanho-monte-seu">
 
                         <label class="opcao-tamanho-produto">
-                            <input type="radio"
-                                   name="tamanhoMonteSeuOpcao"
-                                   value="300"
-                                   data-preco-base="14.90"
-                                   checked>
+                            <input type="radio" name="tamanhoMonteSeuOpcao" value="300" data-preco-base="10.00" checked>
 
                             <span>
                                 <strong>300 ml</strong>
+                                <small>R$ 10,00</small>
+                            </span>
+                        </label>
+
+                        <label class="opcao-tamanho-produto">
+                            <input type="radio" name="tamanhoMonteSeuOpcao" value="400" data-preco-base="14.90">
+
+                            <span>
+                                <strong>400 ml</strong>
                                 <small>R$ 14,90</small>
                             </span>
                         </label>
 
-                        <label class="opcao-tamanho-produto">
-                            <input type="radio"
-                                   name="tamanhoMonteSeuOpcao"
-                                   value="400"
-                                   data-preco-base="18.90">
+                        <label class="opcao-tamanho-produto opcao-tamanho-indisponivel">
+                            <input type="radio" name="tamanhoMonteSeuOpcao" value="500" data-preco-base="18.90"
+                                disabled>
 
                             <span>
-                                <strong>400 ml</strong>
-                                <small>R$ 18,90</small>
+                                <strong>500 ml</strong>
+                                <small>Em breve</small>
                             </span>
                         </label>
 
                         <label class="opcao-tamanho-produto">
-                            <input type="radio"
-                                   name="tamanhoMonteSeuOpcao"
-                                   value="700"
-                                   data-preco-base="25.90">
+                            <input type="radio" name="tamanhoMonteSeuOpcao" value="700" data-preco-base="24.90">
 
                             <span>
                                 <strong>700 ml</strong>
-                                <small>R$ 25,90</small>
+                                <small>R$ 24,90</small>
                             </span>
                         </label>
 
                     </div>
 
                     <input type="hidden" id="tamanhoMonteSeu" value="300">
-                    <input type="hidden" id="precoBaseMonteSeu" value="14.90">
+                    <input type="hidden" id="precoBaseMonteSeu" value="10.00">
                 </div>
 
                 <div class="grupo-monte-seu estrutura-acai">
@@ -568,21 +589,16 @@
 
                 <div class="resumo-etapa">
                     <span>Subtotal do pedido</span>
-                    <strong id="subtotalMonteSeu">R$ 14,90</strong>
+                    <strong id="subtotalMonteSeu">R$ 10,00</strong>
                 </div>
 
-                <button type="button"
-                        id="btnContinuarPedido"
-                        class="btn btn-continuar-pedido">
+                <button type="button" id="btnContinuarPedido" class="btn btn-continuar-pedido">
                     Continuar para entrega
                 </button>
 
             </section>
 
-            <section id="painelEntrega"
-                     class="painel-pedido"
-                     data-etapa="2"
-                     hidden>
+            <section id="painelEntrega" class="painel-pedido" data-etapa="2" hidden>
 
                 <div class="grupo-monte-seu dados-entrega">
                     <h3>Endereço de entrega</h3>
@@ -594,61 +610,41 @@
 
                     <label>
                         Nome completo
-                        <input type="text"
-                               id="nomeCliente"
-                               placeholder="Digite seu nome completo"
-                               autocomplete="name">
+                        <input type="text" id="nomeCliente" placeholder="Digite seu nome completo" autocomplete="name">
                     </label>
 
                     <div class="linha-entrega">
                         <label>
                             CEP
-                            <input type="text"
-                                   id="cepCliente"
-                                   placeholder="00000-000"
-                                   maxlength="9"
-                                   inputmode="numeric"
-                                   autocomplete="postal-code">
+                            <input type="text" id="cepCliente" placeholder="00000-000" maxlength="9" inputmode="numeric"
+                                autocomplete="postal-code">
                         </label>
 
                         <label>
                             Número
-                            <input type="text"
-                                   id="numeroCliente"
-                                   placeholder="123"
-                                   autocomplete="address-line2">
+                            <input type="text" id="numeroCliente" placeholder="123" autocomplete="address-line2">
                         </label>
                     </div>
 
                     <label>
                         Rua ou Avenida
-                        <input type="text"
-                               id="ruaCliente"
-                               placeholder="Preenchida após validar o CEP"
-                               autocomplete="address-line1"
-                               readonly>
+                        <input type="text" id="ruaCliente" placeholder="Preenchida após validar o CEP"
+                            autocomplete="address-line1" readonly>
                     </label>
 
                     <label>
                         Bairro
-                        <input type="text"
-                               id="bairroCliente"
-                               placeholder="Preenchido após validar o CEP"
-                               autocomplete="address-level3"
-                               readonly>
+                        <input type="text" id="bairroCliente" placeholder="Preenchido após validar o CEP"
+                            autocomplete="address-level3" readonly>
                     </label>
 
                     <label>
                         Complemento — opcional
-                        <input type="text"
-                               id="complementoCliente"
-                               placeholder="Apartamento, bloco, casa, referência...">
+                        <input type="text" id="complementoCliente"
+                            placeholder="Apartamento, bloco, casa, referência...">
                     </label>
 
-                    <div id="statusEndereco"
-                         class="status-endereco"
-                         role="status"
-                         aria-live="polite">
+                    <div id="statusEndereco" class="status-endereco" role="status" aria-live="polite">
                         Informe um CEP válido para calcular a entrega.
                     </div>
 
@@ -661,30 +657,22 @@
 
                     <div class="lista-complementos opcoes-pagamento">
                         <label>
-                            <input type="radio"
-                                   name="formaPagamentoMonteSeu"
-                                   value="Cartão de crédito">
+                            <input type="radio" name="formaPagamentoMonteSeu" value="Cartão de crédito">
                             Cartão de crédito
                         </label>
 
                         <label>
-                            <input type="radio"
-                                   name="formaPagamentoMonteSeu"
-                                   value="Cartão de débito">
+                            <input type="radio" name="formaPagamentoMonteSeu" value="Cartão de débito">
                             Cartão de débito
                         </label>
 
                         <label>
-                            <input type="radio"
-                                   name="formaPagamentoMonteSeu"
-                                   value="Pix">
+                            <input type="radio" name="formaPagamentoMonteSeu" value="Pix">
                             Pix
                         </label>
 
                         <label>
-                            <input type="radio"
-                                   name="formaPagamentoMonteSeu"
-                                   value="Dinheiro">
+                            <input type="radio" name="formaPagamentoMonteSeu" value="Dinheiro">
                             Dinheiro
                         </label>
                     </div>
@@ -693,7 +681,7 @@
                 <div class="resumo-pedido-final">
                     <div>
                         <span>Pedido</span>
-                        <strong id="resumoSubtotalPedido">R$ 14,90</strong>
+                        <strong id="resumoSubtotalPedido">R$ 10,00</strong>
                     </div>
 
                     <div>
@@ -703,20 +691,16 @@
 
                     <div class="linha-total-final">
                         <span>Total</span>
-                        <strong id="totalMonteSeu">R$ 14,90</strong>
+                        <strong id="totalMonteSeu">R$ 10,00</strong>
                     </div>
                 </div>
 
                 <div class="acoes-etapas">
-                    <button type="button"
-                            id="btnVoltarPedido"
-                            class="btn btn-outline">
+                    <button type="button" id="btnVoltarPedido" class="btn btn-outline">
                         Voltar
                     </button>
 
-                    <button type="button"
-                            id="btnEnviarMonteSeu"
-                            class="btn">
+                    <button type="button" id="btnEnviarMonteSeu" class="btn">
                         Pedir pelo WhatsApp
                     </button>
                 </div>
