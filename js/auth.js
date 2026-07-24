@@ -1,141 +1,109 @@
 const botao = document.getElementById("btnEntrar");
 const formulario = document.querySelector(".login-form");
+const mensagem = document.getElementById("mensagemLogin");
 
-function realizarLogin() {
+function mostrarMensagem(texto, tipo) {
+    mensagem.className = `mensagem ${tipo}`;
+    mensagem.textContent = texto;
+}
 
+async function realizarLogin() {
     const campoEmail =
         document.querySelector('input[type="email"]');
 
     const campoSenha =
         document.querySelector('input[type="password"]');
 
-    const mensagem =
-        document.getElementById("mensagemLogin");
-
-    const email =
-        campoEmail.value.trim();
-
-    const senha =
-        campoSenha.value.trim();
-
-    let usuario = null;
-
-    try {
-
-        usuario = JSON.parse(
-            localStorage.getItem("clienteAzury")
-        );
-
-    } catch (erro) {
-
-        usuario = null;
-
-    }
-
+    const email = campoEmail.value.trim();
+    const senha = campoSenha.value;
 
     if (email === "" || senha === "") {
-
-        mensagem.className = "mensagem erro";
-
-        mensagem.textContent =
-            "Preencha todos os campos.";
-
-        return;
-
-    }
-
-
-    if (!usuario) {
-
-        mensagem.className = "mensagem erro";
-
-        mensagem.textContent =
-            "Nenhuma conta cadastrada.";
-
-        return;
-
-    }
-
-
-    if (
-        email === usuario.email &&
-        senha === usuario.senha
-    ) {
-
-        /*
-         * Salva a sessão do cliente.
-         * O cadastro continua guardado em clienteAzury.
-         * O usuário logado fica guardado em usuarioAzury.
-         */
-
-        const usuarioLogado = {
-
-            ...usuario,
-
-            nome:
-                usuario.nome ||
-                usuario.nomeCompleto ||
-                email.split("@")[0],
-
-            autenticado: true
-
-        };
-
-
-        localStorage.setItem(
-            "usuarioAzury",
-            JSON.stringify(usuarioLogado)
+        mostrarMensagem(
+            "Preencha todos os campos.",
+            "erro"
         );
 
-
-        mensagem.className =
-            "mensagem sucesso";
-
-        mensagem.textContent =
-            "Login realizado com sucesso!";
-
-
-        setTimeout(() => {
-
-            window.location.href =
-                "cliente.html";
-
-        }, 700);
-
-    } else {
-
-        mensagem.className =
-            "mensagem erro";
-
-        mensagem.textContent =
-            "E-mail ou senha incorretos.";
-
+        return;
     }
 
+    botao.disabled = true;
+    botao.textContent = "Entrando...";
+
+    try {
+        const { data, error } =
+            await window.azurySupabase.auth.signInWithPassword({
+                email,
+                password: senha
+            });
+
+        if (error) {
+            if (error.message === "Invalid login credentials") {
+                mostrarMensagem(
+                    "E-mail ou senha incorretos.",
+                    "erro"
+                );
+            } else if (error.message === "Email not confirmed") {
+                mostrarMensagem(
+                    "Confirme seu e-mail antes de entrar.",
+                    "erro"
+                );
+            } else {
+                mostrarMensagem(
+                    "Não foi possível realizar o login.",
+                    "erro"
+                );
+            }
+
+            return;
+        }
+
+        if (!data.user || !data.session) {
+            mostrarMensagem(
+                "Não foi possível iniciar sua sessão.",
+                "erro"
+            );
+
+            return;
+        }
+
+        localStorage.removeItem("usuarioAzury");
+
+        mostrarMensagem(
+            "Login realizado com sucesso!",
+            "sucesso"
+        );
+
+        setTimeout(() => {
+            window.location.href = "cliente.html";
+        }, 700);
+
+    } catch (erro) {
+        console.error("Erro ao entrar:", erro);
+
+        mostrarMensagem(
+            "Erro de conexão. Tente novamente.",
+            "erro"
+        );
+
+    } finally {
+        botao.disabled = false;
+        botao.textContent = "Entrar";
+    }
 }
 
-
 if (botao) {
-
     botao.addEventListener(
         "click",
         realizarLogin
     );
-
 }
 
-
 if (formulario) {
-
     formulario.addEventListener(
         "submit",
         evento => {
-
             evento.preventDefault();
-
             realizarLogin();
-
         }
     );
-
 }
