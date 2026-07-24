@@ -613,6 +613,11 @@
                         <input type="text" id="nomeCliente" placeholder="Digite seu nome completo" autocomplete="name">
                     </label>
 
+                    <label>
+                        Telefone / WhatsApp
+                        <input type="tel" id="telefoneCliente" placeholder="(11) 99999-9999" autocomplete="tel">
+                    </label>
+
                     <div class="linha-entrega">
                         <label>
                             CEP
@@ -649,6 +654,7 @@
                     </div>
 
                     <input type="hidden" id="enderecoValidado" value="false">
+                    <input type="hidden" id="bairroEntregaId" value="">
                     <input type="hidden" id="taxaEntrega" value="0">
                 </div>
 
@@ -676,6 +682,11 @@
                             Dinheiro
                         </label>
                     </div>
+
+                    <label id="campoTrocoContainer">
+                        Troco para (opcional, somente dinheiro)
+                        <input type="text" id="trocoParaCliente" placeholder="Ex.: 50,00" inputmode="decimal">
+                    </label>
                 </div>
 
                 <div class="resumo-pedido-final">
@@ -713,10 +724,10 @@
 
 
     <!-- SCRIPTS -->
-    <script src="../js/sessao.js"></script>
-    <script src="../js/pontuacao-servico.js"></script>
-    <script src="../js/pedidos-servico.js"></script>
-    <script src="../js/cardapio.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/supabase.js"></script>
+    <script src="./js/sessao.js"></script>
+    <script src="./js/cardapio-supabase.js"></script>
 
 </body>
 

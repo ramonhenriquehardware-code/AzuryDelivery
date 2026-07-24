@@ -286,14 +286,6 @@ function inicializarPontos(usuario) {
         JSON.stringify(usuario)
     );
 
-    const sessaoAtual = {
-        ...usuario,
-        autenticado: true
-    };
-
-    localStorage.setItem(
-        "usuarioAzury",
-        JSON.stringify(sessaoAtual)
-    );
+    localStorage.removeItem("usuarioAzury");
 
 }

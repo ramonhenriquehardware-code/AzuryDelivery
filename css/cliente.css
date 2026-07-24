@@ -384,3 +384,13 @@
         font-size: 14px;
     }
 }
+/* CORREÇÃO DO ALINHAMENTO DOS VALORES DO PEDIDO */
+
+.pagina-cliente .valores-pedido-cliente p {
+    display: block;
+}
+
+.pagina-cliente .valores-pedido-cliente p strong {
+    display: inline;
+    margin-left: 4px;
+}
