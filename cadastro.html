@@ -18,11 +18,7 @@
     <header class="login-header">
 
         <a href="index.html" class="login-logo">
-            <img
-                src="Imagens/Coroa.png"
-                alt="Coroa Azury"
-                class="coroa-topo"
-            >
+            <img src="Imagens/Coroa.png" alt="Coroa Azury" class="coroa-topo">
 
             <span>AZURY</span>
         </a>
@@ -40,19 +36,11 @@
         <section class="login-card">
 
             <div class="marca-dagua" aria-hidden="true">
-                <img
-                    src="Imagens/Coroa.png"
-                    alt=""
-                    class="coroa-marca"
-                >
+                <img src="Imagens/Coroa.png" alt="" class="coroa-marca">
             </div>
 
             <div class="logo-login">
-                <img
-                    src="Imagens/Coroa.png"
-                    alt="Coroa Azury"
-                    class="coroa-login"
-                >
+                <img src="Imagens/Coroa.png" alt="Coroa Azury" class="coroa-login">
             </div>
 
             <h1>AZURY</h1>
@@ -69,46 +57,16 @@
 
             <form class="login-form" id="formCadastro">
 
-                <div
-                    id="mensagemCadastro"
-                    class="mensagem"
-                    role="alert"
-                    aria-live="polite"
-                ></div>
+                <div id="mensagemCadastro" class="mensagem" role="alert" aria-live="polite"></div>
 
-                <input
-                    type="text"
-                    id="nome"
-                    name="nome"
-                    placeholder="Nome completo"
-                    autocomplete="name"
-                    required
-                >
+                <input type="text" id="nome" name="nome" placeholder="Nome completo" autocomplete="name" required>
 
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="Seu e-mail"
-                    autocomplete="email"
-                    required
-                >
+                <input type="email" id="email" name="email" placeholder="Seu e-mail" autocomplete="email" required>
 
-                <input
-                    type="password"
-                    id="senha"
-                    name="senha"
-                    placeholder="Crie uma senha"
-                    autocomplete="new-password"
-                    minlength="6"
-                    required
-                >
+                <input type="password" id="senha" name="senha" placeholder="Crie uma senha" autocomplete="new-password"
+                    minlength="6" required>
 
-                <button
-                    type="submit"
-                    class="btn"
-                    id="btnCadastrar"
-                >
+                <button type="submit" class="btn" id="btnCadastrar">
                     ✨ Criar Conta
                 </button>
 
@@ -123,7 +81,9 @@
 
     </main>
 
-    <script src="js/cadastro.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/supabase.js"></script>
+    <script src="./js/cadastro.js"></script>
 
 </body>
 

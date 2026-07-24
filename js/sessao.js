@@ -1,68 +1,36 @@
-document.addEventListener(
-    "DOMContentLoaded",
-    atualizarMenuConta
-);
+document.addEventListener("DOMContentLoaded", () => {
+    "use strict";
 
-window.addEventListener(
-    "pageshow",
-    atualizarMenuConta
-);
+    const linkConta = document.getElementById("linkConta");
+    const supabase = window.azurySupabase;
 
-function atualizarMenuConta() {
-
-    const linkConta =
-        document.getElementById("linkConta");
-
-    if (!linkConta) {
+    if (!linkConta || !supabase) {
         return;
     }
 
-    let usuario = null;
-
-    try {
-
-        usuario = JSON.parse(
-            localStorage.getItem("usuarioAzury")
-        );
-
-    } catch (erro) {
-
-        usuario = null;
-
+    function atualizarLink(session) {
+        if (session?.user) {
+            linkConta.textContent = "Minha conta";
+            linkConta.href = "cliente.html";
+            linkConta.setAttribute("aria-label", "Abrir minha área de cliente");
+        } else {
+            linkConta.textContent = "Entrar";
+            linkConta.href = "login.html";
+            linkConta.setAttribute("aria-label", "Entrar na conta Azury");
+        }
     }
 
-    const estaLogado = Boolean(
-        usuario &&
-        usuario.autenticado === true &&
-        usuario.email
-    );
+    supabase.auth.getSession()
+        .then(({ data, error }) => {
+            if (error) throw error;
+            atualizarLink(data.session);
+        })
+        .catch(erro => {
+            console.error("Não foi possível verificar a sessão:", erro);
+            atualizarLink(null);
+        });
 
-    if (estaLogado) {
-
-        linkConta.href =
-            "cliente.html";
-
-        linkConta.textContent =
-            "Área do Cliente";
-
-        linkConta.title =
-            "Abrir minha área de cliente";
-
-    } else {
-
-        localStorage.removeItem(
-            "usuarioAzury"
-        );
-
-        linkConta.href =
-            "login.html";
-
-        linkConta.textContent =
-            "Entrar";
-
-        linkConta.title =
-            "Entrar na minha conta";
-
-    }
-
-}
+    supabase.auth.onAuthStateChange((_evento, session) => {
+        atualizarLink(session);
+    });
+});

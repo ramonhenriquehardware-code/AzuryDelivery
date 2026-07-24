@@ -1,0 +1,50 @@
+AZURY — SITE MIGRADO PARA SUPABASE
+Data: 24/07/2026
+
+ESTE PACOTE CONTÉM O SITE COMPLETO.
+O painel administrativo não foi alterado e não faz parte deste ZIP.
+
+INTEGRAÇÕES CONCLUÍDAS
+- Cadastro real pelo Supabase Auth.
+- Login, sessão persistente e logout pelo Supabase Auth.
+- Link Entrar/Minha conta atualizado pela sessão real.
+- Cardápio carregado das tabelas tamanhos_acai e complementos.
+- Situação da loja carregada de configuracoes_loja e horarios_funcionamento.
+- Bairros e taxas carregados de bairros_entrega.
+- CEP validado pelo ViaCEP e ligado ao ID real do bairro.
+- Pedido registrado pela função criar_pedido_completo.
+- Código curto do pedido enviado ao WhatsApp e ao painel administrativo.
+- Valores finais conferidos e calculados pelo banco de dados.
+- Área do cliente carregando perfil, pedidos, itens, histórico, pontos e recompensas.
+- Atualização automática da área do cliente quando o pedido mudar de status.
+- Resgate de recompensa preparado para funções RPC compatíveis do Supabase.
+
+SEGURANÇA
+- Nenhuma chave secreta ou service_role está neste pacote.
+- Somente a chave pública do navegador é usada.
+- Senhas não são guardadas pelo site.
+- O site antigo não precisa ser apagado antes da publicação.
+
+TESTES EXECUTADOS
+- Verificação de sintaxe em todos os arquivos JavaScript carregados.
+- Verificação dos caminhos de scripts e IDs duplicados no HTML.
+- Simulação completa do cardápio, endereço, cálculo e criação de pedido.
+- Validação do objeto enviado para criar_pedido_completo.
+- Simulação da Área do Cliente com perfil, pontos, pedidos e recompensas.
+
+ARQUIVOS PRINCIPAIS ALTERADOS
+- index.html
+- login.html
+- cadastro.html
+- cliente.html
+- js/supabase.js
+- js/auth.js
+- js/cadastro.js
+- js/sessao.js
+- js/cardapio-supabase.js
+- js/cliente.js
+- js/pontos.js
+- js/recompensas.js
+
+IMPORTANTE
+Faça a publicação primeiro na branch integracao-supabase. Só depois dos testes finais essa branch deve ser unida à main.

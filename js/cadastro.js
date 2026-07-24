@@ -1,22 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
+    "use strict";
 
-    const formCadastro = document.getElementById("formCadastro");
-    const btnCadastrar = document.getElementById("btnCadastrar");
+    const form = document.getElementById("formCadastro");
+    const botao = document.getElementById("btnCadastrar");
     const mensagem = document.getElementById("mensagemCadastro");
-
     const nomeInput = document.getElementById("nome");
     const emailInput = document.getElementById("email");
     const senhaInput = document.getElementById("senha");
+    const supabase = window.azurySupabase;
 
-    if (
-        !formCadastro ||
-        !btnCadastrar ||
-        !mensagem ||
-        !nomeInput ||
-        !emailInput ||
-        !senhaInput
-    ) {
-        console.error("Elementos do formulário de cadastro não encontrados.");
+    if (!form || !botao || !mensagem || !nomeInput || !emailInput || !senhaInput || !supabase) {
+        console.error("Não foi possível iniciar o cadastro Azury.");
         return;
     }
 
@@ -25,15 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
         mensagem.textContent = texto;
     }
 
-    function limparMensagem() {
+    form.addEventListener("submit", async evento => {
+        evento.preventDefault();
         mensagem.className = "mensagem";
         mensagem.textContent = "";
-    }
-
-    formCadastro.addEventListener("submit", (event) => {
-
-        event.preventDefault();
-        limparMensagem();
 
         const nome = nomeInput.value.trim();
         const email = emailInput.value.trim().toLowerCase();
@@ -57,77 +46,76 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (senha.length < 6) {
-            exibirMensagem(
-                "erro",
-                "A senha precisa ter pelo menos 6 caracteres."
-            );
-
+            exibirMensagem("erro", "A senha precisa ter pelo menos 6 caracteres.");
             senhaInput.focus();
             return;
         }
 
-        let clienteExistente = null;
+        botao.disabled = true;
+        botao.textContent = "Criando conta...";
 
         try {
-            clienteExistente = JSON.parse(
-                localStorage.getItem("clienteAzury")
-            );
-        } catch (erro) {
-            console.error("Erro ao ler cadastro existente:", erro);
-        }
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password: senha,
+                options: {
+                    data: {
+                        nome,
+                        nome_completo: nome
+                    }
+                }
+            });
 
-        if (
-            clienteExistente &&
-            clienteExistente.email?.toLowerCase() === email
-        ) {
+            if (error) {
+                const texto = String(error.message || "").toLowerCase();
+                if (
+                    texto.includes("already registered") ||
+                    texto.includes("already exists") ||
+                    texto.includes("user already")
+                ) {
+                    exibirMensagem("erro", "Este e-mail já está cadastrado.");
+                } else if (texto.includes("password")) {
+                    exibirMensagem("erro", "A senha informada não é válida.");
+                } else if (texto.includes("email")) {
+                    exibirMensagem("erro", "O e-mail informado não é válido.");
+                } else {
+                    exibirMensagem("erro", error.message || "Não foi possível criar sua conta.");
+                }
+                return;
+            }
+
+            if (!data.user || Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+                exibirMensagem("erro", "Este e-mail já está cadastrado.");
+                return;
+            }
+
+            const haviaSessao = Boolean(data.session);
+            if (haviaSessao) {
+                await supabase.auth.signOut();
+            }
+
+            localStorage.removeItem("clienteAzury");
+            localStorage.removeItem("usuarioAzury");
+
+            botao.textContent = "Conta criada ✓";
             exibirMensagem(
-                "erro",
-                "Este e-mail já está cadastrado."
+                "sucesso",
+                haviaSessao
+                    ? "Conta criada com sucesso! Redirecionando..."
+                    : "Conta criada! Verifique seu e-mail e depois faça login."
             );
 
-            emailInput.focus();
-            return;
-        }
-
-        const cliente = {
-            nome,
-            email,
-            senha,
-            pontos: 0,
-            pontosAcumulados: 0,
-            saldoPontos: 0,
-            nivel: "Bronze",
-            criadoEm: new Date().toISOString()
-        };
-
-        try {
-            localStorage.setItem(
-                "clienteAzury",
-                JSON.stringify(cliente)
-            );
+            window.setTimeout(() => {
+                window.location.href = "login.html";
+            }, 1400);
         } catch (erro) {
-            console.error("Erro ao salvar cadastro:", erro);
-
-            exibirMensagem(
-                "erro",
-                "Não foi possível criar sua conta. Tente novamente."
-            );
-
-            return;
+            console.error("Erro ao criar conta:", erro);
+            exibirMensagem("erro", "Erro de conexão. Tente novamente.");
+        } finally {
+            if (botao.textContent !== "Conta criada ✓") {
+                botao.disabled = false;
+                botao.textContent = "Criar Conta";
+            }
         }
-
-        btnCadastrar.disabled = true;
-        btnCadastrar.textContent = "Conta criada ✓";
-
-        exibirMensagem(
-            "sucesso",
-            "Conta criada com sucesso! Redirecionando..."
-        );
-
-        setTimeout(() => {
-            window.location.href = "login.html";
-        }, 1500);
-
     });
-
 });
