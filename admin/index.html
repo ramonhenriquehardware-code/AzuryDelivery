@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Painel administrativo de desenvolvimento da Azury">
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Azury Admin — Desenvolvimento</title>
+
+    <link rel="stylesheet" href="css/admin-dev.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="theme-color" content="#071426">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Azury Admin">
+
+    <style>
+        .sidebar-brand .admin-welcome {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 3px;
+
+            color: #dbeafe;
+
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            line-height: 1.25;
+        }
+
+        .sidebar-brand .admin-welcome .admin-chief {
+            color: #f6c453;
+
+            font-weight: 900;
+
+            text-shadow:
+                0 0 10px rgba(246, 196, 83, 0.35);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="appLoading" class="app-loading">
+        <div class="loading-mark">👑</div>
+        <strong>Preparando o painel Azury...</strong>
+    </div>
+
+
+    <main id="authView" class="auth-view" hidden>
+
+        <section class="auth-card">
+
+            <div class="auth-brand">
+
+                <span class="brand-crown">👑</span>
+
+                <div>
+                    <strong>AZURY</strong>
+                    <small>Painel administrativo</small>
+                </div>
+
+            </div>
+
+            <span class="dev-badge">
+                Ambiente de desenvolvimento
+            </span>
+
+            <h1>Entrar no painel</h1>
+
+            <p>
+                Use a conta cadastrada no Supabase que possui acesso administrativo.
+            </p>
+
+            <form id="adminLoginForm" class="auth-form">
+
+                <label>
+                    <span>E-mail</span>
+
+                    <input id="adminEmail" type="email" autocomplete="email" required placeholder="seu@email.com">
+                </label>
+
+                <label>
+                    <span>Senha</span>
+
+                    <input id="adminPassword" type="password" autocomplete="current-password" required
+                        placeholder="Sua senha">
+                </label>
+
+                <button id="adminLoginButton" class="btn btn-primary" type="submit">
+                    Entrar
+                </button>
+
+                <div id="authMessage" class="form-message" role="status" aria-live="polite"></div>
+
+            </form>
+
+            <a href="../index.html" class="back-link">
+                ← Voltar ao site
+            </a>
+
+        </section>
+
+    </main>
+
+
+    <div id="adminApp" class="admin-app" hidden>
+
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-brand">
+
+                <span class="brand-crown">👑</span>
+
+                <div>
+
+                    <strong>
+                        AZURY ADMIN
+                    </strong>
+
+                    <small class="admin-welcome">
+                        Seja Bem Vindo
+                        <span class="admin-chief">
+                            Chefe $
+                        </span>
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <nav class="sidebar-nav" aria-label="Menu administrativo">
+
+                <button class="nav-item active" data-section="visao-geral">
+                    <span>◫</span>
+                    Visão geral
+                </button>
+
+                <button class="nav-item" data-section="pedidos">
+                    <span>📦</span>
+                    Pedidos
+                </button>
+
+                <button class="nav-item" data-section="clientes">
+                    <span>👥</span>
+                    Clientes
+                </button>
+
+                <button class="nav-item" data-section="cardapio">
+                    <span>🥣</span>
+                    Cardápio
+                </button>
+
+                <button class="nav-item" data-section="entregas">
+                    <span>🛵</span>
+                    Entregas
+                </button>
+
+                <button class="nav-item" data-section="horarios">
+                    <span>🕒</span>
+                    Loja e horários
+                </button>
+
+                <button class="nav-item" data-section="recompensas">
+                    <span>🎁</span>
+                    Recompensas
+                </button>
+
+                <button class="nav-item" data-section="equipe">
+                    <span>🛡️</span>
+                    Equipe
+                </button>
+
+                <button class="nav-item" data-section="auditoria">
+                    <span>📋</span>
+                    Auditoria
+                </button>
+
+            </nav>
+
+
+            <div class="sidebar-footer">
+
+                <div class="admin-mini">
+
+                    <strong id="sidebarAdminName">
+                        Administrador
+                    </strong>
+
+                    <small id="sidebarAdminLevel">
+                        —
+                    </small>
+
+                </div>
+
+                <button id="logoutButton" class="btn btn-ghost" type="button">
+                    Sair
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <button id="sidebarBackdrop" class="sidebar-backdrop" type="button" aria-label="Fechar menu"
+            tabindex="-1"></button>
+
+
+        <div class="main-shell">
+
+            <header class="topbar">
+
+                <button id="menuButton" class="icon-button mobile-only" type="button" aria-label="Abrir menu">
+                    ☰
+                </button>
+
+                <div>
+
+                    <span class="eyebrow">
+                        AZURY • ADMINISTRAÇÃO
+                    </span>
+
+                    <h1 id="pageTitle">
+                        Visão geral
+                    </h1>
+
+                </div>
+
+                <div class="topbar-actions">
+
+                    <span id="connectionStatus" class="connection-pill">
+                        Conectando...
+                    </span>
+
+                    <button id="globalRefreshButton" class="btn btn-secondary" type="button">
+                        ↻ Atualizar
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <div id="globalMessage" class="global-message" role="status" aria-live="polite"></div>
+
+
+            <div class="content-area">
+
+
+                <section id="section-visao-geral" class="admin-section active-section">
+
+                    <div id="overviewCards" class="metric-grid"></div>
+
+
+                    <div class="two-column-grid">
+
+                        <article class="panel-card">
+
+                            <div class="panel-heading">
+
+                                <div>
+
+                                    <span class="eyebrow">
+                                        OPERAÇÃO
+                                    </span>
+
+                                    <h2>
+                                        Status da loja
+                                    </h2>
+
+                                </div>
+
+                                <button class="btn btn-small" data-go-section="horarios" type="button">
+                                    Gerenciar
+                                </button>
+
+                            </div>
+
+                            <div id="storeStatusPanel" class="store-status-panel"></div>
+
+                        </article>
+
+
+                        <article class="panel-card">
+
+                            <div class="panel-heading">
+
+                                <div>
+
+                                    <span class="eyebrow">
+                                        PEDIDOS
+                                    </span>
+
+                                    <h2>
+                                        Pedidos recentes
+                                    </h2>
+
+                                </div>
+
+                                <button class="btn btn-small" data-go-section="pedidos" type="button">
+                                    Ver todos
+                                </button>
+
+                            </div>
+
+                            <div id="recentOrders" class="compact-list"></div>
+
+                        </article>
+
+                    </div>
+
+                </section>
+
+
+                <section id="section-pedidos" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                OPERAÇÃO EM TEMPO REAL
+                            </span>
+
+                            <h2>
+                                Gerenciamento de pedidos
+                            </h2>
+
+                            <p>
+                                Aceite, prepare, despache, entregue ou cancele pedidos.
+                            </p>
+
+                        </div>
+
+
+                        <div class="toolbar-controls">
+
+                            <label class="compact-field">
+
+                                <span>Status</span>
+
+                                <select id="ordersStatusFilter">
+
+                                    <option value="">
+                                        Todos
+                                    </option>
+
+                                    <option value="recebido">
+                                        Recebidos
+                                    </option>
+
+                                    <option value="confirmado">
+                                        Aceitos
+                                    </option>
+
+                                    <option value="em_preparo">
+                                        Em preparo
+                                    </option>
+
+                                    <option value="pronto">
+                                        Prontos
+                                    </option>
+
+                                    <option value="saiu_para_entrega">
+                                        Em entrega
+                                    </option>
+
+                                    <option value="entregue">
+                                        Entregues
+                                    </option>
+
+                                    <option value="cancelado">
+                                        Cancelados
+                                    </option>
+
+                                </select>
+
+                            </label>
+
+
+                            <button id="refreshOrdersButton" class="btn btn-secondary" type="button">
+                                ↻ Atualizar pedidos
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div id="ordersSummary" class="metric-grid compact-metrics"></div>
+
+                    <div id="ordersList" class="orders-list"></div>
+
+                </section>
+
+
+                <section id="section-clientes" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                CONTAS
+                            </span>
+
+                            <h2>
+                                Clientes cadastrados
+                            </h2>
+
+                            <p>
+                                Consulte contas, pedidos e status de acesso.
+                            </p>
+
+                        </div>
+
+
+                        <form id="clientsSearchForm" class="toolbar-controls">
+
+                            <input id="clientsSearch" type="search" placeholder="Nome, e-mail ou telefone">
+
+                            <select id="clientsActiveFilter">
+
+                                <option value="">
+                                    Todos
+                                </option>
+
+                                <option value="true">
+                                    Ativos
+                                </option>
+
+                                <option value="false">
+                                    Inativos
+                                </option>
+
+                            </select>
+
+                            <button class="btn btn-secondary" type="submit">
+                                Buscar
+                            </button>
+
+                        </form>
+
+                    </div>
+
+
+                    <div id="clientsSummary" class="metric-grid compact-metrics"></div>
+
+                    <div id="clientsList" class="data-grid"></div>
+
+                </section>
+
+
+                <section id="section-cardapio" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                PRODUTOS
+                            </span>
+
+                            <h2>
+                                Cardápio e complementos
+                            </h2>
+
+                            <p>
+                                Edite preços, disponibilidade e ordem de exibição.
+                            </p>
+
+                        </div>
+
+                        <button id="newComplementButton" class="btn btn-primary" type="button">
+                            + Novo complemento
+                        </button>
+
+                    </div>
+
+
+                    <article class="panel-card space-bottom">
+
+                        <div class="panel-heading">
+
+                            <div>
+
+                                <h3>
+                                    Tamanhos oficiais
+                                </h3>
+
+                                <p>
+                                    300, 400, 500 e 700 ml.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div id="sizesList" class="data-grid"></div>
+
+                    </article>
+
+
+                    <article class="panel-card">
+
+                        <div class="panel-heading">
+
+                            <div>
+
+                                <h3>
+                                    Complementos
+                                </h3>
+
+                                <p>
+                                    Itens disponíveis para montagem dos copos.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div id="complementsList" class="data-grid"></div>
+
+                    </article>
+
+                </section>
+
+
+                <section id="section-entregas" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                ÁREA DE ENTREGA
+                            </span>
+
+                            <h2>
+                                Bairros e taxas
+                            </h2>
+
+                            <p>
+                                Administre os bairros atendidos e suas taxas.
+                            </p>
+
+                        </div>
+
+                        <button id="newNeighborhoodButton" class="btn btn-primary" type="button">
+                            + Novo bairro
+                        </button>
+
+                    </div>
+
+
+                    <div id="neighborhoodsList" class="data-grid"></div>
+
+                </section>
+
+
+                <section id="section-horarios" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                FUNCIONAMENTO
+                            </span>
+
+                            <h2>
+                                Loja e horários
+                            </h2>
+
+                            <p>
+                                Pause pedidos, altere a mensagem e defina os horários.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel-card space-bottom">
+
+                        <div class="panel-heading">
+
+                            <div>
+                                <h3>
+                                    Configuração geral
+                                </h3>
+                            </div>
+
+                        </div>
+
+                        <form id="storeConfigForm" class="form-grid"></form>
+
+                    </article>
+
+
+                    <article class="panel-card">
+
+                        <div class="panel-heading">
+
+                            <div>
+                                <h3>
+                                    Horários da semana
+                                </h3>
+                            </div>
+
+                        </div>
+
+                        <div id="schedulesList" class="schedule-list"></div>
+
+                    </article>
+
+                </section>
+
+
+                <section id="section-recompensas" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                FIDELIDADE
+                            </span>
+
+                            <h2>
+                                Recompensas
+                            </h2>
+
+                            <p>
+                                Configure trocas por açaí e cupons de desconto.
+                            </p>
+
+                        </div>
+
+                        <button id="newRewardButton" class="btn btn-primary" type="button">
+                            + Nova recompensa
+                        </button>
+
+                    </div>
+
+
+                    <div id="rewardsList" class="data-grid"></div>
+
+                </section>
+
+
+                <section id="section-equipe" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                PERMISSÕES
+                            </span>
+
+                            <h2>
+                                Equipe administrativa
+                            </h2>
+
+                            <p>
+                                Somente o proprietário pode alterar os acessos da equipe.
+                            </p>
+
+                        </div>
+
+                        <button id="newTeamMemberButton" class="btn btn-primary" type="button">
+                            + Adicionar à equipe
+                        </button>
+
+                    </div>
+
+
+                    <div id="teamSummary" class="metric-grid compact-metrics"></div>
+
+                    <div id="teamList" class="data-grid"></div>
+
+                </section>
+
+
+                <section id="section-auditoria" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                SEGURANÇA
+                            </span>
+
+                            <h2>
+                                Histórico de ações
+                            </h2>
+
+                            <p>
+                                Consulte alterações realizadas no painel.
+                            </p>
+
+                        </div>
+
+
+                        <form id="auditFilterForm" class="toolbar-controls">
+
+                            <select id="auditEntityFilter">
+
+                                <option value="">
+                                    Todas as áreas
+                                </option>
+
+                                <option value="pedidos">
+                                    Pedidos
+                                </option>
+
+                                <option value="perfil_cliente">
+                                    Clientes
+                                </option>
+
+                                <option value="tamanhos_acai">
+                                    Tamanhos
+                                </option>
+
+                                <option value="complementos">
+                                    Complementos
+                                </option>
+
+                                <option value="bairros_entrega">
+                                    Bairros
+                                </option>
+
+                                <option value="horarios_funcionamento">
+                                    Horários
+                                </option>
+
+                                <option value="configuracoes_loja">
+                                    Configuração
+                                </option>
+
+                                <option value="recompensas">
+                                    Recompensas
+                                </option>
+
+                                <option value="administrador">
+                                    Equipe
+                                </option>
+
+                            </select>
+
+                            <button class="btn btn-secondary" type="submit">
+                                Filtrar
+                            </button>
+
+                        </form>
+
+                    </div>
+
+
+                    <div id="auditList" class="timeline-list"></div>
+
+                </section>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="modalBackdrop" class="modal-backdrop" hidden>
+
+        <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+            <header class="modal-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        AZURY ADMIN
+                    </span>
+
+                    <h2 id="modalTitle">
+                        Editar
+                    </h2>
+
+                </div>
+
+                <button id="modalCloseButton" class="icon-button" type="button" aria-label="Fechar">
+                    ×
+                </button>
+
+            </header>
+
+
+            <form id="dynamicModalForm" class="modal-body"></form>
+
+        </section>
+
+    </div>
+
+
+    <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <script defer src="js/supabase-dev.js"></script>
+
+    <script defer src="js/admin-dev.js"></script>
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker
+                    .register("./service-worker.js")
+                    .catch(error => {
+                        console.error("Erro ao registrar o aplicativo Azury Admin:", error);
+                    });
+            });
+        }
+    </script>
+
+
+</body>
+
+</html>
