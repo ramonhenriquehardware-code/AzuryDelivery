@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
     "use strict";
 
-    const sb = window.azurySupabase;
+    let sb = window.azurySupabase;
     const $ = selector => document.querySelector(selector);
     const $$ = selector => Array.from(document.querySelectorAll(selector));
 
@@ -69,11 +69,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         sending: false,
         consultingZip: false,
         zipRequest: 0,
-        operationReady: false
+        operationReady: false,
+        interfaceReady: false,
+        refreshingOperation: false,
+        recoveryTimer: null,
+        operationSource: null
     };
 
     const CART_KEY = "azurySacola";
     const MAX_CART_UNITS = 20;
+    const OPERATION_CACHE_KEY = "azuryOperacaoPublica";
+    const OPERATION_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+    const OPERATION_RETRY_DELAYS = [0, 1500, 3500];
+    const OPERATION_RECOVERY_INTERVAL = 30000;
+
+    const wait = milliseconds =>
+        new Promise(resolve =>
+            window.setTimeout(resolve, milliseconds)
+        );
 
     const money = value =>
         Number(value || 0).toLocaleString("pt-BR", {
@@ -349,9 +362,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                             <strong class="item-sacola-total">
                                 ${money(
-                                    item.preco_unitario *
-                                    item.quantidade
-                                )}
+                    item.preco_unitario *
+                    item.quantidade
+                )}
                             </strong>
 
                         </div>
@@ -359,18 +372,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <p>
                             <b>Meio:</b>
                             ${esc(
-                                complementSummary(item, "meio")
-                            )}
+                    complementSummary(item, "meio")
+                )}
                         </p>
 
                         <p>
                             <b>Cobertura:</b>
                             ${esc(
-                                complementSummary(
-                                    item,
-                                    "cobertura"
-                                )
-                            )}
+                    complementSummary(
+                        item,
+                        "cobertura"
+                    )
+                )}
                         </p>
 
                         <div class="acoes-item-sacola">
@@ -430,9 +443,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                         <strong>
                             ${money(
-                                item.preco_unitario *
-                                item.quantidade
-                            )}
+                    item.preco_unitario *
+                    item.quantidade
+                )}
                         </strong>
 
                     </div>
@@ -560,9 +573,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }, 3000);
         }
-    }
-
-    function message(text, type = "") {
+    } function message(text, type = "") {
         if (!d.addressStatus) {
             return;
         }
@@ -598,7 +609,68 @@ document.addEventListener("DOMContentLoaded", async () => {
         return data || [];
     }
 
-    function applyOperation(data) {
+    function saveOperationCache(data) {
+        try {
+            localStorage.setItem(
+                OPERATION_CACHE_KEY,
+                JSON.stringify({
+                    savedAt: Date.now(),
+                    data
+                })
+            );
+        } catch (error) {
+            console.warn(
+                "Não foi possível salvar o cardápio localmente.",
+                error
+            );
+        }
+    }
+
+    function readOperationCache() {
+        try {
+            const stored = JSON.parse(
+                localStorage.getItem(OPERATION_CACHE_KEY) || "null"
+            );
+
+            if (
+                !stored ||
+                !stored.data ||
+                !Number.isFinite(Number(stored.savedAt))
+            ) {
+                return null;
+            }
+
+            const age = Date.now() - Number(stored.savedAt);
+
+            if (
+                age < 0 ||
+                age > OPERATION_CACHE_MAX_AGE
+            ) {
+                localStorage.removeItem(
+                    OPERATION_CACHE_KEY
+                );
+
+                return null;
+            }
+
+            return stored.data;
+        } catch (error) {
+            console.warn(
+                "O cardápio salvo não pôde ser lido.",
+                error
+            );
+
+            return null;
+        }
+    }
+
+    function applyOperation(
+        data,
+        {
+            saveCache = true,
+            source = "supabase"
+        } = {}
+    ) {
         const sizes =
             data.tamanhos ||
             data.sizes ||
@@ -628,7 +700,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             null;
 
         if (
+            !Array.isArray(sizes) ||
             !sizes.length ||
+            !Array.isArray(districts) ||
             !districts.length ||
             !config
         ) {
@@ -639,18 +713,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         state.sizes = sizes;
 
-        state.complements = complements.filter(item =>
-            item.disponivel !== false &&
-            item.visivel !== false
-        );
+        state.complements =
+            Array.isArray(complements)
+                ? complements.filter(item =>
+                    item.disponivel !== false &&
+                    item.visivel !== false
+                )
+                : [];
 
         state.districts = districts.filter(item =>
             item.ativo !== false
         );
 
-        state.schedules = schedules;
+        state.schedules =
+            Array.isArray(schedules)
+                ? schedules
+                : [];
+
         state.config = config;
         state.operationReady = true;
+        state.operationSource = source;
 
         state.districtMap.clear();
 
@@ -677,123 +759,229 @@ document.addEventListener("DOMContentLoaded", async () => {
             .sort((a, b) =>
                 b.length - a.length
             );
-    }
 
-    async function loadOperation() {
-        if (!sb) {
-            throw new Error(
-                "Supabase não carregado."
-            );
-        }
-
-        try {
-            const [
-                sizes,
-                complements,
-                districts,
-                schedules,
-                configRows
-            ] = await Promise.all([
-                table(
-                    "tamanhos_acai",
-                    query =>
-                        query.order(
-                            "ordem",
-                            { ascending: true }
-                        )
-                ),
-
-                table(
-                    "complementos",
-                    query =>
-                        query
-                            .eq("disponivel", true)
-                            .eq("visivel", true)
-                            .order(
-                                "ordem",
-                                { ascending: true }
-                            )
-                ),
-
-                table(
-                    "bairros_entrega",
-                    query =>
-                        query
-                            .eq("ativo", true)
-                            .order(
-                                "ordem",
-                                { ascending: true }
-                            )
-                ),
-
-                table(
-                    "horarios_funcionamento",
-                    query =>
-                        query.order(
-                            "dia_semana",
-                            { ascending: true }
-                        )
-                ),
-
-                table(
-                    "configuracoes_loja",
-                    query =>
-                        query
-                            .eq("id", 1)
-                            .limit(1)
-                )
-            ]);
-
-            applyOperation({
+        if (saveCache) {
+            saveOperationCache({
                 tamanhos: sizes,
                 complementos: complements,
                 bairros: districts,
                 horarios: schedules,
-                configuracao_loja: configRows[0]
+                configuracao_loja: config
             });
+        }
+    }
 
-            return;
+    function applyCachedOperation() {
+        const cached = readOperationCache();
+
+        if (!cached) {
+            return false;
+        }
+
+        try {
+            applyOperation(
+                cached,
+                {
+                    saveCache: false,
+                    source: "cache"
+                }
+            );
+
+            console.info(
+                "Cardápio carregado da última versão válida."
+            );
+
+            return true;
+        } catch (error) {
+            console.warn(
+                "A versão salva do cardápio não é válida.",
+                error
+            );
+
+            try {
+                localStorage.removeItem(
+                    OPERATION_CACHE_KEY
+                );
+            } catch (_) {
+                // Não impede uma nova tentativa online.
+            }
+
+            return false;
+        }
+    }
+
+    async function loadOperationDirect() {
+        const [
+            sizes,
+            complements,
+            districts,
+            schedules,
+            configRows
+        ] = await Promise.all([
+            table(
+                "tamanhos_acai",
+                query =>
+                    query.order(
+                        "ordem",
+                        { ascending: true }
+                    )
+            ),
+
+            table(
+                "complementos",
+                query =>
+                    query
+                        .eq("disponivel", true)
+                        .eq("visivel", true)
+                        .order(
+                            "ordem",
+                            { ascending: true }
+                        )
+            ),
+
+            table(
+                "bairros_entrega",
+                query =>
+                    query
+                        .eq("ativo", true)
+                        .order(
+                            "ordem",
+                            { ascending: true }
+                        )
+            ),
+
+            table(
+                "horarios_funcionamento",
+                query =>
+                    query.order(
+                        "dia_semana",
+                        { ascending: true }
+                    )
+            ),
+
+            table(
+                "configuracoes_loja",
+                query =>
+                    query
+                        .eq("id", 1)
+                        .limit(1)
+            )
+        ]);
+
+        applyOperation({
+            tamanhos: sizes,
+            complementos: complements,
+            bairros: districts,
+            horarios: schedules,
+            configuracao_loja: configRows[0] || null
+        });
+    }
+
+    async function loadOperationFunction() {
+        const functionNames = [
+            "listar_operacao_publica",
+            "listar_operacao_site",
+            "obter_operacao_publica"
+        ];
+
+        let lastError = null;
+
+        for (const name of functionNames) {
+            const { data, error } =
+                await sb.rpc(name);
+
+            if (!error && data) {
+                applyOperation(data);
+                return;
+            }
+
+            if (error) {
+                lastError = error;
+            }
+
+            const errorMessage = String(
+                error?.message || ""
+            ).toLowerCase();
+
+            const missing =
+                error?.code === "PGRST202" ||
+                errorMessage.includes(
+                    "could not find the function"
+                ) ||
+                errorMessage.includes(
+                    "does not exist"
+                );
+
+            if (error && !missing) {
+                throw error;
+            }
+        }
+
+        throw (
+            lastError ||
+            new Error(
+                "Nenhuma função pública disponível."
+            )
+        );
+    }
+
+    async function loadOperationOnce() {
+        sb =
+            window.azurySupabase ||
+            sb;
+
+        if (!sb) {
+            throw new Error(
+                "Supabase ainda não carregado."
+            );
+        }
+
+        try {
+            await loadOperationDirect();
         } catch (directError) {
             console.warn(
-                "Leitura direta da operação indisponível; tentando função pública.",
+                "Leitura direta indisponível; tentando função pública.",
                 directError
             );
 
-            const functionNames = [
-                "listar_operacao_publica",
-                "listar_operacao_site",
-                "obter_operacao_publica"
-            ];
+            await loadOperationFunction();
+        }
+    }
 
-            for (const name of functionNames) {
-                const { data, error } =
-                    await sb.rpc(name);
+    async function loadOperation() {
+        let lastError = null;
 
-                if (!error && data) {
-                    applyOperation(data);
-                    return;
-                }
+        for (
+            let attempt = 0;
+            attempt < OPERATION_RETRY_DELAYS.length;
+            attempt += 1
+        ) {
+            const delay =
+                OPERATION_RETRY_DELAYS[attempt];
 
-                const errorMessage = String(
-                    error?.message || ""
-                ).toLowerCase();
-
-                const missing =
-                    error?.code === "PGRST202" ||
-                    errorMessage.includes(
-                        "could not find the function"
-                    ) ||
-                    errorMessage.includes(
-                        "does not exist"
-                    );
-
-                if (error && !missing) {
-                    throw error;
-                }
+            if (delay > 0) {
+                await wait(delay);
             }
 
-            throw directError;
+            try {
+                await loadOperationOnce();
+                return;
+            } catch (error) {
+                lastError = error;
+
+                console.warn(
+                    `Tentativa ${attempt + 1} de carregar o cardápio falhou.`,
+                    error
+                );
+            }
         }
+
+        throw (
+            lastError ||
+            new Error(
+                "Não foi possível carregar a operação."
+            )
+        );
     }
 
     function renderSizes() {
@@ -901,9 +1089,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <label
                         class="opcao-tamanho-produto
                         ${available
-                            ? ""
-                            : "opcao-tamanho-indisponivel"
-                        }"
+                        ? ""
+                        : "opcao-tamanho-indisponivel"
+                    }"
                     >
                         <input
                             type="radio"
@@ -912,9 +1100,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                             data-preco-base="${esc(item.preco_base)}"
                             ${available ? "" : "disabled"}
                             ${index === 0 && available
-                                ? "checked"
-                                : ""
-                            }
+                        ? "checked"
+                        : ""
+                    }
                         >
 
                         <span>
@@ -924,9 +1112,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                             <small>
                                 ${available
-                                    ? money(item.preco_base)
-                                    : "Em breve"
-                                }
+                        ? money(item.preco_base)
+                        : "Em breve"
+                    }
                             </small>
                         </span>
                     </label>
@@ -1116,9 +1304,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 title: "ABERTO AGORA",
 
                 text:
-                    `Faça seu pedido — atendimento até ${
-                        timeLabel(today?.fecha_as) ||
-                        "00:00"
+                    `Faça seu pedido — atendimento até ${timeLabel(today?.fecha_as) ||
+                    "00:00"
                     }.`,
 
                 alert: ""
@@ -1228,7 +1415,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                         : "Sacola vazia";
         }
     }
-
     function updateStore() {
         const status = storeState();
 
@@ -1756,7 +1942,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             d.number?.value.trim()
         );
     }
-
     async function createOrder() {
         if (
             state.sending ||
@@ -1866,7 +2051,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 troco_para:
                     pay === "dinheiro" &&
-                    d.change?.value
+                        d.change?.value
                         ? Number(
                             String(d.change.value)
                                 .replace(",", ".")
@@ -1983,9 +2168,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 `CEP: ${d.zip.value.trim()}\n` +
 
-                `Complemento: ${
-                    d.addressExtra?.value.trim() ||
-                    "Não informado"
+                `Complemento: ${d.addressExtra?.value.trim() ||
+                "Não informado"
                 }\n\n` +
 
                 `💳 *Forma de pagamento:*\n` +
@@ -2163,36 +2347,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         );
     }
-
-    try {
+    function ensureDistrictField() {
         if (
-            !d.districtId &&
-            d.addressOk
+            d.districtId ||
+            !d.addressOk
         ) {
-            const hidden =
-                document.createElement("input");
-
-            hidden.type = "hidden";
-            hidden.id = "bairroEntregaId";
-            hidden.value = "";
-
-            d.addressOk.insertAdjacentElement(
-                "afterend",
-                hidden
-            );
-
-            d.districtId = hidden;
+            return;
         }
 
-        await loadOperation();
+        const hidden =
+            document.createElement("input");
 
-        renderSizes();
-        renderComplements();
-        loadCart();
-        updateWhatsapp();
-        setupZip();
-        bind();
+        hidden.type = "hidden";
+        hidden.id = "bairroEntregaId";
+        hidden.value = "";
 
+        d.addressOk.insertAdjacentElement(
+            "afterend",
+            hidden
+        );
+
+        d.districtId = hidden;
+    }
+
+    function selectFirstAvailableSize() {
         const firstAvailable =
             state.sizes.find(item =>
                 item.disponivel === true &&
@@ -2205,7 +2383,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                 firstAvailable.preco_base
             );
         }
+    }
 
+    function initializeInterface() {
+        if (state.interfaceReady) {
+            renderSizes();
+            renderComplements();
+            updateWhatsapp();
+            renderCart();
+            updateStore();
+            selectFirstAvailableSize();
+            return;
+        }
+
+        state.interfaceReady = true;
+
+        renderSizes();
+        renderComplements();
+        loadCart();
+        updateWhatsapp();
+        setupZip();
+        bind();
+        selectFirstAvailableSize();
         renderCart();
         showStep(1);
         updateStore();
@@ -2214,32 +2413,118 @@ document.addEventListener("DOMContentLoaded", async () => {
             updateStore,
             30000
         );
-    } catch (error) {
-        console.error(
-            "Erro ao carregar operação Azury:",
-            error
-        );
+    }
 
+    function showOperationUnavailable() {
         state.operationReady = false;
 
         if (d.storeTitle) {
             d.storeTitle.textContent =
-                "CARDÁPIO INDISPONÍVEL";
+                "CARDÁPIO TEMPORARIAMENTE INDISPONÍVEL";
         }
 
         if (d.storeMsg) {
             d.storeMsg.textContent =
-                "Atualize a página em alguns instantes.";
+                "Estamos tentando restabelecer o cardápio automaticamente.";
         }
+
+        d.store?.classList.remove(
+            "aberta"
+        );
+
+        d.store?.classList.add(
+            "fechada"
+        );
 
         $$(".btn-montar").forEach(button => {
             button.disabled = true;
             button.textContent =
-                "Tente novamente";
+                "Carregando cardápio...";
         });
 
-        alert(
-            "Não foi possível carregar o cardápio do Supabase. Atualize a página em alguns instantes."
+        if (d.add) {
+            d.add.disabled = true;
+        }
+
+        if (d.next) {
+            d.next.disabled = true;
+        }
+
+        if (d.send) {
+            d.send.disabled = true;
+        }
+    }
+
+    function stopOperationRecovery() {
+        if (!state.recoveryTimer) {
+            return;
+        }
+
+        window.clearInterval(
+            state.recoveryTimer
         );
+
+        state.recoveryTimer = null;
+    }
+
+    async function recoverOperation() {
+        if (state.refreshingOperation) {
+            return;
+        }
+
+        state.refreshingOperation = true;
+
+        try {
+            await loadOperation();
+
+            initializeInterface();
+            stopOperationRecovery();
+
+            console.info(
+                "Conexão com o cardápio restabelecida."
+            );
+        } catch (error) {
+            console.warn(
+                "O cardápio continua aguardando reconexão.",
+                error
+            );
+        } finally {
+            state.refreshingOperation = false;
+        }
+    }
+
+    function startOperationRecovery() {
+        if (state.recoveryTimer) {
+            return;
+        }
+
+        state.recoveryTimer =
+            window.setInterval(
+                recoverOperation,
+                OPERATION_RECOVERY_INTERVAL
+            );
+    }
+
+    ensureDistrictField();
+
+    try {
+        await loadOperation();
+        initializeInterface();
+    } catch (error) {
+        console.error(
+            "Falha inicial ao carregar a operação Azury:",
+            error
+        );
+
+        const cacheLoaded =
+            applyCachedOperation();
+
+        if (cacheLoaded) {
+            initializeInterface();
+        } else {
+            showOperationUnavailable();
+        }
+
+        startOperationRecovery();
     }
 });
