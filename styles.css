@@ -6,16 +6,12 @@ body {
     min-width: 320px;
 
     background:
-        radial-gradient(
-            circle at top right,
+        radial-gradient(circle at top right,
             rgba(0, 81, 255, 0.06),
-            transparent 35%
-        ),
-        radial-gradient(
-            circle at bottom left,
+            transparent 35%),
+        radial-gradient(circle at bottom left,
             rgba(212, 175, 55, 0.08),
-            transparent 30%
-        ),
+            transparent 30%),
         #f8f9fc;
 
     font-family:

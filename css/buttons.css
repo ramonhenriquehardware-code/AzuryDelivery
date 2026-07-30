@@ -1,60 +1,61 @@
-.btn{
+.btn {
 
-    width:100%;
+    width: 100%;
 
-    height:56px;
+    height: 56px;
 
-    border:none;
+    border: none;
 
-    border-radius:16px;
+    border-radius: 16px;
 
-    background:var(--cor-principal);
+    background: var(--cor-principal);
 
-    color:#fff;
+    color: #fff;
 
-    font-size:16px;
+    font-size: 16px;
 
-    font-weight:700;
+    font-weight: 700;
 
-    cursor:pointer;
+    cursor: pointer;
 
-    box-shadow:0 10px 25px rgba(0,81,255,.25);
+    box-shadow: 0 10px 25px rgba(0, 81, 255, .25);
 
-    transition:.25s;
-
-}
-
-.btn:hover{
-
-    transform:translateY(-2px);
+    transition: .25s;
 
 }
 
-.btn-outline{
+.btn:hover {
 
-    background:transparent;
-
-    border:2px solid var(--cor-principal);
-
-    color:var(--cor-principal);
+    transform: translateY(-2px);
 
 }
 
-.btn-outline:hover{
+.btn-outline {
 
-    background:var(--cor-principal);
+    background: transparent;
 
-    color:#fff;
+    border: 2px solid var(--cor-principal);
+
+    color: var(--cor-principal);
+
+}
+
+.btn-outline:hover {
+
+    background: var(--cor-principal);
+
+    color: #fff;
 
 }
 
-.btn-light{
+.btn-light {
 
-    background:#fff;
+    background: #fff;
 
-    color:var(--cor-principal);
+    color: var(--cor-principal);
 
 }
+
 #btnAdicionarPontos {
 
     width: 100%;

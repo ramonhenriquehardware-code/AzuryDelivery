@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Azury</title>
 
     <meta name="description"
@@ -20,29 +19,12 @@
     <link rel="stylesheet" href="../css/cta.css">
     <link rel="stylesheet" href="../css/footer.css">
     <link rel="stylesheet" href="../styles.css">
-
-    <style>
-        .header-site .logo .coroa-header {
-            width: 76px;
-            height: 50px;
-            display: block;
-            flex-shrink: 0;
-            overflow: visible;
-        }
-
-        @media (max-width: 520px) {
-            .header-site .logo .coroa-header {
-                width: 56px;
-                height: 38px;
-            }
-        }
-    </style>
 </head>
 
 <body>
 
     <!-- CABEÇALHO -->
-    <header class="header-site">
+    <header class="header-site" id="headerSite">
 
         <a href="#home" class="logo" aria-label="Azury - Ir para o início">
 
@@ -64,23 +46,16 @@
                 </defs>
 
                 <path d="M25 116 L42 43 L91 87 L128 20 L165 87 L214 43 L231 116 Z" fill="url(#ouroHeader)"
-                    stroke="#8f5700" stroke-width="5" stroke-linejoin="round">
-                </path>
+                    stroke="#8f5700" stroke-width="5" stroke-linejoin="round"></path>
 
                 <path d="M35 114 C68 102 98 105 128 116 C158 105 188 102 221 114
                        L216 136 C182 128 160 132 128 142
                        C96 132 74 128 40 136 Z" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="5"
-                    stroke-linejoin="round">
-                </path>
+                    stroke-linejoin="round"></path>
 
-                <circle cx="42" cy="43" r="8" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4">
-                </circle>
-
-                <circle cx="128" cy="20" r="9" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4">
-                </circle>
-
-                <circle cx="214" cy="43" r="8" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4">
-                </circle>
+                <circle cx="42" cy="43" r="8" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4"></circle>
+                <circle cx="128" cy="20" r="9" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4"></circle>
+                <circle cx="214" cy="43" r="8" fill="url(#ouroHeader)" stroke="#8f5700" stroke-width="4"></circle>
 
                 <path d="M128 74 L151 99 L128 125 L105 99 Z" fill="url(#azulHeader)" stroke="#ffffff" stroke-width="3">
                 </path>
@@ -94,33 +69,30 @@
 
         </a>
 
-        <nav class="menu-principal">
+        <nav class="menu-principal" id="menuPrincipal" aria-label="Menu principal">
 
-            <a href="#home">
-                Início
-            </a>
-
-            <a href="#Cardapio">
-                Cardápio
-            </a>
-
-            <a href="#Sobre">
-                Sobre
-            </a>
-
-            <a href="#Contato">
-                Contato
-            </a>
-
-            <a href="login.html" id="linkConta">
-                Entrar
-            </a>
+            <a href="#home">Início</a>
+            <a href="#Cardapio">Cardápio</a>
+            <a href="#Sobre">Sobre</a>
+            <a href="#Contato">Contato</a>
+            <a href="login.html" id="linkConta">Entrar</a>
 
         </nav>
 
-        <a href="#Cardapio" class="btn btn-header">
-            Peça Agora
-        </a>
+        <div class="header-actions">
+
+            <a href="#Cardapio" class="btn btn-header">
+                Peça Agora
+            </a>
+
+            <button type="button" class="menu-toggle" id="menuToggle" aria-label="Abrir menu"
+                aria-controls="menuPrincipal" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </div>
 
     </header>
 
@@ -128,17 +100,19 @@
     <!-- HERO -->
     <section id="home" class="hero-wrapper">
 
-        <article class="hero">
+        <article class="hero hero-azury">
 
-            <div>
+            <div class="hero-copy">
 
                 <h1>
-                    Açaí 300 ml por R$ 10,00
+                    Seu açaí,<br>
+                    do seu jeito.
                 </h1>
 
                 <p>
-                    Açaí 300 ml por R$ 10,00. Complementos cobrados à parte.
-                    Promoção de inauguração por tempo limitado.
+                    Monte seu copo com os complementos que você
+                    mais gosta e receba onde estiver. Qualidade,
+                    sabor e cuidado em cada pedido.
                 </p>
 
                 <nav class="hero-buttons">
@@ -148,8 +122,17 @@
                     </a>
 
                     <a href="https://wa.me/5511960220402" class="btn btn-outline js-pedido-horario"
-                        data-texto-aberto="🟢 WhatsApp" target="_blank" rel="noopener noreferrer">
-                        🟢 WhatsApp
+                        data-texto-aberto="Pedir pelo WhatsApp" target="_blank" rel="noopener noreferrer">
+                        <span class="hero-whatsapp-icon" aria-hidden="true">
+
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path
+                                    d="M12.04 2C6.52 2 2.03 6.49 2.03 12c0 1.76.46 3.48 1.33 5L2 22l5.12-1.34A9.96 9.96 0 0 0 12.04 22C17.56 22 22 17.51 22 12S17.56 2 12.04 2Zm0 18.31a8.3 8.3 0 0 1-4.23-1.16l-.3-.18-3.04.8.81-2.96-.2-.31A8.3 8.3 0 0 1 3.73 12c0-4.59 3.73-8.31 8.31-8.31A8.3 8.3 0 0 1 20.35 12c0 4.59-3.73 8.31-8.31 8.31Zm4.56-6.22c-.25-.13-1.48-.73-1.71-.81-.23-.08-.4-.13-.57.13-.17.25-.65.81-.8.98-.15.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.24-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.16.04-.31-.02-.44-.06-.12-.56-1.35-.77-1.85-.2-.49-.41-.42-.57-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1s.9 2.44 1.03 2.61c.12.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.48-.61 1.69-1.19.21-.59.21-1.09.15-1.19-.06-.11-.23-.17-.48-.3Z">
+                                </path>
+                            </svg>
+
+                        </span>
+                        Pedir pelo WhatsApp
                     </a>
 
                 </nav>
@@ -157,35 +140,127 @@
                 <ul class="hero-stats">
 
                     <li>
-                        <strong>Loja nova</strong>
 
-                        <span>
-                            Na região 👑
+                        <span class="hero-stat-icon" aria-hidden="true">
+
+                            <!-- Copo -->
+                            <svg viewBox="0 0 24 24" fill="none">
+
+                                <path d="M7.5 7.5h9l-1 11h-7l-1-11Z" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linejoin="round"></path>
+
+                                <path d="M6.5 7.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                                </path>
+
+                                <path d="M8.5 4.5h7l1 3h-9l1-3Z" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linejoin="round"></path>
+
+                                <path d="M10 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                                </path>
+
+                            </svg>
+
                         </span>
+
+                        <div>
+
+                            <strong>
+                                Monte como quiser
+                            </strong>
+
+                            <span>
+                                Diversas combinações
+                            </span>
+
+                        </div>
+
                     </li>
 
-                    <li>
-                        <strong>14 opções</strong>
 
-                        <span>
-                            De complementos 🍓
+                    <li>
+
+                        <span class="hero-stat-icon" aria-hidden="true">
+
+                            <!-- Folha -->
+                            <svg viewBox="0 0 24 24" fill="none">
+
+                                <path
+                                    d="M19 4.5C12.5 4.5 7 7.2 5.2 12.1c-.9 2.4.2 5.1 2.5 6.2 2.2 1.1 5 .4 6.4-1.7C17.2 12.1 18.5 8.4 19 4.5Z"
+                                    stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+
+                                <path d="M6.5 18c2.4-3.6 5.5-6.5 9.7-8.7" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round"></path>
+
+                            </svg>
+
                         </span>
+
+                        <div>
+
+                            <strong>
+                                Ingredientes selecionados
+                            </strong>
+
+                            <span>
+                                Qualidade em cada copo
+                            </span>
+
+                        </div>
+
                     </li>
 
-                    <li>
-                        <strong>Delivery</strong>
 
-                        <span>
-                            Exclusivo 🛵
+                    <li>
+
+                        <span class="hero-stat-icon" aria-hidden="true">
+
+                            <!-- Moto -->
+                            <svg viewBox="0 0 24 24" fill="none">
+
+                                <circle cx="6" cy="18" r="2.2" stroke="currentColor" stroke-width="1.8"></circle>
+
+                                <circle cx="18" cy="18" r="2.2" stroke="currentColor" stroke-width="1.8"></circle>
+
+                                <path d="M8.2 18h4.1l2.2-5H11l-2.8 5Z" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linejoin="round"></path>
+
+                                <path d="M14.5 13h2.2l2 3" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" stroke-linejoin="round"></path>
+
+                                <path d="M15.5 10.5h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                                </path>
+
+                                <path d="M9.2 12H6.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                                </path>
+
+                            </svg>
+
                         </span>
+
+                        <div>
+
+                            <strong>
+                                Exclusivo para delivery
+                            </strong>
+
+                            <span>
+                                Peça sem sair de casa
+                            </span>
+
+                        </div>
+
                     </li>
 
                 </ul>
 
             </div>
 
-            <div>
-                <img src="../Imagens/tamanho certo.png" alt="Copo de açaí Azury">
+            <div class="hero-media">
+
+                <div class="hero-image-card">
+                    <img src="../Imagens/copo-azury.png" alt="Copo de açaí Azury">
+                </div>
+
             </div>
 
         </article>
@@ -204,8 +279,7 @@
 
         <div id="statusLoja" class="status-loja" role="status" aria-live="polite">
 
-            <span class="status-loja-indicador" aria-hidden="true">
-            </span>
+            <span class="status-loja-indicador" aria-hidden="true"></span>
 
             <div>
                 <strong id="statusLojaTitulo">
@@ -227,9 +301,7 @@
                     <img src="../Imagens/Copo vazio de 300ml.png" alt="Copo personalizado de açaí de 300 ml">
                 </div>
 
-                <span class="badge">
-                    Promoção
-                </span>
+                <span class="badge">Promoção</span>
 
                 <h3>Monte o Seu • 300ml</h3>
 
@@ -255,9 +327,7 @@
                     <img src="../Imagens/Copo Vazio 400 ml.png" alt="Copo personalizado de açaí de 400 ml">
                 </div>
 
-                <span class="badge">
-                    Alta demanda
-                </span>
+                <span class="badge">Alta demanda</span>
 
                 <h3>Monte o Seu • 400ml</h3>
 
@@ -283,9 +353,7 @@
                     <img src="../Imagens/Copo vazio 500ml.png" alt="Copo personalizado de açaí de 500 ml">
                 </div>
 
-                <span class="badge badge-em-breve">
-                    Em breve
-                </span>
+                <span class="badge badge-em-breve">Em breve</span>
 
                 <h3>Monte o Seu • 500ml</h3>
 
@@ -311,9 +379,7 @@
                     <img src="../Imagens/Copo vazio 700ml.png" alt="Copo personalizado de açaí de 700 ml">
                 </div>
 
-                <span class="badge">
-                    Tamanho família
-                </span>
+                <span class="badge">Tamanho família</span>
 
                 <h3>Monte o Seu • 700ml</h3>
 
@@ -356,27 +422,19 @@
             <ul>
 
                 <li>
-                    <strong>
-                        ✓ Ingredientes selecionados
-                    </strong>
+                    <strong>✓ Ingredientes selecionados</strong>
                 </li>
 
                 <li>
-                    <strong>
-                        ✓ Montagem caprichada
-                    </strong>
+                    <strong>✓ Montagem caprichada</strong>
                 </li>
 
                 <li>
-                    <strong>
-                        ✓ Exclusivo para delivery
-                    </strong>
+                    <strong>✓ Exclusivo para delivery</strong>
                 </li>
 
                 <li>
-                    <strong>
-                        ✓ Pagamento fácil e seguro
-                    </strong>
+                    <strong>✓ Pagamento fácil e seguro</strong>
                 </li>
 
             </ul>
@@ -412,9 +470,7 @@
 
             <section class="footer-coluna">
 
-                <h2>
-                    👑 Azury
-                </h2>
+                <h2>👑 Azury</h2>
 
                 <p>
                     Sabor, cuidado e qualidade em cada pedido.
@@ -424,30 +480,16 @@
 
             <section class="footer-coluna">
 
-                <h3>
-                    Contato
-                </h3>
+                <h3>Contato</h3>
 
-                <p>
-                    📲 (11) 96022-0402
-                </p>
+                <p>📲 (11) 96022-0402</p>
+                <p>🕒 Terça a domingo, das 15:00 às 00:00</p>
+                <p>📍 Delivery em bairros selecionados da região</p>
+                <p>Consulte a disponibilidade informando seu CEP</p>
 
-                <p>
-                    🕒 Terça a domingo, das 15:00 às 00:00
-                </p>
-
-                <p>
-                    📍 Delivery em bairros selecionados da região
-                </p>
-
-                <p>
-                    Consulte a disponibilidade informando seu CEP
-                </p>
                 <div class="aviso-delivery-rodape">
 
-                    <strong>
-                        🛵 EXCLUSIVO PARA DELIVERY
-                    </strong>
+                    <strong>🛵 EXCLUSIVO PARA DELIVERY</strong>
 
                     <span>
                         Não possuímos atendimento local.
@@ -459,24 +501,15 @@
 
             <section class="footer-coluna">
 
-                <h3>
-                    Redes Sociais
-                </h3>
+                <h3>Redes Sociais</h3>
 
                 <a href="https://www.instagram.com/azury.oficial" target="_blank" rel="noopener noreferrer"
                     class="instagram-link">
 
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-
-                        <rect x="3" y="3" width="18" height="18" rx="5">
-                        </rect>
-
-                        <circle cx="12" cy="12" r="4">
-                        </circle>
-
-                        <circle cx="17.5" cy="6.5" r="1" class="instagram-ponto">
-                        </circle>
-
+                        <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <circle cx="17.5" cy="6.5" r="1" class="instagram-ponto"></circle>
                     </svg>
 
                     Instagram
@@ -492,13 +525,9 @@
                 <a href="https://wa.me/message/K3XMWHT77GE2C1" class="parceria-kasa-surf parceria-link" target="_blank"
                     rel="noopener noreferrer" aria-label="Abrir o WhatsApp da Ksa Do Surf">
 
-                    <span class="parceria-emoji" aria-hidden="true">
-                        🏄
-                    </span>
+                    <span class="parceria-emoji" aria-hidden="true">🏄</span>
 
-                    <strong>
-                        Ksa Do Surf
-                    </strong>
+                    <strong>Ksa Do Surf</strong>
 
                 </a>
 
@@ -524,9 +553,7 @@
 
             <header class="cabecalho-pedido">
 
-                <h2>
-                    🥤 Monte o Seu Açaí
-                </h2>
+                <h2>🥤 Monte o Seu Açaí</h2>
 
                 <p>
                     Monte cada copo, adicione à sacola e finalize tudo
@@ -536,16 +563,12 @@
                 <ol class="indicador-etapas" aria-label="Etapas do pedido">
 
                     <li class="etapa-indicador ativa" data-indicador-etapa="1">
-
                         <span>1</span>
-
                         Pedido e sacola
                     </li>
 
                     <li class="etapa-indicador" data-indicador-etapa="2">
-
                         <span>2</span>
-
                         Entrega e pagamento
                     </li>
 
@@ -559,61 +582,46 @@
 
                 <div class="grupo-monte-seu">
 
-                    <h3>
-                        Escolha o tamanho do copo
-                    </h3>
+                    <h3>Escolha o tamanho do copo</h3>
 
                     <div class="opcoes-tamanho-produto opcoes-tamanho-monte-seu">
 
                         <label class="opcao-tamanho-produto">
-
                             <input type="radio" name="tamanhoMonteSeuOpcao" value="300" data-preco-base="10.00" checked>
-
                             <span>
                                 <strong>300 ml</strong>
                                 <small>R$ 10,00</small>
                             </span>
-
                         </label>
 
                         <label class="opcao-tamanho-produto">
-
                             <input type="radio" name="tamanhoMonteSeuOpcao" value="400" data-preco-base="14.90">
-
                             <span>
                                 <strong>400 ml</strong>
                                 <small>R$ 14,90</small>
                             </span>
-
                         </label>
 
                         <label class="opcao-tamanho-produto opcao-tamanho-indisponivel">
-
                             <input type="radio" name="tamanhoMonteSeuOpcao" value="500" data-preco-base="18.90"
                                 disabled>
-
                             <span>
                                 <strong>500 ml</strong>
                                 <small>Em breve</small>
                             </span>
-
                         </label>
 
                         <label class="opcao-tamanho-produto">
-
                             <input type="radio" name="tamanhoMonteSeuOpcao" value="700" data-preco-base="24.90">
-
                             <span>
                                 <strong>700 ml</strong>
                                 <small>R$ 24,90</small>
                             </span>
-
                         </label>
 
                     </div>
 
                     <input type="hidden" id="tamanhoMonteSeu" value="300">
-
                     <input type="hidden" id="precoBaseMonteSeu" value="10.00">
 
                 </div>
@@ -621,9 +629,7 @@
 
                 <div class="grupo-monte-seu estrutura-acai">
 
-                    <h3>
-                        Montagem do copo
-                    </h3>
+                    <h3>Montagem do copo</h3>
 
                     <p>
                         Metade do açaí no fundo, complementos no meio,
@@ -639,39 +645,20 @@
 
 
                 <div class="grupo-monte-seu">
-
-                    <h3>
-                        Complementos no meio
-                    </h3>
-
-                    <div id="complementosMeio" class="lista-complementos">
-                    </div>
-
+                    <h3>Complementos no meio</h3>
+                    <div id="complementosMeio" class="lista-complementos"></div>
                 </div>
 
 
                 <div class="grupo-monte-seu">
-
-                    <h3>
-                        Complementos na cobertura
-                    </h3>
-
-                    <div id="complementosTopo" class="lista-complementos">
-                    </div>
-
+                    <h3>Complementos na cobertura</h3>
+                    <div id="complementosTopo" class="lista-complementos"></div>
                 </div>
 
 
                 <div class="resumo-etapa">
-
-                    <span>
-                        Subtotal deste copo
-                    </span>
-
-                    <strong id="subtotalMonteSeu">
-                        R$ 10,00
-                    </strong>
-
+                    <span>Subtotal deste copo</span>
+                    <strong id="subtotalMonteSeu">R$ 10,00</strong>
                 </div>
 
 
@@ -679,9 +666,7 @@
                     Adicionar à sacola
                 </button>
 
-
-                <p id="sacolaFeedback" class="feedback-sacola" role="status" aria-live="polite">
-                </p>
+                <p id="sacolaFeedback" class="feedback-sacola" role="status" aria-live="polite"></p>
 
 
                 <section class="sacola-pedido" aria-labelledby="tituloSacolaPedido">
@@ -689,15 +674,10 @@
                     <div class="cabecalho-sacola">
 
                         <div>
-
-                            <h3 id="tituloSacolaPedido">
-                                🛍️ Sua sacola
-                            </h3>
-
+                            <h3 id="tituloSacolaPedido">🛍️ Sua sacola</h3>
                             <small>
                                 Adicione quantos copos desejar antes de continuar.
                             </small>
-
                         </div>
 
                         <span id="quantidadeSacola" class="contador-sacola">
@@ -708,36 +688,22 @@
 
 
                     <p id="sacolaVazia" class="sacola-vazia">
-
                         Sua sacola está vazia. Monte um açaí e toque em
                         “Adicionar à sacola”.
-
                     </p>
 
-
-                    <div id="listaSacolaPedido" class="lista-sacola">
-                    </div>
-
+                    <div id="listaSacolaPedido" class="lista-sacola"></div>
 
                     <div class="resumo-sacola">
-
-                        <span>
-                            Subtotal da sacola
-                        </span>
-
-                        <strong id="subtotalSacolaPedido">
-                            R$ 0,00
-                        </strong>
-
+                        <span>Subtotal da sacola</span>
+                        <strong id="subtotalSacolaPedido">R$ 0,00</strong>
                     </div>
 
                 </section>
 
 
                 <button type="button" id="btnContinuarPedido" class="btn btn-continuar-pedido" disabled>
-
                     Adicione um item à sacola
-
                 </button>
 
             </section>
@@ -746,101 +712,64 @@
             <!-- ETAPA 2 -->
             <section id="painelEntrega" class="painel-pedido" data-etapa="2" hidden>
 
-
                 <div class="grupo-monte-seu dados-entrega">
 
-                    <h3>
-                        Endereço de entrega
-                    </h3>
+                    <h3>Endereço de entrega</h3>
 
                     <p class="aviso-area-entrega">
                         Entregamos em bairros selecionados, em um raio máximo
                         de 8 km do endereço de produção.
                     </p>
 
-
                     <label>
-
                         Nome completo
-
                         <input type="text" id="nomeCliente" placeholder="Digite seu nome completo" autocomplete="name">
-
                     </label>
-
 
                     <label>
-
                         Telefone / WhatsApp
-
                         <input type="tel" id="telefoneCliente" placeholder="(11) 99999-9999" autocomplete="tel">
-
                     </label>
-
 
                     <div class="linha-entrega">
 
                         <label>
-
                             CEP
-
                             <input type="text" id="cepCliente" placeholder="00000-000" maxlength="9" inputmode="numeric"
                                 autocomplete="postal-code">
-
                         </label>
-
 
                         <label>
-
                             Número
-
                             <input type="text" id="numeroCliente" placeholder="123" autocomplete="address-line2">
-
                         </label>
 
                     </div>
 
-
                     <label>
-
                         Rua ou Avenida
-
                         <input type="text" id="ruaCliente" placeholder="Preenchida após validar o CEP"
                             autocomplete="address-line1" readonly>
-
                     </label>
 
-
                     <label>
-
                         Bairro
-
                         <input type="text" id="bairroCliente" placeholder="Preenchido após validar o CEP"
                             autocomplete="address-level3" readonly>
-
                     </label>
-
 
                     <label>
-
                         Complemento — opcional
-
                         <input type="text" id="complementoCliente"
                             placeholder="Apartamento, bloco, casa, referência...">
-
                     </label>
 
-
                     <div id="statusEndereco" class="status-endereco" role="status" aria-live="polite">
-
                         Informe um CEP válido para calcular a entrega.
-
                     </div>
 
-
                     <input type="hidden" id="enderecoValidado" value="false">
-
                     <input type="hidden" id="bairroEntregaId" value="">
-
                     <input type="hidden" id="taxaEntrega" value="0">
 
                 </div>
@@ -848,112 +777,61 @@
 
                 <div class="grupo-monte-seu">
 
-                    <h3>
-                        Forma de pagamento
-                    </h3>
-
+                    <h3>Forma de pagamento</h3>
 
                     <div class="lista-complementos opcoes-pagamento">
 
                         <label>
-
                             <input type="radio" name="formaPagamentoMonteSeu" value="Cartão de crédito">
-
                             Cartão de crédito
-
                         </label>
 
-
                         <label>
-
                             <input type="radio" name="formaPagamentoMonteSeu" value="Cartão de débito">
-
                             Cartão de débito
-
                         </label>
 
-
                         <label>
-
                             <input type="radio" name="formaPagamentoMonteSeu" value="Pix">
-
                             Pix
-
                         </label>
 
-
                         <label>
-
                             <input type="radio" name="formaPagamentoMonteSeu" value="Dinheiro">
-
                             Dinheiro
-
                         </label>
 
                     </div>
 
-
                     <label id="campoTrocoContainer">
-
                         Troco para (opcional, somente dinheiro)
-
                         <input type="text" id="trocoParaCliente" placeholder="Ex.: 50,00" inputmode="decimal">
-
                     </label>
 
                 </div>
 
 
                 <div class="grupo-monte-seu resumo-itens-entrega">
-
-                    <h3>
-                        Itens da sacola
-                    </h3>
-
-                    <div id="listaResumoSacola">
-                    </div>
-
+                    <h3>Itens da sacola</h3>
+                    <div id="listaResumoSacola"></div>
                 </div>
 
 
                 <div class="resumo-pedido-final">
 
                     <div>
-
-                        <span>
-                            Produtos
-                        </span>
-
-                        <strong id="resumoSubtotalPedido">
-                            R$ 0,00
-                        </strong>
-
+                        <span>Produtos</span>
+                        <strong id="resumoSubtotalPedido">R$ 0,00</strong>
                     </div>
-
 
                     <div>
-
-                        <span>
-                            Taxa de entrega
-                        </span>
-
-                        <strong id="resumoTaxaEntrega">
-                            A calcular
-                        </strong>
-
+                        <span>Taxa de entrega</span>
+                        <strong id="resumoTaxaEntrega">A calcular</strong>
                     </div>
 
-
                     <div class="linha-total-final">
-
-                        <span>
-                            Total
-                        </span>
-
-                        <strong id="totalMonteSeu">
-                            R$ 0,00
-                        </strong>
-
+                        <span>Total</span>
+                        <strong id="totalMonteSeu">R$ 0,00</strong>
                     </div>
 
                 </div>
@@ -962,16 +840,11 @@
                 <div class="acoes-etapas">
 
                     <button type="button" id="btnVoltarPedido" class="btn btn-outline">
-
                         Voltar
-
                     </button>
 
-
                     <button type="button" id="btnEnviarMonteSeu" class="btn">
-
                         Pedir pelo WhatsApp
-
                     </button>
 
                 </div>
@@ -988,6 +861,58 @@
     <script src="./js/supabase.js"></script>
     <script src="./js/sessao.js"></script>
     <script src="./js/cardapio-supabase.js"></script>
+
+    <script>
+        (function () {
+            const header = document.getElementById("headerSite");
+            const menu = document.getElementById("menuPrincipal");
+            const botao = document.getElementById("menuToggle");
+
+            if (!header || !menu || !botao) {
+                return;
+            }
+
+            function fecharMenu() {
+                header.classList.remove("menu-open");
+                botao.setAttribute("aria-expanded", "false");
+                botao.setAttribute("aria-label", "Abrir menu");
+            }
+
+            function abrirMenu() {
+                header.classList.add("menu-open");
+                botao.setAttribute("aria-expanded", "true");
+                botao.setAttribute("aria-label", "Fechar menu");
+            }
+
+            botao.addEventListener("click", function () {
+                if (header.classList.contains("menu-open")) {
+                    fecharMenu();
+                } else {
+                    abrirMenu();
+                }
+            });
+
+            menu.querySelectorAll("a").forEach(function (link) {
+                link.addEventListener("click", fecharMenu);
+            });
+
+            document.addEventListener("click", function (event) {
+                if (window.innerWidth > 900) {
+                    return;
+                }
+
+                if (!header.contains(event.target)) {
+                    fecharMenu();
+                }
+            });
+
+            window.addEventListener("resize", function () {
+                if (window.innerWidth > 900) {
+                    fecharMenu();
+                }
+            });
+        })();
+    </script>
 
 </body>
 

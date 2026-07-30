@@ -11,15 +11,22 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
+
     gap: 36px;
 
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 99;
+    z-index: 1000;
 
-    background: #ffffff;
-    box-shadow: var(--shadow);
+    background: rgba(255, 255, 255, 0.98);
+
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+    box-shadow:
+        0 8px 28px rgba(20, 35, 70, 0.08);
+
+    backdrop-filter: blur(14px);
 }
 
 
@@ -32,33 +39,19 @@
 
     display: inline-flex;
     align-items: center;
+
     gap: 8px;
 
-    color: #222222;
+    color: #202020;
 
     font-size: 34px;
     font-weight: 900;
     line-height: 1;
 
+    letter-spacing: -1.1px;
+
     text-decoration: none;
     white-space: nowrap;
-}
-
-
-.header-site .logo img {
-    width: 72px;
-    height: 72px;
-
-    display: block;
-    flex-shrink: 0;
-
-    object-fit: contain;
-    object-position: center;
-
-    transform: scale(1.55);
-    transform-origin: center;
-
-    margin-right: 5px;
 }
 
 
@@ -73,6 +66,11 @@
 }
 
 
+.header-site .logo span {
+    display: block;
+}
+
+
 /* =========================================
    MENU PRINCIPAL
 ========================================= */
@@ -83,11 +81,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
+
     gap: 38px;
 }
 
 
 .header-site .menu-principal a {
+    position: relative;
+
+    padding: 12px 0;
+
     color: #222222;
 
     font-size: 15px;
@@ -103,10 +106,46 @@
 }
 
 
+.header-site .menu-principal a::after {
+    content: "";
+
+    position: absolute;
+    left: 0;
+    bottom: 5px;
+
+    width: 0;
+    height: 2px;
+
+    background: var(--cor-principal);
+
+    border-radius: 20px;
+
+    transition: width 0.2s ease;
+}
+
+
 .header-site .menu-principal a:hover {
     color: var(--cor-principal);
 
     transform: translateY(-1px);
+}
+
+
+.header-site .menu-principal a:hover::after {
+    width: 100%;
+}
+
+
+/* =========================================
+   AÇÕES DO CABEÇALHO
+========================================= */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 13px;
 }
 
 
@@ -117,9 +156,9 @@
 .header-site .btn-header {
     width: auto;
     min-width: 145px;
-    min-height: 46px;
+    min-height: 48px;
 
-    padding: 12px 22px;
+    padding: 12px 23px;
 
     display: inline-flex;
     align-items: center;
@@ -128,23 +167,87 @@
     color: #ffffff;
     background: var(--cor-principal);
 
-    border-radius: 12px;
+    border: 1px solid var(--cor-principal);
+    border-radius: 13px;
 
     font-size: 15px;
     font-weight: 700;
+
+    line-height: 1;
 
     text-align: center;
     text-decoration: none;
     white-space: nowrap;
 
     box-shadow:
-        0 8px 22px
-        rgba(0, 81, 255, 0.22);
+        0 10px 25px rgba(0, 81, 255, 0.23);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 
 .header-site .btn-header:hover {
     background: #0048df;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 13px 29px rgba(0, 81, 255, 0.3);
+}
+
+
+/* =========================================
+   BOTÃO DO MENU MOBILE
+========================================= */
+
+.menu-toggle {
+    width: 46px;
+    height: 46px;
+
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 0;
+
+    color: #202020;
+    background: transparent;
+
+    border: 0;
+    border-radius: 11px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.menu-toggle:hover {
+    background: #eef4ff;
+}
+
+
+.menu-toggle span {
+    width: 25px;
+    height: 3px;
+
+    display: block;
+
+    background: currentColor;
+
+    border-radius: 20px;
+
+    transition:
+        transform 0.25s ease,
+        opacity 0.2s ease;
 }
 
 
@@ -152,92 +255,203 @@
    ESPAÇO PARA O CABEÇALHO FIXO
 ========================================= */
 
-.header-site + .hero-wrapper {
+.header-site+.hero-wrapper {
     margin-top: 90px;
 }
 
 
 /* =========================================
-   TABLET
+   NOTEBOOK
 ========================================= */
 
-@media (max-width: 950px) {
+@media (max-width: 1100px) {
 
     .header-site {
-        min-height: 128px;
+        padding-right: 4%;
+        padding-left: 4%;
 
-        padding:
-            10px
-            5%
-            9px;
+        gap: 25px;
+    }
+
+
+    .header-site .logo {
+        font-size: 30px;
+    }
+
+
+    .header-site .logo .coroa-header {
+        width: 65px;
+        height: 44px;
+    }
+
+
+    .header-site .menu-principal {
+        gap: 25px;
+    }
+
+
+    .header-site .menu-principal a {
+        font-size: 14px;
+    }
+
+
+    .header-site .btn-header {
+        min-width: 130px;
+
+        padding-right: 18px;
+        padding-left: 18px;
+    }
+
+}
+
+
+/* =========================================
+   TABLET E CELULAR
+========================================= */
+
+@media (max-width: 900px) {
+
+    .header-site {
+        min-height: 82px;
+
+        padding: 10px 20px;
 
         grid-template-columns:
-            minmax(0, 1fr)
-            auto;
+            minmax(0, 1fr) auto;
 
-        grid-template-rows:
-            auto
-            auto;
-
-        column-gap: 18px;
-        row-gap: 8px;
+        gap: 15px;
     }
 
 
     .header-site .logo {
         justify-self: start;
 
-        font-size: 29px;
+        font-size: 28px;
+    }
+
+
+    .header-site .logo .coroa-header {
+        width: 62px;
+        height: 42px;
+    }
+
+
+    .header-actions {
+        justify-self: end;
+
+        gap: 10px;
     }
 
 
     .header-site .btn-header {
-        justify-self: end;
+        min-width: 128px;
+        min-height: 46px;
 
-        min-width: 130px;
+        padding: 11px 17px;
+
+        font-size: 14px;
+    }
+
+
+    .menu-toggle {
+        display: flex;
     }
 
 
     .header-site .menu-principal {
-        width: 100%;
+        width: min(360px, calc(100vw - 32px));
 
-        grid-column:
-            1
-            /
-            -1;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 16px;
 
-        display: grid;
-        grid-template-columns:
-            repeat(
-                5,
-                minmax(0, 1fr)
-            );
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
 
-        align-items: center;
+        gap: 3px;
 
-        gap: 8px;
+        padding: 12px;
+
+        background: #ffffff;
+
+        border: 1px solid rgba(0, 81, 255, 0.1);
+        border-radius: 16px;
+
+        box-shadow:
+            0 22px 50px rgba(20, 35, 70, 0.18);
+
+        opacity: 0;
+        visibility: hidden;
+
+        transform: translateY(-12px);
+
+        pointer-events: none;
+
+        transition:
+            opacity 0.22s ease,
+            visibility 0.22s ease,
+            transform 0.22s ease;
+    }
+
+
+    .header-site.menu-open .menu-principal {
+        opacity: 1;
+        visibility: visible;
+
+        transform: translateY(0);
+
+        pointer-events: auto;
     }
 
 
     .header-site .menu-principal a {
         width: 100%;
 
-        padding: 7px 4px;
+        padding: 13px 15px;
 
-        font-size: 13px;
+        border-radius: 10px;
 
-        border-radius: 8px;
+        font-size: 14px;
+
+        text-align: left;
+    }
+
+
+    .header-site .menu-principal a::after {
+        display: none;
     }
 
 
     .header-site .menu-principal a:hover {
+        color: var(--cor-principal);
         background: #eef4ff;
+
+        transform: none;
     }
 
 
-    .header-site + .hero-wrapper {
-        margin-top: 128px;
+    .header-site.menu-open .menu-toggle span:nth-child(1) {
+        transform:
+            translateY(9px) rotate(45deg);
     }
+
+
+    .header-site.menu-open .menu-toggle span:nth-child(2) {
+        opacity: 0;
+    }
+
+
+    .header-site.menu-open .menu-toggle span:nth-child(3) {
+        transform:
+            translateY(-9px) rotate(-45deg);
+    }
+
+
+    .header-site+.hero-wrapper {
+        margin-top: 82px;
+    }
+
 }
 
 
@@ -248,15 +462,11 @@
 @media (max-width: 520px) {
 
     .header-site {
-        min-height: 112px;
+        min-height: 76px;
 
-        padding:
-            8px
-            12px
-            7px;
+        padding: 8px 14px;
 
-        column-gap: 8px;
-        row-gap: 7px;
+        gap: 8px;
     }
 
 
@@ -264,67 +474,88 @@
         gap: 4px;
 
         font-size: 24px;
-    }
 
-
-    .header-site .logo img {
-        width: 48px;
-        height: 48px;
-
-        margin-right: 2px;
-
-        transform: scale(1.4);
+        letter-spacing: -0.8px;
     }
 
 
     .header-site .logo .coroa-header {
-        width: 55px;
-        height: 38px;
+        width: 53px;
+        height: 37px;
+    }
+
+
+    .header-actions {
+        gap: 7px;
     }
 
 
     .header-site .btn-header {
-        min-width: 112px;
-        min-height: 40px;
+        min-width: 111px;
+        min-height: 43px;
 
-        padding: 9px 12px;
+        padding: 10px 13px;
 
-        border-radius: 12px;
+        border-radius: 11px;
 
         font-size: 13px;
     }
 
 
+    .menu-toggle {
+        width: 43px;
+        height: 43px;
+
+        gap: 5px;
+
+        border-radius: 10px;
+    }
+
+
+    .menu-toggle span {
+        width: 23px;
+        height: 3px;
+    }
+
+
+    .header-site.menu-open .menu-toggle span:nth-child(1) {
+        transform:
+            translateY(8px) rotate(45deg);
+    }
+
+
+    .header-site.menu-open .menu-toggle span:nth-child(3) {
+        transform:
+            translateY(-8px) rotate(-45deg);
+    }
+
+
     .header-site .menu-principal {
-        gap: 3px;
+        width: calc(100vw - 24px);
+
+        top: calc(100% + 6px);
+        right: 12px;
     }
 
 
-    .header-site .menu-principal a {
-        min-width: 0;
-
-        padding: 6px 1px;
-
-        overflow: hidden;
-
-        font-size: 10.5px;
-        font-weight: 700;
-
-        text-overflow: ellipsis;
+    .header-site+.hero-wrapper {
+        margin-top: 76px;
     }
 
-
-    .header-site + .hero-wrapper {
-        margin-top: 112px;
-    }
 }
 
 
 /* =========================================
-   CELULARES MUITO PEQUENOS
+   CELULARES PEQUENOS
 ========================================= */
 
-@media (max-width: 360px) {
+@media (max-width: 390px) {
+
+    .header-site {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
 
     .header-site .logo {
         font-size: 21px;
@@ -332,20 +563,64 @@
 
 
     .header-site .logo .coroa-header {
-        width: 48px;
+        width: 47px;
+        height: 34px;
     }
 
 
     .header-site .btn-header {
-        min-width: 100px;
+        min-width: 101px;
+        min-height: 41px;
 
-        padding: 8px 9px;
+        padding-right: 10px;
+        padding-left: 10px;
 
         font-size: 12px;
     }
 
 
-    .header-site .menu-principal a {
-        font-size: 9.5px;
+    .menu-toggle {
+        width: 40px;
+        height: 40px;
     }
+
+
+    .menu-toggle span {
+        width: 21px;
+    }
+
+}
+
+
+/* =========================================
+   CELULAR MUITO ESTREITO
+========================================= */
+
+@media (max-width: 340px) {
+
+    .header-site .logo {
+        font-size: 19px;
+    }
+
+
+    .header-site .logo .coroa-header {
+        width: 43px;
+    }
+
+
+    .header-site .btn-header {
+        min-width: 94px;
+
+        padding-right: 8px;
+        padding-left: 8px;
+
+        font-size: 11px;
+    }
+
+
+    .menu-toggle {
+        width: 38px;
+        height: 38px;
+    }
+
 }
