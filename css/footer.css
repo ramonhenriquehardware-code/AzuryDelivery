@@ -80,6 +80,70 @@ footer {
 
 
 /* =========================================
+   MARCA AZURY
+========================================= */
+
+.footer-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    margin-bottom: 12px;
+}
+
+
+.footer-logo h2 {
+    margin: 0;
+}
+
+
+.coroa-footer {
+    width: 42px;
+    height: auto;
+
+    display: block;
+    flex-shrink: 0;
+}
+
+
+/* =========================================
+   TELEFONE / WHATSAPP
+========================================= */
+
+.footer-telefone {
+    color: #e0e0e0;
+
+    font: inherit;
+
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.footer-telefone:hover {
+    color: #ffffff;
+}
+
+
+.footer-telefone:focus-visible {
+    outline:
+        3px solid rgba(103,
+            154,
+            255,
+            0.55);
+
+    outline-offset: 5px;
+
+    border-radius: 6px;
+}
+
+
+/* =========================================
    AVISO EXCLUSIVO PARA DELIVERY
 ========================================= */
 
@@ -240,12 +304,11 @@ footer {
     height: 38px;
 
     display: block;
+    flex-shrink: 0;
 
     color: #ffffff;
 
     fill: none;
-
-    flex-shrink: 0;
 }
 
 
@@ -329,6 +392,16 @@ footer {
 
     .footer-coluna {
         width: 100%;
+    }
+
+
+    .footer-logo {
+        margin-bottom: 10px;
+    }
+
+
+    .coroa-footer {
+        width: 44px;
     }
 
 
