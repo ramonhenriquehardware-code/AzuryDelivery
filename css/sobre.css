@@ -1,37 +1,179 @@
 .sobre {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
     gap: 60px;
+
+    width: 100%;
     padding: 80px 5%;
+
     background: var(--cor-terceira);
 }
 
-.sobre img {
-    border-radius: var(--radius);
-    box-shadow: var(--shodow);
-}
+.sobre>img {
+    display: block;
 
-.sobre h2 {
-    font-size: 50px;
-    margin-bottom: 20px;
-    font-size: 30px;
+    width: 100%;
+    max-width: 620px;
+    height: 440px;
+
+    justify-self: center;
+
+    object-fit: cover;
+    object-position: center;
+
+    border-radius: var(--radius);
+    box-shadow: var(--shodow,
+            0 18px 45px rgba(0, 0, 0, 0.14));
 }
 
 .sobre article {
+    width: 100%;
+    max-width: 560px;
+
     color: var(--gray);
-    margin-bottom: 30px;
+}
+
+.sobre h1,
+.sobre h2 {
+    margin: 0 0 18px;
+
+    color: var(--cor-quarta);
+    font-size: clamp(34px, 4vw, 50px);
+    line-height: 1.1;
+}
+
+.sobre article>p {
+    margin: 0 0 30px;
+
+    color: #5f6778;
+    font-size: 18px;
+    line-height: 1.6;
 }
 
 .sobre ul {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 16px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
 }
+
+.sobre li {
+    display: flex;
+    align-items: center;
+
+    min-height: 48px;
+    padding: 12px 16px;
+
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 81, 255, 0.1);
+    border-radius: 12px;
+}
+
 .sobre li strong {
     color: #5f6778;
+    font-size: 16px;
+    line-height: 1.4;
 }
 
 .sobre li strong::first-letter {
     color: var(--cor-principal);
+}
+
+
+/* TABLET */
+@media (max-width: 900px) {
+    .sobre {
+        gap: 40px;
+        padding: 65px 5%;
+    }
+
+    .sobre>img {
+        height: 380px;
+    }
+}
+
+
+/* CELULAR */
+@media (max-width: 700px) {
+    .sobre {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 30px;
+
+        padding: 55px 20px;
+    }
+
+    .sobre>img {
+        width: 100%;
+        max-width: none;
+        height: auto;
+        min-height: 280px;
+        max-height: 390px;
+
+        object-fit: cover;
+        object-position: center;
+
+        border-radius: 18px;
+    }
+
+    .sobre article {
+        width: 100%;
+        max-width: none;
+
+        margin: 0;
+        text-align: left;
+    }
+
+    .sobre h1,
+    .sobre h2 {
+        margin-bottom: 14px;
+
+        font-size: clamp(32px, 10vw, 42px);
+        line-height: 1.08;
+    }
+
+    .sobre article>p {
+        margin-bottom: 24px;
+
+        font-size: 16px;
+        line-height: 1.55;
+    }
+
+    .sobre ul {
+        gap: 12px;
+    }
+
+    .sobre li {
+        width: 100%;
+        min-height: 50px;
+
+        padding: 13px 15px;
+    }
+
+    .sobre li strong {
+        font-size: 15px;
+    }
+}
+
+
+/* CELULARES MENORES */
+@media (max-width: 380px) {
+    .sobre {
+        padding: 48px 16px;
+    }
+
+    .sobre>img {
+        min-height: 240px;
+    }
+
+    .sobre h1,
+    .sobre h2 {
+        font-size: 30px;
+    }
 }
