@@ -146,17 +146,17 @@
 
 .hero-wrapper .hero-buttons .btn {
     width: auto;
-    min-width: 210px;
-    min-height: 55px;
+    min-width: 190px;
+    min-height: 50px;
 
     padding:
-        12px 23px;
+        10px 20px;
 
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    gap: 10px;
+    gap: 9px;
 
     color: #ffffff;
     background: var(--cor-principal);
@@ -167,7 +167,7 @@
     box-shadow:
         0 11px 27px rgba(0, 81, 255, 0.19);
 
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     line-height: 1.15;
 
@@ -194,7 +194,7 @@
 
 
 .hero-wrapper .hero-buttons .btn-outline {
-    min-width: 264px;
+    min-width: 235px;
 
     color: var(--cor-principal);
     background: #ffffff;
@@ -218,8 +218,8 @@
 
 .hero-wrapper .hero-whatsapp-bullet,
 .hero-wrapper .hero-whatsapp-icon {
-    width: 27px;
-    height: 27px;
+    width: 24px;
+    height: 24px;
 
     display: inline-grid;
     place-items: center;
@@ -227,7 +227,7 @@
     flex-shrink: 0;
 
     color: #ffffff;
-    background: #20bd50;
+    background: #25d366;
 
     border-radius: 50%;
 }
@@ -251,8 +251,8 @@
 
 
 .hero-wrapper .hero-whatsapp-icon svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
 
     display: block;
 
@@ -262,7 +262,7 @@
 
 .hero-wrapper .hero-buttons .btn-outline:hover .hero-whatsapp-bullet,
 .hero-wrapper .hero-buttons .btn-outline:hover .hero-whatsapp-icon {
-    color: #20bd50;
+    color: #25d366;
     background: #ffffff;
 }
 
@@ -530,14 +530,14 @@
 
 
     .hero-wrapper .hero-buttons .btn {
-        min-width: 190px;
+        min-width: 180px;
 
-        font-size: 15px;
+        font-size: 14px;
     }
 
 
     .hero-wrapper .hero-buttons .btn-outline {
-        min-width: 245px;
+        min-width: 225px;
     }
 
 
@@ -829,7 +829,7 @@
         align-items: stretch;
         justify-content: flex-start;
 
-        gap: 10px;
+        gap: 9px;
     }
 
 
@@ -837,28 +837,28 @@
     .hero-wrapper .hero-buttons .btn-outline {
         width: 100%;
         min-width: 0;
-        min-height: 50px;
+        min-height: 47px;
 
         padding:
-            11px 10px;
+            9px 9px;
 
         gap: 7px;
 
-        border-radius: 11px;
+        border-radius: 10px;
 
-        font-size: 13px;
+        font-size: 12.5px;
     }
 
 
     .hero-wrapper .hero-whatsapp-icon {
-        width: 25px;
-        height: 25px;
+        width: 23px;
+        height: 23px;
     }
 
 
     .hero-wrapper .hero-whatsapp-icon svg {
-        width: 17px;
-        height: 17px;
+        width: 15px;
+        height: 15px;
     }
 
 
@@ -1031,12 +1031,12 @@
 
     .hero-wrapper .hero-buttons .btn,
     .hero-wrapper .hero-buttons .btn-outline {
-        min-height: 48px;
+        min-height: 45px;
 
         padding:
-            10px 8px;
+            8px 8px;
 
-        font-size: 12px;
+        font-size: 11.8px;
     }
 
 
