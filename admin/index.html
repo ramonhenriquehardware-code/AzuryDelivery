@@ -384,6 +384,11 @@
                             </label>
 
 
+                            <button id="newManualOrderButton" class="btn btn-primary" type="button"
+                                data-new-manual-order="true">
+                                + Registrar pedido do WhatsApp
+                            </button>
+
                             <button id="refreshOrdersButton" class="btn btn-secondary" type="button">
                                 ↻ Atualizar pedidos
                             </button>
@@ -812,13 +817,13 @@
 
     <script defer src="js/supabase-dev.js"></script>
 
-    <script defer src="js/admin-dev.js"></script>
+    <script defer src="js/admin-dev.js?v=20260806-2"></script>
 
     <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
                 navigator.serviceWorker
-                    .register("./service-worker.js")
+                    .register("./service-worker.js?v=20260806-2")
                     .catch(error => {
                         console.error("Erro ao registrar o aplicativo Azury Admin:", error);
                     });
