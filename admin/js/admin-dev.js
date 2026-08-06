@@ -78,7 +78,8 @@
         auditoria: [],
         refreshTimer: null,
         modalSubmit: null,
-        messageTimer: null
+        messageTimer: null,
+        manualItemCounter: 0
     };
 
     const el = {
@@ -253,7 +254,7 @@
             startAutoRefresh();
         } catch (error) {
             console.error(error);
-            await supabase.auth.signOut().catch(() => {});
+            await supabase.auth.signOut().catch(() => { });
             showAuth("Esta conta não possui acesso ao painel ou a sessão expirou.", "error");
         }
     }
@@ -279,7 +280,7 @@
             startAutoRefresh();
         } catch (error) {
             console.error(error);
-            await supabase.auth.signOut().catch(() => {});
+            await supabase.auth.signOut().catch(() => { });
             el.authMessage.textContent = error.message || "Não foi possível entrar.";
             el.authMessage.className = "form-message error";
         } finally {
@@ -376,6 +377,748 @@
         const parts = [street, number ? `nº ${number}` : "", district, zip ? `CEP ${zip}` : ""].filter(Boolean);
         return `${parts.length ? `<p>${escapeHtml(parts.join(" • "))}</p>` : "<p>Endereço não informado.</p>"}${complement ? `<p>Complemento: ${escapeHtml(complement)}</p>` : ""}`;
     }
+
+    function normalizeKey(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function parseMoneyInput(value) {
+        const normalized = String(value ?? "")
+            .trim()
+            .replace(/\s/g, "")
+            .replace(/\./g, "")
+            .replace(",", ".");
+
+        const number = Number(normalized);
+        return Number.isFinite(number) ? number : 0;
+    }
+
+    function splitManualComplements(value, layer) {
+        return String(value || "")
+            .split(/[\n,;]+/)
+            .map(name => name.trim())
+            .filter(Boolean)
+            .map(name => ({
+                nome: name,
+                camada: layer,
+                preco_unitario: 0
+            }));
+    }
+
+    function manualSizeOptions(selectedSize = "") {
+        const sizes = state.operacao?.tamanhos || [];
+
+        return sizes
+            .filter(item => item.visivel !== false)
+            .map(item => `
+                <option
+                    value="${escapeHtml(item.tamanho_ml)}"
+                    data-price="${escapeHtml(item.preco_base)}"
+                    ${String(item.tamanho_ml) === String(selectedSize) ? "selected" : ""}
+                >
+                    ${escapeHtml(item.tamanho_ml)} ml — ${formatMoney(item.preco_base)}
+                </option>
+            `)
+            .join("");
+    }
+
+    function manualItemRowHtml(index) {
+        const sizes = state.operacao?.tamanhos || [];
+        const firstSize =
+            sizes.find(item =>
+                item.disponivel === true &&
+                item.visivel !== false
+            ) ||
+            sizes.find(item =>
+                item.visivel !== false
+            ) ||
+            {};
+
+        const defaultSize =
+            firstSize.tamanho_ml || "";
+
+        const defaultPrice =
+            firstSize.preco_base ?? "";
+
+        return `
+            <article
+                data-manual-item-row
+                data-manual-item-index="${escapeHtml(index)}"
+                style="
+                    grid-column: 1 / -1;
+                    border: 1px solid rgba(148, 163, 184, 0.35);
+                    border-radius: 16px;
+                    padding: 16px;
+                    background: rgba(15, 23, 42, 0.35);
+                "
+            >
+                <div
+                    style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 14px;
+                    "
+                >
+                    <strong>
+                        Item do pedido
+                    </strong>
+
+                    <button
+                        type="button"
+                        class="btn btn-danger btn-small"
+                        data-manual-remove-item
+                    >
+                        Remover
+                    </button>
+                </div>
+
+                <div
+                    style="
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                        gap: 12px;
+                    "
+                >
+                    <label class="modal-field">
+                        <span>Tamanho</span>
+
+                        <select
+                            data-manual-size
+                            required
+                        >
+                            ${manualSizeOptions(defaultSize)}
+                        </select>
+                    </label>
+
+                    <label class="modal-field">
+                        <span>Quantidade</span>
+
+                        <input
+                            data-manual-quantity
+                            type="number"
+                            min="1"
+                            max="10"
+                            value="1"
+                            required
+                        >
+                    </label>
+
+                    <label class="modal-field">
+                        <span>Valor unitário final</span>
+
+                        <input
+                            data-manual-price
+                            type="text"
+                            inputmode="decimal"
+                            value="${escapeHtml(defaultPrice)}"
+                            placeholder="Ex.: 10,00"
+                            required
+                        >
+                    </label>
+
+                    <label
+                        class="modal-field"
+                        style="grid-column: 1 / -1;"
+                    >
+                        <span>
+                            Complementos no meio
+                        </span>
+
+                        <textarea
+                            data-manual-middle
+                            placeholder="Ex.: Granola, leite condensado"
+                        ></textarea>
+                    </label>
+
+                    <label
+                        class="modal-field"
+                        style="grid-column: 1 / -1;"
+                    >
+                        <span>
+                            Complementos na cobertura
+                        </span>
+
+                        <textarea
+                            data-manual-top
+                            placeholder="Ex.: Paçoca, leite em pó"
+                        ></textarea>
+                    </label>
+                </div>
+            </article>
+        `;
+    }
+
+    function addManualItemRow() {
+        const container =
+            el.dynamicModalForm.querySelector(
+                "[data-manual-items]"
+            );
+
+        if (!container) {
+            return;
+        }
+
+        state.manualItemCounter += 1;
+
+        container.insertAdjacentHTML(
+            "beforeend",
+            manualItemRowHtml(
+                state.manualItemCounter
+            )
+        );
+    }
+
+    async function submitManualOrder(formNode) {
+        const rows = Array.from(
+            formNode.querySelectorAll(
+                "[data-manual-item-row]"
+            )
+        );
+
+        if (!rows.length) {
+            throw new Error(
+                "Adicione pelo menos um item ao pedido."
+            );
+        }
+
+        const items = rows.map(row => {
+            const size =
+                Number(
+                    row.querySelector(
+                        "[data-manual-size]"
+                    )?.value
+                );
+
+            const quantity =
+                Number(
+                    row.querySelector(
+                        "[data-manual-quantity]"
+                    )?.value
+                );
+
+            const unitPrice =
+                parseMoneyInput(
+                    row.querySelector(
+                        "[data-manual-price]"
+                    )?.value
+                );
+
+            if (!Number.isFinite(size) || size <= 0) {
+                throw new Error(
+                    "Escolha o tamanho de todos os itens."
+                );
+            }
+
+            if (
+                !Number.isInteger(quantity) ||
+                quantity < 1 ||
+                quantity > 10
+            ) {
+                throw new Error(
+                    "A quantidade de um item é inválida."
+                );
+            }
+
+            if (unitPrice < 0) {
+                throw new Error(
+                    "O valor de um item não pode ser negativo."
+                );
+            }
+
+            const middle =
+                splitManualComplements(
+                    row.querySelector(
+                        "[data-manual-middle]"
+                    )?.value,
+                    "meio"
+                );
+
+            const top =
+                splitManualComplements(
+                    row.querySelector(
+                        "[data-manual-top]"
+                    )?.value,
+                    "cobertura"
+                );
+
+            return {
+                produto_nome:
+                    `Monte o Seu • ${size}ml`,
+
+                tamanho_ml:
+                    size,
+
+                quantidade:
+                    quantity,
+
+                preco_unitario:
+                    unitPrice,
+
+                complementos: [
+                    ...middle,
+                    ...top
+                ]
+            };
+        });
+
+        const form =
+            new FormData(formNode);
+
+        const districtName =
+            String(
+                form.get("bairro") || ""
+            ).trim();
+
+        const districtKey =
+            normalizeKey(districtName);
+
+        const district =
+            (state.operacao?.bairros || [])
+                .find(item => {
+                    const itemKey =
+                        normalizeKey(item.nome);
+
+                    const aliases =
+                        Array.isArray(item.aliases)
+                            ? item.aliases
+                            : [];
+
+                    return (
+                        itemKey === districtKey ||
+                        aliases.some(alias =>
+                            normalizeKey(alias) ===
+                            districtKey
+                        )
+                    );
+                });
+
+        const payment =
+            String(
+                form.get("forma_pagamento") ||
+                ""
+            );
+
+        const payload = {
+            cliente_nome:
+                String(
+                    form.get("cliente_nome") ||
+                    ""
+                ).trim(),
+
+            cliente_email:
+                String(
+                    form.get("cliente_email") ||
+                    ""
+                ).trim() ||
+                null,
+
+            cliente_telefone:
+                String(
+                    form.get("cliente_telefone") ||
+                    ""
+                ).trim() ||
+                null,
+
+            forma_pagamento:
+                payment,
+
+            status_pagamento:
+                String(
+                    form.get("status_pagamento") ||
+                    "pendente"
+                ),
+
+            status:
+                "recebido",
+
+            troco_para:
+                payment === "dinheiro"
+                    ? (
+                        String(
+                            form.get("troco_para") ||
+                            ""
+                        ).trim()
+                            ? parseMoneyInput(
+                                form.get("troco_para")
+                            )
+                            : null
+                    )
+                    : null,
+
+            bairro_entrega_id:
+                district?.id || null,
+
+            cep:
+                String(
+                    form.get("cep") ||
+                    ""
+                ).trim(),
+
+            rua:
+                String(
+                    form.get("rua") ||
+                    ""
+                ).trim(),
+
+            numero:
+                String(
+                    form.get("numero") ||
+                    ""
+                ).trim(),
+
+            bairro:
+                districtName,
+
+            complemento_endereco:
+                String(
+                    form.get(
+                        "complemento_endereco"
+                    ) ||
+                    ""
+                ).trim() ||
+                null,
+
+            taxa_entrega:
+                parseMoneyInput(
+                    form.get("taxa_entrega")
+                ),
+
+            desconto:
+                parseMoneyInput(
+                    form.get("desconto")
+                ),
+
+            observacoes:
+                String(
+                    form.get("observacoes") ||
+                    ""
+                ).trim() ||
+                null,
+
+            itens: items
+        };
+
+        const data = await rpc(
+            "criar_pedido_manual_admin",
+            {
+                p_dados: payload
+            }
+        );
+
+        await refreshOrders();
+
+        showMessage(
+            `Pedido ${data.codigo || ""} registrado com sucesso pelo WhatsApp.`
+        );
+    }
+
+    async function openManualOrderModal() {
+        if (!state.operacao) {
+            state.operacao =
+                await rpc(
+                    "listar_operacao_admin"
+                );
+        }
+
+        state.manualItemCounter = 1;
+
+        state.modalSubmit = {
+            title:
+                "Registrar pedido do WhatsApp",
+
+            submitText:
+                "Registrar pedido",
+
+            customSubmit:
+                submitManualOrder
+        };
+
+        el.modalTitle.textContent =
+            "Registrar pedido do WhatsApp";
+
+        el.dynamicModalForm.innerHTML = `
+            <div
+                style="
+                    grid-column: 1 / -1;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+                    gap: 14px;
+                "
+            >
+                <label class="modal-field">
+                    <span>Nome do cliente</span>
+
+                    <input
+                        name="cliente_nome"
+                        required
+                        placeholder="Nome completo"
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>Telefone / WhatsApp</span>
+
+                    <input
+                        name="cliente_telefone"
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>E-mail</span>
+
+                    <input
+                        name="cliente_email"
+                        type="email"
+                        placeholder="Opcional"
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>Forma de pagamento</span>
+
+                    <select
+                        name="forma_pagamento"
+                        required
+                    >
+                        <option value="pix">Pix</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="cartao_debito">Cartão de débito</option>
+                        <option value="cartao_credito">Cartão de crédito</option>
+                    </select>
+                </label>
+
+                <label class="modal-field">
+                    <span>Status do pagamento</span>
+
+                    <select
+                        name="status_pagamento"
+                        required
+                    >
+                        <option value="pendente">
+                            Pendente
+                        </option>
+
+                        <option value="pago">
+                            Pago
+                        </option>
+                    </select>
+                </label>
+
+                <label class="modal-field">
+                    <span>Troco para</span>
+
+                    <input
+                        name="troco_para"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="Somente dinheiro"
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>CEP</span>
+
+                    <input
+                        name="cep"
+                        required
+                        placeholder="00000-000"
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>Rua / Avenida</span>
+
+                    <input
+                        name="rua"
+                        required
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>Número</span>
+
+                    <input
+                        name="numero"
+                        required
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>Bairro</span>
+
+                    <input
+                        name="bairro"
+                        list="manualDistrictOptions"
+                        required
+                    >
+
+                    <datalist id="manualDistrictOptions">
+                        ${(state.operacao?.bairros || [])
+                .map(item => `
+                                <option value="${escapeHtml(item.nome)}">
+                            `)
+                .join("")}
+                    </datalist>
+                </label>
+
+                <label class="modal-field">
+                    <span>Complemento do endereço</span>
+
+                    <input
+                        name="complemento_endereco"
+                        placeholder="Casa, bloco, referência..."
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>Taxa de entrega</span>
+
+                    <input
+                        name="taxa_entrega"
+                        type="text"
+                        inputmode="decimal"
+                        value="0,00"
+                        required
+                    >
+                </label>
+
+                <label class="modal-field">
+                    <span>Desconto</span>
+
+                    <input
+                        name="desconto"
+                        type="text"
+                        inputmode="decimal"
+                        value="0,00"
+                    >
+                </label>
+            </div>
+
+            <div
+                style="
+                    grid-column: 1 / -1;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 12px;
+                    margin-top: 6px;
+                "
+            >
+                <div>
+                    <strong>Itens do pedido</strong>
+
+                    <p style="margin: 4px 0 0; opacity: 0.75;">
+                        Informe o valor final unitário de cada copo.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-manual-add-item
+                >
+                    + Adicionar item
+                </button>
+            </div>
+
+            <div
+                data-manual-items
+                style="
+                    grid-column: 1 / -1;
+                    display: grid;
+                    gap: 14px;
+                "
+            >
+                ${manualItemRowHtml(1)}
+            </div>
+
+            <label
+                class="modal-field full"
+                style="grid-column: 1 / -1;"
+            >
+                <span>Observações</span>
+
+                <textarea
+                    name="observacoes"
+                    placeholder="Detalhes do pedido recebido pelo WhatsApp"
+                ></textarea>
+            </label>
+
+            <div
+                class="modal-actions"
+                style="grid-column: 1 / -1;"
+            >
+                <button
+                    class="btn btn-secondary"
+                    data-modal-cancel
+                    type="button"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    class="btn btn-primary"
+                    type="submit"
+                >
+                    Registrar pedido
+                </button>
+            </div>
+        `;
+
+        el.modalBackdrop.hidden = false;
+        document.body.style.overflow = "hidden";
+    }
+
+    function ensureManualOrderButton() {
+        if (
+            document.getElementById(
+                "newManualOrderButton"
+            )
+        ) {
+            return;
+        }
+
+        const refreshButton =
+            el.refreshOrdersButton;
+
+        if (!refreshButton?.parentElement) {
+            return;
+        }
+
+        const button =
+            document.createElement("button");
+
+        button.id =
+            "newManualOrderButton";
+
+        button.className =
+            "btn btn-primary";
+
+        button.type =
+            "button";
+
+        button.dataset.newManualOrder =
+            "true";
+
+        button.textContent =
+            "+ Registrar pedido do WhatsApp";
+
+        refreshButton.parentElement.insertBefore(
+            button,
+            refreshButton
+        );
+    }
+
 
     function renderOrders() {
         const r = state.resumoPedidos || {};
@@ -649,36 +1392,42 @@
     }
 
     function openSizeModal(item) {
-        openModal({ title: `Editar ${item.tamanho_ml} ml`, fields: [
-            { name: "nome", label: "Nome", value: item.nome, required: true },
-            { name: "descricao", label: "Descrição", type: "textarea", value: item.descricao, required: true, full: true },
-            { name: "preco_base", label: "Preço base", type: "number", step: "0.01", value: item.preco_base, required: true },
-            { name: "badge", label: "Badge", value: item.badge || "" },
-            ...commonBooleanFields(item),
-            { name: "ordem", label: "Ordem", type: "number", value: item.ordem, required: true }
-        ], onSubmit: async values => { await rpc("atualizar_tamanho_admin", { p_dados: { id: item.id, ...values } }); await reloadOperation("Tamanho atualizado."); } });
+        openModal({
+            title: `Editar ${item.tamanho_ml} ml`, fields: [
+                { name: "nome", label: "Nome", value: item.nome, required: true },
+                { name: "descricao", label: "Descrição", type: "textarea", value: item.descricao, required: true, full: true },
+                { name: "preco_base", label: "Preço base", type: "number", step: "0.01", value: item.preco_base, required: true },
+                { name: "badge", label: "Badge", value: item.badge || "" },
+                ...commonBooleanFields(item),
+                { name: "ordem", label: "Ordem", type: "number", value: item.ordem, required: true }
+            ], onSubmit: async values => { await rpc("atualizar_tamanho_admin", { p_dados: { id: item.id, ...values } }); await reloadOperation("Tamanho atualizado."); }
+        });
     }
 
     function openComplementModal(item = null) {
         const editing = Boolean(item);
-        openModal({ title: editing ? `Editar ${item.nome}` : "Novo complemento", fields: [
-            { name: "nome", label: "Nome", value: item?.nome || "", required: true },
-            { name: "preco", label: "Preço", type: "number", step: "0.01", value: item?.preco ?? "", required: true },
-            { name: "disponivel", label: "Disponível", type: "checkbox", value: item?.disponivel ?? true },
-            { name: "visivel", label: "Visível", type: "checkbox", value: item?.visivel ?? true },
-            { name: "ordem", label: "Ordem", type: "number", value: item?.ordem ?? 0, required: true }
-        ], onSubmit: async values => { await rpc(editing ? "atualizar_complemento_admin" : "criar_complemento_admin", { p_dados: editing ? { id: item.id, ...values } : values }); await reloadOperation(editing ? "Complemento atualizado." : "Complemento criado."); } });
+        openModal({
+            title: editing ? `Editar ${item.nome}` : "Novo complemento", fields: [
+                { name: "nome", label: "Nome", value: item?.nome || "", required: true },
+                { name: "preco", label: "Preço", type: "number", step: "0.01", value: item?.preco ?? "", required: true },
+                { name: "disponivel", label: "Disponível", type: "checkbox", value: item?.disponivel ?? true },
+                { name: "visivel", label: "Visível", type: "checkbox", value: item?.visivel ?? true },
+                { name: "ordem", label: "Ordem", type: "number", value: item?.ordem ?? 0, required: true }
+            ], onSubmit: async values => { await rpc(editing ? "atualizar_complemento_admin" : "criar_complemento_admin", { p_dados: editing ? { id: item.id, ...values } : values }); await reloadOperation(editing ? "Complemento atualizado." : "Complemento criado."); }
+        });
     }
 
     function openNeighborhoodModal(item = null) {
         const editing = Boolean(item);
-        openModal({ title: editing ? `Editar ${item.nome}` : "Novo bairro", fields: [
-            { name: "nome", label: "Nome", value: item?.nome || "", required: true },
-            { name: "taxa", label: "Taxa de entrega", type: "number", step: "0.01", value: item?.taxa ?? "", required: true },
-            { name: "aliases", label: "Aliases separados por vírgula", value: (item?.aliases || []).join(", "), full: true },
-            { name: "ativo", label: "Ativo", type: "checkbox", value: item?.ativo ?? true },
-            { name: "ordem", label: "Ordem", type: "number", value: item?.ordem ?? 0, required: true }
-        ], transform: values => ({ ...values, aliases: String(values.aliases || "").split(",").map(v => v.trim()).filter(Boolean) }), onSubmit: async values => { await rpc(editing ? "atualizar_bairro_admin" : "criar_bairro_admin", { p_dados: editing ? { id: item.id, ...values } : values }); await reloadOperation(editing ? "Bairro atualizado." : "Bairro criado."); } });
+        openModal({
+            title: editing ? `Editar ${item.nome}` : "Novo bairro", fields: [
+                { name: "nome", label: "Nome", value: item?.nome || "", required: true },
+                { name: "taxa", label: "Taxa de entrega", type: "number", step: "0.01", value: item?.taxa ?? "", required: true },
+                { name: "aliases", label: "Aliases separados por vírgula", value: (item?.aliases || []).join(", "), full: true },
+                { name: "ativo", label: "Ativo", type: "checkbox", value: item?.ativo ?? true },
+                { name: "ordem", label: "Ordem", type: "number", value: item?.ordem ?? 0, required: true }
+            ], transform: values => ({ ...values, aliases: String(values.aliases || "").split(",").map(v => v.trim()).filter(Boolean) }), onSubmit: async values => { await rpc(editing ? "atualizar_bairro_admin" : "criar_bairro_admin", { p_dados: editing ? { id: item.id, ...values } : values }); await reloadOperation(editing ? "Bairro atualizado." : "Bairro criado."); }
+        });
     }
 
     function rewardFields(item = null) {
@@ -700,10 +1449,12 @@
 
     function openRewardModal(item = null) {
         const editing = Boolean(item);
-        openModal({ title: editing ? `Editar ${item.titulo}` : "Nova recompensa", fields: rewardFields(item), transform: values => {
-            ["tamanho_ml", "limite_complementos", "percentual_desconto", "limite_mensal"].forEach(key => { if (values[key] === "") values[key] = null; });
-            return values;
-        }, onSubmit: async values => { await rpc(editing ? "atualizar_recompensa_admin" : "criar_recompensa_admin", { p_dados: editing ? { id: item.id, ...values } : values }); await reloadOperation(editing ? "Recompensa atualizada." : "Recompensa criada."); } });
+        openModal({
+            title: editing ? `Editar ${item.titulo}` : "Nova recompensa", fields: rewardFields(item), transform: values => {
+                ["tamanho_ml", "limite_complementos", "percentual_desconto", "limite_mensal"].forEach(key => { if (values[key] === "") values[key] = null; });
+                return values;
+            }, onSubmit: async values => { await rpc(editing ? "atualizar_recompensa_admin" : "criar_recompensa_admin", { p_dados: editing ? { id: item.id, ...values } : values }); await reloadOperation(editing ? "Recompensa atualizada." : "Recompensa criada."); }
+        });
     }
 
     async function saveStoreConfig(event) {
@@ -844,6 +1595,29 @@
         const submitButton = el.dynamicModalForm.querySelector("button[type='submit']");
         submitButton.disabled = true;
         submitButton.textContent = "Salvando...";
+        if (state.modalSubmit.customSubmit) {
+            try {
+                await state.modalSubmit.customSubmit(
+                    el.dynamicModalForm
+                );
+
+                closeModal();
+            } catch (error) {
+                console.error(error);
+                showMessage(
+                    error.message,
+                    "error"
+                );
+
+                submitButton.disabled = false;
+                submitButton.textContent =
+                    state.modalSubmit.submitText ||
+                    "Salvar";
+            }
+
+            return;
+        }
+
         const form = new FormData(el.dynamicModalForm);
         const values = {};
         for (const field of state.modalSubmit.fields || []) {
@@ -911,6 +1685,8 @@
         state.refreshTimer = null;
     }
 
+    ensureManualOrderButton();
+
     el.loginForm.addEventListener("submit", handleLogin);
     el.logoutButton.addEventListener("click", handleLogout);
     el.menuButton.addEventListener("click", () => setSidebarOpen(!el.sidebar.classList.contains("open")));
@@ -930,6 +1706,63 @@
     el.modalBackdrop.addEventListener("click", event => { if (event.target === el.modalBackdrop) closeModal(); });
 
     document.addEventListener("click", event => {
+        const manualOrderButton =
+            event.target.closest(
+                "[data-new-manual-order]"
+            );
+
+        if (manualOrderButton) {
+            openManualOrderModal()
+                .catch(error => {
+                    console.error(error);
+                    showMessage(
+                        error.message,
+                        "error"
+                    );
+                });
+
+            return;
+        }
+
+        const addManualItem =
+            event.target.closest(
+                "[data-manual-add-item]"
+            );
+
+        if (addManualItem) {
+            addManualItemRow();
+            return;
+        }
+
+        const removeManualItem =
+            event.target.closest(
+                "[data-manual-remove-item]"
+            );
+
+        if (removeManualItem) {
+            const rows =
+                el.dynamicModalForm.querySelectorAll(
+                    "[data-manual-item-row]"
+                );
+
+            if (rows.length <= 1) {
+                showMessage(
+                    "O pedido precisa ter pelo menos um item.",
+                    "warning"
+                );
+
+                return;
+            }
+
+            removeManualItem
+                .closest(
+                    "[data-manual-item-row]"
+                )
+                ?.remove();
+
+            return;
+        }
+
         const nav = event.target.closest("[data-section]");
         if (nav) navigate(nav.dataset.section);
         const go = event.target.closest("[data-go-section]");
@@ -954,6 +1787,33 @@
     });
 
     document.addEventListener("change", event => {
+        const manualSize =
+            event.target.closest(
+                "[data-manual-size]"
+            );
+
+        if (manualSize) {
+            const selected =
+                manualSize.options[
+                manualSize.selectedIndex
+                ];
+
+            const priceInput =
+                manualSize
+                    .closest(
+                        "[data-manual-item-row]"
+                    )
+                    ?.querySelector(
+                        "[data-manual-price]"
+                    );
+
+            if (priceInput) {
+                priceInput.value =
+                    selected?.dataset.price ||
+                    "";
+            }
+        }
+
         const active = event.target.closest("[data-active]");
         if (active) {
             const row = active.closest("[data-day]");
