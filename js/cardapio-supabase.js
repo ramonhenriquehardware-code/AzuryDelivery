@@ -892,10 +892,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
         });
 
-        window.setTimeout(
-            closeNotification,
-            6000
-        );
     }
 
 
@@ -2547,6 +2543,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             const url =
                 `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 
+            closeModal();
+
+            showOrderSuccess(code);
+
+            clearCart();
+            resetOrder();
+
             if (whatsappWindow) {
                 whatsappWindow.location.href =
                     url;
@@ -2557,13 +2560,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     "noopener,noreferrer"
                 );
             }
-
-            closeModal();
-
-            showOrderSuccess(code);
-
-            clearCart();
-            resetOrder();
         } catch (error) {
             whatsappWindow?.close();
 
