@@ -713,6 +713,192 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    function showOrderSuccess(code) {
+        const styleId =
+            "azury-pedido-sucesso-estilos";
+
+        if (!document.getElementById(styleId)) {
+            const style =
+                document.createElement("style");
+
+            style.id = styleId;
+            style.textContent = `
+                #azuryPedidoSucesso {
+                    position: fixed;
+                    top: max(16px, env(safe-area-inset-top));
+                    right: 16px;
+                    z-index: 100000;
+                    width: min(420px, calc(100vw - 32px));
+                    display: grid;
+                    grid-template-columns: auto 1fr auto;
+                    gap: 12px;
+                    align-items: center;
+                    padding: 16px;
+                    border: 1px solid rgba(0, 81, 255, 0.20);
+                    border-left: 5px solid #16a34a;
+                    border-radius: 16px;
+                    background: #ffffff;
+                    box-shadow: 0 18px 45px rgba(0, 25, 80, 0.22);
+                    color: #13213c;
+                    font-family: inherit;
+                    opacity: 0;
+                    transform: translateY(-18px);
+                    transition:
+                        opacity 220ms ease,
+                        transform 220ms ease;
+                }
+
+                #azuryPedidoSucesso.visivel {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+
+                #azuryPedidoSucesso .azury-sucesso-icone {
+                    width: 42px;
+                    height: 42px;
+                    display: grid;
+                    place-items: center;
+                    border-radius: 50%;
+                    background: #dcfce7;
+                    color: #15803d;
+                    font-size: 24px;
+                    font-weight: 900;
+                }
+
+                #azuryPedidoSucesso .azury-sucesso-texto {
+                    min-width: 0;
+                }
+
+                #azuryPedidoSucesso strong {
+                    display: block;
+                    margin-bottom: 3px;
+                    color: #0051ff;
+                    font-size: 16px;
+                    line-height: 1.3;
+                }
+
+                #azuryPedidoSucesso span {
+                    display: block;
+                    color: #475569;
+                    font-size: 14px;
+                    line-height: 1.4;
+                }
+
+                #azuryPedidoSucesso .azury-sucesso-fechar {
+                    width: 34px;
+                    height: 34px;
+                    display: grid;
+                    place-items: center;
+                    border: 0;
+                    border-radius: 50%;
+                    background: transparent;
+                    color: #64748b;
+                    font-size: 24px;
+                    line-height: 1;
+                    cursor: pointer;
+                }
+
+                #azuryPedidoSucesso .azury-sucesso-fechar:hover {
+                    background: #eff6ff;
+                    color: #0051ff;
+                }
+
+                @media (max-width: 520px) {
+                    #azuryPedidoSucesso {
+                        top: max(10px, env(safe-area-inset-top));
+                        right: 10px;
+                        width: calc(100vw - 20px);
+                        padding: 14px;
+                    }
+                }
+            `;
+
+            document.head.appendChild(style);
+        }
+
+        document
+            .getElementById("azuryPedidoSucesso")
+            ?.remove();
+
+        const notification =
+            document.createElement("div");
+
+        notification.id =
+            "azuryPedidoSucesso";
+
+        notification.setAttribute(
+            "role",
+            "status"
+        );
+
+        notification.setAttribute(
+            "aria-live",
+            "polite"
+        );
+
+        notification.innerHTML = `
+            <div class="azury-sucesso-icone" aria-hidden="true">
+                ✓
+            </div>
+
+            <div class="azury-sucesso-texto">
+                <strong>
+                    Pedido ${esc(code)} registrado com sucesso!
+                </strong>
+
+                <span>
+                    Agora confirme o pedido pelo WhatsApp.
+                </span>
+            </div>
+
+            <button
+                type="button"
+                class="azury-sucesso-fechar"
+                aria-label="Fechar confirmação"
+            >
+                ×
+            </button>
+        `;
+
+        document.body.appendChild(
+            notification
+        );
+
+        const closeNotification = () => {
+            if (!notification.isConnected) {
+                return;
+            }
+
+            notification.classList.remove(
+                "visivel"
+            );
+
+            window.setTimeout(
+                () => notification.remove(),
+                240
+            );
+        };
+
+        notification
+            .querySelector(".azury-sucesso-fechar")
+            ?.addEventListener(
+                "click",
+                closeNotification
+            );
+
+        window.requestAnimationFrame(() => {
+            notification.classList.add(
+                "visivel"
+            );
+        });
+
+        window.setTimeout(
+            closeNotification,
+            6000
+        );
+    }
+
+
     async function table(name, configure) {
         let query = sb
             .from(name)
@@ -2374,9 +2560,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             closeModal();
 
-            alert(
-                `Pedido ${code} registrado com sucesso e enviado ao painel Azury.`
-            );
+            showOrderSuccess(code);
 
             clearCart();
             resetOrder();
