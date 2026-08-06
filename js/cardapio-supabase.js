@@ -83,6 +83,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     const OPERATION_RETRY_DELAYS = [0, 1500, 3500];
     const OPERATION_RECOVERY_INTERVAL = 30000;
 
+    // REGRAS DO NOVO CARDÁPIO — 06-08-2026
+    const FREE_COMPLEMENT_LIMITS = new Map([
+        [300, 2],
+        [400, 3],
+        [500, 3],
+        [700, 4]
+    ]);
+
+    const ALWAYS_PAID_COMPLEMENT_TERMS = [
+        "nutella",
+        "oreo",
+        "morango",
+        "uva"
+    ];
+
+    let complementSelectionCounter = 0;
+
     const wait = milliseconds =>
         new Promise(resolve =>
             window.setTimeout(resolve, milliseconds)
@@ -115,6 +132,95 @@ document.addEventListener("DOMContentLoaded", async () => {
         Number.isFinite(Number(value))
             ? Number(value)
             : fallback;
+
+    const freeComplementLimit = size =>
+        FREE_COMPLEMENT_LIMITS.get(Number(size)) || 0;
+
+    const isAlwaysPaidComplement = name => {
+        const normalizedName = norm(name);
+
+        return ALWAYS_PAID_COMPLEMENT_TERMS.some(term =>
+            normalizedName.includes(term)
+        );
+    };
+
+    function priceComplements(complements, size) {
+        const limit = freeComplementLimit(size);
+
+        const rows = (complements || []).map(
+            (complement, index) => ({
+                ...complement,
+                nome: String(
+                    complement?.nome ??
+                    complement?.value ??
+                    ""
+                ),
+                preco: num(
+                    complement?.preco ??
+                    complement?.dataset?.preco,
+                    0
+                ),
+                ordem_selecao: Math.max(
+                    1,
+                    Math.floor(
+                        num(
+                            complement?.ordem_selecao ??
+                            complement?.dataset?.ordemSelecao,
+                            index + 1
+                        )
+                    )
+                ),
+                _index: index
+            })
+        );
+
+        const eligible = rows
+            .filter(complement =>
+                !isAlwaysPaidComplement(complement.nome)
+            )
+            .sort((a, b) =>
+                a.ordem_selecao - b.ordem_selecao ||
+                a._index - b._index
+            );
+
+        const freeIndexes = new Set(
+            eligible
+                .slice(0, limit)
+                .map(complement => complement._index)
+        );
+
+        return rows.map(complement => {
+            const alwaysPaid =
+                isAlwaysPaidComplement(complement.nome);
+
+            const free =
+                !alwaysPaid &&
+                freeIndexes.has(complement._index);
+
+            const { _index, ...clean } = complement;
+
+            return {
+                ...clean,
+                especial_pago: alwaysPaid,
+                gratuito: free,
+                preco_cobrado: free
+                    ? 0
+                    : complement.preco
+            };
+        });
+    }
+
+    function itemUnitPrice(size, base, complements) {
+        return (
+            num(base, 0) +
+            priceComplements(complements, size)
+                .reduce(
+                    (total, complement) =>
+                        total + num(complement.preco_cobrado),
+                    0
+                )
+        );
+    }
 
     const timeMinutes = value => {
         const parts = String(value || "").split(":");
@@ -204,7 +310,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const complements = Array.isArray(raw?.complementos)
             ? raw.complementos
-                .map(complement => {
+                .map((complement, index) => {
                     const current = state.complements.find(item =>
                         norm(item.nome) === norm(complement?.nome)
                     );
@@ -219,20 +325,27 @@ document.addEventListener("DOMContentLoaded", async () => {
                             id: current.id || null,
                             nome: current.nome,
                             camada: layer,
-                            preco: num(current.preco)
+                            preco: num(current.preco),
+                            ordem_selecao: Math.max(
+                                1,
+                                Math.floor(
+                                    num(
+                                        complement?.ordem_selecao,
+                                        index + 1
+                                    )
+                                )
+                            )
                         }
                         : null;
                 })
                 .filter(Boolean)
             : [];
 
-        const unitPrice =
-            num(size.preco_base) +
-            complements.reduce(
-                (total, complement) =>
-                    total + num(complement.preco),
-                0
-            );
+        const unitPrice = itemUnitPrice(
+            size.tamanho_ml,
+            size.preco_base,
+            complements
+        );
 
         return {
             id: String(raw?.id || newId()),
@@ -528,11 +641,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         const complements = [
             ...middle,
             ...top
-        ].map(input => ({
+        ].map((input, index) => ({
             id: input.dataset.id || null,
             nome: input.value,
             camada: input.dataset.camada,
-            preco: num(input.dataset.preco)
+            preco: num(input.dataset.preco),
+            ordem_selecao: Math.max(
+                1,
+                Math.floor(
+                    num(
+                        input.dataset.ordemSelecao,
+                        index + 1
+                    )
+                )
+            )
         }));
 
         const item = {
@@ -1046,9 +1168,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             if (description) {
+                const freeLimit =
+                    freeComplementLimit(item.tamanho_ml);
+
                 description.textContent =
-                    item.descricao ||
-                    "Escolha os complementos do meio e da cobertura.";
+                    available && freeLimit > 0
+                        ? `${freeLimit} complementos grátis. Extras e ingredientes especiais são cobrados à parte.`
+                        : item.descricao ||
+                        "Escolha os complementos do meio e da cobertura.";
             }
 
             if (price) {
@@ -1112,7 +1239,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                             <small>
                                 ${available
-                        ? money(item.preco_base)
+                        ? `${money(item.preco_base)} • ${freeComplementLimit(item.tamanho_ml)} grátis`
                         : "Em breve"
                     }
                             </small>
@@ -1145,7 +1272,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             container.innerHTML = state.complements
-                .map((item, index) => `
+                .map((item, index) => {
+                    const alwaysPaid =
+                        isAlwaysPaidComplement(item.nome);
+
+                    const priceText = alwaysPaid
+                        ? `Adicional pago • ${money(item.preco)}`
+                        : `Grátis dentro do limite • Extra ${money(item.preco)}`;
+
+                    return `
                     <label>
                         <input
                             type="checkbox"
@@ -1154,14 +1289,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                             data-id="${esc(item.id || "")}"
                             data-preco="${esc(item.preco)}"
                             data-camada="${layer}"
+                            data-especial-pago="${alwaysPaid ? "true" : "false"}"
                             id="${layer}-${index}"
                         >
 
                         ${esc(item.nome)}
                         —
-                        ${money(item.preco)}
+                        ${esc(priceText)}
                     </label>
-                `)
+                `;
+                })
                 .join("");
         };
 
@@ -1172,7 +1309,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             .forEach(input => {
                 input.addEventListener(
                     "change",
-                    calculate
+                    () => {
+                        if (input.checked) {
+                            complementSelectionCounter += 1;
+                            input.dataset.ordemSelecao =
+                                String(complementSelectionCounter);
+                        } else {
+                            delete input.dataset.ordemSelecao;
+                        }
+
+                        calculate();
+                    }
                 );
             });
     }
@@ -1534,15 +1681,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function calculate() {
-        let value =
-            num(d.base?.value, 0);
+        const size = Number(d.size?.value);
+        const base = num(d.base?.value, 0);
 
-        allComplements().forEach(item => {
-            if (item.checked) {
-                value +=
-                    num(item.dataset.preco, 0);
-            }
-        });
+        const complements = allComplements()
+            .filter(item => item.checked)
+            .map((item, index) => ({
+                nome: item.value,
+                preco: num(item.dataset.preco, 0),
+                ordem_selecao: Math.max(
+                    1,
+                    Math.floor(
+                        num(
+                            item.dataset.ordemSelecao,
+                            index + 1
+                        )
+                    )
+                )
+            }));
+
+        const value = itemUnitPrice(
+            size,
+            base,
+            complements
+        );
 
         state.subtotal = value;
 
@@ -1876,8 +2038,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function resetBuilder() {
+        complementSelectionCounter = 0;
+
         allComplements().forEach(item => {
             item.checked = false;
+            delete item.dataset.ordemSelecao;
         });
 
         calculate();
