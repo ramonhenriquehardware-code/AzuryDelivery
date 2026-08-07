@@ -1122,6 +1122,10 @@
 
     function renderOrders() {
         const r = state.resumoPedidos || {};
+        const canDeleteOrders =
+            String(
+                state.admin?.nivel_acesso || ""
+            ).toLowerCase() === "proprietario";
         el.ordersSummary.innerHTML = [
             metricCard("📦", r.total ?? 0, "Total"),
             metricCard("🟡", r.recebidos ?? 0, "Recebidos"),
@@ -1170,6 +1174,7 @@
                 <footer class="order-actions">
                     ${next ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>` : ""}
                     ${!["entregue", "cancelado"].includes(order.status) ? `<button class="btn btn-danger" data-order-action="cancel" type="button">Cancelar</button>` : ""}
+                    ${canDeleteOrders ? `<button class="btn btn-danger" data-order-action="delete" type="button">Excluir pedido</button>` : ""}
                     <div class="payment-control"><select data-payment-select><option value="pendente" ${paymentStatus === "pendente" ? "selected" : ""}>Pagamento pendente</option><option value="pago" ${paymentStatus === "pago" ? "selected" : ""}>Pago</option><option value="cancelado" ${paymentStatus === "cancelado" ? "selected" : ""}>Cancelado</option><option value="estornado" ${paymentStatus === "estornado" ? "selected" : ""}>Estornado</option></select><button class="btn btn-secondary" data-order-action="payment" type="button">Salvar pagamento</button></div>
                 </footer>
             </article>`;
@@ -1245,6 +1250,93 @@
                         await updateOrder(orderId, "cancelado", null, values.motivo);
                         showMessage("Pedido cancelado.", "warning");
                     }
+                });
+            }
+
+            if (action === "delete") {
+                const order =
+                    state.pedidos.find(
+                        item =>
+                            String(item.id) ===
+                            String(orderId)
+                    );
+
+                const code =
+                    order?.codigo ||
+                    order?.id ||
+                    "";
+
+                openModal({
+                    title:
+                        `Excluir pedido ${code}`,
+
+                    message:
+                        "Esta ação é definitiva. O pedido, os itens e os complementos serão apagados.",
+
+                    messageType:
+                        "warning",
+
+                    fields: [
+                        {
+                            name:
+                                "confirmacao",
+
+                            label:
+                                `Digite ${code} para confirmar`,
+
+                            required:
+                                true,
+
+                            full:
+                                true
+                        }
+                    ],
+
+                    submitText:
+                        "Excluir definitivamente",
+
+                    submitClass:
+                        "btn-danger",
+
+                    onSubmit:
+                        async values => {
+                            const confirmation =
+                                String(
+                                    values.confirmacao ||
+                                    ""
+                                ).trim();
+
+                            if (
+                                confirmation.toUpperCase() !==
+                                String(code)
+                                    .trim()
+                                    .toUpperCase()
+                            ) {
+                                throw new Error(
+                                    `Digite exatamente ${code} para confirmar.`
+                                );
+                            }
+
+                            const result =
+                                await rpc(
+                                    "excluir_pedido_admin",
+                                    {
+                                        p_pedido_id:
+                                            orderId,
+
+                                        p_confirmacao:
+                                            confirmation
+                                    }
+                                );
+
+                            await refreshOrders();
+
+                            showMessage(
+                                result?.mensagem ||
+                                `Pedido ${code} excluído definitivamente.`,
+                                "warning"
+                            );
+                        }
                 });
             }
 
@@ -1591,10 +1683,20 @@
 
     async function submitModal(event) {
         event.preventDefault();
-        if (!state.modalSubmit?.onSubmit) return;
+
+        if (!state.modalSubmit) {
+            return;
+        }
+
         const submitButton = el.dynamicModalForm.querySelector("button[type='submit']");
+
+        if (!submitButton) {
+            return;
+        }
+
         submitButton.disabled = true;
         submitButton.textContent = "Salvando...";
+
         if (state.modalSubmit.customSubmit) {
             try {
                 await state.modalSubmit.customSubmit(
@@ -1615,6 +1717,14 @@
                     "Salvar";
             }
 
+            return;
+        }
+
+        if (!state.modalSubmit.onSubmit) {
+            submitButton.disabled = false;
+            submitButton.textContent =
+                state.modalSubmit.submitText ||
+                "Salvar";
             return;
         }
 
