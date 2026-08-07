@@ -79,7 +79,13 @@
         refreshTimer: null,
         modalSubmit: null,
         messageTimer: null,
-        manualItemCounter: 0
+        manualItemCounter: 0,
+        realtimeChannel: null,
+        audioContext: null,
+        soundEnabled: false,
+        alarmTimer: null,
+        activeAlarmOrderId: null,
+        activeAlarmCode: null
     };
 
     const el = {
@@ -252,6 +258,7 @@
             setConnection(true, "Conectado ao Supabase");
             await loadOverview();
             startAutoRefresh();
+            startRealtimeOrders();
         } catch (error) {
             console.error(error);
             await supabase.auth.signOut().catch(() => { });
@@ -278,6 +285,7 @@
             el.password.value = "";
             await loadOverview();
             startAutoRefresh();
+            startRealtimeOrders();
         } catch (error) {
             console.error(error);
             await supabase.auth.signOut().catch(() => { });
@@ -291,6 +299,8 @@
 
     async function handleLogout() {
         stopAutoRefresh();
+        stopRealtimeOrders();
+        stopOrderAlarm();
         await supabase.auth.signOut();
         state.session = null;
         state.admin = null;
@@ -1078,6 +1088,431 @@
         el.modalBackdrop.hidden = false;
         document.body.style.overflow = "hidden";
     }
+
+    function injectOrderAlarmStyles() {
+        if (document.getElementById("azuryOrderAlarmStyles")) {
+            return;
+        }
+
+        const style = document.createElement("style");
+
+        style.id = "azuryOrderAlarmStyles";
+
+        style.textContent = `
+            .azury-order-alarm {
+                position: fixed;
+                top: 18px;
+                right: 18px;
+                z-index: 120000;
+                width: min(430px, calc(100vw - 36px));
+                overflow: hidden;
+                border: 2px solid #f6c453;
+                border-radius: 18px;
+                background: #071426;
+                color: #ffffff;
+                box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+                animation: azury-order-pulse 1.15s ease-in-out infinite alternate;
+            }
+
+            .azury-order-alarm-head {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 18px;
+                background: linear-gradient(135deg, #0b1d38, #102f63);
+            }
+
+            .azury-order-alarm-icon {
+                display: grid;
+                place-items: center;
+                width: 54px;
+                height: 54px;
+                flex: 0 0 54px;
+                border-radius: 50%;
+                background: #f6c453;
+                color: #071426;
+                font-size: 28px;
+            }
+
+            .azury-order-alarm-copy {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .azury-order-alarm-copy strong {
+                display: block;
+                margin-bottom: 5px;
+                font-size: 18px;
+            }
+
+            .azury-order-alarm-copy span {
+                display: block;
+                color: #dbeafe;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            .azury-order-alarm-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                padding: 14px 18px 18px;
+            }
+
+            .azury-order-alarm-actions .btn {
+                width: 100%;
+            }
+
+            @keyframes azury-order-pulse {
+                from {
+                    transform: scale(1);
+                }
+
+                to {
+                    transform: scale(1.012);
+                }
+            }
+
+            @media (max-width: 620px) {
+                .azury-order-alarm {
+                    top: 10px;
+                    right: 10px;
+                    width: calc(100vw - 20px);
+                }
+
+                .azury-order-alarm-actions {
+                    grid-template-columns: 1fr;
+                }
+            }
+        `;
+
+        document.head.appendChild(style);
+    }
+
+    function ensureOrderSoundButton() {
+        if (document.getElementById("orderSoundButton")) {
+            return;
+        }
+
+        const refreshButton = el.globalRefreshButton;
+
+        if (!refreshButton?.parentElement) {
+            return;
+        }
+
+        const button = document.createElement("button");
+
+        button.id = "orderSoundButton";
+        button.className = "btn btn-secondary";
+        button.type = "button";
+        button.dataset.orderSoundToggle = "true";
+        button.textContent = "🔔 Ativar som";
+
+        refreshButton.parentElement.insertBefore(
+            button,
+            refreshButton
+        );
+    }
+
+    function updateOrderSoundButton() {
+        const button = document.getElementById("orderSoundButton");
+
+        if (!button) {
+            return;
+        }
+
+        button.textContent = state.soundEnabled
+            ? "🔔 Som ativo"
+            : "🔔 Ativar som";
+
+        button.setAttribute(
+            "aria-pressed",
+            String(state.soundEnabled)
+        );
+    }
+
+    function playOrderAlarmPattern() {
+        const context = state.audioContext;
+
+        if (
+            !state.soundEnabled ||
+            !context ||
+            context.state !== "running"
+        ) {
+            return;
+        }
+
+        const start = context.currentTime;
+
+        const tones = [
+            { offset: 0, frequency: 880, duration: 0.16 },
+            { offset: 0.23, frequency: 1175, duration: 0.19 },
+            { offset: 0.50, frequency: 880, duration: 0.16 }
+        ];
+
+        tones.forEach(tone => {
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+
+            oscillator.type = "sine";
+
+            oscillator.frequency.setValueAtTime(
+                tone.frequency,
+                start + tone.offset
+            );
+
+            gain.gain.setValueAtTime(
+                0.0001,
+                start + tone.offset
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.22,
+                start + tone.offset + 0.025
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.0001,
+                start + tone.offset + tone.duration
+            );
+
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+
+            oscillator.start(start + tone.offset);
+
+            oscillator.stop(
+                start + tone.offset + tone.duration + 0.03
+            );
+        });
+    }
+
+    async function activateOrderSound() {
+        const AudioContextClass =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+            throw new Error(
+                "Este navegador não oferece suporte ao som de novos pedidos."
+            );
+        }
+
+        if (!state.audioContext) {
+            state.audioContext = new AudioContextClass();
+        }
+
+        if (state.audioContext.state !== "running") {
+            await state.audioContext.resume();
+        }
+
+        state.soundEnabled =
+            state.audioContext.state === "running";
+
+        updateOrderSoundButton();
+
+        if (!state.soundEnabled) {
+            throw new Error(
+                "O navegador não liberou o áudio. Clique novamente em Ativar som."
+            );
+        }
+
+        playOrderAlarmPattern();
+
+        showMessage(
+            "Som de novos pedidos ativado."
+        );
+    }
+
+    function stopOrderAlarm() {
+        if (state.alarmTimer) {
+            clearInterval(state.alarmTimer);
+            state.alarmTimer = null;
+        }
+
+        document
+            .getElementById("azuryOrderAlarm")
+            ?.remove();
+
+        state.activeAlarmOrderId = null;
+        state.activeAlarmCode = null;
+    }
+
+    function showNewOrderAlarm(order) {
+        const orderId = order?.id || null;
+        const code =
+            order?.codigo ||
+            orderId ||
+            "Novo pedido";
+
+        state.activeAlarmOrderId = orderId;
+        state.activeAlarmCode = code;
+
+        injectOrderAlarmStyles();
+
+        document
+            .getElementById("azuryOrderAlarm")
+            ?.remove();
+
+        const alert = document.createElement("section");
+
+        alert.id = "azuryOrderAlarm";
+        alert.className = "azury-order-alarm";
+        alert.setAttribute("role", "alert");
+
+        alert.innerHTML = `
+            <div class="azury-order-alarm-head">
+                <div class="azury-order-alarm-icon">
+                    🔔
+                </div>
+
+                <div class="azury-order-alarm-copy">
+                    <strong>
+                        NOVO PEDIDO ${escapeHtml(code)}
+                    </strong>
+
+                    <span>
+                        Um novo pedido chegou na Azury.
+                    </span>
+
+                    ${!state.soundEnabled
+                ? `
+                                <span>
+                                    Clique em “Ativar som” para liberar o alarme sonoro.
+                                </span>
+                            `
+                : ""
+            }
+                </div>
+            </div>
+
+            <div class="azury-order-alarm-actions">
+                <button
+                    class="btn btn-primary"
+                    type="button"
+                    data-order-alarm-view
+                >
+                    Ver pedido
+                </button>
+
+                <button
+                    class="btn btn-secondary"
+                    type="button"
+                    data-order-alarm-silence
+                >
+                    Silenciar
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(alert);
+
+        if (state.alarmTimer) {
+            clearInterval(state.alarmTimer);
+            state.alarmTimer = null;
+        }
+
+        if (state.soundEnabled) {
+            playOrderAlarmPattern();
+
+            state.alarmTimer = setInterval(
+                playOrderAlarmPattern,
+                2200
+            );
+        }
+
+        showMessage(
+            `Novo pedido ${code} recebido.`,
+            "success"
+        );
+    }
+
+    async function handleRealtimeOrderInsert(payload) {
+        const order = payload?.new || {};
+
+        const isManualOrder =
+            order?.dados_originais
+                ?.registro_manual === true;
+
+        try {
+            await refreshOrders();
+        } catch (error) {
+            console.error(
+                "Não foi possível atualizar os pedidos após o evento em tempo real.",
+                error
+            );
+        }
+
+        if (isManualOrder) {
+            return;
+        }
+
+        showNewOrderAlarm(order);
+    }
+
+    function stopRealtimeOrders() {
+        if (!state.realtimeChannel) {
+            return;
+        }
+
+        try {
+            supabase.removeChannel(
+                state.realtimeChannel
+            );
+        } catch (error) {
+            console.warn(
+                "Não foi possível encerrar o canal de pedidos em tempo real.",
+                error
+            );
+        }
+
+        state.realtimeChannel = null;
+    }
+
+    function startRealtimeOrders() {
+        stopRealtimeOrders();
+
+        state.realtimeChannel =
+            supabase
+                .channel(
+                    `azury-admin-pedidos-${Date.now()}`
+                )
+                .on(
+                    "postgres_changes",
+                    {
+                        event: "INSERT",
+                        schema: "public",
+                        table: "pedidos"
+                    },
+                    payload => {
+                        handleRealtimeOrderInsert(payload)
+                            .catch(error => {
+                                console.error(
+                                    "Erro ao processar novo pedido em tempo real.",
+                                    error
+                                );
+                            });
+                    }
+                )
+                .subscribe(status => {
+                    if (status === "SUBSCRIBED") {
+                        console.info(
+                            "Pedidos em tempo real ativados."
+                        );
+                    }
+
+                    if (
+                        status === "CHANNEL_ERROR" ||
+                        status === "TIMED_OUT"
+                    ) {
+                        console.warn(
+                            "O canal de pedidos em tempo real não está disponível.",
+                            status
+                        );
+                    }
+                });
+    }
+
 
     function ensureManualOrderButton() {
         if (
@@ -2277,7 +2712,10 @@
         state.refreshTimer = null;
     }
 
+    injectOrderAlarmStyles();
+    ensureOrderSoundButton();
     ensureManualOrderButton();
+    updateOrderSoundButton();
 
     el.loginForm.addEventListener("submit", handleLogin);
     el.logoutButton.addEventListener("click", handleLogout);
@@ -2298,6 +2736,51 @@
     el.modalBackdrop.addEventListener("click", event => { if (event.target === el.modalBackdrop) closeModal(); });
 
     document.addEventListener("click", event => {
+        const soundButton =
+            event.target.closest(
+                "[data-order-sound-toggle]"
+            );
+
+        if (soundButton) {
+            activateOrderSound()
+                .catch(error => {
+                    console.error(error);
+
+                    showMessage(
+                        error.message,
+                        "error"
+                    );
+                });
+
+            return;
+        }
+
+        const alarmViewButton =
+            event.target.closest(
+                "[data-order-alarm-view]"
+            );
+
+        if (alarmViewButton) {
+            stopOrderAlarm();
+
+            navigate("pedidos")
+                .catch(error => {
+                    console.error(error);
+                });
+
+            return;
+        }
+
+        const alarmSilenceButton =
+            event.target.closest(
+                "[data-order-alarm-silence]"
+            );
+
+        if (alarmSilenceButton) {
+            stopOrderAlarm();
+            return;
+        }
+
         const manualOrderButton =
             event.target.closest(
                 "[data-new-manual-order]"
@@ -2419,6 +2902,11 @@
             setSidebarOpen(false);
             if (!el.modalBackdrop.hidden) closeModal();
         }
+    });
+
+    window.addEventListener("beforeunload", () => {
+        stopRealtimeOrders();
+        stopOrderAlarm();
     });
 
     window.addEventListener("resize", () => {
