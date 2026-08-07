@@ -1985,6 +1985,57 @@
     }
 
 
+    function scheduleWhatsAppStatusPrompt(orderId, status) {
+        window.setTimeout(() => {
+            const order =
+                state.pedidos.find(
+                    item =>
+                        String(item.id) ===
+                        String(orderId)
+                );
+
+            if (
+                !order ||
+                order.status !== status ||
+                !canNotifyOrderOnWhatsApp(order)
+            ) {
+                return;
+            }
+
+            const code =
+                order.codigo ||
+                order.id ||
+                "";
+
+            const customerName =
+                firstDefined(
+                    order,
+                    [
+                        "cliente_nome",
+                        "nome_do_cliente",
+                        "nome_cliente",
+                        "cliente",
+                        "nome"
+                    ],
+                    "cliente"
+                );
+
+            openModal({
+                title: "Avisar cliente no WhatsApp?",
+                message:
+                    `Pedido ${code} atualizado para “${statusLabel(status)}”. Deseja abrir o WhatsApp de ${customerName} com a mensagem pronta?`,
+                messageType: "success",
+                fields: [],
+                submitText: "Abrir WhatsApp",
+                submitClass: "btn-success",
+                onSubmit: async () => {
+                    openOrderWhatsApp(order);
+                }
+            });
+        }, 0);
+    }
+
+
     function renderOrders() {
         const r = state.resumoPedidos || {};
         const adminLevel =
@@ -2110,6 +2161,10 @@
                 const applyStatus = async () => {
                     await updateOrder(orderId, status, null, null);
                     showMessage(`Pedido atualizado para “${statusLabel(status)}”.`);
+                    scheduleWhatsAppStatusPrompt(
+                        orderId,
+                        status
+                    );
                 };
 
                 if (transition?.confirmMessage) {
