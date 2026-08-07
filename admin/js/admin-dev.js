@@ -8,6 +8,9 @@
         return;
     }
 
+    const VAPID_PUBLIC_KEY =
+        "BI6lY59TKq__8CSOrvnk_FEGYUCbidsGR81loR8RsaYgO3eCoHFbQsfgWPNuENMEt95K02Od4k21GIo_eVVyaxM";
+
     const STATUS_LABELS = Object.freeze({
         recebido: "Pedido recebido",
         confirmado: "Pedido aceito",
@@ -85,7 +88,10 @@
         soundEnabled: false,
         alarmTimer: null,
         activeAlarmOrderId: null,
-        activeAlarmCode: null
+        activeAlarmCode: null,
+        pushSupported: false,
+        pushEnabled: false,
+        pushSubscription: null
     };
 
     const el = {
@@ -259,6 +265,14 @@
             await loadOverview();
             startAutoRefresh();
             startRealtimeOrders();
+
+            syncExistingPushSubscription()
+                .catch(error => {
+                    console.warn(
+                        "Não foi possível verificar a inscrição push.",
+                        error
+                    );
+                });
         } catch (error) {
             console.error(error);
             await supabase.auth.signOut().catch(() => { });
@@ -286,6 +300,14 @@
             await loadOverview();
             startAutoRefresh();
             startRealtimeOrders();
+
+            syncExistingPushSubscription()
+                .catch(error => {
+                    console.warn(
+                        "Não foi possível verificar a inscrição push.",
+                        error
+                    );
+                });
         } catch (error) {
             console.error(error);
             await supabase.auth.signOut().catch(() => { });
@@ -1514,6 +1536,288 @@
     }
 
 
+    function urlBase64ToUint8Array(base64String) {
+        const padding =
+            "=".repeat(
+                (4 - base64String.length % 4) % 4
+            );
+
+        const base64 =
+            (base64String + padding)
+                .replace(/-/g, "+")
+                .replace(/_/g, "/");
+
+        const rawData =
+            window.atob(base64);
+
+        return Uint8Array.from(
+            [...rawData].map(character =>
+                character.charCodeAt(0)
+            )
+        );
+    }
+
+    function ensurePushNotificationButton() {
+        if (
+            document.getElementById(
+                "pushNotificationButton"
+            )
+        ) {
+            return;
+        }
+
+        const soundButton =
+            document.getElementById(
+                "orderSoundButton"
+            );
+
+        const referenceButton =
+            soundButton ||
+            el.globalRefreshButton;
+
+        if (!referenceButton?.parentElement) {
+            return;
+        }
+
+        const button =
+            document.createElement("button");
+
+        button.id =
+            "pushNotificationButton";
+
+        button.className =
+            "btn btn-secondary";
+
+        button.type =
+            "button";
+
+        button.dataset.pushNotificationToggle =
+            "true";
+
+        button.textContent =
+            "📲 Ativar notificações";
+
+        referenceButton.parentElement.insertBefore(
+            button,
+            referenceButton
+        );
+    }
+
+    function updatePushNotificationButton() {
+        const button =
+            document.getElementById(
+                "pushNotificationButton"
+            );
+
+        if (!button) {
+            return;
+        }
+
+        const permission =
+            "Notification" in window
+                ? Notification.permission
+                : "unsupported";
+
+        if (!state.pushSupported) {
+            button.textContent =
+                "📲 Push indisponível";
+
+            button.disabled =
+                true;
+
+            return;
+        }
+
+        if (permission === "denied") {
+            button.textContent =
+                "📲 Notificações bloqueadas";
+
+            button.disabled =
+                false;
+
+            return;
+        }
+
+        button.textContent =
+            state.pushEnabled
+                ? "📲 Notificações ativas"
+                : "📲 Ativar notificações";
+
+        button.disabled =
+            false;
+
+        button.setAttribute(
+            "aria-pressed",
+            String(
+                state.pushEnabled
+            )
+        );
+    }
+
+    async function getAdminServiceWorkerRegistration() {
+        if (!("serviceWorker" in navigator)) {
+            throw new Error(
+                "Este navegador não oferece suporte a notificações com o painel fechado."
+            );
+        }
+
+        const registration =
+            await navigator.serviceWorker.ready;
+
+        if (!registration) {
+            throw new Error(
+                "O aplicativo ainda não terminou de preparar as notificações."
+            );
+        }
+
+        return registration;
+    }
+
+    async function savePushSubscription(subscription) {
+        const subscriptionJson =
+            subscription.toJSON();
+
+        await rpc(
+            "salvar_push_admin",
+            {
+                p_subscription:
+                    subscriptionJson,
+
+                p_user_agent:
+                    navigator.userAgent ||
+                    null
+            }
+        );
+
+        state.pushSubscription =
+            subscription;
+
+        state.pushEnabled =
+            true;
+
+        updatePushNotificationButton();
+    }
+
+    async function syncExistingPushSubscription() {
+        state.pushSupported =
+            "serviceWorker" in navigator &&
+            "PushManager" in window &&
+            "Notification" in window;
+
+        updatePushNotificationButton();
+
+        if (
+            !state.pushSupported ||
+            Notification.permission !== "granted"
+        ) {
+            state.pushEnabled =
+                false;
+
+            updatePushNotificationButton();
+            return;
+        }
+
+        const registration =
+            await getAdminServiceWorkerRegistration();
+
+        const subscription =
+            await registration.pushManager
+                .getSubscription();
+
+        if (!subscription) {
+            state.pushEnabled =
+                false;
+
+            updatePushNotificationButton();
+            return;
+        }
+
+        await savePushSubscription(
+            subscription
+        );
+    }
+
+    async function activatePushNotifications() {
+        state.pushSupported =
+            "serviceWorker" in navigator &&
+            "PushManager" in window &&
+            "Notification" in window;
+
+        if (!state.pushSupported) {
+            updatePushNotificationButton();
+
+            throw new Error(
+                "Este navegador não oferece suporte às notificações push."
+            );
+        }
+
+        let permission =
+            Notification.permission;
+
+        if (permission === "default") {
+            permission =
+                await Notification.requestPermission();
+        }
+
+        if (permission !== "granted") {
+            state.pushEnabled =
+                false;
+
+            updatePushNotificationButton();
+
+            throw new Error(
+                "As notificações não foram autorizadas neste dispositivo."
+            );
+        }
+
+        const registration =
+            await getAdminServiceWorkerRegistration();
+
+        let subscription =
+            await registration.pushManager
+                .getSubscription();
+
+        if (!subscription) {
+            subscription =
+                await registration.pushManager
+                    .subscribe({
+                        userVisibleOnly:
+                            true,
+
+                        applicationServerKey:
+                            urlBase64ToUint8Array(
+                                VAPID_PUBLIC_KEY
+                            )
+                    });
+        }
+
+        await savePushSubscription(
+            subscription
+        );
+
+        showMessage(
+            "Notificações de novos pedidos ativadas neste dispositivo."
+        );
+    }
+
+    function handleServiceWorkerMessage(event) {
+        if (
+            event.data?.type !==
+            "AZURY_OPEN_ORDER"
+        ) {
+            return;
+        }
+
+        navigate("pedidos")
+            .catch(error => {
+                console.error(
+                    "Não foi possível abrir o pedido da notificação.",
+                    error
+                );
+            });
+    }
+
+
     function ensureManualOrderButton() {
         if (
             document.getElementById(
@@ -2714,8 +3018,16 @@
 
     injectOrderAlarmStyles();
     ensureOrderSoundButton();
+    ensurePushNotificationButton();
     ensureManualOrderButton();
     updateOrderSoundButton();
+
+    state.pushSupported =
+        "serviceWorker" in navigator &&
+        "PushManager" in window &&
+        "Notification" in window;
+
+    updatePushNotificationButton();
 
     el.loginForm.addEventListener("submit", handleLogin);
     el.logoutButton.addEventListener("click", handleLogout);
@@ -2736,6 +3048,25 @@
     el.modalBackdrop.addEventListener("click", event => { if (event.target === el.modalBackdrop) closeModal(); });
 
     document.addEventListener("click", event => {
+        const pushButton =
+            event.target.closest(
+                "[data-push-notification-toggle]"
+            );
+
+        if (pushButton) {
+            activatePushNotifications()
+                .catch(error => {
+                    console.error(error);
+
+                    showMessage(
+                        error.message,
+                        "error"
+                    );
+                });
+
+            return;
+        }
+
         const soundButton =
             event.target.closest(
                 "[data-order-sound-toggle]"
@@ -2903,6 +3234,13 @@
             if (!el.modalBackdrop.hidden) closeModal();
         }
     });
+
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.addEventListener(
+            "message",
+            handleServiceWorkerMessage
+        );
+    }
 
     window.addEventListener("beforeunload", () => {
         stopRealtimeOrders();
