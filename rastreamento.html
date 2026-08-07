@@ -834,11 +834,44 @@
                                 map
                             );
 
-                    setTimeout(
+                    const refreshMapLayout =
                         () => {
-                            map.invalidateSize();
-                        },
-                        0
+                            if (!map) {
+                                return;
+                            }
+
+                            map.invalidateSize({
+                                pan:
+                                    false,
+
+                                animate:
+                                    false
+                            });
+
+                            map.setView(
+                                [
+                                    latitude,
+                                    longitude
+                                ],
+                                16,
+                                {
+                                    animate:
+                                        false
+                                }
+                            );
+                        };
+
+                    window.requestAnimationFrame(
+                        () => {
+                            window.requestAnimationFrame(
+                                refreshMapLayout
+                            );
+                        }
+                    );
+
+                    window.setTimeout(
+                        refreshMapLayout,
+                        250
                     );
 
                     return;
