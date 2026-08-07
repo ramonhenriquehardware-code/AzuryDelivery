@@ -1,4 +1,4 @@
-const CACHE_NAME = "azury-admin-v2";
+const CACHE_NAME = "azury-admin-v3";
 
 const APP_FILES = [
     "./",
@@ -8,7 +8,8 @@ const APP_FILES = [
     "./js/admin-dev.js",
     "./js/supabase-dev.js",
     "./icons/icon-192.png",
-    "./icons/icon-512.png"
+    "./icons/icon-512.png",
+    "./icons/icon-notification.png"
 ];
 
 self.addEventListener("install", event => {
@@ -95,9 +96,11 @@ self.addEventListener("push", event => {
 
     const title =
         payload.title ||
-        (codigo
-            ? `🔔 Novo pedido ${codigo}`
-            : "🔔 Novo pedido Azury");
+        (
+            codigo
+                ? `🔔 Novo pedido ${codigo}`
+                : "🔔 Novo pedido Azury"
+        );
 
     const body =
         payload.body ||
@@ -114,8 +117,13 @@ self.addEventListener("push", event => {
 
     const options = {
         body,
+
+        // Logo completa exibida na notificação aberta.
         icon: "./icons/icon-192.png",
-        badge: "./icons/icon-192.png",
+
+        // Ícone monocromático usado pelo Android
+        // na barra superior do celular.
+        badge: "./icons/icon-notification.png",
 
         tag: orderId
             ? `azury-pedido-${orderId}`
