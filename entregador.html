@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0051ff">
+    <title>Azury | Entregador</title>
+
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #0f172a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top,
+                    rgba(0, 81, 255, 0.12),
+                    transparent 34rem),
+                #f5f7fb;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .page {
+            width: min(100% - 28px, 560px);
+            margin: 0 auto;
+            padding: 28px 0 40px;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .brand-name {
+            margin: 0;
+            color: #0051ff;
+            font-size: clamp(30px, 8vw, 44px);
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .brand-subtitle {
+            margin: 6px 0 0;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .card {
+            overflow: hidden;
+            border: 1px solid #dbe4f0;
+            border-radius: 22px;
+            background: #ffffff;
+            box-shadow:
+                0 20px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        .card-head {
+            padding: 22px;
+            background:
+                linear-gradient(135deg,
+                    #0051ff,
+                    #083ea8);
+            color: #ffffff;
+        }
+
+        .card-head h1 {
+            margin: 0;
+            font-size: 23px;
+        }
+
+        .card-head p {
+            margin: 8px 0 0;
+            color: #dbeafe;
+            line-height: 1.5;
+        }
+
+        .content {
+            display: grid;
+            gap: 16px;
+            padding: 22px;
+        }
+
+        .status-box {
+            border: 1px solid #dbe4f0;
+            border-radius: 16px;
+            padding: 16px;
+            background: #f8fafc;
+        }
+
+        .status-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .status-value {
+            display: block;
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .status-detail {
+            margin: 7px 0 0;
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .status-box.active {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+
+        .status-box.active .status-value {
+            color: #15803d;
+        }
+
+        .status-box.error {
+            border-color: #fecaca;
+            background: #fef2f2;
+        }
+
+        .status-box.error .status-value {
+            color: #b91c1c;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns:
+                1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric {
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .metric span {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 5px;
+            font-size: 15px;
+        }
+
+        .actions {
+            display: grid;
+            gap: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            min-height: 52px;
+            border: 0;
+            border-radius: 14px;
+            padding: 13px 16px;
+            cursor: pointer;
+            font-weight: 900;
+            transition:
+                transform 0.15s ease,
+                opacity 0.15s ease;
+        }
+
+        .btn:active {
+            transform: scale(0.985);
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .btn-primary {
+            background: #0051ff;
+            color: #ffffff;
+        }
+
+        .btn-danger {
+            background: #b42318;
+            color: #ffffff;
+        }
+
+        .helper {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .warning {
+            border-radius: 14px;
+            padding: 14px;
+            background: #fff7ed;
+            color: #9a3412;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 420px) {
+            .page {
+                width:
+                    min(100% - 18px,
+                        560px);
+                padding-top: 18px;
+            }
+
+            .card-head,
+            .content {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <header class="brand">
+            <p class="brand-name">
+                AZURY
+            </p>
+
+            <p class="brand-subtitle">
+                Área do entregador
+            </p>
+        </header>
+
+        <section class="card">
+            <div class="card-head">
+                <h1>
+                    Compartilhar localização
+                </h1>
+
+                <p>
+                    Use esta página durante a
+                    entrega para enviar sua
+                    posição ao acompanhamento
+                    do pedido.
+                </p>
+            </div>
+
+            <div class="content">
+                <div id="trackingStatus" class="status-box" role="status" aria-live="polite">
+                    <span class="status-label">
+                        Status
+                    </span>
+
+                    <strong id="statusText" class="status-value">
+                        Preparando rastreamento...
+                    </strong>
+
+                    <p id="statusDetail" class="status-detail">
+                        Aguarde um instante.
+                    </p>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <span>
+                            Último envio
+                        </span>
+
+                        <strong id="lastUpdate">
+                            —
+                        </strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>
+                            Precisão do GPS
+                        </span>
+
+                        <strong id="accuracy">
+                            —
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button id="startButton" class="btn btn-primary" type="button" disabled>
+                        📍 Iniciar compartilhamento
+                    </button>
+
+                    <button id="stopButton" class="btn btn-danger" type="button" hidden>
+                        ⏹ Parar neste celular
+                    </button>
+                </div>
+
+                <div class="warning">
+                    Mantenha esta página aberta
+                    durante a entrega e deixe a
+                    localização do celular
+                    ativada. O navegador pode
+                    reduzir ou pausar
+                    atualizações se a página
+                    ficar muito tempo em segundo
+                    plano ou com a tela
+                    bloqueada.
+                </div>
+
+                <p class="helper">
+                    O botão “Parar neste celular”
+                    interrompe somente o envio
+                    deste aparelho. O
+                    rastreamento do pedido
+                    continua ativo até ser
+                    encerrado no painel
+                    administrativo da Azury.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="admin/js/supabase-dev.js"></script>
+
+    <script>
+        (function () {
+            "use strict";
+
+            const supabase =
+                window.AzurySupabase;
+
+            const el = {
+                box:
+                    document.getElementById(
+                        "trackingStatus"
+                    ),
+
+                statusText:
+                    document.getElementById(
+                        "statusText"
+                    ),
+
+                statusDetail:
+                    document.getElementById(
+                        "statusDetail"
+                    ),
+
+                lastUpdate:
+                    document.getElementById(
+                        "lastUpdate"
+                    ),
+
+                accuracy:
+                    document.getElementById(
+                        "accuracy"
+                    ),
+
+                startButton:
+                    document.getElementById(
+                        "startButton"
+                    ),
+
+                stopButton:
+                    document.getElementById(
+                        "stopButton"
+                    )
+            };
+
+            const params =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+            const token =
+                params.get("token");
+
+            let watchId =
+                null;
+
+            let sending =
+                false;
+
+            let lastSentAt =
+                0;
+
+            let wakeLock =
+                null;
+
+            function setStatus(
+                type,
+                title,
+                detail
+            ) {
+                el.box.className =
+                    `status-box${type
+                        ? ` ${type}`
+                        : ""
+                    }`;
+
+                el.statusText.textContent =
+                    title;
+
+                el.statusDetail.textContent =
+                    detail;
+            }
+
+            function formatClock(value) {
+                const date =
+                    value
+                        ? new Date(value)
+                        : new Date();
+
+                if (
+                    Number.isNaN(
+                        date.getTime()
+                    )
+                ) {
+                    return "Agora";
+                }
+
+                return date
+                    .toLocaleTimeString(
+                        "pt-BR",
+                        {
+                            hour:
+                                "2-digit",
+
+                            minute:
+                                "2-digit",
+
+                            second:
+                                "2-digit"
+                        }
+                    );
+            }
+
+            async function requestWakeLock() {
+                if (
+                    !(
+                        "wakeLock" in
+                        navigator
+                    ) ||
+                    document
+                        .visibilityState !==
+                    "visible"
+                ) {
+                    return;
+                }
+
+                try {
+                    wakeLock =
+                        await navigator
+                            .wakeLock
+                            .request(
+                                "screen"
+                            );
+
+                    wakeLock
+                        .addEventListener(
+                            "release",
+                            () => {
+                                wakeLock =
+                                    null;
+                            }
+                        );
+                } catch (error) {
+                    console.warn(
+                        "Não foi possível manter a tela ativa.",
+                        error
+                    );
+                }
+            }
+
+            async function releaseWakeLock() {
+                if (!wakeLock) {
+                    return;
+                }
+
+                try {
+                    await wakeLock
+                        .release();
+                } catch (error) {
+                    console.warn(
+                        "Não foi possível liberar o bloqueio de tela.",
+                        error
+                    );
+                }
+
+                wakeLock =
+                    null;
+            }
+
+            function stopLocalSharing(
+                message =
+                    "Compartilhamento pausado neste celular."
+            ) {
+                if (
+                    watchId !==
+                    null
+                ) {
+                    navigator
+                        .geolocation
+                        .clearWatch(
+                            watchId
+                        );
+
+                    watchId =
+                        null;
+                }
+
+                sending =
+                    false;
+
+                releaseWakeLock()
+                    .catch(() => { });
+
+                el.startButton.hidden =
+                    false;
+
+                el.startButton.disabled =
+                    false;
+
+                el.startButton.textContent =
+                    "📍 Retomar compartilhamento";
+
+                el.stopButton.hidden =
+                    true;
+
+                setStatus(
+                    "",
+                    "Compartilhamento pausado",
+                    message
+                );
+            }
+
+            function handleGeolocationError(
+                error
+            ) {
+                const messages = {
+                    1:
+                        "A permissão de localização foi negada. Libere o acesso à localização para este site nas configurações do navegador.",
+
+                    2:
+                        "O celular não conseguiu determinar sua localização agora.",
+
+                    3:
+                        "A localização demorou demais para responder. Tente novamente."
+                };
+
+                const message =
+                    messages[
+                    error.code
+                    ] ||
+                    error.message ||
+                    "Não foi possível acessar a localização.";
+
+                stopLocalSharing(
+                    message
+                );
+
+                setStatus(
+                    "error",
+                    "Localização indisponível",
+                    message
+                );
+            }
+
+            async function sendPosition(
+                position
+            ) {
+                if (sending) {
+                    return;
+                }
+
+                const now =
+                    Date.now();
+
+                if (
+                    now -
+                    lastSentAt <
+                    4000
+                ) {
+                    return;
+                }
+
+                sending =
+                    true;
+
+                try {
+                    const latitude =
+                        position
+                            .coords
+                            .latitude;
+
+                    const longitude =
+                        position
+                            .coords
+                            .longitude;
+
+                    const accuracy =
+                        Number.isFinite(
+                            position
+                                .coords
+                                .accuracy
+                        )
+                            ? position
+                                .coords
+                                .accuracy
+                            : null;
+
+                    const {
+                        data,
+                        error
+                    } =
+                        await supabase
+                            .rpc(
+                                "atualizar_localizacao_rastreamento",
+                                {
+                                    p_token_entregador:
+                                        token,
+
+                                    p_latitude:
+                                        latitude,
+
+                                    p_longitude:
+                                        longitude,
+
+                                    p_precisao_metros:
+                                        accuracy
+                                }
+                            );
+
+                    if (error) {
+                        throw new Error(
+                            error.message ||
+                            "Não foi possível enviar a localização."
+                        );
+                    }
+
+                    lastSentAt =
+                        Date.now();
+
+                    el.lastUpdate
+                        .textContent =
+                        formatClock(
+                            data
+                                ?.atualizado_em
+                        );
+
+                    el.accuracy
+                        .textContent =
+                        accuracy ===
+                            null
+                            ? "Não informada"
+                            : `${Math.round(
+                                accuracy
+                            )} m`;
+
+                    setStatus(
+                        "active",
+                        "Localização sendo compartilhada",
+                        "O painel e o link do cliente podem receber sua posição enquanto esta página continuar ativa."
+                    );
+                } catch (error) {
+                    console.error(
+                        error
+                    );
+
+                    const message =
+                        error.message ||
+                        "Não foi possível atualizar a localização.";
+
+                    if (
+                        /não está mais ativo|finalizado|encerrado|inválido/i
+                            .test(
+                                message
+                            )
+                    ) {
+                        if (
+                            watchId !==
+                            null
+                        ) {
+                            navigator
+                                .geolocation
+                                .clearWatch(
+                                    watchId
+                                );
+
+                            watchId =
+                                null;
+                        }
+
+                        releaseWakeLock()
+                            .catch(
+                                () => { }
+                            );
+
+                        el.startButton
+                            .hidden =
+                            true;
+
+                        el.stopButton
+                            .hidden =
+                            true;
+
+                        setStatus(
+                            "error",
+                            "Rastreamento encerrado",
+                            message
+                        );
+
+                        return;
+                    }
+
+                    setStatus(
+                        "error",
+                        "Falha ao enviar localização",
+                        `${message} O celular continuará tentando enquanto o compartilhamento estiver ativo.`
+                    );
+                } finally {
+                    sending =
+                        false;
+                }
+            }
+
+            async function startSharing() {
+                if (!supabase) {
+                    setStatus(
+                        "error",
+                        "Supabase indisponível",
+                        "Não foi possível carregar a conexão necessária para o rastreamento."
+                    );
+
+                    return;
+                }
+
+                if (!token) {
+                    setStatus(
+                        "error",
+                        "Link inválido",
+                        "Este link não possui o token necessário para compartilhar a localização."
+                    );
+
+                    return;
+                }
+
+                if (
+                    !(
+                        "geolocation" in
+                        navigator
+                    )
+                ) {
+                    setStatus(
+                        "error",
+                        "GPS indisponível",
+                        "Este navegador não oferece suporte à localização."
+                    );
+
+                    return;
+                }
+
+                if (
+                    watchId !==
+                    null
+                ) {
+                    return;
+                }
+
+                el.startButton
+                    .disabled =
+                    true;
+
+                el.startButton
+                    .textContent =
+                    "Solicitando localização...";
+
+                setStatus(
+                    "",
+                    "Solicitando localização",
+                    "Autorize o acesso à localização quando o navegador perguntar."
+                );
+
+                await requestWakeLock();
+
+                watchId =
+                    navigator
+                        .geolocation
+                        .watchPosition(
+                            position => {
+                                el.startButton
+                                    .hidden =
+                                    true;
+
+                                el.stopButton
+                                    .hidden =
+                                    false;
+
+                                sendPosition(
+                                    position
+                                )
+                                    .catch(
+                                        error => {
+                                            console.error(
+                                                error
+                                            );
+                                        }
+                                    );
+                            },
+
+                            handleGeolocationError,
+
+                            {
+                                enableHighAccuracy:
+                                    true,
+
+                                maximumAge:
+                                    3000,
+
+                                timeout:
+                                    15000
+                            }
+                        );
+            }
+
+            function initialize() {
+                if (!supabase) {
+                    setStatus(
+                        "error",
+                        "Conexão indisponível",
+                        "O cliente do Supabase não foi carregado."
+                    );
+
+                    return;
+                }
+
+                if (!token) {
+                    setStatus(
+                        "error",
+                        "Link inválido",
+                        "Abra o link do entregador gerado pelo painel da Azury."
+                    );
+
+                    return;
+                }
+
+                if (
+                    !(
+                        "geolocation" in
+                        navigator
+                    )
+                ) {
+                    setStatus(
+                        "error",
+                        "GPS indisponível",
+                        "Este navegador não oferece suporte à localização."
+                    );
+
+                    return;
+                }
+
+                el.startButton
+                    .disabled =
+                    false;
+
+                setStatus(
+                    "",
+                    "Pronto para iniciar",
+                    "Toque em “Iniciar compartilhamento” e permita o acesso à localização do celular."
+                );
+            }
+
+            el.startButton
+                .addEventListener(
+                    "click",
+                    () => {
+                        startSharing()
+                            .catch(
+                                error => {
+                                    console.error(
+                                        error
+                                    );
+
+                                    setStatus(
+                                        "error",
+                                        "Não foi possível iniciar",
+                                        error.message ||
+                                        "Tente novamente."
+                                    );
+
+                                    el.startButton
+                                        .disabled =
+                                        false;
+                                }
+                            );
+                    }
+                );
+
+            el.stopButton
+                .addEventListener(
+                    "click",
+                    () => {
+                        stopLocalSharing();
+                    }
+                );
+
+            document
+                .addEventListener(
+                    "visibilitychange",
+                    () => {
+                        if (
+                            document
+                                .visibilityState ===
+                            "visible" &&
+                            watchId !==
+                            null &&
+                            !wakeLock
+                        ) {
+                            requestWakeLock()
+                                .catch(
+                                    () => { }
+                                );
+                        }
+                    }
+                );
+
+            window
+                .addEventListener(
+                    "beforeunload",
+                    () => {
+                        if (
+                            watchId !==
+                            null
+                        ) {
+                            navigator
+                                .geolocation
+                                .clearWatch(
+                                    watchId
+                                );
+                        }
+
+                        releaseWakeLock()
+                            .catch(
+                                () => { }
+                            );
+                    }
+                );
+
+            initialize();
+        })();
+    </script>
+</body>
+
+</html>

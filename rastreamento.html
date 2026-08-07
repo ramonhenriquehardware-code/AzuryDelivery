@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0051ff">
+    <title>Azury | Acompanhar entrega</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIINfQ3yns4NVZBKVnsu3lO8MZ5S9I6D1fA=" crossorigin="">
+
+    <style>
+        :root {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #0f172a;
+            background: #f5f7fb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, rgba(0, 81, 255, .12), transparent 34rem), #f5f7fb;
+        }
+
+        .page {
+            width: min(calc(100% - 24px), 760px);
+            margin: 0 auto;
+            padding: 22px 0 40px;
+        }
+
+        .brand {
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        .brand strong {
+            display: block;
+            color: #0051ff;
+            font-size: clamp(30px, 8vw, 44px);
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .brand span {
+            display: block;
+            margin-top: 5px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .card {
+            overflow: hidden;
+            border: 1px solid #dbe4f0;
+            border-radius: 22px;
+            background: #fff;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, .08);
+        }
+
+        .head {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 22px;
+            background: linear-gradient(135deg, #0051ff, #083ea8);
+            color: #fff;
+        }
+
+        .head h1 {
+            margin: 0;
+            font-size: 23px;
+        }
+
+        .head p {
+            margin: 8px 0 0;
+            color: #dbeafe;
+            line-height: 1.5;
+        }
+
+        .order-code {
+            align-self: flex-start;
+            border: 1px solid rgba(255, 255, 255, .35);
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, .13);
+            font-size: 13px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .content {
+            display: grid;
+            gap: 16px;
+            padding: 22px;
+        }
+
+        .status {
+            border: 1px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 16px;
+            background: #eff6ff;
+        }
+
+        .status span {
+            display: block;
+            margin-bottom: 5px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+        }
+
+        .status strong {
+            display: block;
+            color: #1d4ed8;
+            font-size: 18px;
+        }
+
+        .status p {
+            margin: 7px 0 0;
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .status.active {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+
+        .status.active strong {
+            color: #15803d;
+        }
+
+        .status.finished {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .status.finished strong {
+            color: #334155;
+        }
+
+        .status.error {
+            border-color: #fecaca;
+            background: #fef2f2;
+        }
+
+        .status.error strong {
+            color: #b91c1c;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .metric {
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .metric span {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 5px;
+            font-size: 15px;
+        }
+
+        .map-box {
+            overflow: hidden;
+            border: 1px solid #dbe4f0;
+            border-radius: 18px;
+            background: #eef2f7;
+        }
+
+        #map {
+            width: 100%;
+            height: 390px;
+        }
+
+        #placeholder {
+            display: grid;
+            place-items: center;
+            min-height: 390px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        #placeholder strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 17px;
+        }
+
+        #placeholder p {
+            max-width: 430px;
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .live-dot {
+            position: relative;
+            width: 22px;
+            height: 22px;
+            border: 4px solid #fff;
+            border-radius: 50%;
+            background: #0051ff;
+            box-shadow: 0 2px 10px rgba(0, 81, 255, .45);
+        }
+
+        .live-dot::after {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            border: 2px solid rgba(0, 81, 255, .35);
+            border-radius: 50%;
+            animation: pulse 1.5s ease-out infinite;
+        }
+
+        @keyframes pulse {
+            from {
+                transform: scale(.6);
+                opacity: 1;
+            }
+
+            to {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .update {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .update strong::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .helper {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .leaflet-control-attribution {
+            font-size: 9px;
+        }
+
+        @media (max-width: 620px) {
+            .page {
+                width: calc(100% - 18px);
+                padding-top: 14px;
+            }
+
+            .head {
+                display: block;
+                padding: 18px;
+            }
+
+            .order-code {
+                display: inline-block;
+                margin-top: 14px;
+            }
+
+            .content {
+                padding: 18px;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .metric:first-child {
+                grid-column: 1 / -1;
+            }
+
+            #map,
+            #placeholder {
+                height: 330px;
+                min-height: 330px;
+            }
+
+            .update {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <header class="brand">
+            <strong>AZURY</strong>
+            <span>Acompanhe sua entrega</span>
+        </header>
+
+        <section class="card">
+            <div class="head">
+                <div>
+                    <h1>Acompanhe seu pedido</h1>
+
+                    <p>
+                        Quando o entregador compartilhar a localização,
+                        você poderá acompanhar a entrega por aqui.
+                    </p>
+                </div>
+
+                <div id="orderCode" class="order-code">
+                    Pedido
+                </div>
+            </div>
+
+            <div class="content">
+                <div id="trackingStatus" class="status" role="status" aria-live="polite">
+                    <span>
+                        Status
+                    </span>
+
+                    <strong id="statusText">
+                        Carregando rastreamento...
+                    </strong>
+
+                    <p id="statusDetail">
+                        Aguarde um instante.
+                    </p>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <span>
+                            Status do pedido
+                        </span>
+
+                        <strong id="orderStatus">
+                            —
+                        </strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>
+                            Última atualização
+                        </span>
+
+                        <strong id="lastUpdate">
+                            —
+                        </strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>
+                            Precisão aproximada
+                        </span>
+
+                        <strong id="accuracy">
+                            —
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="map-box">
+                    <div id="placeholder">
+                        <div>
+                            <strong>
+                                Aguardando localização
+                            </strong>
+
+                            <p>
+                                Assim que o entregador iniciar o compartilhamento,
+                                a posição aparecerá aqui automaticamente.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="map" hidden></div>
+                </div>
+
+                <div class="update">
+                    <strong>
+                        Atualização automática ativada
+                    </strong>
+
+                    <span id="refreshText">
+                        Consultando localização...
+                    </span>
+                </div>
+
+                <p class="helper">
+                    A posição depende do GPS, da conexão e das permissões do celular
+                    do entregador. Pequenas variações de precisão são normais.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="admin/js/supabase-dev.js"></script>
+
+    <script>
+        (function () {
+            "use strict";
+
+            const REFRESH_MS =
+                5000;
+
+            const supabase =
+                window.AzurySupabase;
+
+            const token =
+                new URLSearchParams(
+                    window.location.search
+                ).get(
+                    "token"
+                );
+
+            const STATUS_LABELS =
+                Object.freeze({
+                    recebido:
+                        "Pedido recebido",
+
+                    confirmado:
+                        "Pedido aceito",
+
+                    em_preparo:
+                        "Em preparo",
+
+                    pronto:
+                        "Pronto",
+
+                    saiu_para_entrega:
+                        "Saiu para entrega",
+
+                    entregue:
+                        "Entregue",
+
+                    cancelado:
+                        "Cancelado"
+                });
+
+            const el = {
+                orderCode:
+                    document.getElementById(
+                        "orderCode"
+                    ),
+
+                box:
+                    document.getElementById(
+                        "trackingStatus"
+                    ),
+
+                statusText:
+                    document.getElementById(
+                        "statusText"
+                    ),
+
+                statusDetail:
+                    document.getElementById(
+                        "statusDetail"
+                    ),
+
+                orderStatus:
+                    document.getElementById(
+                        "orderStatus"
+                    ),
+
+                lastUpdate:
+                    document.getElementById(
+                        "lastUpdate"
+                    ),
+
+                accuracy:
+                    document.getElementById(
+                        "accuracy"
+                    ),
+
+                placeholder:
+                    document.getElementById(
+                        "placeholder"
+                    ),
+
+                map:
+                    document.getElementById(
+                        "map"
+                    ),
+
+                refreshText:
+                    document.getElementById(
+                        "refreshText"
+                    )
+            };
+
+            let refreshTimer =
+                null;
+
+            let countdownTimer =
+                null;
+
+            let nextRefreshAt =
+                0;
+
+            let loading =
+                false;
+
+            let map =
+                null;
+
+            let marker =
+                null;
+
+            let accuracyCircle =
+                null;
+
+            function label(status) {
+                return (
+                    STATUS_LABELS[
+                    status
+                    ] ||
+                    String(
+                        status ||
+                        "Não informado"
+                    )
+                );
+            }
+
+            function setStatus(
+                type,
+                title,
+                detail
+            ) {
+                el.box.className =
+                    `status${type
+                        ? ` ${type}`
+                        : ""
+                    }`;
+
+                el.statusText.textContent =
+                    title;
+
+                el.statusDetail.textContent =
+                    detail;
+            }
+
+            function formatDate(value) {
+                if (!value) {
+                    return "—";
+                }
+
+                const date =
+                    new Date(
+                        value
+                    );
+
+                if (
+                    Number.isNaN(
+                        date.getTime()
+                    )
+                ) {
+                    return "—";
+                }
+
+                return date
+                    .toLocaleString(
+                        "pt-BR",
+                        {
+                            dateStyle:
+                                "short",
+
+                            timeStyle:
+                                "medium"
+                        }
+                    );
+            }
+
+            function stopTimers() {
+                if (refreshTimer) {
+                    clearInterval(
+                        refreshTimer
+                    );
+                }
+
+                if (countdownTimer) {
+                    clearInterval(
+                        countdownTimer
+                    );
+                }
+
+                refreshTimer =
+                    null;
+
+                countdownTimer =
+                    null;
+
+                nextRefreshAt =
+                    0;
+            }
+
+            function updateCountdown() {
+                if (!nextRefreshAt) {
+                    el.refreshText
+                        .textContent =
+                        "Consultando localização...";
+
+                    return;
+                }
+
+                const seconds =
+                    Math.max(
+                        0,
+                        Math.ceil(
+                            (
+                                nextRefreshAt -
+                                Date.now()
+                            ) /
+                            1000
+                        )
+                    );
+
+                el.refreshText
+                    .textContent =
+                    seconds
+                        ? `Nova atualização em ${seconds}s`
+                        : "Atualizando agora...";
+            }
+
+            function startTimers() {
+                stopTimers();
+
+                nextRefreshAt =
+                    Date.now() +
+                    REFRESH_MS;
+
+                updateCountdown();
+
+                countdownTimer =
+                    setInterval(
+                        updateCountdown,
+                        500
+                    );
+
+                refreshTimer =
+                    setInterval(
+                        () => {
+                            fetchTracking()
+                                .catch(
+                                    console.error
+                                );
+                        },
+                        REFRESH_MS
+                    );
+            }
+
+            function resetMap(
+                title,
+                text
+            ) {
+                if (map) {
+                    map.remove();
+
+                    map =
+                        null;
+
+                    marker =
+                        null;
+
+                    accuracyCircle =
+                        null;
+                }
+
+                el.map.hidden =
+                    true;
+
+                el.placeholder.hidden =
+                    false;
+
+                el.placeholder
+                    .innerHTML =
+                    `
+                        <div>
+                            <strong>
+                                ${title}
+                            </strong>
+
+                            <p>
+                                ${text}
+                            </p>
+                        </div>
+                    `;
+            }
+
+            function ensureMap(
+                latitude,
+                longitude,
+                accuracy
+            ) {
+                if (!window.L) {
+                    throw new Error(
+                        "O mapa não pôde ser carregado."
+                    );
+                }
+
+                el.placeholder.hidden =
+                    true;
+
+                el.map.hidden =
+                    false;
+
+                if (!map) {
+                    map =
+                        window.L
+                            .map(
+                                "map"
+                            )
+                            .setView(
+                                [
+                                    latitude,
+                                    longitude
+                                ],
+                                16
+                            );
+
+                    window.L
+                        .tileLayer(
+                            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                            {
+                                maxZoom:
+                                    19,
+
+                                attribution:
+                                    "&copy; OpenStreetMap"
+                            }
+                        )
+                        .addTo(
+                            map
+                        );
+
+                    const icon =
+                        window.L
+                            .divIcon({
+                                className:
+                                    "",
+
+                                html:
+                                    '<div class="live-dot"></div>',
+
+                                iconSize:
+                                    [
+                                        22,
+                                        22
+                                    ],
+
+                                iconAnchor:
+                                    [
+                                        11,
+                                        11
+                                    ]
+                            });
+
+                    marker =
+                        window.L
+                            .marker(
+                                [
+                                    latitude,
+                                    longitude
+                                ],
+                                {
+                                    icon
+                                }
+                            )
+                            .addTo(
+                                map
+                            );
+
+                    marker.bindTooltip(
+                        "Entregador Azury"
+                    );
+
+                    accuracyCircle =
+                        window.L
+                            .circle(
+                                [
+                                    latitude,
+                                    longitude
+                                ],
+                                {
+                                    radius:
+                                        accuracy ||
+                                        0,
+
+                                    weight:
+                                        1,
+
+                                    fillOpacity:
+                                        .08
+                                }
+                            )
+                            .addTo(
+                                map
+                            );
+
+                    setTimeout(
+                        () => {
+                            map.invalidateSize();
+                        },
+                        0
+                    );
+
+                    return;
+                }
+
+                marker.setLatLng(
+                    [
+                        latitude,
+                        longitude
+                    ]
+                );
+
+                accuracyCircle
+                    .setLatLng(
+                        [
+                            latitude,
+                            longitude
+                        ]
+                    );
+
+                accuracyCircle
+                    .setRadius(
+                        accuracy ||
+                        0
+                    );
+
+                map.setView(
+                    [
+                        latitude,
+                        longitude
+                    ],
+                    Math.max(
+                        map.getZoom(),
+                        16
+                    )
+                );
+            }
+
+            function render(data) {
+                const status =
+                    data?.status ||
+                    "";
+
+                const active =
+                    data?.ativo ===
+                    true;
+
+                const finished =
+                    status ===
+                    "entregue" ||
+                    status ===
+                    "cancelado";
+
+                const rawLat =
+                    data?.latitude;
+
+                const rawLng =
+                    data?.longitude;
+
+                const rawAccuracy =
+                    data?.precisao_metros;
+
+                const latitude =
+                    Number(
+                        rawLat
+                    );
+
+                const longitude =
+                    Number(
+                        rawLng
+                    );
+
+                const accuracy =
+                    Number(
+                        rawAccuracy
+                    );
+
+                const hasPosition =
+                    rawLat !==
+                    null &&
+                    rawLat !==
+                    undefined &&
+                    rawLat !==
+                    "" &&
+                    rawLng !==
+                    null &&
+                    rawLng !==
+                    undefined &&
+                    rawLng !==
+                    "" &&
+                    Number.isFinite(
+                        latitude
+                    ) &&
+                    Number.isFinite(
+                        longitude
+                    );
+
+                const hasAccuracy =
+                    rawAccuracy !==
+                    null &&
+                    rawAccuracy !==
+                    undefined &&
+                    rawAccuracy !==
+                    "" &&
+                    Number.isFinite(
+                        accuracy
+                    );
+
+                el.orderCode
+                    .textContent =
+                    data?.codigo ||
+                    "Pedido";
+
+                el.orderStatus
+                    .textContent =
+                    label(
+                        status
+                    );
+
+                el.lastUpdate
+                    .textContent =
+                    formatDate(
+                        data
+                            ?.atualizado_em
+                    );
+
+                el.accuracy
+                    .textContent =
+                    hasAccuracy
+                        ? `${Math.round(
+                            accuracy
+                        )} m`
+                        : "—";
+
+                if (
+                    !active ||
+                    finished
+                ) {
+                    stopTimers();
+
+                    el.refreshText
+                        .textContent =
+                        "Atualizações encerradas";
+
+                    if (
+                        status ===
+                        "entregue"
+                    ) {
+                        setStatus(
+                            "finished",
+                            "Pedido entregue",
+                            "A entrega foi finalizada e o rastreamento foi encerrado."
+                        );
+
+                        resetMap(
+                            "Entrega concluída",
+                            "Obrigado por escolher a Azury!"
+                        );
+
+                        return;
+                    }
+
+                    if (
+                        status ===
+                        "cancelado"
+                    ) {
+                        setStatus(
+                            "finished",
+                            "Pedido cancelado",
+                            "Este pedido foi cancelado e o rastreamento não está mais disponível."
+                        );
+
+                        resetMap(
+                            "Rastreamento encerrado",
+                            "O acompanhamento deste pedido foi finalizado."
+                        );
+
+                        return;
+                    }
+
+                    setStatus(
+                        "finished",
+                        "Rastreamento encerrado",
+                        "A Azury encerrou o compartilhamento de localização deste pedido."
+                    );
+
+                    resetMap(
+                        "Rastreamento encerrado",
+                        "A localização não está mais sendo compartilhada."
+                    );
+
+                    return;
+                }
+
+                if (!hasPosition) {
+                    setStatus(
+                        "",
+                        "Aguardando o entregador",
+                        "O rastreamento está ativo. A localização aparecerá assim que o entregador iniciar o compartilhamento."
+                    );
+
+                    resetMap(
+                        "Aguardando localização",
+                        "Assim que o entregador iniciar o compartilhamento, a posição aparecerá aqui automaticamente."
+                    );
+
+                    return;
+                }
+
+                setStatus(
+                    "active",
+                    "Entregador em acompanhamento",
+                    "A posição abaixo é atualizada automaticamente enquanto o entregador estiver compartilhando a localização."
+                );
+
+                ensureMap(
+                    latitude,
+                    longitude,
+                    hasAccuracy
+                        ? accuracy
+                        : 0
+                );
+            }
+
+            async function fetchTracking() {
+                if (loading) {
+                    return;
+                }
+
+                loading =
+                    true;
+
+                el.refreshText
+                    .textContent =
+                    "Atualizando agora...";
+
+                try {
+                    const {
+                        data,
+                        error
+                    } =
+                        await supabase
+                            .rpc(
+                                "consultar_rastreamento_cliente",
+                                {
+                                    p_token_cliente:
+                                        token
+                                }
+                            );
+
+                    if (error) {
+                        throw new Error(
+                            error.message ||
+                            "Não foi possível consultar o rastreamento."
+                        );
+                    }
+
+                    render(
+                        data ||
+                        {}
+                    );
+
+                    if (
+                        data?.ativo ===
+                        true
+                    ) {
+                        nextRefreshAt =
+                            Date.now() +
+                            REFRESH_MS;
+
+                        updateCountdown();
+                    }
+                } catch (error) {
+                    console.error(
+                        error
+                    );
+
+                    stopTimers();
+
+                    setStatus(
+                        "error",
+                        "Rastreamento indisponível",
+                        /inválido|invalid|not found/i
+                            .test(
+                                error.message ||
+                                ""
+                            )
+                            ? "Este link é inválido ou não está mais disponível."
+                            : "Não foi possível carregar o rastreamento agora. Verifique sua conexão e tente novamente."
+                    );
+
+                    resetMap(
+                        "Localização indisponível",
+                        "Não foi possível exibir a posição deste pedido."
+                    );
+
+                    el.orderStatus
+                        .textContent =
+                        "—";
+
+                    el.lastUpdate
+                        .textContent =
+                        "—";
+
+                    el.accuracy
+                        .textContent =
+                        "—";
+
+                    el.refreshText
+                        .textContent =
+                        "Atualização interrompida";
+                } finally {
+                    loading =
+                        false;
+                }
+            }
+
+            async function initialize() {
+                if (!supabase) {
+                    setStatus(
+                        "error",
+                        "Conexão indisponível",
+                        "Não foi possível carregar a conexão necessária para o rastreamento."
+                    );
+
+                    return;
+                }
+
+                if (!token) {
+                    setStatus(
+                        "error",
+                        "Link inválido",
+                        "Abra o link de acompanhamento enviado pela Azury."
+                    );
+
+                    resetMap(
+                        "Link inválido",
+                        "Este endereço não possui o código necessário para acompanhar a entrega."
+                    );
+
+                    el.refreshText
+                        .textContent =
+                        "Atualização indisponível";
+
+                    return;
+                }
+
+                await fetchTracking();
+
+                if (
+                    !el.box
+                        .classList
+                        .contains(
+                            "error"
+                        ) &&
+                    !el.box
+                        .classList
+                        .contains(
+                            "finished"
+                        )
+                ) {
+                    startTimers();
+                }
+            }
+
+            document
+                .addEventListener(
+                    "visibilitychange",
+                    () => {
+                        if (
+                            document
+                                .visibilityState ===
+                            "visible" &&
+                            token &&
+                            supabase &&
+                            !el.box
+                                .classList
+                                .contains(
+                                    "finished"
+                                )
+                        ) {
+                            fetchTracking()
+                                .catch(
+                                    console.error
+                                );
+                        }
+                    }
+                );
+
+            window
+                .addEventListener(
+                    "beforeunload",
+                    stopTimers
+                );
+
+            initialize()
+                .catch(
+                    error => {
+                        console.error(
+                            error
+                        );
+
+                        setStatus(
+                            "error",
+                            "Não foi possível iniciar",
+                            error.message ||
+                            "Tente abrir o link novamente."
+                        );
+                    }
+                );
+        })();
+    </script>
+</body>
+
+</html>

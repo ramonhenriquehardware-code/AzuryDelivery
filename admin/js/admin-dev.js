@@ -73,6 +73,7 @@
         currentSection: "visao-geral",
         pedidos: [],
         resumoPedidos: {},
+        rastreamentos: [],
         clientes: [],
         resumoClientes: {},
         operacao: null,
@@ -326,6 +327,7 @@
         await supabase.auth.signOut();
         state.session = null;
         state.admin = null;
+        state.rastreamentos = [];
         showAuth("Sessão encerrada.", "success");
     }
 
@@ -369,12 +371,14 @@
     async function loadOverview() {
         setConnection(true, "Atualizando...");
         try {
-            const [ordersData, operationData] = await Promise.all([
+            const [ordersData, operationData, trackingData] = await Promise.all([
                 rpc("listar_pedidos_admin", { p_status: null, p_limite: 100 }),
-                rpc("listar_operacao_admin")
+                rpc("listar_operacao_admin"),
+                rpc("listar_rastreamentos_admin")
             ]);
             state.pedidos = ordersData.pedidos || [];
             state.resumoPedidos = ordersData.resumo || {};
+            state.rastreamentos = Array.isArray(trackingData) ? trackingData : [];
             state.operacao = operationData;
             renderOverview();
             renderOrders();
@@ -2036,6 +2040,193 @@
     }
 
 
+    function findOrderTracking(orderId) {
+        return state.rastreamentos.find(
+            tracking =>
+                String(tracking.pedido_id) ===
+                String(orderId)
+        ) || null;
+    }
+
+    function buildTrackingUrl(page, token) {
+        if (!token) {
+            return "";
+        }
+
+        const url = new URL(
+            page,
+            `${window.location.origin}/`
+        );
+
+        url.searchParams.set(
+            "token",
+            String(token)
+        );
+
+        return url.toString();
+    }
+
+    function getCourierTrackingUrl(tracking) {
+        return buildTrackingUrl(
+            "entregador.html",
+            tracking?.token_entregador
+        );
+    }
+
+    function getCustomerTrackingUrl(tracking) {
+        return buildTrackingUrl(
+            "rastreamento.html",
+            tracking?.token_cliente
+        );
+    }
+
+    function openCourierTracking(tracking) {
+        if (
+            !tracking ||
+            tracking.ativo !== true ||
+            !tracking.token_entregador
+        ) {
+            throw new Error(
+                "Este pedido não possui rastreamento ativo para o entregador."
+            );
+        }
+
+        const url =
+            getCourierTrackingUrl(tracking);
+
+        const opened = window.open(
+            url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        if (!opened) {
+            window.location.href = url;
+        }
+    }
+
+    function openCustomerTrackingWhatsApp(order, tracking) {
+        if (!order) {
+            throw new Error(
+                "Pedido não encontrado no painel."
+            );
+        }
+
+        if (
+            !tracking ||
+            tracking.ativo !== true ||
+            !tracking.token_cliente
+        ) {
+            throw new Error(
+                "Este pedido não possui rastreamento ativo para o cliente."
+            );
+        }
+
+        const phone = firstDefined(
+            order,
+            [
+                "telefone_do_cliente",
+                "cliente_telefone",
+                "telefone"
+            ],
+            ""
+        );
+
+        const normalizedPhone =
+            normalizeWhatsAppPhone(phone);
+
+        if (normalizedPhone.length < 12) {
+            throw new Error(
+                "Este pedido não possui um WhatsApp válido."
+            );
+        }
+
+        const code =
+            order.codigo ||
+            order.id ||
+            "";
+
+        const customerName =
+            firstDefined(
+                order,
+                [
+                    "cliente_nome",
+                    "nome_do_cliente",
+                    "nome_cliente",
+                    "cliente",
+                    "nome"
+                ],
+                "cliente"
+            );
+
+        const trackingUrl =
+            getCustomerTrackingUrl(tracking);
+
+        const message =
+            `Olá, ${customerName}! Você pode acompanhar a entrega do pedido ${code} da Azury em tempo real por este link:\n${trackingUrl}`;
+
+        const url =
+            `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`;
+
+        const opened = window.open(
+            url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        if (!opened) {
+            window.location.href = url;
+        }
+    }
+
+    async function activateOrderTracking(orderId) {
+        const result = await rpc(
+            "ativar_rastreamento_admin",
+            {
+                p_pedido_id: orderId
+            }
+        );
+
+        await refreshOrders();
+
+        return result;
+    }
+
+    async function endOrderTracking(orderId) {
+        const result = await rpc(
+            "encerrar_rastreamento_admin",
+            {
+                p_pedido_id: orderId
+            }
+        );
+
+        await refreshOrders();
+
+        return result;
+    }
+
+    async function endOrderTrackingIfActive(orderId) {
+        const tracking =
+            findOrderTracking(orderId);
+
+        if (!tracking || tracking.ativo !== true) {
+            return true;
+        }
+
+        try {
+            await endOrderTracking(orderId);
+            return true;
+        } catch (error) {
+            console.warn(
+                "O pedido foi finalizado, mas não foi possível encerrar o rastreamento automaticamente.",
+                error
+            );
+
+            return false;
+        }
+    }
+
+
     function printPaymentLabel(value) {
         const key = String(value || "")
             .trim()
@@ -2611,6 +2802,11 @@
             const payment = firstDefined(order, ["forma_pagamento"], "Não informada");
             const paymentStatus = firstDefined(order, ["status_pagamento"], "pendente");
             const note = firstDefined(order, ["observacoes", "observacao"], "");
+            const tracking = findOrderTracking(order.id);
+            const trackingActive = tracking?.ativo === true;
+            const canStartTracking =
+                !trackingActive &&
+                !["entregue", "cancelado"].includes(order.status);
 
             return `<article class="order-card" data-order-id="${escapeHtml(order.id)}">
                 <header class="order-head">
@@ -2623,6 +2819,7 @@
                     <div class="order-metric"><span>Entrega</span><strong>${formatMoney(fee)}</strong></div>
                     <div class="order-metric"><span>Total</span><strong>${formatMoney(total)}</strong></div>
                     <div class="order-metric"><span>Pagamento</span><strong>${escapeHtml(payment)} • ${escapeHtml(paymentStatus)}</strong></div>
+                    <div class="order-metric"><span>Rastreamento</span><strong>${trackingActive ? "Ativo" : "Desativado"}</strong></div>
                 </div>
                 <div class="order-body">
                     <div class="order-block"><h4>Cliente e entrega</h4><p><strong>Telefone:</strong> ${escapeHtml(phone)}</p><p><strong>E-mail:</strong> ${escapeHtml(email)}</p>${addressHtml(order)}${note ? `<p><strong>Observação:</strong> ${escapeHtml(note)}</p>` : ""}</div>
@@ -2631,6 +2828,14 @@
                 <footer class="order-actions">
                     ${next ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>` : ""}
                     <button class="btn btn-secondary" data-order-action="print" type="button">🖨️ Imprimir comanda</button>
+                    ${trackingActive
+                    ? `
+                            <button class="btn btn-secondary" data-order-action="tracking-courier" type="button">🛵 Abrir entregador</button>
+                            <button class="btn btn-success" data-order-action="tracking-customer" type="button">🔗 Enviar rastreamento</button>
+                            <button class="btn btn-danger" data-order-action="tracking-end" type="button">⏹ Encerrar rastreamento</button>
+                        `
+                    : ""}
+                    ${canStartTracking ? `<button class="btn btn-secondary" data-order-action="tracking-start" type="button">📍 Ativar rastreamento</button>` : ""}
                     ${canNotifyOrderOnWhatsApp(order) ? `<button class="btn btn-success" data-order-action="whatsapp" type="button">💬 Avisar cliente</button>` : ""}
                     ${canEditOrders ? `<button class="btn btn-secondary" data-order-action="edit" type="button">Editar pedido</button>` : ""}
                     ${!["entregue", "cancelado"].includes(order.status) ? `<button class="btn btn-danger" data-order-action="cancel" type="button">Cancelar</button>` : ""}
@@ -2644,9 +2849,13 @@
     async function refreshOrders() {
         setLoading(el.ordersList, "Atualizando pedidos...");
         try {
-            const data = await rpc("listar_pedidos_admin", { p_status: null, p_limite: 100 });
+            const [data, trackingData] = await Promise.all([
+                rpc("listar_pedidos_admin", { p_status: null, p_limite: 100 }),
+                rpc("listar_rastreamentos_admin")
+            ]);
             state.pedidos = data.pedidos || [];
             state.resumoPedidos = data.resumo || {};
+            state.rastreamentos = Array.isArray(trackingData) ? trackingData : [];
             renderOrders();
             renderOverview();
         } catch (error) {
@@ -2674,6 +2883,102 @@
         button.disabled = true;
 
         try {
+            if (action === "tracking-start") {
+                const order =
+                    state.pedidos.find(
+                        item =>
+                            String(item.id) ===
+                            String(orderId)
+                    );
+
+                if (!order) {
+                    throw new Error(
+                        "Pedido não encontrado no painel."
+                    );
+                }
+
+                const result =
+                    await activateOrderTracking(
+                        orderId
+                    );
+
+                showMessage(
+                    result?.ativo === true
+                        ? `Rastreamento do pedido ${order.codigo || order.id} ativado.`
+                        : "Rastreamento ativado."
+                );
+
+                return;
+            }
+
+            if (action === "tracking-courier") {
+                const tracking =
+                    findOrderTracking(orderId);
+
+                openCourierTracking(
+                    tracking
+                );
+
+                return;
+            }
+
+            if (action === "tracking-customer") {
+                const order =
+                    state.pedidos.find(
+                        item =>
+                            String(item.id) ===
+                            String(orderId)
+                    );
+
+                const tracking =
+                    findOrderTracking(orderId);
+
+                openCustomerTrackingWhatsApp(
+                    order,
+                    tracking
+                );
+
+                return;
+            }
+
+            if (action === "tracking-end") {
+                const order =
+                    state.pedidos.find(
+                        item =>
+                            String(item.id) ===
+                            String(orderId)
+                    );
+
+                const code =
+                    order?.codigo ||
+                    order?.id ||
+                    "";
+
+                openModal({
+                    title: "Encerrar rastreamento?",
+                    message:
+                        `Confirma o encerramento do rastreamento do pedido ${code}? A localização atual será apagada e os links deixarão de acompanhar novas posições.`,
+                    messageType: "warning",
+                    fields: [],
+                    submitText: "Encerrar rastreamento",
+                    submitClass: "btn-danger",
+                    onSubmit: async () => {
+                        const result =
+                            await endOrderTracking(
+                                orderId
+                            );
+
+                        showMessage(
+                            result?.mensagem ||
+                            `Rastreamento do pedido ${code} encerrado.`,
+                            "warning"
+                        );
+                    }
+                });
+
+                return;
+            }
+
             if (action === "print") {
                 const order =
                     state.pedidos.find(
@@ -2706,7 +3011,25 @@
 
                 const applyStatus = async () => {
                     await updateOrder(orderId, status, null, null);
-                    showMessage(`Pedido atualizado para “${statusLabel(status)}”.`);
+
+                    let trackingEnded = true;
+
+                    if (status === "entregue") {
+                        trackingEnded =
+                            await endOrderTrackingIfActive(
+                                orderId
+                            );
+                    }
+
+                    showMessage(
+                        trackingEnded
+                            ? `Pedido atualizado para “${statusLabel(status)}”.`
+                            : `Pedido atualizado para “${statusLabel(status)}”, mas o rastreamento não pôde ser encerrado automaticamente.`,
+                        trackingEnded
+                            ? "success"
+                            : "warning"
+                    );
+
                     scheduleWhatsAppStatusPrompt(
                         orderId,
                         status
@@ -2736,7 +3059,18 @@
                     submitClass: "btn-danger",
                     onSubmit: async values => {
                         await updateOrder(orderId, "cancelado", null, values.motivo);
-                        showMessage("Pedido cancelado.", "warning");
+
+                        const trackingEnded =
+                            await endOrderTrackingIfActive(
+                                orderId
+                            );
+
+                        showMessage(
+                            trackingEnded
+                                ? "Pedido cancelado."
+                                : "Pedido cancelado, mas o rastreamento não pôde ser encerrado automaticamente.",
+                            "warning"
+                        );
                     }
                 });
             }
