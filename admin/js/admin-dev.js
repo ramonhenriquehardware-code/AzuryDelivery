@@ -373,7 +373,7 @@
         const number = firstDefined(order, ["numero", "endereco_numero"], "");
         const district = firstDefined(order, ["bairro", "bairro_nome", "nome_bairro", "bairro_entrega_nome"], "");
         const zip = firstDefined(order, ["cep"], "");
-        const complement = firstDefined(order, ["complemento", "endereco_complemento"], "");
+        const complement = firstDefined(order, ["complemento_endereco", "endereco_complemento", "complemento"], "");
         const parts = [street, number ? `nº ${number}` : "", district, zip ? `CEP ${zip}` : ""].filter(Boolean);
         return `${parts.length ? `<p>${escapeHtml(parts.join(" • "))}</p>` : "<p>Endereço não informado.</p>"}${complement ? `<p>Complemento: ${escapeHtml(complement)}</p>` : ""}`;
     }
@@ -1122,10 +1122,18 @@
 
     function renderOrders() {
         const r = state.resumoPedidos || {};
-        const canDeleteOrders =
+        const adminLevel =
             String(
                 state.admin?.nivel_acesso || ""
-            ).toLowerCase() === "proprietario";
+            ).toLowerCase();
+
+        const canEditOrders =
+            ["proprietario", "administrador"].includes(
+                adminLevel
+            );
+
+        const canDeleteOrders =
+            adminLevel === "proprietario";
         el.ordersSummary.innerHTML = [
             metricCard("📦", r.total ?? 0, "Total"),
             metricCard("🟡", r.recebidos ?? 0, "Recebidos"),
@@ -1173,6 +1181,7 @@
                 </div>
                 <footer class="order-actions">
                     ${next ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>` : ""}
+                    ${canEditOrders ? `<button class="btn btn-secondary" data-order-action="edit" type="button">Editar pedido</button>` : ""}
                     ${!["entregue", "cancelado"].includes(order.status) ? `<button class="btn btn-danger" data-order-action="cancel" type="button">Cancelar</button>` : ""}
                     ${canDeleteOrders ? `<button class="btn btn-danger" data-order-action="delete" type="button">Excluir pedido</button>` : ""}
                     <div class="payment-control"><select data-payment-select><option value="pendente" ${paymentStatus === "pendente" ? "selected" : ""}>Pagamento pendente</option><option value="pago" ${paymentStatus === "pago" ? "selected" : ""}>Pago</option><option value="cancelado" ${paymentStatus === "cancelado" ? "selected" : ""}>Cancelado</option><option value="estornado" ${paymentStatus === "estornado" ? "selected" : ""}>Estornado</option></select><button class="btn btn-secondary" data-order-action="payment" type="button">Salvar pagamento</button></div>
@@ -1250,6 +1259,479 @@
                         await updateOrder(orderId, "cancelado", null, values.motivo);
                         showMessage("Pedido cancelado.", "warning");
                     }
+                });
+            }
+
+            if (action === "edit") {
+                const order =
+                    state.pedidos.find(
+                        item =>
+                            String(item.id) ===
+                            String(orderId)
+                    );
+
+                if (!order) {
+                    throw new Error(
+                        "Pedido não encontrado no painel."
+                    );
+                }
+
+                const code =
+                    order.codigo ||
+                    order.id ||
+                    "";
+
+                const customerName =
+                    firstDefined(
+                        order,
+                        [
+                            "cliente_nome",
+                            "nome_do_cliente",
+                            "nome_cliente",
+                            "cliente",
+                            "nome"
+                        ],
+                        ""
+                    );
+
+                const phone =
+                    firstDefined(
+                        order,
+                        [
+                            "cliente_telefone",
+                            "telefone_do_cliente",
+                            "telefone"
+                        ],
+                        ""
+                    );
+
+                const email =
+                    firstDefined(
+                        order,
+                        [
+                            "cliente_email",
+                            "email_cliente"
+                        ],
+                        ""
+                    );
+
+                const zip =
+                    firstDefined(
+                        order,
+                        ["cep"],
+                        ""
+                    );
+
+                const street =
+                    firstDefined(
+                        order,
+                        [
+                            "rua",
+                            "logradouro",
+                            "endereco_rua"
+                        ],
+                        ""
+                    );
+
+                const number =
+                    firstDefined(
+                        order,
+                        [
+                            "numero",
+                            "endereco_numero"
+                        ],
+                        ""
+                    );
+
+                const district =
+                    firstDefined(
+                        order,
+                        [
+                            "bairro",
+                            "bairro_nome",
+                            "nome_bairro",
+                            "bairro_entrega_nome"
+                        ],
+                        ""
+                    );
+
+                const addressComplement =
+                    firstDefined(
+                        order,
+                        [
+                            "complemento_endereco",
+                            "endereco_complemento",
+                            "complemento"
+                        ],
+                        ""
+                    );
+
+                const payment =
+                    firstDefined(
+                        order,
+                        ["forma_pagamento"],
+                        "pix"
+                    );
+
+                const paymentStatus =
+                    firstDefined(
+                        order,
+                        ["status_pagamento"],
+                        "pendente"
+                    );
+
+                const changeFor =
+                    firstDefined(
+                        order,
+                        ["troco_para"],
+                        ""
+                    );
+
+                const fee =
+                    toNumber(
+                        firstDefined(
+                            order,
+                            [
+                                "taxa_entrega",
+                                "taxa"
+                            ],
+                            0
+                        )
+                    );
+
+                const discount =
+                    toNumber(
+                        firstDefined(
+                            order,
+                            ["desconto"],
+                            0
+                        )
+                    );
+
+                const note =
+                    firstDefined(
+                        order,
+                        [
+                            "observacoes",
+                            "observacao"
+                        ],
+                        ""
+                    );
+
+                openModal({
+                    title:
+                        `Editar pedido ${code}`,
+
+                    fields: [
+                        {
+                            name:
+                                "cliente_nome",
+                            label:
+                                "Nome do cliente",
+                            value:
+                                customerName,
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "cliente_telefone",
+                            label:
+                                "Telefone / WhatsApp",
+                            type:
+                                "tel",
+                            value:
+                                phone
+                        },
+                        {
+                            name:
+                                "cliente_email",
+                            label:
+                                "E-mail",
+                            type:
+                                "email",
+                            value:
+                                email
+                        },
+                        {
+                            name:
+                                "forma_pagamento",
+                            label:
+                                "Forma de pagamento",
+                            type:
+                                "select",
+                            value:
+                                payment,
+                            options: [
+                                {
+                                    value:
+                                        "pix",
+                                    label:
+                                        "Pix"
+                                },
+                                {
+                                    value:
+                                        "dinheiro",
+                                    label:
+                                        "Dinheiro"
+                                },
+                                {
+                                    value:
+                                        "cartao_debito",
+                                    label:
+                                        "Cartão de débito"
+                                },
+                                {
+                                    value:
+                                        "cartao_credito",
+                                    label:
+                                        "Cartão de crédito"
+                                }
+                            ],
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "status_pagamento",
+                            label:
+                                "Status do pagamento",
+                            type:
+                                "select",
+                            value:
+                                paymentStatus,
+                            options: [
+                                {
+                                    value:
+                                        "pendente",
+                                    label:
+                                        "Pendente"
+                                },
+                                {
+                                    value:
+                                        "pago",
+                                    label:
+                                        "Pago"
+                                },
+                                {
+                                    value:
+                                        "cancelado",
+                                    label:
+                                        "Cancelado"
+                                },
+                                {
+                                    value:
+                                        "estornado",
+                                    label:
+                                        "Estornado"
+                                }
+                            ],
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "troco_para",
+                            label:
+                                "Troco para",
+                            type:
+                                "number",
+                            step:
+                                "0.01",
+                            value:
+                                changeFor
+                        },
+                        {
+                            name:
+                                "cep",
+                            label:
+                                "CEP",
+                            value:
+                                zip,
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "rua",
+                            label:
+                                "Rua / Avenida",
+                            value:
+                                street,
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "numero",
+                            label:
+                                "Número",
+                            value:
+                                number,
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "bairro",
+                            label:
+                                "Bairro",
+                            value:
+                                district,
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "complemento_endereco",
+                            label:
+                                "Complemento do endereço",
+                            value:
+                                addressComplement
+                        },
+                        {
+                            name:
+                                "taxa_entrega",
+                            label:
+                                "Taxa de entrega",
+                            type:
+                                "number",
+                            step:
+                                "0.01",
+                            value:
+                                fee,
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "desconto",
+                            label:
+                                "Desconto",
+                            type:
+                                "number",
+                            step:
+                                "0.01",
+                            value:
+                                discount,
+                            required:
+                                true
+                        },
+                        {
+                            name:
+                                "observacoes",
+                            label:
+                                "Observações",
+                            type:
+                                "textarea",
+                            value:
+                                note,
+                            full:
+                                true
+                        }
+                    ],
+
+                    submitText:
+                        "Salvar alterações",
+
+                    submitClass:
+                        "btn-primary",
+
+                    onSubmit:
+                        async values => {
+                            const result =
+                                await rpc(
+                                    "editar_pedido_admin",
+                                    {
+                                        p_pedido_id:
+                                            orderId,
+
+                                        p_dados: {
+                                            cliente_nome:
+                                                String(
+                                                    values.cliente_nome ||
+                                                    ""
+                                                ).trim(),
+
+                                            cliente_telefone:
+                                                String(
+                                                    values.cliente_telefone ||
+                                                    ""
+                                                ).trim() ||
+                                                null,
+
+                                            cliente_email:
+                                                String(
+                                                    values.cliente_email ||
+                                                    ""
+                                                ).trim() ||
+                                                null,
+
+                                            forma_pagamento:
+                                                values.forma_pagamento,
+
+                                            status_pagamento:
+                                                values.status_pagamento,
+
+                                            troco_para:
+                                                values.troco_para === ""
+                                                    ? null
+                                                    : values.troco_para,
+
+                                            cep:
+                                                String(
+                                                    values.cep ||
+                                                    ""
+                                                ).trim(),
+
+                                            rua:
+                                                String(
+                                                    values.rua ||
+                                                    ""
+                                                ).trim(),
+
+                                            numero:
+                                                String(
+                                                    values.numero ||
+                                                    ""
+                                                ).trim(),
+
+                                            bairro:
+                                                String(
+                                                    values.bairro ||
+                                                    ""
+                                                ).trim(),
+
+                                            complemento_endereco:
+                                                String(
+                                                    values.complemento_endereco ||
+                                                    ""
+                                                ).trim() ||
+                                                null,
+
+                                            taxa_entrega:
+                                                values.taxa_entrega,
+
+                                            desconto:
+                                                values.desconto,
+
+                                            observacoes:
+                                                String(
+                                                    values.observacoes ||
+                                                    ""
+                                                ).trim() ||
+                                                null
+                                        }
+                                    }
+                                );
+
+                            await refreshOrders();
+
+                            showMessage(
+                                result?.mensagem ||
+                                `Pedido ${code} atualizado com sucesso.`
+                            );
+                        }
                 });
             }
 
