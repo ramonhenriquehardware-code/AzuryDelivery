@@ -1859,6 +1859,132 @@
     }
 
 
+    const WHATSAPP_STATUS_MESSAGES = Object.freeze({
+        confirmado: order => {
+            const code = order.codigo || order.id || "";
+            const name = firstDefined(
+                order,
+                ["cliente_nome", "nome_do_cliente", "nome_cliente", "cliente", "nome"],
+                "cliente"
+            );
+
+            return `Olá, ${name}! Seu pedido ${code} foi confirmado pela Azury. Em breve iniciaremos o preparo.`;
+        },
+
+        em_preparo: order => {
+            const code = order.codigo || order.id || "";
+            const name = firstDefined(
+                order,
+                ["cliente_nome", "nome_do_cliente", "nome_cliente", "cliente", "nome"],
+                "cliente"
+            );
+
+            return `Olá, ${name}! Seu pedido ${code} já está em preparo. Estamos preparando tudo com carinho para você.`;
+        },
+
+        pronto: order => {
+            const code = order.codigo || order.id || "";
+            const name = firstDefined(
+                order,
+                ["cliente_nome", "nome_do_cliente", "nome_cliente", "cliente", "nome"],
+                "cliente"
+            );
+
+            return `Olá, ${name}! Seu pedido ${code} está pronto e aguardando a saída para entrega.`;
+        },
+
+        saiu_para_entrega: order => {
+            const code = order.codigo || order.id || "";
+            const name = firstDefined(
+                order,
+                ["cliente_nome", "nome_do_cliente", "nome_cliente", "cliente", "nome"],
+                "cliente"
+            );
+
+            return `Olá, ${name}! Seu pedido ${code} saiu para entrega e já está a caminho.`;
+        },
+
+        entregue: order => {
+            const code = order.codigo || order.id || "";
+            const name = firstDefined(
+                order,
+                ["cliente_nome", "nome_do_cliente", "nome_cliente", "cliente", "nome"],
+                "cliente"
+            );
+
+            return `Olá, ${name}! O pedido ${code} foi marcado como entregue. Obrigado por escolher a Azury!`;
+        }
+    });
+
+    function normalizeWhatsAppPhone(value) {
+        let digits = String(value || "").replace(/\D/g, "");
+
+        if (!digits) {
+            return "";
+        }
+
+        if ((digits.length === 10 || digits.length === 11) && !digits.startsWith("55")) {
+            digits = `55${digits}`;
+        }
+
+        return digits;
+    }
+
+    function canNotifyOrderOnWhatsApp(order) {
+        if (!order || !WHATSAPP_STATUS_MESSAGES[order.status]) {
+            return false;
+        }
+
+        const phone = firstDefined(
+            order,
+            ["telefone_do_cliente", "cliente_telefone", "telefone"],
+            ""
+        );
+
+        return normalizeWhatsAppPhone(phone).length >= 12;
+    }
+
+    function openOrderWhatsApp(order) {
+        if (!order) {
+            throw new Error("Pedido não encontrado no painel.");
+        }
+
+        const phone = firstDefined(
+            order,
+            ["telefone_do_cliente", "cliente_telefone", "telefone"],
+            ""
+        );
+
+        const normalizedPhone = normalizeWhatsAppPhone(phone);
+
+        if (normalizedPhone.length < 12) {
+            throw new Error("Este pedido não possui um WhatsApp válido.");
+        }
+
+        const messageBuilder = WHATSAPP_STATUS_MESSAGES[order.status];
+
+        if (!messageBuilder) {
+            throw new Error(
+                "Não há mensagem de WhatsApp disponível para o status atual deste pedido."
+            );
+        }
+
+        const message = messageBuilder(order);
+        const url =
+            `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`;
+
+        const opened = window.open(
+            url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        if (!opened) {
+            window.location.href = url;
+        }
+    }
+
+
     function renderOrders() {
         const r = state.resumoPedidos || {};
         const adminLevel =
@@ -1920,6 +2046,7 @@
                 </div>
                 <footer class="order-actions">
                     ${next ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>` : ""}
+                    ${canNotifyOrderOnWhatsApp(order) ? `<button class="btn btn-success" data-order-action="whatsapp" type="button">💬 Avisar cliente</button>` : ""}
                     ${canEditOrders ? `<button class="btn btn-secondary" data-order-action="edit" type="button">Editar pedido</button>` : ""}
                     ${!["entregue", "cancelado"].includes(order.status) ? `<button class="btn btn-danger" data-order-action="cancel" type="button">Cancelar</button>` : ""}
                     ${canDeleteOrders ? `<button class="btn btn-danger" data-order-action="delete" type="button">Excluir pedido</button>` : ""}
@@ -1962,6 +2089,18 @@
         button.disabled = true;
 
         try {
+            if (action === "whatsapp") {
+                const order =
+                    state.pedidos.find(
+                        item =>
+                            String(item.id) ===
+                            String(orderId)
+                    );
+
+                openOrderWhatsApp(order);
+                return;
+            }
+
             if (action === "next") {
                 const status = button.dataset.nextStatus;
                 const transition = NEXT_STATUS[card.querySelector("[data-order-action='next']")
