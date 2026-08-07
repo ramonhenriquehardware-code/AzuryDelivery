@@ -895,6 +895,193 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 
+    function showOrderWarning(text) {
+        const styleId =
+            "azury-pedido-aviso-estilos";
+
+        if (!document.getElementById(styleId)) {
+            const style =
+                document.createElement("style");
+
+            style.id = styleId;
+
+            style.textContent = `
+                #azuryPedidoAviso {
+                    position: fixed;
+                    top: max(16px, env(safe-area-inset-top));
+                    right: 16px;
+                    z-index: 100000;
+                    width: min(420px, calc(100vw - 32px));
+                    display: grid;
+                    grid-template-columns: auto 1fr auto;
+                    gap: 12px;
+                    align-items: center;
+                    padding: 16px;
+                    border: 1px solid rgba(245, 158, 11, 0.28);
+                    border-left: 5px solid #f59e0b;
+                    border-radius: 16px;
+                    background: #ffffff;
+                    box-shadow: 0 18px 45px rgba(0, 25, 80, 0.22);
+                    color: #13213c;
+                    font-family: inherit;
+                    opacity: 0;
+                    transform: translateY(-18px);
+                    transition:
+                        opacity 220ms ease,
+                        transform 220ms ease;
+                }
+
+                #azuryPedidoAviso.visivel {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+
+                #azuryPedidoAviso .azury-aviso-icone {
+                    width: 42px;
+                    height: 42px;
+                    display: grid;
+                    place-items: center;
+                    border-radius: 50%;
+                    background: #fef3c7;
+                    color: #b45309;
+                    font-size: 22px;
+                    font-weight: 900;
+                }
+
+                #azuryPedidoAviso .azury-aviso-texto {
+                    min-width: 0;
+                }
+
+                #azuryPedidoAviso strong {
+                    display: block;
+                    margin-bottom: 3px;
+                    color: #b45309;
+                    font-size: 16px;
+                    line-height: 1.3;
+                }
+
+                #azuryPedidoAviso span {
+                    display: block;
+                    color: #475569;
+                    font-size: 14px;
+                    line-height: 1.4;
+                }
+
+                #azuryPedidoAviso .azury-aviso-fechar {
+                    width: 34px;
+                    height: 34px;
+                    display: grid;
+                    place-items: center;
+                    border: 0;
+                    border-radius: 50%;
+                    background: transparent;
+                    color: #64748b;
+                    font-size: 24px;
+                    line-height: 1;
+                    cursor: pointer;
+                }
+
+                #azuryPedidoAviso .azury-aviso-fechar:hover {
+                    background: #fff7ed;
+                    color: #b45309;
+                }
+
+                @media (max-width: 520px) {
+                    #azuryPedidoAviso {
+                        top: max(10px, env(safe-area-inset-top));
+                        right: 10px;
+                        width: calc(100vw - 20px);
+                        padding: 14px;
+                    }
+                }
+            `;
+
+            document.head.appendChild(style);
+        }
+
+        document
+            .getElementById("azuryPedidoAviso")
+            ?.remove();
+
+        const notification =
+            document.createElement("div");
+
+        notification.id =
+            "azuryPedidoAviso";
+
+        notification.setAttribute(
+            "role",
+            "alert"
+        );
+
+        notification.setAttribute(
+            "aria-live",
+            "assertive"
+        );
+
+        notification.innerHTML = `
+            <div class="azury-aviso-icone" aria-hidden="true">
+                !
+            </div>
+
+            <div class="azury-aviso-texto">
+                <strong>
+                    Verifique o endereço
+                </strong>
+
+                <span>
+                    ${esc(text)}
+                </span>
+            </div>
+
+            <button
+                type="button"
+                class="azury-aviso-fechar"
+                aria-label="Fechar aviso"
+            >
+                ×
+            </button>
+        `;
+
+        document.body.appendChild(
+            notification
+        );
+
+        const closeNotification = () => {
+            if (!notification.isConnected) {
+                return;
+            }
+
+            notification.classList.remove(
+                "visivel"
+            );
+
+            window.setTimeout(
+                () => notification.remove(),
+                240
+            );
+        };
+
+        notification
+            .querySelector(".azury-aviso-fechar")
+            ?.addEventListener(
+                "click",
+                closeNotification
+            );
+
+        window.requestAnimationFrame(() => {
+            notification.classList.add(
+                "visivel"
+            );
+        });
+
+        window.setTimeout(
+            closeNotification,
+            6000
+        );
+    }
+
+
     async function table(name, configure) {
         let query = sb
             .from(name)
@@ -2315,7 +2502,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (!addressValid()) {
-            alert(
+            showOrderWarning(
                 "Informe um endereço válido de um bairro atendido."
             );
 
