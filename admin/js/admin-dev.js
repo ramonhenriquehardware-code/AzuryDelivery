@@ -2036,6 +2036,539 @@
     }
 
 
+    function printPaymentLabel(value) {
+        const key = String(value || "")
+            .trim()
+            .toLowerCase();
+
+        const labels = {
+            pix: "Pix",
+            dinheiro: "Dinheiro",
+            cartao_debito: "Cartão de débito",
+            cartao_credito: "Cartão de crédito"
+        };
+
+        return labels[key] || String(value || "Não informada");
+    }
+
+    function printableOrderItemsHtml(order) {
+        const items = Array.isArray(order.itens)
+            ? order.itens
+            : [];
+
+        if (!items.length) {
+            return `<p class="print-empty">Itens não informados.</p>`;
+        }
+
+        return items
+            .map((item, index) => {
+                const name = firstDefined(
+                    item,
+                    [
+                        "produto_nome",
+                        "nome",
+                        "produto",
+                        "nome_produto"
+                    ],
+                    `Item ${index + 1}`
+                );
+
+                const size = firstDefined(
+                    item,
+                    ["tamanho_ml", "tamanho"],
+                    ""
+                );
+
+                const quantity = firstDefined(
+                    item,
+                    ["quantidade"],
+                    1
+                );
+
+                const itemNote = firstDefined(
+                    item,
+                    ["observacoes", "observacao"],
+                    ""
+                );
+
+                const complements = Array.isArray(
+                    item.complementos
+                )
+                    ? item.complementos
+                    : [];
+
+                const layers = {
+                    meio: [],
+                    cobertura: [],
+                    outros: []
+                };
+
+                complements.forEach(complement => {
+                    const complementName =
+                        typeof complement === "string"
+                            ? complement
+                            : firstDefined(
+                                complement,
+                                [
+                                    "nome",
+                                    "complemento_nome",
+                                    "nome_complemento"
+                                ],
+                                "Complemento"
+                            );
+
+                    const layer =
+                        typeof complement === "object" &&
+                            complement !== null
+                            ? normalizeKey(
+                                firstDefined(
+                                    complement,
+                                    [
+                                        "camada",
+                                        "tipo_camada",
+                                        "layer",
+                                        "posicao"
+                                    ],
+                                    ""
+                                )
+                            )
+                            : "";
+
+                    if (layer.includes("meio")) {
+                        layers.meio.push(complementName);
+                    } else if (
+                        layer.includes("cobertura") ||
+                        layer.includes("topo")
+                    ) {
+                        layers.cobertura.push(complementName);
+                    } else {
+                        layers.outros.push(complementName);
+                    }
+                });
+
+                const complementsHtml = [
+                    layers.meio.length
+                        ? `<p><strong>MEIO:</strong> ${escapeHtml(layers.meio.join(", "))}</p>`
+                        : "",
+                    layers.cobertura.length
+                        ? `<p><strong>COBERTURA:</strong> ${escapeHtml(layers.cobertura.join(", "))}</p>`
+                        : "",
+                    layers.outros.length
+                        ? `<p><strong>COMPLEMENTOS:</strong> ${escapeHtml(layers.outros.join(", "))}</p>`
+                        : ""
+                ].join("");
+
+                return `
+                    <section class="print-item">
+                        <div class="print-item-title">
+                            ${escapeHtml(quantity)}x ${escapeHtml(name)}
+                        </div>
+                        ${size ? `<p><strong>Tamanho:</strong> ${escapeHtml(size)} ml</p>` : ""}
+                        ${complementsHtml}
+                        ${itemNote ? `<p><strong>Obs. do item:</strong> ${escapeHtml(itemNote)}</p>` : ""}
+                    </section>
+                `;
+            })
+            .join("");
+    }
+
+    function printableOrderAddressHtml(order) {
+        const street = firstDefined(
+            order,
+            ["rua", "logradouro", "endereco_rua"],
+            ""
+        );
+
+        const number = firstDefined(
+            order,
+            ["numero", "endereco_numero"],
+            ""
+        );
+
+        const district = firstDefined(
+            order,
+            [
+                "bairro",
+                "bairro_nome",
+                "nome_bairro",
+                "bairro_entrega_nome"
+            ],
+            ""
+        );
+
+        const zip = firstDefined(
+            order,
+            ["cep"],
+            ""
+        );
+
+        const complement = firstDefined(
+            order,
+            [
+                "complemento_endereco",
+                "endereco_complemento",
+                "complemento"
+            ],
+            ""
+        );
+
+        const hasAddress =
+            street ||
+            number ||
+            district ||
+            zip ||
+            complement;
+
+        if (!hasAddress) {
+            return "";
+        }
+
+        const firstLine = [
+            street,
+            number ? `nº ${number}` : ""
+        ]
+            .filter(Boolean)
+            .join(", ");
+
+        return `
+            <section class="print-section">
+                <h2>ENTREGA</h2>
+                ${firstLine ? `<p>${escapeHtml(firstLine)}</p>` : ""}
+                ${district ? `<p>${escapeHtml(district)}</p>` : ""}
+                ${zip ? `<p>CEP ${escapeHtml(zip)}</p>` : ""}
+                ${complement ? `<p><strong>Complemento:</strong> ${escapeHtml(complement)}</p>` : ""}
+            </section>
+        `;
+    }
+
+    function printOrder(order) {
+        if (!order) {
+            throw new Error(
+                "Pedido não encontrado no painel."
+            );
+        }
+
+        const printWindow = window.open(
+            "",
+            "_blank",
+            "width=1200,height=900"
+        );
+
+        if (!printWindow) {
+            throw new Error(
+                "O navegador bloqueou a janela de impressão. Libere pop-ups para o painel da Azury."
+            );
+        }
+
+        const code =
+            order.codigo ||
+            order.id ||
+            "Pedido";
+
+        const customerName = firstDefined(
+            order,
+            [
+                "cliente_nome",
+                "nome_do_cliente",
+                "nome_cliente",
+                "cliente",
+                "nome"
+            ],
+            "Cliente não informado"
+        );
+
+        const payment = firstDefined(
+            order,
+            ["forma_pagamento"],
+            "Não informada"
+        );
+
+        const changeFor = firstDefined(
+            order,
+            ["troco_para"],
+            ""
+        );
+
+        const subtotal = toNumber(
+            firstDefined(
+                order,
+                ["subtotal", "valor_produtos"],
+                0
+            )
+        );
+
+        const fee = toNumber(
+            firstDefined(
+                order,
+                ["taxa_entrega", "taxa"],
+                0
+            )
+        );
+
+        const discount = toNumber(
+            firstDefined(
+                order,
+                ["desconto"],
+                0
+            )
+        );
+
+        const total = toNumber(
+            firstDefined(
+                order,
+                ["valor_total", "total"],
+                0
+            )
+        );
+
+        const note = firstDefined(
+            order,
+            ["observacoes", "observacao"],
+            ""
+        );
+
+        const createdAt = firstDefined(
+            order,
+            ["criado_em", "created_at"],
+            ""
+        );
+
+        const html = `<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Comanda ${escapeHtml(code)}</title>
+    <style>
+        @page {
+            size: 80mm auto;
+            margin: 4mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            color: #000000;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        body {
+            width: 72mm;
+            margin: 0 auto;
+        }
+
+        h1,
+        h2,
+        p {
+            margin: 0;
+        }
+
+        .print-header {
+            text-align: center;
+            padding-bottom: 3mm;
+            border-bottom: 1.5px dashed #000000;
+        }
+
+        .print-brand {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+        }
+
+        .print-type {
+            margin-top: 1mm;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .print-order-code {
+            margin-top: 2.5mm;
+            font-size: 25px;
+            font-weight: 900;
+        }
+
+        .print-date {
+            margin-top: 1mm;
+            font-size: 11px;
+        }
+
+        .print-section {
+            padding: 3mm 0;
+            border-bottom: 1.5px dashed #000000;
+        }
+
+        .print-section h2 {
+            margin-bottom: 1.5mm;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+
+        .print-section p + p {
+            margin-top: 0.8mm;
+        }
+
+        .print-item {
+            padding: 2.5mm 0;
+            border-bottom: 1px dotted #000000;
+            page-break-inside: avoid;
+        }
+
+        .print-item:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .print-item-title {
+            margin-bottom: 1.3mm;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .print-item p + p {
+            margin-top: 0.8mm;
+        }
+
+        .print-total-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 4mm;
+            margin-top: 1mm;
+        }
+
+        .print-total-row.grand-total {
+            margin-top: 2mm;
+            padding-top: 2mm;
+            border-top: 1.5px solid #000000;
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .print-observation {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: pre-wrap;
+        }
+
+        .print-empty {
+            padding: 2mm 0;
+        }
+
+        .print-footer {
+            padding-top: 3mm;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        @media screen {
+            body {
+                padding: 4mm 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="print-header">
+        <div class="print-brand">AZURY</div>
+        <div class="print-type">COMANDA DE COZINHA</div>
+        <div class="print-order-code">${escapeHtml(code)}</div>
+        <div class="print-date">${escapeHtml(formatDate(createdAt))}</div>
+    </header>
+
+    <section class="print-section">
+        <h2>CLIENTE</h2>
+        <p><strong>${escapeHtml(customerName)}</strong></p>
+    </section>
+
+    <section class="print-section">
+        <h2>ITENS DO PEDIDO</h2>
+        ${printableOrderItemsHtml(order)}
+    </section>
+
+    ${note
+                ? `
+            <section class="print-section">
+                <h2>OBSERVAÇÕES</h2>
+                <p class="print-observation">${escapeHtml(note)}</p>
+            </section>
+        `
+                : ""}
+
+    <section class="print-section">
+        <h2>PAGAMENTO</h2>
+        <p><strong>Forma:</strong> ${escapeHtml(printPaymentLabel(payment))}</p>
+        ${changeFor !== "" && changeFor !== null
+                ? `<p><strong>Troco para:</strong> ${formatMoney(changeFor)}</p>`
+                : ""}
+    </section>
+
+    ${printableOrderAddressHtml(order)}
+
+    <section class="print-section">
+        <h2>RESUMO</h2>
+        <div class="print-total-row">
+            <span>Produtos</span>
+            <strong>${formatMoney(subtotal)}</strong>
+        </div>
+        ${fee > 0
+                ? `
+            <div class="print-total-row">
+                <span>Entrega</span>
+                <strong>${formatMoney(fee)}</strong>
+            </div>
+        `
+                : ""}
+        ${discount > 0
+                ? `
+            <div class="print-total-row">
+                <span>Desconto</span>
+                <strong>- ${formatMoney(discount)}</strong>
+            </div>
+        `
+                : ""}
+        <div class="print-total-row grand-total">
+            <span>TOTAL</span>
+            <strong>${formatMoney(total)}</strong>
+        </div>
+    </section>
+
+    <footer class="print-footer">
+        AZURY • azurydelivery.com.br
+    </footer>
+</body>
+</html>`;
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+
+        printWindow.addEventListener(
+            "afterprint",
+            () => {
+                printWindow.close();
+            },
+            { once: true }
+        );
+
+        printWindow.setTimeout(
+            () => {
+                printWindow.print();
+            },
+            200
+        );
+    }
+
+
     function renderOrders() {
         const r = state.resumoPedidos || {};
         const adminLevel =
@@ -2097,6 +2630,7 @@
                 </div>
                 <footer class="order-actions">
                     ${next ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>` : ""}
+                    <button class="btn btn-secondary" data-order-action="print" type="button">🖨️ Imprimir comanda</button>
                     ${canNotifyOrderOnWhatsApp(order) ? `<button class="btn btn-success" data-order-action="whatsapp" type="button">💬 Avisar cliente</button>` : ""}
                     ${canEditOrders ? `<button class="btn btn-secondary" data-order-action="edit" type="button">Editar pedido</button>` : ""}
                     ${!["entregue", "cancelado"].includes(order.status) ? `<button class="btn btn-danger" data-order-action="cancel" type="button">Cancelar</button>` : ""}
@@ -2140,6 +2674,18 @@
         button.disabled = true;
 
         try {
+            if (action === "print") {
+                const order =
+                    state.pedidos.find(
+                        item =>
+                            String(item.id) ===
+                            String(orderId)
+                    );
+
+                printOrder(order);
+                return;
+            }
+
             if (action === "whatsapp") {
                 const order =
                     state.pedidos.find(
