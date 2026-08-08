@@ -7,8 +7,6 @@
     <meta name="theme-color" content="#0051ff">
     <title>Azury | Acompanhar entrega</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIINfQ3yns4NVZBKVnsu3lO8MZ5S9I6D1fA=" crossorigin="">
 
     <style>
         :root {
@@ -189,8 +187,11 @@
         }
 
         #map {
+            display: block;
             width: 100%;
             height: 390px;
+            border: 0;
+            background: #eef2f7;
         }
 
         #placeholder {
@@ -276,9 +277,6 @@
             line-height: 1.55;
         }
 
-        .leaflet-control-attribution {
-            font-size: 9px;
-        }
 
         @media (max-width: 620px) {
             .page {
@@ -405,7 +403,8 @@
                         </div>
                     </div>
 
-                    <div id="map" hidden></div>
+                    <iframe id="map" title="Localização do entregador" loading="eager"
+                        referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
                 </div>
 
                 <div class="update">
@@ -426,8 +425,6 @@
         </section>
     </main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -538,14 +535,8 @@
             let loading =
                 false;
 
-            let map =
-                null;
-
-            let marker =
-                null;
-
-            let accuracyCircle =
-                null;
+            let mapPositionKey =
+                "";
 
             function label(status) {
                 return (
@@ -690,21 +681,15 @@
                 title,
                 text
             ) {
-                if (map) {
-                    map.remove();
-
-                    map =
-                        null;
-
-                    marker =
-                        null;
-
-                    accuracyCircle =
-                        null;
-                }
+                mapPositionKey =
+                    "";
 
                 el.map.hidden =
                     true;
+
+                el.map.removeAttribute(
+                    "src"
+                );
 
                 el.placeholder.hidden =
                     false;
@@ -729,185 +714,42 @@
                 longitude,
                 accuracy
             ) {
-                if (!window.L) {
-                    throw new Error(
-                        "O mapa não pôde ser carregado."
-                    );
-                }
-
                 el.placeholder.hidden =
                     true;
 
                 el.map.hidden =
                     false;
 
-                if (!map) {
-                    map =
-                        window.L
-                            .map(
-                                "map"
-                            )
-                            .setView(
-                                [
-                                    latitude,
-                                    longitude
-                                ],
-                                16
-                            );
+                const positionKey =
+                    `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
 
-                    window.L
-                        .tileLayer(
-                            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                            {
-                                maxZoom:
-                                    19,
-
-                                attribution:
-                                    "&copy; OpenStreetMap"
-                            }
-                        )
-                        .addTo(
-                            map
-                        );
-
-                    const icon =
-                        window.L
-                            .divIcon({
-                                className:
-                                    "",
-
-                                html:
-                                    '<div class="live-dot"></div>',
-
-                                iconSize:
-                                    [
-                                        22,
-                                        22
-                                    ],
-
-                                iconAnchor:
-                                    [
-                                        11,
-                                        11
-                                    ]
-                            });
-
-                    marker =
-                        window.L
-                            .marker(
-                                [
-                                    latitude,
-                                    longitude
-                                ],
-                                {
-                                    icon
-                                }
-                            )
-                            .addTo(
-                                map
-                            );
-
-                    marker.bindTooltip(
-                        "Entregador Azury"
-                    );
-
-                    accuracyCircle =
-                        window.L
-                            .circle(
-                                [
-                                    latitude,
-                                    longitude
-                                ],
-                                {
-                                    radius:
-                                        accuracy ||
-                                        0,
-
-                                    weight:
-                                        1,
-
-                                    fillOpacity:
-                                        .08
-                                }
-                            )
-                            .addTo(
-                                map
-                            );
-
-                    const refreshMapLayout =
-                        () => {
-                            if (!map) {
-                                return;
-                            }
-
-                            map.invalidateSize({
-                                pan:
-                                    false,
-
-                                animate:
-                                    false
-                            });
-
-                            map.setView(
-                                [
-                                    latitude,
-                                    longitude
-                                ],
-                                16,
-                                {
-                                    animate:
-                                        false
-                                }
-                            );
-                        };
-
-                    window.requestAnimationFrame(
-                        () => {
-                            window.requestAnimationFrame(
-                                refreshMapLayout
-                            );
-                        }
-                    );
-
-                    window.setTimeout(
-                        refreshMapLayout,
-                        250
-                    );
-
+                if (
+                    mapPositionKey ===
+                    positionKey &&
+                    el.map.hasAttribute(
+                        "src"
+                    )
+                ) {
                     return;
                 }
 
-                marker.setLatLng(
-                    [
-                        latitude,
-                        longitude
-                    ]
-                );
+                const params =
+                    new URLSearchParams({
+                        q:
+                            `${latitude},${longitude}`,
 
-                accuracyCircle
-                    .setLatLng(
-                        [
-                            latitude,
-                            longitude
-                        ]
-                    );
+                        z:
+                            "16",
 
-                accuracyCircle
-                    .setRadius(
-                        accuracy ||
-                        0
-                    );
+                        output:
+                            "embed"
+                    });
 
-                map.setView(
-                    [
-                        latitude,
-                        longitude
-                    ],
-                    Math.max(
-                        map.getZoom(),
-                        16
-                    )
-                );
+                el.map.src =
+                    `https://www.google.com/maps?${params.toString()}`;
+
+                mapPositionKey =
+                    positionKey;
             }
 
             function render(data) {
