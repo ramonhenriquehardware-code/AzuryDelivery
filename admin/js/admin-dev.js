@@ -77,6 +77,7 @@
         clientes: [],
         resumoClientes: {},
         operacao: null,
+        phConfig: null,
         equipe: [],
         resumoEquipe: {},
         auditoria: [],
@@ -464,7 +465,224 @@
             .join("");
     }
 
-    function manualItemRowHtml(index) {
+    function manualSelectedEstablishment() {
+        return String(
+            el.dynamicModalForm
+                ?.querySelector('[name="estabelecimento"]')
+                ?.value ||
+            "azury"
+        ).trim();
+    }
+
+    function phProductValue(type, id) {
+        return `${type}:${id}`;
+    }
+
+    function findPhProduct(value) {
+        const [type, ...idParts] =
+            String(value || "")
+                .split(":");
+
+        const id =
+            idParts.join(":");
+
+        if (!type || !id) {
+            return null;
+        }
+
+        const collections = {
+            marmita:
+                state.phConfig?.marmitas || [],
+
+            bebida:
+                state.phConfig?.bebidas || [],
+
+            adicional:
+                state.phConfig?.adicionais || []
+        };
+
+        const collection =
+            collections[type];
+
+        if (!Array.isArray(collection)) {
+            return null;
+        }
+
+        const product =
+            collection.find(item =>
+                String(item.id) === String(id) &&
+                item.ativo !== false
+            );
+
+        if (!product) {
+            return null;
+        }
+
+        return {
+            type,
+            product
+        };
+    }
+
+    function firstPhProductValue() {
+        const marmita =
+            (state.phConfig?.marmitas || [])
+                .find(item =>
+                    item.ativo !== false
+                );
+
+        if (marmita) {
+            return phProductValue(
+                "marmita",
+                marmita.id
+            );
+        }
+
+        const bebida =
+            (state.phConfig?.bebidas || [])
+                .find(item =>
+                    item.ativo !== false
+                );
+
+        if (bebida) {
+            return phProductValue(
+                "bebida",
+                bebida.id
+            );
+        }
+
+        const adicional =
+            (state.phConfig?.adicionais || [])
+                .find(item =>
+                    item.ativo !== false
+                );
+
+        if (adicional) {
+            return phProductValue(
+                "adicional",
+                adicional.id
+            );
+        }
+
+        return "";
+    }
+
+    function phProductOptions(selectedValue = "") {
+        const groups = [
+            {
+                label: "Marmitas",
+                type: "marmita",
+                items:
+                    state.phConfig?.marmitas || []
+            },
+            {
+                label: "Bebidas",
+                type: "bebida",
+                items:
+                    state.phConfig?.bebidas || []
+            },
+            {
+                label: "Adicionais",
+                type: "adicional",
+                items:
+                    state.phConfig?.adicionais || []
+            }
+        ];
+
+        return groups
+            .map(group => {
+                const options =
+                    group.items
+                        .filter(item =>
+                            item.ativo !== false
+                        )
+                        .map(item => {
+                            const value =
+                                phProductValue(
+                                    group.type,
+                                    item.id
+                                );
+
+                            const priceText =
+                                group.type === "marmita"
+                                    ? ""
+                                    : item.preco === null || item.preco === undefined
+                                        ? " — preço a definir"
+                                        : ` — ${formatMoney(item.preco)}`;
+
+                            return `
+                                <option
+                                    value="${escapeHtml(value)}"
+                                    ${value === selectedValue ? "selected" : ""}
+                                >
+                                    ${escapeHtml(item.nome)}${escapeHtml(priceText)}
+                                </option>
+                            `;
+                        })
+                        .join("");
+
+                if (!options) {
+                    return "";
+                }
+
+                return `
+                    <optgroup label="${escapeHtml(group.label)}">
+                        ${options}
+                    </optgroup>
+                `;
+            })
+            .join("");
+    }
+
+    function phSizeOptions(product, selectedSize = "") {
+        const sizes =
+            Array.isArray(product?.tamanhos)
+                ? product.tamanhos
+                : [];
+
+        return sizes
+            .map(size => {
+                const price =
+                    size.preco;
+
+                const priceText =
+                    price === null || price === undefined
+                        ? "Preço a definir"
+                        : formatMoney(price);
+
+                return `
+                    <option
+                        value="${escapeHtml(size.capacidade_ml)}"
+                        data-price="${price === null || price === undefined ? "" : escapeHtml(price)}"
+                        ${String(size.capacidade_ml) === String(selectedSize) ? "selected" : ""}
+                    >
+                        ${escapeHtml(size.nome)} • ${escapeHtml(size.capacidade_ml)} ml — ${escapeHtml(priceText)}
+                    </option>
+                `;
+            })
+            .join("");
+    }
+
+    function phAccompanimentOptions(selectedId = "") {
+        const items =
+            (state.phConfig?.acompanhamentos || [])
+                .filter(item =>
+                    item.ativo !== false
+                );
+
+        return items
+            .map(item => `
+                <option
+                    value="${escapeHtml(item.id)}"
+                    ${String(item.id) === String(selectedId) ? "selected" : ""}
+                >
+                    ${escapeHtml(item.nome)}
+                </option>
+            `)
+            .join("");
+    }
+
+    function manualAzuryItemRowHtml(index) {
         const sizes = state.operacao?.tamanhos || [];
         const firstSize =
             sizes.find(item =>
@@ -486,6 +704,7 @@
             <article
                 data-manual-item-row
                 data-manual-item-index="${escapeHtml(index)}"
+                data-manual-item-establishment="azury"
                 style="
                     grid-column: 1 / -1;
                     border: 1px solid rgba(148, 163, 184, 0.35);
@@ -592,6 +811,359 @@
         `;
     }
 
+    function manualPhItemRowHtml(index) {
+        const defaultProductValue =
+            firstPhProductValue();
+
+        const productData =
+            findPhProduct(
+                defaultProductValue
+            );
+
+        const isMeal =
+            productData?.type === "marmita";
+
+        const firstSize =
+            isMeal &&
+            Array.isArray(
+                productData.product.tamanhos
+            )
+                ? productData.product.tamanhos[0]
+                : null;
+
+        const firstAccompaniment =
+            (state.phConfig?.acompanhamentos || [])
+                .find(item =>
+                    item.ativo !== false
+                );
+
+        const defaultPrice =
+            isMeal
+                ? firstSize?.preco
+                : productData?.product?.preco;
+
+        return `
+            <article
+                data-manual-item-row
+                data-manual-item-index="${escapeHtml(index)}"
+                data-manual-item-establishment="ph_sabor_cia"
+                style="
+                    grid-column: 1 / -1;
+                    border: 1px solid rgba(148, 163, 184, 0.35);
+                    border-radius: 16px;
+                    padding: 16px;
+                    background: rgba(15, 23, 42, 0.35);
+                "
+            >
+                <div
+                    style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 14px;
+                    "
+                >
+                    <strong>
+                        Item da PH Sabor &amp; Cia
+                    </strong>
+
+                    <button
+                        type="button"
+                        class="btn btn-danger btn-small"
+                        data-manual-remove-item
+                    >
+                        Remover
+                    </button>
+                </div>
+
+                <div
+                    style="
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+                        gap: 12px;
+                    "
+                >
+                    <label
+                        class="modal-field"
+                        style="grid-column: span 2;"
+                    >
+                        <span>Produto</span>
+
+                        <select
+                            data-manual-ph-product
+                            required
+                        >
+                            ${phProductOptions(defaultProductValue)}
+                        </select>
+                    </label>
+
+                    <label
+                        class="modal-field"
+                        data-manual-ph-size-field
+                        ${isMeal ? "" : "hidden"}
+                    >
+                        <span>Tamanho</span>
+
+                        <select
+                            data-manual-ph-size
+                            ${isMeal ? "required" : ""}
+                        >
+                            ${isMeal ? phSizeOptions(productData.product, firstSize?.capacidade_ml || "") : ""}
+                        </select>
+                    </label>
+
+                    <label
+                        class="modal-field"
+                        data-manual-ph-accompaniment-field
+                        ${isMeal ? "" : "hidden"}
+                    >
+                        <span>Acompanhamento</span>
+
+                        <select
+                            data-manual-ph-accompaniment
+                            ${isMeal ? "required" : ""}
+                        >
+                            ${isMeal ? phAccompanimentOptions(firstAccompaniment?.id || "") : ""}
+                        </select>
+                    </label>
+
+                    <label class="modal-field">
+                        <span>Quantidade</span>
+
+                        <input
+                            data-manual-quantity
+                            type="number"
+                            min="1"
+                            max="10"
+                            value="1"
+                            required
+                        >
+                    </label>
+
+                    <label class="modal-field">
+                        <span>Valor unitário final</span>
+
+                        <input
+                            data-manual-price
+                            type="text"
+                            inputmode="decimal"
+                            value="${defaultPrice === null || defaultPrice === undefined ? "" : escapeHtml(defaultPrice)}"
+                            placeholder="${defaultPrice === null || defaultPrice === undefined ? "Defina o valor cobrado" : "Ex.: 10,00"}"
+                            required
+                        >
+                    </label>
+                </div>
+            </article>
+        `;
+    }
+
+    function manualItemRowHtml(index, establishment = "azury") {
+        if (establishment === "ph_sabor_cia") {
+            return manualPhItemRowHtml(
+                index
+            );
+        }
+
+        return manualAzuryItemRowHtml(
+            index
+        );
+    }
+
+    function resetManualItemsForEstablishment(establishment) {
+        const container =
+            el.dynamicModalForm.querySelector(
+                "[data-manual-items]"
+            );
+
+        if (!container) {
+            return;
+        }
+
+        state.manualItemCounter = 1;
+
+        container.innerHTML =
+            manualItemRowHtml(
+                1,
+                establishment
+            );
+
+        const description =
+            el.dynamicModalForm.querySelector(
+                "[data-manual-items-description]"
+            );
+
+        if (description) {
+            description.textContent =
+                establishment === "ph_sabor_cia"
+                    ? "Escolha marmitas, bebidas ou adicionais da PH. Valores ainda provisórios podem ser informados manualmente."
+                    : "Informe o valor final unitário de cada copo.";
+        }
+    }
+
+    function updatePhManualProductRow(selectNode) {
+        const row =
+            selectNode.closest(
+                "[data-manual-item-row]"
+            );
+
+        if (!row) {
+            return;
+        }
+
+        const productData =
+            findPhProduct(
+                selectNode.value
+            );
+
+        if (!productData) {
+            return;
+        }
+
+        const sizeField =
+            row.querySelector(
+                "[data-manual-ph-size-field]"
+            );
+
+        const sizeSelect =
+            row.querySelector(
+                "[data-manual-ph-size]"
+            );
+
+        const accompanimentField =
+            row.querySelector(
+                "[data-manual-ph-accompaniment-field]"
+            );
+
+        const accompanimentSelect =
+            row.querySelector(
+                "[data-manual-ph-accompaniment]"
+            );
+
+        const priceInput =
+            row.querySelector(
+                "[data-manual-price]"
+            );
+
+        const isMeal =
+            productData.type === "marmita";
+
+        if (sizeField) {
+            sizeField.hidden =
+                !isMeal;
+        }
+
+        if (accompanimentField) {
+            accompanimentField.hidden =
+                !isMeal;
+        }
+
+        if (sizeSelect) {
+            sizeSelect.required =
+                isMeal;
+
+            if (isMeal) {
+                const firstSize =
+                    Array.isArray(
+                        productData.product.tamanhos
+                    )
+                        ? productData.product.tamanhos[0]
+                        : null;
+
+                sizeSelect.innerHTML =
+                    phSizeOptions(
+                        productData.product,
+                        firstSize?.capacidade_ml || ""
+                    );
+            } else {
+                sizeSelect.innerHTML = "";
+                sizeSelect.value = "";
+            }
+        }
+
+        if (accompanimentSelect) {
+            accompanimentSelect.required =
+                isMeal;
+
+            if (isMeal) {
+                const firstAccompaniment =
+                    (state.phConfig?.acompanhamentos || [])
+                        .find(item =>
+                            item.ativo !== false
+                        );
+
+                accompanimentSelect.innerHTML =
+                    phAccompanimentOptions(
+                        firstAccompaniment?.id || ""
+                    );
+            } else {
+                accompanimentSelect.innerHTML = "";
+                accompanimentSelect.value = "";
+            }
+        }
+
+        if (priceInput) {
+            if (isMeal) {
+                const selected =
+                    sizeSelect?.options[
+                        sizeSelect.selectedIndex
+                    ];
+
+                priceInput.value =
+                    selected?.dataset.price ||
+                    "";
+
+                priceInput.placeholder =
+                    selected?.dataset.price
+                        ? "Ex.: 10,00"
+                        : "Defina o valor cobrado";
+            } else {
+                const price =
+                    productData.product.preco;
+
+                priceInput.value =
+                    price === null || price === undefined
+                        ? ""
+                        : String(price);
+
+                priceInput.placeholder =
+                    price === null || price === undefined
+                        ? "Defina o valor cobrado"
+                        : "Ex.: 10,00";
+            }
+        }
+    }
+
+    function updatePhManualSizePrice(selectNode) {
+        const row =
+            selectNode.closest(
+                "[data-manual-item-row]"
+            );
+
+        const priceInput =
+            row?.querySelector(
+                "[data-manual-price]"
+            );
+
+        const selected =
+            selectNode.options[
+                selectNode.selectedIndex
+            ];
+
+        if (!priceInput) {
+            return;
+        }
+
+        priceInput.value =
+            selected?.dataset.price ||
+            "";
+
+        priceInput.placeholder =
+            selected?.dataset.price
+                ? "Ex.: 10,00"
+                : "Defina o valor cobrado";
+    }
+
     function addManualItemRow() {
         const container =
             el.dynamicModalForm.querySelector(
@@ -607,12 +1179,256 @@
         container.insertAdjacentHTML(
             "beforeend",
             manualItemRowHtml(
-                state.manualItemCounter
+                state.manualItemCounter,
+                manualSelectedEstablishment()
             )
         );
     }
 
+    function buildManualAzuryItem(row) {
+        const size =
+            Number(
+                row.querySelector(
+                    "[data-manual-size]"
+                )?.value
+            );
+
+        const quantity =
+            Number(
+                row.querySelector(
+                    "[data-manual-quantity]"
+                )?.value
+            );
+
+        const unitPrice =
+            parseMoneyInput(
+                row.querySelector(
+                    "[data-manual-price]"
+                )?.value
+            );
+
+        if (!Number.isFinite(size) || size <= 0) {
+            throw new Error(
+                "Escolha o tamanho de todos os itens."
+            );
+        }
+
+        if (
+            !Number.isInteger(quantity) ||
+            quantity < 1 ||
+            quantity > 10
+        ) {
+            throw new Error(
+                "A quantidade de um item é inválida."
+            );
+        }
+
+        if (unitPrice < 0) {
+            throw new Error(
+                "O valor de um item não pode ser negativo."
+            );
+        }
+
+        const middle =
+            splitManualComplements(
+                row.querySelector(
+                    "[data-manual-middle]"
+                )?.value,
+                "meio"
+            );
+
+        const top =
+            splitManualComplements(
+                row.querySelector(
+                    "[data-manual-top]"
+                )?.value,
+                "cobertura"
+            );
+
+        return {
+            produto_nome:
+                `Monte o Seu • ${size}ml`,
+
+            tamanho_ml:
+                size,
+
+            quantidade:
+                quantity,
+
+            preco_unitario:
+                unitPrice,
+
+            complementos: [
+                ...middle,
+                ...top
+            ]
+        };
+    }
+
+    function buildManualPhItem(row) {
+        const productSelect =
+            row.querySelector(
+                "[data-manual-ph-product]"
+            );
+
+        const productData =
+            findPhProduct(
+                productSelect?.value
+            );
+
+        if (!productData) {
+            throw new Error(
+                "Escolha todos os produtos da PH Sabor & Cia."
+            );
+        }
+
+        const quantity =
+            Number(
+                row.querySelector(
+                    "[data-manual-quantity]"
+                )?.value
+            );
+
+        if (
+            !Number.isInteger(quantity) ||
+            quantity < 1 ||
+            quantity > 10
+        ) {
+            throw new Error(
+                "A quantidade de um item da PH é inválida."
+            );
+        }
+
+        const priceInput =
+            row.querySelector(
+                "[data-manual-price]"
+            );
+
+        const rawPrice =
+            String(
+                priceInput?.value ||
+                ""
+            ).trim();
+
+        if (!rawPrice) {
+            throw new Error(
+                `Informe o valor unitário de ${productData.product.nome}.`
+            );
+        }
+
+        const unitPrice =
+            parseMoneyInput(
+                rawPrice
+            );
+
+        if (unitPrice < 0) {
+            throw new Error(
+                "O valor de um item da PH não pode ser negativo."
+            );
+        }
+
+        if (productData.type === "marmita") {
+            const sizeSelect =
+                row.querySelector(
+                    "[data-manual-ph-size]"
+                );
+
+            const size =
+                Number(
+                    sizeSelect?.value
+                );
+
+            if (!Number.isFinite(size) || size <= 0) {
+                throw new Error(
+                    `Escolha o tamanho de ${productData.product.nome}.`
+                );
+            }
+
+            const accompanimentId =
+                String(
+                    row.querySelector(
+                        "[data-manual-ph-accompaniment]"
+                    )?.value ||
+                    ""
+                );
+
+            const accompaniment =
+                (state.phConfig?.acompanhamentos || [])
+                    .find(item =>
+                        String(item.id) === accompanimentId &&
+                        item.ativo !== false
+                    );
+
+            if (!accompaniment) {
+                throw new Error(
+                    `Escolha o acompanhamento de ${productData.product.nome}.`
+                );
+            }
+
+            return {
+                produto_nome:
+                    productData.product.nome,
+
+                tamanho_ml:
+                    size,
+
+                quantidade:
+                    quantity,
+
+                preco_unitario:
+                    unitPrice,
+
+                complementos: [
+                    {
+                        nome:
+                            accompaniment.nome,
+
+                        camada:
+                            "unica",
+
+                        preco_unitario:
+                            0
+                    }
+                ]
+            };
+        }
+
+        return {
+            produto_nome:
+                productData.product.nome,
+
+            tamanho_ml:
+                null,
+
+            quantidade:
+                quantity,
+
+            preco_unitario:
+                unitPrice,
+
+            complementos: []
+        };
+    }
+
     async function submitManualOrder(formNode) {
+        const form =
+            new FormData(formNode);
+
+        const establishment =
+            String(
+                form.get("estabelecimento") ||
+                "azury"
+            ).trim();
+
+        if (![
+            "azury",
+            "ph_sabor_cia"
+        ].includes(establishment)) {
+            throw new Error(
+                "O estabelecimento selecionado é inválido."
+            );
+        }
+
         const rows = Array.from(
             formNode.querySelectorAll(
                 "[data-manual-item-row]"
@@ -625,92 +1441,19 @@
             );
         }
 
-        const items = rows.map(row => {
-            const size =
-                Number(
-                    row.querySelector(
-                        "[data-manual-size]"
-                    )?.value
+        const items =
+            establishment === "ph_sabor_cia"
+                ? rows.map(
+                    buildManualPhItem
+                )
+                : rows.map(
+                    buildManualAzuryItem
                 );
-
-            const quantity =
-                Number(
-                    row.querySelector(
-                        "[data-manual-quantity]"
-                    )?.value
-                );
-
-            const unitPrice =
-                parseMoneyInput(
-                    row.querySelector(
-                        "[data-manual-price]"
-                    )?.value
-                );
-
-            if (!Number.isFinite(size) || size <= 0) {
-                throw new Error(
-                    "Escolha o tamanho de todos os itens."
-                );
-            }
-
-            if (
-                !Number.isInteger(quantity) ||
-                quantity < 1 ||
-                quantity > 10
-            ) {
-                throw new Error(
-                    "A quantidade de um item é inválida."
-                );
-            }
-
-            if (unitPrice < 0) {
-                throw new Error(
-                    "O valor de um item não pode ser negativo."
-                );
-            }
-
-            const middle =
-                splitManualComplements(
-                    row.querySelector(
-                        "[data-manual-middle]"
-                    )?.value,
-                    "meio"
-                );
-
-            const top =
-                splitManualComplements(
-                    row.querySelector(
-                        "[data-manual-top]"
-                    )?.value,
-                    "cobertura"
-                );
-
-            return {
-                produto_nome:
-                    `Monte o Seu • ${size}ml`,
-
-                tamanho_ml:
-                    size,
-
-                quantidade:
-                    quantity,
-
-                preco_unitario:
-                    unitPrice,
-
-                complementos: [
-                    ...middle,
-                    ...top
-                ]
-            };
-        });
-
-        const form =
-            new FormData(formNode);
 
         const districtName =
             String(
-                form.get("bairro") || ""
+                form.get("bairro") ||
+                ""
             ).trim();
 
         const districtKey =
@@ -743,6 +1486,9 @@
             );
 
         const payload = {
+            estabelecimento:
+                establishment,
+
             cliente_nome:
                 String(
                     form.get("cliente_nome") ||
@@ -839,7 +1585,8 @@
                 ).trim() ||
                 null,
 
-            itens: items
+            itens:
+                items
         };
 
         const data = await rpc(
@@ -861,6 +1608,13 @@
             state.operacao =
                 await rpc(
                     "listar_operacao_admin"
+                );
+        }
+
+        if (!state.phConfig) {
+            state.phConfig =
+                await rpc(
+                    "obter_configuracao_ph_admin"
                 );
         }
 
@@ -889,6 +1643,24 @@
                     gap: 14px;
                 "
             >
+                <label class="modal-field">
+                    <span>Estabelecimento</span>
+
+                    <select
+                        name="estabelecimento"
+                        data-manual-establishment
+                        required
+                    >
+                        <option value="azury">
+                            Azury
+                        </option>
+
+                        <option value="ph_sabor_cia">
+                            PH Sabor &amp; Cia
+                        </option>
+                    </select>
+                </label>
+
                 <label class="modal-field">
                     <span>Nome do cliente</span>
 
@@ -1053,7 +1825,10 @@
                 <div>
                     <strong>Itens do pedido</strong>
 
-                    <p style="margin: 4px 0 0; opacity: 0.75;">
+                    <p
+                        data-manual-items-description
+                        style="margin: 4px 0 0; opacity: 0.75;"
+                    >
                         Informe o valor final unitário de cada copo.
                     </p>
                 </div>
@@ -1075,7 +1850,7 @@
                     gap: 14px;
                 "
             >
-                ${manualItemRowHtml(1)}
+                ${manualItemRowHtml(1, "azury")}
             </div>
 
             <label
@@ -1539,7 +2314,6 @@
                 });
     }
 
-
     function urlBase64ToUint8Array(base64String) {
         const padding =
             "=".repeat(
@@ -1821,7 +2595,6 @@
             });
     }
 
-
     function ensureManualOrderButton() {
         if (
             document.getElementById(
@@ -1862,7 +2635,6 @@
         );
     }
 
-
     const WHATSAPP_STATUS_MESSAGES = Object.freeze({
         confirmado: order => {
             const code = order.codigo || order.id || "";
@@ -1872,7 +2644,7 @@
                 "cliente"
             );
 
-            return `Olá, ${name}! Seu pedido ${code} foi confirmado pela Azury. Em breve iniciaremos o preparo.`;
+            return `Olá, ${name}! Seu pedido ${code} foi confirmado pela ${order.estabelecimento === "ph_sabor_cia" ? "PH Sabor & Cia" : "Azury"}. Em breve iniciaremos o preparo.`;
         },
 
         em_preparo: order => {
@@ -1883,7 +2655,7 @@
                 "cliente"
             );
 
-            return `Olá, ${name}! Seu pedido ${code} já está em preparo. Estamos preparando tudo com carinho para você.`;
+            return `Olá, ${name}! Seu pedido ${code} já está em preparo na ${order.estabelecimento === "ph_sabor_cia" ? "PH Sabor & Cia" : "Azury"}. Estamos preparando tudo com carinho para você.`;
         },
 
         pronto: order => {
@@ -1894,7 +2666,7 @@
                 "cliente"
             );
 
-            return `Olá, ${name}! Seu pedido ${code} está pronto e aguardando a saída para entrega.`;
+            return `Olá, ${name}! Seu pedido ${code} da ${order.estabelecimento === "ph_sabor_cia" ? "PH Sabor & Cia" : "Azury"} está pronto e aguardando a saída para entrega.`;
         },
 
         saiu_para_entrega: order => {
@@ -1905,7 +2677,7 @@
                 "cliente"
             );
 
-            return `Olá, ${name}! Seu pedido ${code} saiu para entrega e já está a caminho.`;
+            return `Olá, ${name}! Seu pedido ${code} da ${order.estabelecimento === "ph_sabor_cia" ? "PH Sabor & Cia" : "Azury"} saiu para entrega e já está a caminho.`;
         },
 
         entregue: order => {
@@ -1916,7 +2688,7 @@
                 "cliente"
             );
 
-            return `Olá, ${name}! O pedido ${code} foi marcado como entregue. Obrigado por escolher a Azury!`;
+            return `Olá, ${name}! O pedido ${code} foi marcado como entregue. Obrigado por escolher a ${order.estabelecimento === "ph_sabor_cia" ? "PH Sabor & Cia" : "Azury"}!`;
         }
     });
 
@@ -1988,7 +2760,6 @@
         }
     }
 
-
     function scheduleWhatsAppStatusPrompt(orderId, status) {
         window.setTimeout(() => {
             const order =
@@ -2038,7 +2809,6 @@
             });
         }, 0);
     }
-
 
     function findOrderTracking(orderId) {
         return state.rastreamentos.find(
@@ -2163,7 +2933,7 @@
             getCustomerTrackingUrl(tracking);
 
         const message =
-            `Olá, ${customerName}! Você pode acompanhar a entrega do pedido ${code} da Azury em tempo real por este link:\n${trackingUrl}`;
+            `Olá, ${customerName}! Você pode acompanhar a entrega do pedido ${code} da ${order.estabelecimento === "ph_sabor_cia" ? "PH Sabor & Cia" : "Azury"} em tempo real por este link:\n${trackingUrl}`;
 
         const url =
             `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`;
@@ -2225,7 +2995,6 @@
             return false;
         }
     }
-
 
     function printPaymentLabel(value) {
         const key = String(value || "")
@@ -2524,6 +3293,20 @@
             ""
         );
 
+        const isPhOrder =
+            order.estabelecimento ===
+            "ph_sabor_cia";
+
+        const printBrand =
+            isPhOrder
+                ? "PH SABOR & CIA"
+                : "AZURY";
+
+        const printFooter =
+            isPhOrder
+                ? "PH SABOR & CIA"
+                : "AZURY • azurydelivery.com.br";
+
         const html = `<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -2669,7 +3452,7 @@
 </head>
 <body>
     <header class="print-header">
-        <div class="print-brand">AZURY</div>
+        <div class="print-brand">${escapeHtml(printBrand)}</div>
         <div class="print-type">COMANDA DE COZINHA</div>
         <div class="print-order-code">${escapeHtml(code)}</div>
         <div class="print-date">${escapeHtml(formatDate(createdAt))}</div>
@@ -2733,7 +3516,7 @@
     </section>
 
     <footer class="print-footer">
-        AZURY • azurydelivery.com.br
+        ${escapeHtml(printFooter)}
     </footer>
 </body>
 </html>`;
@@ -2758,7 +3541,6 @@
             200
         );
     }
-
 
     function renderOrders() {
         const r = state.resumoPedidos || {};
@@ -2802,6 +3584,10 @@
             const payment = firstDefined(order, ["forma_pagamento"], "Não informada");
             const paymentStatus = firstDefined(order, ["status_pagamento"], "pendente");
             const note = firstDefined(order, ["observacoes", "observacao"], "");
+            const establishment =
+                order.estabelecimento === "ph_sabor_cia"
+                    ? "PH Sabor & Cia"
+                    : "Azury";
             const tracking = findOrderTracking(order.id);
             const trackingActive = tracking?.ativo === true;
             const canStartTracking =
@@ -2814,6 +3600,7 @@
                     <span class="status-badge status-${escapeHtml(order.status)}">${escapeHtml(statusLabel(order.status))}</span>
                 </header>
                 <div class="order-metrics">
+                    <div class="order-metric"><span>Estabelecimento</span><strong>${escapeHtml(establishment)}</strong></div>
                     <div class="order-metric"><span>Cliente</span><strong>${escapeHtml(customerName)}</strong></div>
                     <div class="order-metric"><span>Produtos</span><strong>${formatMoney(subtotal)}</strong></div>
                     <div class="order-metric"><span>Entrega</span><strong>${formatMoney(fee)}</strong></div>
@@ -3722,6 +4509,7 @@
         renderStoreConfig();
         renderSchedules();
         renderRewards();
+        renderPhConfigPanel();
     }
 
     function renderSizes() {
@@ -3762,6 +4550,1465 @@
         const items = state.operacao?.recompensas || [];
         if (!items.length) return setEmpty(el.rewardsList, "Nenhuma recompensa cadastrada.");
         el.rewardsList.innerHTML = items.map(item => `<article class="data-card"><div class="data-card-head"><div><h3>${escapeHtml(item.titulo)}</h3><p>${escapeHtml(item.descricao)}</p></div><span class="small-badge ${item.ativo ? "active" : "inactive"}">${item.ativo ? "Ativa" : "Inativa"}</span></div><div class="data-pairs"><div class="data-pair"><span>Tipo</span><strong>${escapeHtml(item.tipo)}</strong></div><div class="data-pair"><span>Pontos</span><strong>${escapeHtml(item.pontos_necessarios)}</strong></div><div class="data-pair"><span>Benefício</span><strong>${item.tipo === "cupom" ? `${escapeHtml(item.percentual_desconto)}%` : `${escapeHtml(item.quantidade_copos)} copo(s) de ${escapeHtml(item.tamanho_ml)} ml`}</strong></div></div><div class="data-card-actions"><button class="btn btn-secondary" data-edit-reward="${item.id}" type="button">Editar</button></div></article>`).join("");
+    }
+
+    function clonePhConfig() {
+        return JSON.parse(JSON.stringify(state.phConfig || {}));
+    }
+
+    function phPrice(value) {
+        return value === null || value === undefined || value === ""
+            ? "A definir"
+            : formatMoney(value);
+    }
+
+    function ensurePhConfigPanel() {
+        let panel = document.getElementById("phConfigPanel");
+        if (panel) return panel;
+
+        const section = document.getElementById("section-cardapio");
+        if (!section) return null;
+
+        panel = document.createElement("section");
+        panel.id = "phConfigPanel";
+        panel.className = "panel";
+        panel.style.marginTop = "24px";
+        section.appendChild(panel);
+        return panel;
+    }
+
+    function phConfigCards(items, type) {
+        if (!items.length) {
+            return `<div class="empty-state">Nenhum item cadastrado.</div>`;
+        }
+
+        return items.map(item => {
+            const isMeal = type === "marmita";
+
+            const attribute = isMeal
+                ? "data-ph-edit-meal"
+                : type === "bebida"
+                    ? "data-ph-edit-drink"
+                    : "data-ph-edit-addon";
+
+            const price = isMeal
+                ? (item.tamanhos || [])
+                    .map(size =>
+                        `${escapeHtml(
+                            size.nome ||
+                            `${size.capacidade_ml} ml`
+                        )}: ${escapeHtml(
+                            phPrice(size.preco)
+                        )}`
+                    )
+                    .join(" • ") ||
+                    "Sem tamanhos"
+                : escapeHtml(
+                    phPrice(item.preco)
+                );
+
+            return `
+                <article class="data-card">
+                    <div class="data-card-head">
+                        <div>
+                            <h3>
+                                ${escapeHtml(item.nome)}
+                            </h3>
+
+                            <p>
+                                ${price}
+                            </p>
+                        </div>
+
+                        <span
+                            class="small-badge ${item.ativo !== false ? "active" : "inactive"}"
+                        >
+                            ${item.ativo !== false ? "Ativo" : "Inativo"}
+                        </span>
+                    </div>
+
+                    ${
+                        isMeal &&
+                        item.descricao
+
+                            ? `
+                                <p style="margin-top:10px;">
+                                    ${escapeHtml(item.descricao)}
+                                </p>
+                            `
+
+                            : ""
+                    }
+
+                    <div class="data-card-actions">
+                        <button
+                            class="btn btn-secondary"
+                            ${attribute}="${escapeHtml(item.id)}"
+                            type="button"
+                        >
+                            Editar
+                        </button>
+                    </div>
+                </article>
+            `;
+        }).join("");
+    }
+
+    function renderPhConfigPanel() {
+        const panel =
+            ensurePhConfigPanel();
+
+        if (!panel) {
+            return;
+        }
+
+        if (!state.phConfig) {
+            panel.innerHTML = `
+                <div
+                    style="
+                        display:flex;
+                        align-items:center;
+                        justify-content:space-between;
+                        gap:16px;
+                        flex-wrap:wrap;
+                    "
+                >
+                    <div>
+                        <h2 style="margin:0 0 6px;">
+                            PH Sabor &amp; Cia
+                        </h2>
+
+                        <p style="margin:0;opacity:.75;">
+                            Configuração do cardápio e da operação da PH.
+                        </p>
+                    </div>
+
+                    <button
+                        class="btn btn-primary"
+                        data-ph-config-reload
+                        type="button"
+                    >
+                        Carregar configuração PH
+                    </button>
+                </div>
+            `;
+
+            return;
+        }
+
+        const config =
+            state.phConfig;
+
+        const store =
+            config.loja ||
+            {};
+
+        const address =
+            store.endereco ||
+            {};
+
+        const schedule =
+            store.horario ||
+            {};
+
+        const bands =
+            Array.isArray(
+                store.faixas_entrega
+            )
+                ? store.faixas_entrega
+                : [];
+
+        const meals =
+            Array.isArray(
+                config.marmitas
+            )
+                ? config.marmitas
+                : [];
+
+        const drinks =
+            Array.isArray(
+                config.bebidas
+            )
+                ? config.bebidas
+                : [];
+
+        const addons =
+            Array.isArray(
+                config.adicionais
+            )
+                ? config.adicionais
+                : [];
+
+        const accompaniments =
+            Array.isArray(
+                config.acompanhamentos
+            )
+                ? config.acompanhamentos
+                : [];
+
+        const days =
+            Array.isArray(
+                schedule.dias
+            )
+                ? schedule.dias.join(", ")
+                : schedule.dias ||
+                "Não informado";
+
+        const addressText = [
+            address.rua,
+
+            address.numero
+                ? `nº ${address.numero}`
+                : "",
+
+            address.bairro,
+            address.cidade,
+            address.estado
+        ]
+            .filter(Boolean)
+            .join(" • ") ||
+            "Endereço não informado";
+
+        const bandsText =
+            bands.length
+
+                ? bands
+                    .map(item =>
+                        `até ${item.ate_km} km: ${formatMoney(item.taxa)}`
+                    )
+                    .join(" • ")
+
+                : "Não informadas";
+
+        panel.innerHTML = `
+            <div
+                style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:16px;
+                    flex-wrap:wrap;
+                    margin-bottom:18px;
+                "
+            >
+                <div>
+                    <h2 style="margin:0 0 6px;">
+                        PH Sabor &amp; Cia
+                    </h2>
+
+                    <p style="margin:0;opacity:.75;">
+                        Configuração usada nos pedidos manuais da PH.
+                    </p>
+                </div>
+
+                <button
+                    class="btn btn-secondary"
+                    data-ph-config-reload
+                    type="button"
+                >
+                    Atualizar dados PH
+                </button>
+            </div>
+
+            <article
+                class="data-card"
+                style="margin-bottom:22px;"
+            >
+                <div class="data-card-head">
+                    <div>
+                        <h3>
+                            Loja e horários
+                        </h3>
+
+                        <p>
+                            ${escapeHtml(
+                                store.nome ||
+                                "PH Sabor & Cia"
+                            )}
+                        </p>
+                    </div>
+
+                    <span
+                        class="small-badge ${store.retirada_ativa !== false ? "active" : "inactive"}"
+                    >
+                        Retirada ${store.retirada_ativa !== false ? "ativa" : "inativa"}
+                    </span>
+                </div>
+
+                <div class="data-pairs">
+                    <div class="data-pair">
+                        <span>
+                            WhatsApp
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                store.whatsapp ||
+                                "Não informado"
+                            )}
+                        </strong>
+                    </div>
+
+                    <div class="data-pair">
+                        <span>
+                            Instagram
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                store.instagram ||
+                                "Não informado"
+                            )}
+                        </strong>
+                    </div>
+
+                    <div class="data-pair">
+                        <span>
+                            Pedido mínimo
+                        </span>
+
+                        <strong>
+                            ${formatMoney(
+                                store.pedido_minimo ||
+                                0
+                            )}
+                        </strong>
+                    </div>
+
+                    <div class="data-pair">
+                        <span>
+                            Limite de entrega
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                store.limite_entrega_km ??
+                                "—"
+                            )} km
+                        </strong>
+                    </div>
+
+                    <div class="data-pair">
+                        <span>
+                            Horário
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                schedule.abertura ||
+                                "—"
+                            )}
+                            às
+                            ${escapeHtml(
+                                schedule.fechamento ||
+                                "—"
+                            )}
+                        </strong>
+                    </div>
+
+                    <div class="data-pair">
+                        <span>
+                            Dias
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(days)}
+                        </strong>
+                    </div>
+                </div>
+
+                <p style="margin-top:12px;">
+                    <strong>
+                        Endereço:
+                    </strong>
+
+                    ${escapeHtml(addressText)}
+                </p>
+
+                <p style="margin-top:8px;">
+                    <strong>
+                        Faixas de entrega:
+                    </strong>
+
+                    ${escapeHtml(bandsText)}
+                </p>
+
+                <div class="data-card-actions">
+                    <button
+                        class="btn btn-secondary"
+                        data-ph-edit-store
+                        type="button"
+                    >
+                        Editar loja e horários
+                    </button>
+
+                    ${
+                        bands.length
+
+                            ? `
+                                <button
+                                    class="btn btn-secondary"
+                                    data-ph-edit-delivery-bands
+                                    type="button"
+                                >
+                                    Editar taxas por distância
+                                </button>
+                            `
+
+                            : ""
+                    }
+                </div>
+            </article>
+
+            <div style="margin-bottom:24px;">
+                <h3 style="margin-bottom:12px;">
+                    Marmitas
+                </h3>
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+                        gap:14px;
+                    "
+                >
+                    ${phConfigCards(
+                        meals,
+                        "marmita"
+                    )}
+                </div>
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <h3 style="margin-bottom:12px;">
+                    Bebidas
+                </h3>
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+                        gap:14px;
+                    "
+                >
+                    ${phConfigCards(
+                        drinks,
+                        "bebida"
+                    )}
+                </div>
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <h3 style="margin-bottom:12px;">
+                    Adicionais
+                </h3>
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+                        gap:14px;
+                    "
+                >
+                    ${phConfigCards(
+                        addons,
+                        "adicional"
+                    )}
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom:12px;">
+                    Acompanhamentos das marmitas
+                </h3>
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+                        gap:14px;
+                    "
+                >
+                    ${
+                        accompaniments.length
+
+                            ? accompaniments
+                                .map(item => `
+                                    <article class="data-card">
+                                        <div class="data-card-head">
+                                            <div>
+                                                <h3>
+                                                    ${escapeHtml(item.nome)}
+                                                </h3>
+
+                                                <p>
+                                                    Acompanhamento de marmita
+                                                </p>
+                                            </div>
+
+                                            <span
+                                                class="small-badge ${item.ativo !== false ? "active" : "inactive"}"
+                                            >
+                                                ${item.ativo !== false ? "Ativo" : "Inativo"}
+                                            </span>
+                                        </div>
+
+                                        <div class="data-card-actions">
+                                            <button
+                                                class="btn btn-secondary"
+                                                data-ph-edit-accompaniment="${escapeHtml(item.id)}"
+                                                type="button"
+                                            >
+                                                Editar
+                                            </button>
+                                        </div>
+                                    </article>
+                                `)
+                                .join("")
+
+                            : `
+                                <div class="empty-state">
+                                    Nenhum acompanhamento cadastrado.
+                                </div>
+                            `
+                    }
+                </div>
+            </div>
+        `;
+    }
+
+    async function loadPhConfig(message = "") {
+        state.phConfig =
+            await rpc(
+                "obter_configuracao_ph_admin"
+            );
+
+        renderPhConfigPanel();
+
+        if (message) {
+            showMessage(message);
+        }
+    }
+
+    async function savePhConfig(
+        nextConfig,
+        message
+    ) {
+        const result =
+            await rpc(
+                "salvar_configuracao_ph_admin",
+                {
+                    p_dados:
+                        nextConfig
+                }
+            );
+
+        state.phConfig =
+            result?.dados ||
+            nextConfig;
+
+        renderPhConfigPanel();
+
+        showMessage(message);
+    }
+
+    function openPhStoreModal() {
+        if (!state.phConfig) {
+            return;
+        }
+
+        const store =
+            state.phConfig.loja ||
+            {};
+
+        const address =
+            store.endereco ||
+            {};
+
+        const schedule =
+            store.horario ||
+            {};
+
+        openModal({
+            title:
+                "Editar PH Sabor & Cia",
+
+            fields: [
+                {
+                    name:
+                        "nome",
+
+                    label:
+                        "Nome da loja",
+
+                    value:
+                        store.nome ||
+                        "PH Sabor & Cia",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "whatsapp",
+
+                    label:
+                        "WhatsApp",
+
+                    value:
+                        store.whatsapp ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "instagram",
+
+                    label:
+                        "Instagram",
+
+                    value:
+                        store.instagram ||
+                        ""
+                },
+
+                {
+                    name:
+                        "pedido_minimo",
+
+                    label:
+                        "Pedido mínimo",
+
+                    type:
+                        "number",
+
+                    step:
+                        "0.01",
+
+                    value:
+                        store.pedido_minimo ??
+                        0,
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "limite_entrega_km",
+
+                    label:
+                        "Limite de entrega em km",
+
+                    type:
+                        "number",
+
+                    step:
+                        "0.1",
+
+                    value:
+                        store.limite_entrega_km ??
+                        0,
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "retirada_ativa",
+
+                    label:
+                        "Retirada no local ativa",
+
+                    type:
+                        "checkbox",
+
+                    value:
+                        store.retirada_ativa !==
+                        false
+                },
+
+                {
+                    name:
+                        "abertura",
+
+                    label:
+                        "Horário de abertura",
+
+                    type:
+                        "time",
+
+                    value:
+                        schedule.abertura ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "fechamento",
+
+                    label:
+                        "Horário de fechamento",
+
+                    type:
+                        "time",
+
+                    value:
+                        schedule.fechamento ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "fuso_horario",
+
+                    label:
+                        "Fuso horário",
+
+                    value:
+                        schedule.fuso_horario ||
+                        "America/Sao_Paulo",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "rua",
+
+                    label:
+                        "Rua",
+
+                    value:
+                        address.rua ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "numero",
+
+                    label:
+                        "Número",
+
+                    value:
+                        address.numero ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "bairro",
+
+                    label:
+                        "Bairro",
+
+                    value:
+                        address.bairro ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "cidade",
+
+                    label:
+                        "Cidade",
+
+                    value:
+                        address.cidade ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "estado",
+
+                    label:
+                        "Estado",
+
+                    value:
+                        address.estado ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "pais",
+
+                    label:
+                        "País",
+
+                    value:
+                        address.pais ||
+                        "Brasil",
+
+                    required:
+                        true
+                }
+            ],
+
+            submitText:
+                "Salvar PH",
+
+            onSubmit:
+                async values => {
+                    const next =
+                        clonePhConfig();
+
+                    const currentStore =
+                        next.loja ||
+                        {};
+
+                    next.loja = {
+                        ...currentStore,
+
+                        nome:
+                            String(
+                                values.nome ||
+                                ""
+                            ).trim(),
+
+                        whatsapp:
+                            String(
+                                values.whatsapp ||
+                                ""
+                            ).trim(),
+
+                        instagram:
+                            String(
+                                values.instagram ||
+                                ""
+                            ).trim(),
+
+                        pedido_minimo:
+                            Number(
+                                values.pedido_minimo
+                            ),
+
+                        limite_entrega_km:
+                            Number(
+                                values.limite_entrega_km
+                            ),
+
+                        retirada_ativa:
+                            values.retirada_ativa,
+
+                        endereco: {
+                            ...(
+                                currentStore.endereco ||
+                                {}
+                            ),
+
+                            rua:
+                                String(
+                                    values.rua ||
+                                    ""
+                                ).trim(),
+
+                            numero:
+                                String(
+                                    values.numero ||
+                                    ""
+                                ).trim(),
+
+                            bairro:
+                                String(
+                                    values.bairro ||
+                                    ""
+                                ).trim(),
+
+                            cidade:
+                                String(
+                                    values.cidade ||
+                                    ""
+                                ).trim(),
+
+                            estado:
+                                String(
+                                    values.estado ||
+                                    ""
+                                ).trim(),
+
+                            pais:
+                                String(
+                                    values.pais ||
+                                    ""
+                                ).trim()
+                        },
+
+                        horario: {
+                            ...(
+                                currentStore.horario ||
+                                {}
+                            ),
+
+                            abertura:
+                                values.abertura,
+
+                            fechamento:
+                                values.fechamento,
+
+                            fuso_horario:
+                                String(
+                                    values.fuso_horario ||
+                                    ""
+                                ).trim()
+                        }
+                    };
+
+                    await savePhConfig(
+                        next,
+                        "Configuração da PH atualizada."
+                    );
+                }
+        });
+    }
+
+    function openPhMealModal(item) {
+        if (!item) {
+            return;
+        }
+
+        const sizes =
+            Array.isArray(
+                item.tamanhos
+            )
+                ? item.tamanhos
+                : [];
+
+        openModal({
+            title:
+                `Editar ${item.nome}`,
+
+            fields: [
+                {
+                    name:
+                        "nome",
+
+                    label:
+                        "Nome do prato",
+
+                    value:
+                        item.nome ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "descricao",
+
+                    label:
+                        "Descrição",
+
+                    type:
+                        "textarea",
+
+                    value:
+                        item.descricao ||
+                        "",
+
+                    full:
+                        true
+                },
+
+                {
+                    name:
+                        "ativo",
+
+                    label:
+                        "Disponível para pedidos",
+
+                    type:
+                        "checkbox",
+
+                    value:
+                        item.ativo !==
+                        false
+                },
+
+                ...sizes.map(
+                    (
+                        size,
+                        index
+                    ) => ({
+                        name:
+                            `preco_${index}`,
+
+                        label:
+                            `Preço ${size.nome || ""} • ${size.capacidade_ml} ml`,
+
+                        type:
+                            "number",
+
+                        step:
+                            "0.01",
+
+                        value:
+                            size.preco ??
+                            ""
+                    })
+                )
+            ],
+
+            submitText:
+                "Salvar marmita",
+
+            onSubmit:
+                async values => {
+                    const next =
+                        clonePhConfig();
+
+                    const target =
+                        (
+                            next.marmitas ||
+                            []
+                        )
+                            .find(
+                                current =>
+                                    String(
+                                        current.id
+                                    ) ===
+                                    String(
+                                        item.id
+                                    )
+                            );
+
+                    if (!target) {
+                        throw new Error(
+                            "A marmita não foi encontrada na configuração da PH."
+                        );
+                    }
+
+                    target.nome =
+                        String(
+                            values.nome ||
+                            ""
+                        ).trim();
+
+                    target.descricao =
+                        String(
+                            values.descricao ||
+                            ""
+                        ).trim();
+
+                    target.ativo =
+                        values.ativo;
+
+                    target.tamanhos =
+                        (
+                            target.tamanhos ||
+                            []
+                        )
+                            .map(
+                                (
+                                    size,
+                                    index
+                                ) => ({
+                                    ...size,
+
+                                    preco:
+                                        values[
+                                            `preco_${index}`
+                                        ] ===
+                                        ""
+
+                                            ? null
+
+                                            : Number(
+                                                values[
+                                                    `preco_${index}`
+                                                ]
+                                            )
+                                })
+                            );
+
+                    await savePhConfig(
+                        next,
+                        `${target.nome} atualizado na PH.`
+                    );
+                }
+        });
+    }
+
+    function openPhSimpleItemModal(
+        type,
+        item
+    ) {
+        if (!item) {
+            return;
+        }
+
+        const isDrink =
+            type ===
+            "bebida";
+
+        const collectionKey =
+            isDrink
+                ? "bebidas"
+                : "adicionais";
+
+        openModal({
+            title:
+                `Editar ${item.nome}`,
+
+            fields: [
+                {
+                    name:
+                        "nome",
+
+                    label:
+                        isDrink
+                            ? "Nome da bebida"
+                            : "Nome do adicional",
+
+                    value:
+                        item.nome ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "preco",
+
+                    label:
+                        "Preço",
+
+                    type:
+                        "number",
+
+                    step:
+                        "0.01",
+
+                    value:
+                        item.preco ??
+                        ""
+                },
+
+                {
+                    name:
+                        "ativo",
+
+                    label:
+                        "Disponível para pedidos",
+
+                    type:
+                        "checkbox",
+
+                    value:
+                        item.ativo !==
+                        false
+                }
+            ],
+
+            submitText:
+                "Salvar",
+
+            onSubmit:
+                async values => {
+                    const next =
+                        clonePhConfig();
+
+                    const target =
+                        (
+                            next[
+                                collectionKey
+                            ] ||
+                            []
+                        )
+                            .find(
+                                current =>
+                                    String(
+                                        current.id
+                                    ) ===
+                                    String(
+                                        item.id
+                                    )
+                            );
+
+                    if (!target) {
+                        throw new Error(
+                            "O item não foi encontrado na configuração da PH."
+                        );
+                    }
+
+                    target.nome =
+                        String(
+                            values.nome ||
+                            ""
+                        ).trim();
+
+                    target.preco =
+                        values.preco ===
+                        ""
+
+                            ? null
+
+                            : Number(
+                                values.preco
+                            );
+
+                    target.ativo =
+                        values.ativo;
+
+                    await savePhConfig(
+                        next,
+                        `${target.nome} atualizado na PH.`
+                    );
+                }
+        });
+    }
+
+    function openPhAccompanimentModal(
+        item
+    ) {
+        if (!item) {
+            return;
+        }
+
+        openModal({
+            title:
+                `Editar ${item.nome}`,
+
+            fields: [
+                {
+                    name:
+                        "nome",
+
+                    label:
+                        "Nome do acompanhamento",
+
+                    value:
+                        item.nome ||
+                        "",
+
+                    required:
+                        true
+                },
+
+                {
+                    name:
+                        "ativo",
+
+                    label:
+                        "Disponível para pedidos",
+
+                    type:
+                        "checkbox",
+
+                    value:
+                        item.ativo !==
+                        false
+                }
+            ],
+
+            submitText:
+                "Salvar acompanhamento",
+
+            onSubmit:
+                async values => {
+                    const next =
+                        clonePhConfig();
+
+                    const target =
+                        (
+                            next.acompanhamentos ||
+                            []
+                        )
+                            .find(
+                                current =>
+                                    String(
+                                        current.id
+                                    ) ===
+                                    String(
+                                        item.id
+                                    )
+                            );
+
+                    if (!target) {
+                        throw new Error(
+                            "O acompanhamento não foi encontrado na configuração da PH."
+                        );
+                    }
+
+                    target.nome =
+                        String(
+                            values.nome ||
+                            ""
+                        ).trim();
+
+                    target.ativo =
+                        values.ativo;
+
+                    await savePhConfig(
+                        next,
+                        `${target.nome} atualizado na PH.`
+                    );
+                }
+        });
+    }
+
+    function openPhDeliveryBandsModal() {
+        if (!state.phConfig) {
+            return;
+        }
+
+        const bands =
+            Array.isArray(
+                state.phConfig
+                    ?.loja
+                    ?.faixas_entrega
+            )
+                ? state.phConfig
+                    .loja
+                    .faixas_entrega
+                : [];
+
+        if (!bands.length) {
+            showMessage(
+                "A PH não possui faixas de entrega cadastradas.",
+                "warning"
+            );
+
+            return;
+        }
+
+        const fields =
+            [];
+
+        bands.forEach(
+            (
+                band,
+                index
+            ) => {
+                fields.push(
+                    {
+                        name:
+                            `ate_km_${index}`,
+
+                        label:
+                            `Faixa ${index + 1} • até quantos km`,
+
+                        type:
+                            "number",
+
+                        step:
+                            "0.1",
+
+                        value:
+                            band.ate_km,
+
+                        required:
+                            true
+                    },
+
+                    {
+                        name:
+                            `taxa_${index}`,
+
+                        label:
+                            `Faixa ${index + 1} • taxa`,
+
+                        type:
+                            "number",
+
+                        step:
+                            "0.01",
+
+                        value:
+                            band.taxa,
+
+                        required:
+                            true
+                    }
+                );
+            }
+        );
+
+        openModal({
+            title:
+                "Taxas de entrega da PH",
+
+            fields,
+
+            submitText:
+                "Salvar taxas",
+
+            onSubmit:
+                async values => {
+                    const next =
+                        clonePhConfig();
+
+                    next.loja = {
+                        ...(
+                            next.loja ||
+                            {}
+                        ),
+
+                        faixas_entrega:
+                            bands.map(
+                                (
+                                    band,
+                                    index
+                                ) => ({
+                                    ...band,
+
+                                    ate_km:
+                                        Number(
+                                            values[
+                                                `ate_km_${index}`
+                                            ]
+                                        ),
+
+                                    taxa:
+                                        Number(
+                                            values[
+                                                `taxa_${index}`
+                                            ]
+                                        )
+                                })
+                            )
+                    };
+
+                    await savePhConfig(
+                        next,
+                        "Taxas de entrega da PH atualizadas."
+                    );
+                }
+        });
     }
 
     async function reloadOperation(message) {
@@ -4066,7 +6313,13 @@
             if (section === "visao-geral") await loadOverview();
             if (section === "pedidos") await refreshOrders();
             if (section === "clientes") await loadClients();
-            if (["cardapio", "entregas", "horarios", "recompensas"].includes(section)) await reloadOperation();
+            if (["cardapio", "entregas", "horarios", "recompensas"].includes(section)) {
+                await reloadOperation();
+
+                if (section === "cardapio") {
+                    await loadPhConfig();
+                }
+            }
             if (section === "equipe") await loadTeam();
             if (section === "auditoria") await loadAudit();
         } catch (error) {
@@ -4243,6 +6496,161 @@
             return;
         }
 
+        const phReload =
+            event.target.closest(
+                "[data-ph-config-reload]"
+            );
+
+        if (phReload) {
+            loadPhConfig(
+                "Configuração da PH atualizada."
+            )
+                .catch(error => {
+                    console.error(error);
+
+                    showMessage(
+                        error.message,
+                        "error"
+                    );
+                });
+
+            return;
+        }
+
+        if (
+            event.target.closest(
+                "[data-ph-edit-store]"
+            )
+        ) {
+            openPhStoreModal();
+            return;
+        }
+
+        if (
+            event.target.closest(
+                "[data-ph-edit-delivery-bands]"
+            )
+        ) {
+            openPhDeliveryBandsModal();
+            return;
+        }
+
+        const phMealButton =
+            event.target.closest(
+                "[data-ph-edit-meal]"
+            );
+
+        if (phMealButton) {
+            openPhMealModal(
+                (
+                    state.phConfig
+                        ?.marmitas ||
+                    []
+                )
+                    .find(
+                        item =>
+                            String(
+                                item.id
+                            ) ===
+                            String(
+                                phMealButton
+                                    .dataset
+                                    .phEditMeal
+                            )
+                    )
+            );
+
+            return;
+        }
+
+        const phDrinkButton =
+            event.target.closest(
+                "[data-ph-edit-drink]"
+            );
+
+        if (phDrinkButton) {
+            openPhSimpleItemModal(
+                "bebida",
+
+                (
+                    state.phConfig
+                        ?.bebidas ||
+                    []
+                )
+                    .find(
+                        item =>
+                            String(
+                                item.id
+                            ) ===
+                            String(
+                                phDrinkButton
+                                    .dataset
+                                    .phEditDrink
+                            )
+                    )
+            );
+
+            return;
+        }
+
+        const phAddonButton =
+            event.target.closest(
+                "[data-ph-edit-addon]"
+            );
+
+        if (phAddonButton) {
+            openPhSimpleItemModal(
+                "adicional",
+
+                (
+                    state.phConfig
+                        ?.adicionais ||
+                    []
+                )
+                    .find(
+                        item =>
+                            String(
+                                item.id
+                            ) ===
+                            String(
+                                phAddonButton
+                                    .dataset
+                                    .phEditAddon
+                            )
+                    )
+            );
+
+            return;
+        }
+
+        const phAccompanimentButton =
+            event.target.closest(
+                "[data-ph-edit-accompaniment]"
+            );
+
+        if (phAccompanimentButton) {
+            openPhAccompanimentModal(
+                (
+                    state.phConfig
+                        ?.acompanhamentos ||
+                    []
+                )
+                    .find(
+                        item =>
+                            String(
+                                item.id
+                            ) ===
+                            String(
+                                phAccompanimentButton
+                                    .dataset
+                                    .phEditAccompaniment
+                            )
+                    )
+            );
+
+            return;
+        }
+
         const nav = event.target.closest("[data-section]");
         if (nav) navigate(nav.dataset.section);
         const go = event.target.closest("[data-go-section]");
@@ -4267,6 +6675,45 @@
     });
 
     document.addEventListener("change", event => {
+        const manualEstablishment =
+            event.target.closest(
+                "[data-manual-establishment]"
+            );
+
+        if (manualEstablishment) {
+            resetManualItemsForEstablishment(
+                manualEstablishment.value
+            );
+
+            return;
+        }
+
+        const manualPhProduct =
+            event.target.closest(
+                "[data-manual-ph-product]"
+            );
+
+        if (manualPhProduct) {
+            updatePhManualProductRow(
+                manualPhProduct
+            );
+
+            return;
+        }
+
+        const manualPhSize =
+            event.target.closest(
+                "[data-manual-ph-size]"
+            );
+
+        if (manualPhSize) {
+            updatePhManualSizePrice(
+                manualPhSize
+            );
+
+            return;
+        }
+
         const manualSize =
             event.target.closest(
                 "[data-manual-size]"
