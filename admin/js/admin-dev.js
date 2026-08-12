@@ -4475,7 +4475,7 @@
                     <div class="data-pair"><span>Total entregue</span><strong>${formatMoney(client.valor_total_entregue ?? 0)}</strong></div>
                     <div class="data-pair"><span>Último login</span><strong>${escapeHtml(formatDate(client.ultimo_login_em))}</strong></div>
                 </div>
-                <div class="data-card-actions">${client.e_administrador ? `<span class="small-badge active">Conta administrativa</span>` : `<button class="btn ${active ? "btn-danger" : "btn-success"}" data-client-toggle="${active ? "false" : "true"}" type="button">${active ? "Desativar conta" : "Ativar conta"}</button>`}</div>
+                <div class="data-card-actions">${client.e_administrador ? `<span class="small-badge active">Conta administrativa</span>` : `<button class="btn ${active ? "btn-danger" : "btn-success"}" data-client-toggle="${active ? "false" : "true"}" type="button">${active ? "Desativar conta" : "Ativar conta"}</button><button class="btn btn-danger" data-client-delete type="button">Excluir conta definitivamente</button>`}</div>
             </article>`;
         }).join("");
     }
@@ -4501,7 +4501,176 @@
         }
     }
 
-    function renderOperationSections() {
+    async function deleteClient(button) {
+    const card = button.closest("[data-client-id]");
+    const clientId = card?.dataset.clientId;
+
+    if (!clientId) {
+        showMessage(
+            "Não foi possível identificar a conta.",
+            "error"
+        );
+        return;
+    }
+
+    const client = state.clientes.find(
+        item =>
+            String(item.id) ===
+            String(clientId)
+    );
+
+    if (!client) {
+        showMessage(
+            "Cliente não encontrado.",
+            "error"
+        );
+        return;
+    }
+
+    if (client.e_administrador) {
+        showMessage(
+            "Contas administrativas não podem ser excluídas pela área de clientes.",
+            "error"
+        );
+        return;
+    }
+
+    const email = String(
+        firstDefined(
+            client,
+            [
+                "email_auth",
+                "email"
+            ],
+            ""
+        ) || ""
+    ).trim();
+
+    if (!email) {
+        showMessage(
+            "Esta conta não possui um e-mail válido para confirmação.",
+            "error"
+        );
+        return;
+    }
+
+    openModal({
+        title:
+            "Excluir conta definitivamente",
+
+        message:
+            `Esta ação é definitiva. A conta ${email} será apagada do sistema. Depois da exclusão, este mesmo e-mail poderá ser usado novamente em um novo cadastro.`,
+
+        messageType:
+            "warning",
+
+        fields: [
+            {
+                name:
+                    "confirmacao",
+
+                label:
+                    `Digite ${email} para confirmar`,
+
+                required:
+                    true,
+
+                full:
+                    true
+            }
+        ],
+
+        submitText:
+            "Excluir definitivamente",
+
+        submitClass:
+            "btn-danger",
+
+        onSubmit:
+            async values => {
+                const confirmacao =
+                    String(
+                        values.confirmacao ||
+                        ""
+                    )
+                        .trim()
+                        .toLowerCase();
+
+                if (
+                    confirmacao !==
+                    email.toLowerCase()
+                ) {
+                    throw new Error(
+                        `Digite exatamente ${email} para confirmar.`
+                    );
+                }
+
+                const {
+                    data,
+                    error
+                } =
+                    await supabase
+                        .functions
+                        .invoke(
+                            "excluir-cliente-admin",
+                            {
+                                body: {
+                                    cliente_id:
+                                        clientId
+                                }
+                            }
+                        );
+
+                if (error) {
+                    let mensagem =
+                        error.message ||
+                        "Não foi possível excluir a conta.";
+
+                    if (
+                        error.context &&
+                        typeof error.context.json ===
+                            "function"
+                    ) {
+                        try {
+                            const resposta =
+                                await error.context
+                                    .json();
+
+                            mensagem =
+                                resposta?.mensagem ||
+                                resposta?.message ||
+                                mensagem;
+                        } catch (_) {
+                            // Mantém a mensagem original.
+                        }
+                    }
+
+                    throw new Error(
+                        mensagem
+                    );
+                }
+
+                if (
+                    !data ||
+                    data.sucesso !== true
+                ) {
+                    throw new Error(
+                        data?.mensagem ||
+                        "Não foi possível excluir a conta."
+                    );
+                }
+
+                await loadClients();
+
+                showMessage(
+                    data.mensagem ||
+                    `Conta ${email} excluída definitivamente.`,
+                    "warning"
+                );
+            }
+    });
+}
+function renderOperationSections() {
         if (!state.operacao) return;
         renderSizes();
         renderComplements();
@@ -6659,6 +6828,9 @@
         if (orderAction) handleOrderAction(orderAction);
         const clientToggle = event.target.closest("[data-client-toggle]");
         if (clientToggle) toggleClient(clientToggle);
+
+const clientDelete = event.target.closest("[data-client-delete]");
+if (clientDelete) deleteClient(clientDelete);
         const sizeButton = event.target.closest("[data-edit-size]");
         if (sizeButton) openSizeModal(state.operacao.tamanhos.find(item => String(item.id) === sizeButton.dataset.editSize));
         const complementButton = event.target.closest("[data-edit-complement]");
