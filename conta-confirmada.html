@@ -1,0 +1,236 @@
+<!-- ARQUIVO NOVO — CONFIRMAÇÃO DE CONTA AZURY — 12-08-2026 -->
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Conta confirmada | AZURY</title>
+
+    <meta name="description" content="Confirmação de conta AZURY." />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: linear-gradient(
+          135deg,
+          #eef3ff 0%,
+          #ffffff 55%,
+          #edf3ff 100%
+        );
+        font-family: Arial, Helvetica, sans-serif;
+        color: #171717;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 480px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e5e9f2;
+        border-radius: 22px;
+        box-shadow: 0 18px 50px rgba(0, 81, 255, 0.14);
+      }
+
+      .topo {
+        padding: 34px 24px;
+        text-align: center;
+        background: #0051ff;
+        color: #ffffff;
+      }
+
+      .coroa {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 46px;
+        line-height: 1;
+      }
+
+      .marca {
+        margin: 0;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+      }
+
+      .slogan {
+        margin: 8px 0 0;
+        font-size: 14px;
+        color: #dce7ff;
+      }
+
+      .conteudo {
+        padding: 36px 30px 32px;
+        text-align: center;
+      }
+
+      .icone-sucesso {
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #eaf8ef;
+        color: #159447;
+        font-size: 38px;
+        font-weight: 800;
+      }
+
+      h1 {
+        margin: 0 0 14px;
+        font-size: 25px;
+        line-height: 1.25;
+      }
+
+      .descricao {
+        margin: 0 auto;
+        max-width: 360px;
+        color: #5f6368;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .botao {
+        width: 100%;
+        display: block;
+        margin-top: 30px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        background: #0051ff;
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 700;
+        transition:
+          transform 0.15s ease,
+          background-color 0.15s ease;
+      }
+
+      .botao:hover {
+        background: #0046dc;
+        transform: translateY(-1px);
+      }
+
+      .rodape {
+        margin-top: 24px;
+        color: #929292;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .erro .icone-sucesso {
+        background: #fff0f0;
+        color: #d93025;
+      }
+
+      .erro .botao {
+        background: #0051ff;
+      }
+
+      @media (max-width: 520px) {
+        body {
+          padding: 16px;
+        }
+
+        .conteudo {
+          padding: 32px 22px 28px;
+        }
+
+        h1 {
+          font-size: 23px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="card" id="cardConfirmacao">
+      <header class="topo">
+        <span class="coroa" aria-hidden="true"> 👑 </span>
+
+        <p class="marca">AZURY</p>
+
+        <p class="slogan">Sabor que conquista</p>
+      </header>
+
+      <section class="conteudo">
+        <div class="icone-sucesso" id="iconeStatus" aria-hidden="true">✓</div>
+
+        <h1 id="tituloStatus">Conta confirmada com sucesso!</h1>
+
+        <p class="descricao" id="descricaoStatus">
+          Seu e-mail foi confirmado e sua conta AZURY está ativa. Agora você já
+          pode entrar e aproveitar todos os benefícios.
+        </p>
+
+        <a class="botao" href="login.html"> Entrar na minha conta </a>
+
+        <p class="rodape">© AZURY • Delivery de Açaí</p>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const parametros = new URLSearchParams(window.location.search);
+
+        const hash = new URLSearchParams(
+          window.location.hash.replace(/^#/, ""),
+        );
+
+        const erro = parametros.get("error") || hash.get("error");
+
+        const descricaoErro =
+          parametros.get("error_description") || hash.get("error_description");
+
+        if (erro) {
+          const card = document.getElementById("cardConfirmacao");
+
+          const icone = document.getElementById("iconeStatus");
+
+          const titulo = document.getElementById("tituloStatus");
+
+          const descricao = document.getElementById("descricaoStatus");
+
+          card.classList.add("erro");
+
+          icone.textContent = "!";
+
+          titulo.textContent = "Não foi possível confirmar sua conta";
+
+          descricao.textContent = descricaoErro
+            ? decodeURIComponent(descricaoErro)
+            : "O link de confirmação pode ter expirado ou já ter sido utilizado. Tente entrar na sua conta.";
+
+          return;
+        }
+
+        if (window.location.hash || window.location.search) {
+          window.history.replaceState(
+            null,
+            document.title,
+            window.location.pathname,
+          );
+        }
+      })();
+    </script>
+  </body>
+</html>
