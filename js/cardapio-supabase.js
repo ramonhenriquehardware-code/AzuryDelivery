@@ -150,16 +150,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         const rows = (complements || []).map(
             (complement, index) => ({
                 ...complement,
+
                 nome: String(
                     complement?.nome ??
                     complement?.value ??
                     ""
                 ),
+
                 preco: num(
                     complement?.preco ??
                     complement?.dataset?.preco,
                     0
                 ),
+
                 ordem_selecao: Math.max(
                     1,
                     Math.floor(
@@ -170,42 +173,111 @@ document.addEventListener("DOMContentLoaded", async () => {
                         )
                     )
                 ),
+
                 _index: index
             })
         );
 
-        const eligible = rows
-            .filter(complement =>
-                !isAlwaysPaidComplement(complement.nome)
-            )
-            .sort((a, b) =>
-                a.ordem_selecao - b.ordem_selecao ||
-                a._index - b._index
+        /*
+         * REGRA AZURY:
+         * o limite grátis é por TIPO de complemento.
+         *
+         * Exemplo:
+         * leite em pó no meio + leite em pó na cobertura
+         * continua sendo 1 único complemento.
+         */
+        const groups = new Map();
+
+        rows.forEach(row => {
+            const key = norm(row.nome);
+
+            if (!key) {
+                return;
+            }
+
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    key,
+                    nome: row.nome,
+                    ordem_selecao: row.ordem_selecao,
+                    primeiro_indice: row._index
+                });
+
+                return;
+            }
+
+            const group = groups.get(key);
+
+            group.ordem_selecao = Math.min(
+                group.ordem_selecao,
+                row.ordem_selecao
             );
 
-        const freeIndexes = new Set(
+            group.primeiro_indice = Math.min(
+                group.primeiro_indice,
+                row._index
+            );
+        });
+
+        const uniqueComplements =
+            Array.from(groups.values())
+                .sort((a, b) =>
+                    a.ordem_selecao - b.ordem_selecao ||
+                    a.primeiro_indice - b.primeiro_indice
+                );
+
+        const eligible =
+            uniqueComplements.filter(
+                complement =>
+                    !isAlwaysPaidComplement(
+                        complement.nome
+                    )
+            );
+
+        const freeKeys = new Set(
             eligible
                 .slice(0, limit)
-                .map(complement => complement._index)
+                .map(complement =>
+                    complement.key
+                )
         );
 
-        return rows.map(complement => {
+        return rows.map(row => {
+            const key = norm(row.nome);
+            const group = groups.get(key);
+
             const alwaysPaid =
-                isAlwaysPaidComplement(complement.nome);
+                isAlwaysPaidComplement(row.nome);
 
             const free =
                 !alwaysPaid &&
-                freeIndexes.has(complement._index);
+                freeKeys.has(key);
 
-            const { _index, ...clean } = complement;
+            /*
+             * Mesmo que dados antigos tenham o mesmo
+             * complemento repetido em duas camadas,
+             * ele só pode ser cobrado uma vez.
+             */
+            const firstOccurrence =
+                !group ||
+                row._index ===
+                    group.primeiro_indice;
+
+            const { _index, ...clean } = row;
 
             return {
                 ...clean,
-                especial_pago: alwaysPaid,
-                gratuito: free,
-                preco_cobrado: free
-                    ? 0
-                    : complement.preco
+
+                especial_pago:
+                    alwaysPaid,
+
+                gratuito:
+                    free,
+
+                preco_cobrado:
+                    free || !firstOccurrence
+                        ? 0
+                        : row.preco
             };
         });
     }
@@ -308,38 +380,106 @@ document.addEventListener("DOMContentLoaded", async () => {
             return null;
         }
 
-        const complements = Array.isArray(raw?.complementos)
-            ? raw.complementos
-                .map((complement, index) => {
-                    const current = state.complements.find(item =>
-                        norm(item.nome) === norm(complement?.nome)
-                    );
+        /*
+         * Também converte sacolas antigas, onde o mesmo
+         * complemento podia aparecer duas vezes:
+         * uma no meio e outra na cobertura.
+         */
+        const complementMap = new Map();
+
+        if (Array.isArray(raw?.complementos)) {
+            raw.complementos.forEach(
+                (complement, index) => {
+                    const current =
+                        state.complements.find(item =>
+                            norm(item.nome) ===
+                            norm(complement?.nome)
+                        );
+
+                    if (!current) {
+                        return;
+                    }
+
+                    const rawLayer =
+                        String(
+                            complement?.camada || ""
+                        ).toLowerCase();
 
                     const layer =
-                        complement?.camada === "cobertura"
+                        rawLayer === "cobertura"
                             ? "cobertura"
-                            : "meio";
+                            : rawLayer === "ambos" ||
+                                rawLayer === "unica"
+                                ? "ambos"
+                                : "meio";
 
-                    return current
-                        ? {
-                            id: current.id || null,
-                            nome: current.nome,
-                            camada: layer,
-                            preco: num(current.preco),
-                            ordem_selecao: Math.max(
-                                1,
-                                Math.floor(
-                                    num(
-                                        complement?.ordem_selecao,
-                                        index + 1
-                                    )
+                    const key =
+                        norm(current.nome);
+
+                    const selectionOrder =
+                        Math.max(
+                            1,
+                            Math.floor(
+                                num(
+                                    complement
+                                        ?.ordem_selecao,
+                                    index + 1
                                 )
                             )
-                        }
-                        : null;
-                })
-                .filter(Boolean)
-            : [];
+                        );
+
+                    if (!complementMap.has(key)) {
+                        complementMap.set(
+                            key,
+                            {
+                                id:
+                                    current.id ||
+                                    null,
+
+                                nome:
+                                    current.nome,
+
+                                camada:
+                                    layer,
+
+                                preco:
+                                    num(
+                                        current.preco
+                                    ),
+
+                                ordem_selecao:
+                                    selectionOrder
+                            }
+                        );
+
+                        return;
+                    }
+
+                    const existing =
+                        complementMap.get(key);
+
+                    if (
+                        existing.camada !==
+                        layer
+                    ) {
+                        existing.camada =
+                            "ambos";
+                    }
+
+                    existing.ordem_selecao =
+                        Math.min(
+                            existing
+                                .ordem_selecao,
+                            selectionOrder
+                        );
+                }
+            );
+        }
+
+        const complements =
+            Array.from(
+                complementMap.values()
+            );
 
         const unitPrice = itemUnitPrice(
             size.tamanho_ml,
@@ -355,7 +495,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 1,
                 Math.min(
                     MAX_CART_UNITS,
-                    Math.floor(num(raw?.quantidade, 1))
+                    Math.floor(
+                        num(
+                            raw?.quantidade,
+                            1
+                        )
+                    )
                 )
             ),
 
@@ -417,11 +562,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function complementSummary(item, layer) {
-        const names = (item.complementos || [])
-            .filter(complement =>
-                complement.camada === layer
+        const names = Array.from(
+            new Set(
+                (item.complementos || [])
+                    .filter(complement =>
+                        complement.camada === layer ||
+                        complement.camada === "ambos"
+                    )
+                    .map(complement =>
+                        complement.nome
+                    )
             )
-            .map(complement => complement.nome);
+        );
 
         return names.length
             ? names.join(", ")
@@ -635,27 +787,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        const middle = selected("meio");
-        const top = selected("cobertura");
-
-        const complements = [
-            ...middle,
-            ...top
-        ].map((input, index) => ({
-            id: input.dataset.id || null,
-            nome: input.value,
-            camada: input.dataset.camada,
-            preco: num(input.dataset.preco),
-            ordem_selecao: Math.max(
-                1,
-                Math.floor(
-                    num(
-                        input.dataset.ordemSelecao,
-                        index + 1
-                    )
-                )
-            )
-        }));
+        /*
+         * Cada complemento é salvo uma única vez.
+         * A propriedade "camada" informa se ele vai
+         * no meio, na cobertura ou nos dois.
+         */
+        const complements =
+            currentComplementSelections();
 
         const item = {
             id: newId(),
@@ -695,7 +833,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }, 3000);
         }
-    } function message(text, type = "") {
+    }
+
+    function message(text, type = "") {
         if (!d.addressStatus) {
             return;
         }
@@ -1634,59 +1774,547 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
     }
 
-    function renderComplements() {
-        const render = (container, layer) => {
-            if (!container) {
-                return;
-            }
+    function complementImagePath(name) {
+        const key = norm(name);
 
-            container.innerHTML = state.complements
-                .map((item, index) => {
-                    const alwaysPaid =
-                        isAlwaysPaidComplement(item.nome);
+        const images = {
+            "granola":
+                "imagens/granola.png",
 
-                    const priceText = alwaysPaid
-                        ? `Adicional pago • ${money(item.preco)}`
-                        : `Grátis dentro do limite • Extra ${money(item.preco)}`;
+            "leite condensado":
+                "imagens/leite-condensado.png",
 
-                    return `
-                    <label>
-                        <input
-                            type="checkbox"
-                            class="complemento-monte-seu"
-                            value="${esc(item.nome)}"
-                            data-id="${esc(item.id || "")}"
-                            data-preco="${esc(item.preco)}"
-                            data-camada="${layer}"
-                            data-especial-pago="${alwaysPaid ? "true" : "false"}"
-                            id="${layer}-${index}"
-                        >
+            "pacoca":
+                "imagens/pacoca.png",
 
-                        ${esc(item.nome)}
-                        —
-                        ${esc(priceText)}
-                    </label>
-                `;
-                })
-                .join("");
+            "banana":
+                "imagens/banana.png",
+
+            "coco ralado":
+                "imagens/coco-ralado.png",
+
+            "leite em po":
+                "imagens/leite-em-po.png",
+
+            "bombom oreo":
+                "imagens/bombom-oreo.png",
+
+            "oreo":
+                "imagens/bombom-oreo.png",
+
+            "ovomaltine":
+                "imagens/ovomaltine.png",
+
+            "morango":
+                "imagens/morango.png",
+
+            "uva verde":
+                "imagens/uva-verde.png",
+
+            "uva":
+                "imagens/uva-verde.png",
+
+            "nutella":
+                "imagens/nutella.png"
         };
 
-        render(d.middle, "meio");
-        render(d.top, "cobertura");
+        if (images[key]) {
+            return images[key];
+        }
 
-        $$(".complemento-monte-seu")
+        const partial = Object.keys(images)
+            .find(imageKey =>
+                key.includes(imageKey) ||
+                imageKey.includes(key)
+            );
+
+        return partial
+            ? images[partial]
+            : "";
+    }
+
+    function ensureComplementPickerStyles() {
+        const styleId =
+            "azury-complementos-novo-estilo";
+
+        if (
+            document.getElementById(
+                styleId
+            )
+        ) {
+            return;
+        }
+
+        const style =
+            document.createElement("style");
+
+        style.id =
+            styleId;
+
+        style.textContent = `
+            .azury-complementos-ajuda {
+                margin: -4px 0 14px;
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+
+            .azury-complementos-ajuda strong {
+                color: #0051ff;
+            }
+
+            .lista-complementos.azury-complementos-grid {
+                display: grid;
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+                gap: 14px;
+            }
+
+            .complemento-card {
+                min-width: 0;
+                overflow: hidden;
+                border: 1px solid #dbe5f5;
+                border-radius: 18px;
+                background: #ffffff;
+                box-shadow:
+                    0 8px 24px
+                    rgba(15, 23, 42, 0.07);
+                transition:
+                    border-color 180ms ease,
+                    box-shadow 180ms ease,
+                    transform 180ms ease;
+            }
+
+            .complemento-card.selecionado {
+                border-color: #0051ff;
+                box-shadow:
+                    0 10px 28px
+                    rgba(0, 81, 255, 0.14);
+                transform: translateY(-1px);
+            }
+
+            .complemento-card-selecao {
+                display: grid;
+                grid-template-columns:
+                    76px minmax(0, 1fr) auto;
+                gap: 12px;
+                align-items: center;
+                padding: 14px;
+                cursor: pointer;
+            }
+
+            .complemento-card-imagem {
+                width: 76px;
+                height: 76px;
+                display: grid;
+                place-items: center;
+                overflow: hidden;
+                border-radius: 15px;
+                background: #f8fafc;
+            }
+
+            .complemento-card-imagem img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+            .complemento-card-imagem.sem-imagem {
+                display: none;
+            }
+
+            .complemento-card-info {
+                min-width: 0;
+            }
+
+            .complemento-card-info strong {
+                display: block;
+                color: #0f172a;
+                font-size: 15px;
+                line-height: 1.3;
+            }
+
+            .complemento-card-info small {
+                display: block;
+                margin-top: 5px;
+                color: #64748b;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .complemento-card-info small.especial {
+                color: #b45309;
+                font-weight: 700;
+            }
+
+            .complemento-card-check {
+                width: 22px;
+                height: 22px;
+                accent-color: #0051ff;
+                cursor: pointer;
+            }
+
+            .complemento-camadas {
+                display: grid;
+                grid-template-columns:
+                    repeat(3, minmax(0, 1fr));
+                gap: 7px;
+                padding: 0 14px 14px;
+            }
+
+            .complemento-camadas label {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+                min-height: 38px;
+                padding: 7px 8px;
+                border: 1px solid #dbe5f5;
+                border-radius: 11px;
+                background: #f8fafc;
+                color: #334155;
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            .complemento-camadas label:has(
+                input:checked
+            ) {
+                border-color: #0051ff;
+                background: #eef4ff;
+                color: #0051ff;
+            }
+
+            .complemento-camadas label:has(
+                input:disabled
+            ) {
+                opacity: 0.48;
+                cursor: default;
+            }
+
+            .complemento-camadas input {
+                accent-color: #0051ff;
+            }
+
+            @media (max-width: 720px) {
+                .lista-complementos.azury-complementos-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .complemento-card-selecao {
+                    grid-template-columns:
+                        68px minmax(0, 1fr) auto;
+                }
+
+                .complemento-card-imagem {
+                    width: 68px;
+                    height: 68px;
+                }
+            }
+
+            @media (max-width: 420px) {
+                .complemento-camadas {
+                    gap: 5px;
+                    padding:
+                        0 10px 12px;
+                }
+
+                .complemento-camadas label {
+                    padding: 7px 4px;
+                    font-size: 11px;
+                }
+            }
+        `;
+
+        document.head.appendChild(
+            style
+        );
+    }
+
+    function renderComplements() {
+        if (!d.middle) {
+            return;
+        }
+
+        ensureComplementPickerStyles();
+
+        const middleGroup =
+            d.middle.closest(
+                ".grupo-monte-seu"
+            );
+
+        const topGroup =
+            d.top?.closest(
+                ".grupo-monte-seu"
+            );
+
+        if (
+            topGroup &&
+            topGroup !== middleGroup
+        ) {
+            topGroup.hidden = true;
+        }
+
+        if (d.top) {
+            d.top.innerHTML = "";
+        }
+
+        if (middleGroup) {
+            const title =
+                middleGroup.querySelector("h3");
+
+            if (title) {
+                title.textContent =
+                    "Escolha seus complementos";
+            }
+
+            let help =
+                middleGroup.querySelector(
+                    ".azury-complementos-ajuda"
+                );
+
+            if (!help) {
+                help =
+                    document.createElement("p");
+
+                help.className =
+                    "azury-complementos-ajuda";
+
+                if (title) {
+                    title.insertAdjacentElement(
+                        "afterend",
+                        help
+                    );
+                } else {
+                    middleGroup.prepend(
+                        help
+                    );
+                }
+            }
+
+            help.innerHTML =
+                `Escolha o complemento <strong>uma vez</strong> e defina onde ele vai: meio, cobertura ou nos dois. <strong>“Nos dois” continua contando como 1 complemento.</strong>`;
+        }
+
+        d.middle.classList.add(
+            "azury-complementos-grid"
+        );
+
+        d.middle.innerHTML =
+            state.complements
+                .map((item, index) => {
+                    const alwaysPaid =
+                        isAlwaysPaidComplement(
+                            item.nome
+                        );
+
+                    const priceText =
+                        alwaysPaid
+                            ? `Adicional pago • ${money(item.preco)}`
+                            : `Grátis dentro do limite • Extra ${money(item.preco)}`;
+
+                    const image =
+                        complementImagePath(
+                            item.nome
+                        );
+
+                    const groupName =
+                        `camada-complemento-${index}`;
+
+                    return `
+                        <div
+                            class="complemento-card"
+                            data-complement-card
+                        >
+                            <label
+                                class="complemento-card-selecao"
+                                for="complemento-${index}"
+                            >
+                                <span
+                                    class="complemento-card-imagem ${image ? "" : "sem-imagem"}"
+                                >
+                                    ${image
+                                        ? `
+                                            <img
+                                                src="${esc(image)}"
+                                                alt="${esc(item.nome)}"
+                                                loading="lazy"
+                                            >
+                                        `
+                                        : ""
+                                    }
+                                </span>
+
+                                <span
+                                    class="complemento-card-info"
+                                >
+                                    <strong>
+                                        ${esc(item.nome)}
+                                    </strong>
+
+                                    <small
+                                        class="${alwaysPaid ? "especial" : ""}"
+                                    >
+                                        ${esc(priceText)}
+                                    </small>
+                                </span>
+
+                                <input
+                                    type="checkbox"
+                                    class="complemento-monte-seu complemento-card-check"
+                                    value="${esc(item.nome)}"
+                                    data-id="${esc(item.id || "")}"
+                                    data-preco="${esc(item.preco)}"
+                                    data-especial-pago="${alwaysPaid ? "true" : "false"}"
+                                    id="complemento-${index}"
+                                >
+                            </label>
+
+                            <div
+                                class="complemento-camadas"
+                                aria-label="Posição de ${esc(item.nome)}"
+                            >
+                                <label>
+                                    <input
+                                        type="radio"
+                                        class="complemento-camada"
+                                        name="${groupName}"
+                                        value="meio"
+                                        disabled
+                                    >
+                                    Meio
+                                </label>
+
+                                <label>
+                                    <input
+                                        type="radio"
+                                        class="complemento-camada"
+                                        name="${groupName}"
+                                        value="cobertura"
+                                        disabled
+                                    >
+                                    Cobertura
+                                </label>
+
+                                <label>
+                                    <input
+                                        type="radio"
+                                        class="complemento-camada"
+                                        name="${groupName}"
+                                        value="ambos"
+                                        checked
+                                        disabled
+                                    >
+                                    Nos dois
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                })
+                .join("");
+
+        d.middle
+            .querySelectorAll(
+                ".complemento-card-imagem img"
+            )
+            .forEach(image => {
+                image.addEventListener(
+                    "error",
+                    () => {
+                        image
+                            .closest(
+                                ".complemento-card-imagem"
+                            )
+                            ?.classList.add(
+                                "sem-imagem"
+                            );
+
+                        image.remove();
+                    },
+                    { once: true }
+                );
+            });
+
+        allComplements()
             .forEach(input => {
                 input.addEventListener(
                     "change",
                     () => {
+                        const card =
+                            input.closest(
+                                ".complemento-card"
+                            );
+
+                        const layerInputs =
+                            card
+                                ? Array.from(
+                                    card.querySelectorAll(
+                                        ".complemento-camada"
+                                    )
+                                )
+                                : [];
+
                         if (input.checked) {
                             complementSelectionCounter += 1;
+
                             input.dataset.ordemSelecao =
-                                String(complementSelectionCounter);
+                                String(
+                                    complementSelectionCounter
+                                );
+
+                            layerInputs
+                                .forEach(layerInput => {
+                                    layerInput.disabled =
+                                        false;
+                                });
+
+                            if (
+                                !layerInputs.some(
+                                    layerInput =>
+                                        layerInput.checked
+                                )
+                            ) {
+                                const both =
+                                    layerInputs.find(
+                                        layerInput =>
+                                            layerInput.value ===
+                                            "ambos"
+                                    );
+
+                                if (both) {
+                                    both.checked = true;
+                                }
+                            }
                         } else {
                             delete input.dataset.ordemSelecao;
+
+                            layerInputs
+                                .forEach(layerInput => {
+                                    layerInput.disabled =
+                                        true;
+                                });
                         }
 
+                        card?.classList.toggle(
+                            "selecionado",
+                            input.checked
+                        );
+
+                        calculate();
+                    }
+                );
+            });
+
+        d.middle
+            .querySelectorAll(
+                ".complemento-camada"
+            )
+            .forEach(input => {
+                input.addEventListener(
+                    "change",
+                    () => {
                         calculate();
                     }
                 );
@@ -2042,40 +2670,82 @@ document.addEventListener("DOMContentLoaded", async () => {
         return $$(".complemento-monte-seu");
     }
 
+    function currentComplementSelections() {
+        return allComplements()
+            .filter(input =>
+                input.checked
+            )
+            .map((input, index) => {
+                const card =
+                    input.closest(
+                        ".complemento-card"
+                    );
+
+                const layerInput =
+                    card?.querySelector(
+                        ".complemento-camada:checked"
+                    );
+
+                return {
+                    id:
+                        input.dataset.id ||
+                        null,
+
+                    nome:
+                        input.value,
+
+                    camada:
+                        layerInput?.value ||
+                        "ambos",
+
+                    preco:
+                        num(
+                            input.dataset.preco,
+                            0
+                        ),
+
+                    ordem_selecao:
+                        Math.max(
+                            1,
+                            Math.floor(
+                                num(
+                                    input.dataset
+                                        .ordemSelecao,
+                                    index + 1
+                                )
+                            )
+                        )
+                };
+            });
+    }
+
     function selected(layer) {
-        return allComplements().filter(item =>
-            item.checked &&
-            item.dataset.camada === layer
-        );
+        return currentComplementSelections()
+            .filter(complement =>
+                complement.camada === layer ||
+                complement.camada === "ambos"
+            );
     }
 
     function calculate() {
-        const size = Number(d.size?.value);
-        const base = num(d.base?.value, 0);
+        const size =
+            Number(d.size?.value);
 
-        const complements = allComplements()
-            .filter(item => item.checked)
-            .map((item, index) => ({
-                nome: item.value,
-                preco: num(item.dataset.preco, 0),
-                ordem_selecao: Math.max(
-                    1,
-                    Math.floor(
-                        num(
-                            item.dataset.ordemSelecao,
-                            index + 1
-                        )
-                    )
-                )
-            }));
+        const base =
+            num(d.base?.value, 0);
 
-        const value = itemUnitPrice(
-            size,
-            base,
-            complements
-        );
+        const complements =
+            currentComplementSelections();
 
-        state.subtotal = value;
+        const value =
+            itemUnitPrice(
+                size,
+                base,
+                complements
+            );
+
+        state.subtotal =
+            value;
 
         if (d.subtotal) {
             d.subtotal.textContent =
@@ -2409,9 +3079,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     function resetBuilder() {
         complementSelectionCounter = 0;
 
-        allComplements().forEach(item => {
-            item.checked = false;
-            delete item.dataset.ordemSelecao;
+        allComplements().forEach(input => {
+            input.checked = false;
+
+            delete input.dataset
+                .ordemSelecao;
+
+            const card =
+                input.closest(
+                    ".complemento-card"
+                );
+
+            card?.classList.remove(
+                "selecionado"
+            );
+
+            const layerInputs =
+                card
+                    ? Array.from(
+                        card.querySelectorAll(
+                            ".complemento-camada"
+                        )
+                    )
+                    : [];
+
+            layerInputs.forEach(
+                layerInput => {
+                    layerInput.disabled =
+                        true;
+
+                    layerInput.checked =
+                        layerInput.value ===
+                        "ambos";
+                }
+            );
         });
 
         calculate();
@@ -2660,14 +3361,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                         (item.complementos || [])
                             .filter(complement =>
                                 complement.camada ===
-                                "meio"
+                                    "meio" ||
+                                complement.camada ===
+                                    "ambos"
                             );
 
                     const top =
                         (item.complementos || [])
                             .filter(complement =>
                                 complement.camada ===
-                                "cobertura"
+                                    "cobertura" ||
+                                complement.camada ===
+                                    "ambos"
                             );
 
                     return (
