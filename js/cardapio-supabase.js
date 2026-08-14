@@ -1779,43 +1779,43 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const images = {
             "granola":
-                "imagens/granola.png",
+                "Imagens/granola.png",
 
             "leite condensado":
-                "imagens/leite-condensado.png",
+                "Imagens/leite-condensado.png",
 
             "pacoca":
-                "imagens/pacoca.png",
+                "Imagens/pacoca.png",
 
             "banana":
-                "imagens/banana.png",
+                "Imagens/banana.png",
 
             "coco ralado":
-                "imagens/coco-ralado.png",
+                "Imagens/coco-ralado.png",
 
             "leite em po":
-                "imagens/leite-em-po.png",
+                "Imagens/leite-em-po.png",
 
             "bombom oreo":
-                "imagens/bombom-oreo.png",
+                "Imagens/bombom-oreo.png",
 
             "oreo":
-                "imagens/bombom-oreo.png",
+                "Imagens/bombom-oreo.png",
 
             "ovomaltine":
-                "imagens/ovomaltine.png",
+                "Imagens/ovomaltine.png",
 
             "morango":
-                "imagens/morango.png",
+                "Imagens/morango.png",
 
             "uva verde":
-                "imagens/uva-verde.png",
+                "Imagens/uva-verde.png",
 
             "uva":
-                "imagens/uva-verde.png",
+                "Imagens/uva-verde.png",
 
             "nutella":
-                "imagens/nutella.png"
+                "Imagens/nutella.png"
         };
 
         if (images[key]) {
