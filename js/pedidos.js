@@ -2600,21 +2600,7 @@
                 [];
         }
 
-        if (
-            Array.isArray(
-                sacolaAtual
-            ) &&
-            sacolaAtual.length
-        ) {
-            const substituir =
-                window.confirm(
-                    "Sua sacola atual será limpa para montar novamente este pedido. Continuar?"
-                );
-
-            if (!substituir) {
-                return;
-            }
-        }
+        
 
         try {
             /*
