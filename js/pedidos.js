@@ -2084,205 +2084,154 @@
     }
 
     function garantirModalAvaliacaoPedido() {
-        if (
-            document.getElementById(
-                "modalAvaliacaoPedidoAzury"
-            )
-        ) {
-            return;
-        }
+    if (
+        document.getElementById(
+            "modalAvaliacaoPedidoAzury"
+        )
+    ) {
+        return;
+    }
 
-        const modal =
-            document.createElement(
-                "div"
-            );
-
-        modal.id =
-            "modalAvaliacaoPedidoAzury";
-
-        modal.setAttribute(
-            "aria-hidden",
-            "true"
+    const modal =
+        document.createElement(
+            "div"
         );
 
-        modal.innerHTML = `
-            <div
-                class="avaliacao-conteudo"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="tituloAvaliacaoPedidoAzury"
-            >
+    modal.id =
+        "modalAvaliacaoPedidoAzury";
 
-                <div
-                    class="
-                        avaliacao-topo
-                    "
-                >
+    modal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
 
-                    <div>
+    modal.innerHTML = `
+        <div
+            class="avaliacao-conteudo"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tituloAvaliacaoPedidoAzury"
+        >
 
-                        <h2
-                            id="
-                                tituloAvaliacaoPedidoAzury
-                            "
-                        >
-                            Avalie seu pedido
-                        </h2>
+            <div class="avaliacao-topo">
 
-                        <p
-                            class="
-                                avaliacao-subtitulo
-                            "
-                            id="
-                                subtituloAvaliacaoPedidoAzury
-                            "
-                        >
-                            Sua opinião ajuda
-                            a Azury a melhorar
-                            cada pedido.
-                        </p>
+                <div>
 
-                    </div>
+                    <h2 id="tituloAvaliacaoPedidoAzury">
+                        Avalie seu pedido
+                    </h2>
 
-                    <button
-                        type="button"
-                        class="
-                            btn-fechar-avaliacao
-                        "
-                        data-fechar-avaliacao
-                        aria-label="Fechar"
+                    <p
+                        class="avaliacao-subtitulo"
+                        id="subtituloAvaliacaoPedidoAzury"
                     >
-                        ×
-                    </button>
+                        Sua opinião ajuda
+                        a Azury a melhorar
+                        cada pedido.
+                    </p>
 
                 </div>
 
-                <div
-                    class="
-                        estrelas-avaliacao
-                    "
-                    role="radiogroup"
-                    aria-label="
-                        Nota do pedido
-                    "
+                <button
+                    type="button"
+                    class="btn-fechar-avaliacao"
+                    data-fechar-avaliacao
+                    aria-label="Fechar"
                 >
-
-                    ${
-                        [1, 2, 3, 4, 5]
-                            .map(
-                                nota => `
-                                    <button
-                                        type="button"
-                                        class="
-                                            estrela-avaliacao
-                                        "
-                                        data-nota-avaliacao="${nota}"
-                                        role="radio"
-                                        aria-checked="false"
-                                        aria-label="
-                                            ${nota}
-                                            estrela${
-                                                nota > 1
-                                                    ? "s"
-                                                    : ""
-                                            }
-                                        "
-                                    >
-                                        ★
-                                    </button>
-                                `
-                            )
-                            .join("")
-                    }
-
-                </div>
-
-                <label
-                    for="
-                        comentarioAvaliacaoPedidoAzury
-                    "
-                >
-                    Comentário
-
-                    <span
-                        style="
-                            font-weight:
-                            400
-                        "
-                    >
-                        (opcional)
-                    </span>
-                </label>
-
-                <textarea
-                    id="
-                        comentarioAvaliacaoPedidoAzury
-                    "
-                    maxlength="500"
-                    placeholder="
-                        Conte como foi sua
-                        experiência com o pedido...
-                    "
-                ></textarea>
-
-                <div
-                    class="
-                        contador-avaliacao
-                    "
-                    id="
-                        contadorAvaliacaoPedidoAzury
-                    "
-                >
-                    0/500
-                </div>
-
-                <p
-                    class="
-                        status-avaliacao
-                    "
-                    id="
-                        statusAvaliacaoPedidoAzury
-                    "
-                    aria-live="polite"
-                ></p>
-
-                <div
-                    class="
-                        acoes-avaliacao
-                    "
-                >
-
-                    <button
-                        type="button"
-                        class="
-                            btn-cancelar-avaliacao
-                        "
-                        data-fechar-avaliacao
-                    >
-                        Cancelar
-                    </button>
-
-                    <button
-                        type="button"
-                        class="
-                            btn-salvar-avaliacao
-                        "
-                        id="
-                            btnSalvarAvaliacaoPedidoAzury
-                        "
-                    >
-                        Salvar avaliação
-                    </button>
-
-                </div>
+                    ×
+                </button>
 
             </div>
-        `;
 
-        document.body.appendChild(
-            modal
-        );
-    }
+            <div
+                class="estrelas-avaliacao"
+                role="radiogroup"
+                aria-label="Nota do pedido"
+            >
+
+                ${
+                    [1, 2, 3, 4, 5]
+                        .map(
+                            nota => `
+                                <button
+                                    type="button"
+                                    class="estrela-avaliacao"
+                                    data-nota-avaliacao="${nota}"
+                                    role="radio"
+                                    aria-checked="false"
+                                    aria-label="${nota} estrela${
+                                        nota > 1
+                                            ? "s"
+                                            : ""
+                                    }"
+                                >
+                                    ★
+                                </button>
+                            `
+                        )
+                        .join("")
+                }
+
+            </div>
+
+            <label for="comentarioAvaliacaoPedidoAzury">
+                Comentário
+
+                <span
+                    style="
+                        font-weight: 400;
+                    "
+                >
+                    (opcional)
+                </span>
+            </label>
+
+            <textarea
+                id="comentarioAvaliacaoPedidoAzury"
+                maxlength="500"
+                placeholder="Conte como foi sua experiência com o pedido..."
+            ></textarea>
+
+            <div
+                class="contador-avaliacao"
+                id="contadorAvaliacaoPedidoAzury"
+            >
+                0/500
+            </div>
+
+            <p
+                class="status-avaliacao"
+                id="statusAvaliacaoPedidoAzury"
+                aria-live="polite"
+            ></p>
+
+            <div class="acoes-avaliacao">
+
+                <button
+                    type="button"
+                    class="btn-cancelar-avaliacao"
+                    data-fechar-avaliacao
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-salvar-avaliacao"
+                    id="btnSalvarAvaliacaoPedidoAzury"
+                >
+                    Salvar avaliação
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(
+        modal
+    );
+}
 
     function obterUsuarioPedidosAtual() {
         if (
