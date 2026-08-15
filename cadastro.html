@@ -1,90 +1,269 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Criar Conta - AZURY</title>
 
-    <link rel="stylesheet" href="css/reset.css">
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/login.css">
-    <link rel="stylesheet" href="css/cadastro.css">
-</head>
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/login.css" />
+    <link rel="stylesheet" href="css/cadastro.css" />
 
-<body>
+    <style>
+      /* =========================================
+           MOSTRAR / OCULTAR SENHA
+        ========================================= */
 
+      .campo-senha {
+        position: relative;
+        width: 100%;
+      }
+
+      .campo-senha input {
+        width: 100%;
+        box-sizing: border-box;
+        padding-right: 50px;
+      }
+
+      .login-form .botao-ver-senha {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+
+        transform: translateY(-50%);
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 36px;
+        height: 36px;
+
+        padding: 0;
+
+        border: 0;
+        border-radius: 50%;
+
+        background: transparent;
+
+        color: #64748b;
+
+        cursor: pointer;
+
+        box-shadow: none;
+
+        z-index: 2;
+      }
+
+      .login-form .botao-ver-senha:hover {
+        background: rgba(0, 81, 255, 0.08);
+        color: #0051ff;
+      }
+
+      .login-form .botao-ver-senha:focus-visible {
+        outline: 2px solid #0051ff;
+        outline-offset: 2px;
+      }
+
+      .botao-ver-senha svg {
+        width: 22px;
+        height: 22px;
+
+        display: block;
+
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </head>
+
+  <body>
     <header class="login-header">
+      <a href="index.html" class="login-logo">
+        <img src="Imagens/Coroa.png" alt="Coroa Azury" class="coroa-topo" />
 
-        <a href="index.html" class="login-logo">
-            <img src="Imagens/Coroa.png" alt="Coroa Azury" class="coroa-topo">
+        <span>AZURY</span>
+      </a>
 
-            <span>AZURY</span>
-        </a>
-
-        <nav class="login-nav">
-            <a href="login.html">
-                Já tenho uma conta
-            </a>
-        </nav>
-
+      <nav class="login-nav">
+        <a href="login.html"> Já tenho uma conta </a>
+      </nav>
     </header>
 
     <main class="login-container">
+      <section class="login-card">
+        <div class="marca-dagua" aria-hidden="true">
+          <img src="Imagens/Coroa.png" alt="" class="coroa-marca" />
+        </div>
 
-        <section class="login-card">
+        <div class="logo-login">
+          <img src="Imagens/Coroa.png" alt="Coroa Azury" class="coroa-login" />
+        </div>
 
-            <div class="marca-dagua" aria-hidden="true">
-                <img src="Imagens/Coroa.png" alt="" class="coroa-marca">
-            </div>
+        <h1>AZURY</h1>
 
-            <div class="logo-login">
-                <img src="Imagens/Coroa.png" alt="Coroa Azury" class="coroa-login">
-            </div>
+        <span class="login-badge"> ✨ Novo Cliente </span>
 
-            <h1>AZURY</h1>
+        <h2>Criar Conta</h2>
 
-            <span class="login-badge">
-                ✨ Novo Cliente
-            </span>
+        <p class="descricao-login">
+          Cadastre-se para participar do programa de fidelidade Azury.
+        </p>
 
-            <h2>Criar Conta</h2>
+        <form class="login-form" id="formCadastro">
+          <div
+            id="mensagemCadastro"
+            class="mensagem"
+            role="alert"
+            aria-live="polite"
+          ></div>
 
-            <p class="descricao-login">
-                Cadastre-se para participar do programa de fidelidade Azury.
-            </p>
+          <input
+            type="text"
+            id="nome"
+            name="nome"
+            placeholder="Nome completo"
+            autocomplete="name"
+            required
+          />
 
-            <form class="login-form" id="formCadastro">
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Seu e-mail"
+            autocomplete="email"
+            required
+          />
 
-                <div id="mensagemCadastro" class="mensagem" role="alert" aria-live="polite"></div>
+          <!-- CAMPO DE SENHA COM MOSTRAR / OCULTAR -->
+          <div class="campo-senha">
+            <input
+              type="password"
+              id="senha"
+              name="senha"
+              placeholder="Crie uma senha"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            />
 
-                <input type="text" id="nome" name="nome" placeholder="Nome completo" autocomplete="name" required>
+            <button
+              type="button"
+              class="botao-ver-senha"
+              id="botaoVerSenhaCadastro"
+              aria-label="Mostrar senha"
+              aria-pressed="false"
+              title="Mostrar senha"
+            >
+              <!-- OLHO ABERTO -->
+              <svg
+                id="iconeMostrarSenhaCadastro"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"
+                ></path>
 
-                <input type="email" id="email" name="email" placeholder="Seu e-mail" autocomplete="email" required>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
 
-                <input type="password" id="senha" name="senha" placeholder="Crie uma senha" autocomplete="new-password"
-                    minlength="6" required>
+              <!-- OLHO RISCADO -->
+              <svg
+                id="iconeOcultarSenhaCadastro"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                style="display: none"
+              >
+                <path d="M3 3l18 18"></path>
 
-                <button type="submit" class="btn" id="btnCadastrar">
-                    ✨ Criar Conta
-                </button>
+                <path
+                  d="M10.6 5.2A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a17.5 17.5 0 0 1-2.2 3.2"
+                ></path>
 
-                <p class="texto-cadastro">
-                    Já possui cadastro?
-                    <a href="login.html">Entrar na minha conta</a>
-                </p>
+                <path
+                  d="M6.2 6.2C3.5 8 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4.1-.9"
+                ></path>
 
-            </form>
+                <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path>
+              </svg>
+            </button>
+          </div>
 
-        </section>
+          <button type="submit" class="btn" id="btnCadastrar">
+            ✨ Criar Conta
+          </button>
 
+          <p class="texto-cadastro">
+            Já possui cadastro?
+            <a href="login.html">Entrar na minha conta</a>
+          </p>
+        </form>
+      </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./js/supabase.js"></script>
     <script src="./js/cadastro.js"></script>
 
-</body>
+    <!-- MOSTRAR / OCULTAR SENHA -->
+    <script>
+      const senhaCadastro = document.getElementById("senha");
 
+      const botaoVerSenhaCadastro = document.getElementById(
+        "botaoVerSenhaCadastro",
+      );
+
+      const iconeMostrarSenhaCadastro = document.getElementById(
+        "iconeMostrarSenhaCadastro",
+      );
+
+      const iconeOcultarSenhaCadastro = document.getElementById(
+        "iconeOcultarSenhaCadastro",
+      );
+
+      if (
+        senhaCadastro &&
+        botaoVerSenhaCadastro &&
+        iconeMostrarSenhaCadastro &&
+        iconeOcultarSenhaCadastro
+      ) {
+        botaoVerSenhaCadastro.addEventListener("click", function () {
+          const senhaEstaVisivel = senhaCadastro.type === "text";
+
+          if (senhaEstaVisivel) {
+            senhaCadastro.type = "password";
+
+            iconeMostrarSenhaCadastro.style.display = "block";
+
+            iconeOcultarSenhaCadastro.style.display = "none";
+
+            botaoVerSenhaCadastro.setAttribute("aria-label", "Mostrar senha");
+
+            botaoVerSenhaCadastro.setAttribute("title", "Mostrar senha");
+
+            botaoVerSenhaCadastro.setAttribute("aria-pressed", "false");
+          } else {
+            senhaCadastro.type = "text";
+
+            iconeMostrarSenhaCadastro.style.display = "none";
+
+            iconeOcultarSenhaCadastro.style.display = "block";
+
+            botaoVerSenhaCadastro.setAttribute("aria-label", "Ocultar senha");
+
+            botaoVerSenhaCadastro.setAttribute("title", "Ocultar senha");
+
+            botaoVerSenhaCadastro.setAttribute("aria-pressed", "true");
+          }
+        });
+      }
+    </script>
+  </body>
 </html>
