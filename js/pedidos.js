@@ -2537,17 +2537,51 @@
         pedido
     ) {
         const itens =
-            prepararItensPedidoParaSacola(
-                pedido
-            );
+            Array.isArray(
+                pedido?.itens
+            )
+                ? pedido.itens
+                : [];
 
-        if (!itens.length) {
+        const primeiroItemValido =
+            itens.find(item => {
+                const tamanho =
+                    Number(
+                        primeiroValor(
+                            item,
+                            [
+                                "tamanho_ml",
+                                "tamanho"
+                            ],
+                            0
+                        )
+                    );
+
+                return (
+                    Number.isFinite(tamanho) &&
+                    tamanho > 0
+                );
+            });
+
+        if (!primeiroItemValido) {
             alert(
-                "Não foi possível reconstruir este pedido. Os itens antigos não têm informações suficientes."
+                "Não foi possível identificar o tamanho deste pedido."
             );
 
             return;
         }
+
+        const tamanho =
+            Number(
+                primeiroValor(
+                    primeiroItemValido,
+                    [
+                        "tamanho_ml",
+                        "tamanho"
+                    ],
+                    0
+                )
+            );
 
         let sacolaAtual =
             [];
@@ -2574,7 +2608,7 @@
         ) {
             const substituir =
                 window.confirm(
-                    "Sua sacola atual será substituída pelos itens deste pedido. Continuar?"
+                    "Sua sacola atual será limpa para montar novamente este pedido. Continuar?"
                 );
 
             if (!substituir) {
@@ -2583,14 +2617,24 @@
         }
 
         try {
+            /*
+             * PEDIR NOVAMENTE:
+             * não coloca o pedido antigo pronto
+             * dentro da sacola.
+             *
+             * A sacola começa vazia e o cliente
+             * escolhe novamente os complementos.
+             */
             sessionStorage
-                .setItem(
-                    CART_KEY,
-                    JSON.stringify(
-                        itens
-                    )
+                .removeItem(
+                    CART_KEY
                 );
 
+            /*
+             * Guarda somente o tamanho do pedido
+             * anterior para o cardápio abrir o
+             * montador já no tamanho correto.
+             */
             sessionStorage
                 .setItem(
                     "azuryPedidoRepetido",
@@ -2607,12 +2651,16 @@
                                 pedido?.id ||
                                 "",
 
+                            tamanho_ml:
+                                tamanho,
+
                             criado_em:
                                 new Date()
                                     .toISOString()
                         }
                     )
                 );
+
         } catch (erro) {
             console.error(
                 "Erro ao preparar pedido novamente:",
@@ -2620,7 +2668,7 @@
             );
 
             alert(
-                "Não foi possível preparar a sacola. Tente novamente."
+                "Não foi possível abrir este pedido novamente."
             );
 
             return;
@@ -2629,6 +2677,7 @@
         window.location.href =
             "index.html#Cardapio";
     }
+
 
     function atualizarEstrelasAvaliacao() {
         document

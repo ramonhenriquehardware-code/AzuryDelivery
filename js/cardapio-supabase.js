@@ -4864,7 +4864,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         d.districtId = hidden;
     }
 
-    function selectFirstAvailableSize() {
+   function selectFirstAvailableSize() {
     const firstAvailable =
         state.sizes.find(item =>
             item.disponivel === true &&
@@ -4882,55 +4882,45 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 /* =========================================
    PEDIR NOVAMENTE
-   Abre automaticamente a sacola reconstruída
+   Abre o montador com:
+   - mesmo tamanho
+   - sacola vazia
+   - complementos zerados
 ========================================= */
 
 async function openRepeatedOrderIfNeeded() {
-    let repeatedOrder = "";
+    let repeatedOrder = null;
 
     try {
-        repeatedOrder =
+        const stored =
             sessionStorage.getItem(
                 "azuryPedidoRepetido"
-            ) || "";
+            );
+
+        repeatedOrder =
+            stored
+                ? JSON.parse(stored)
+                : null;
+
     } catch (_) {
-        repeatedOrder = "";
+        repeatedOrder =
+            null;
     }
+
 
     if (!repeatedOrder) {
         return;
     }
 
-    /*
-     * O pedidos.js já colocou o pedido antigo
-     * em azurySacola.
-     *
-     * loadCart() já:
-     * - valida os produtos atuais;
-     * - valida complementos atuais;
-     * - recalcula os preços;
-     * - remove itens indisponíveis.
-     */
 
-    if (!state.cart.length) {
-        try {
-            sessionStorage.removeItem(
-                "azuryPedidoRepetido"
-            );
-        } catch (_) {
-        }
-
-        alert(
-            "Não foi possível reconstruir este pedido com o cardápio atual."
+    const tamanho =
+        Number(
+            repeatedOrder.tamanho_ml
         );
 
-        return;
-    }
 
     /*
-     * Remove o marcador antes de abrir.
-     * Assim, se o cliente atualizar a página,
-     * o modal não fica abrindo sozinho novamente.
+     * O marcador é usado somente uma vez.
      */
     try {
         sessionStorage.removeItem(
@@ -4939,85 +4929,212 @@ async function openRepeatedOrderIfNeeded() {
     } catch (_) {
     }
 
+
     /*
-     * Preenche os dados do cliente logado
-     * exatamente como acontece quando ele
-     * abre o montador normalmente.
+     * Confirma que o tamanho do pedido antigo
+     * ainda existe e está disponível hoje.
+     */
+    const size =
+        state.sizes.find(item =>
+            Number(
+                item.tamanho_ml
+            ) === tamanho &&
+            item.disponivel === true &&
+            item.visivel === true
+        );
+
+
+    if (!size) {
+        alert(
+            "O tamanho deste pedido não está disponível no cardápio atual."
+        );
+
+        return;
+    }
+
+
+    /* =========================================
+       SACOLA
+
+       Pedir novamente NÃO copia o pedido antigo.
+
+       A sacola começa completamente vazia.
+    ========================================= */
+
+    state.cart = [];
+
+
+    try {
+        sessionStorage.removeItem(
+            CART_KEY
+        );
+    } catch (_) {
+    }
+
+
+    renderCart();
+
+
+    /* =========================================
+       COMPLEMENTOS
+
+       Nenhum complemento antigo é reutilizado.
+
+       Volta para:
+       0 de 2
+       0 de 3
+       0 de 4
+       etc.
+    ========================================= */
+
+    resetBuilder();
+
+
+    /* =========================================
+       TAMANHO
+
+       Mantém somente o tamanho usado
+       no pedido anterior.
+    ========================================= */
+
+    selectSize(
+        size.tamanho_ml,
+        size.preco_base
+    );
+
+
+    /*
+     * Preenche nome, telefone e demais
+     * informações do cliente logado.
      */
     await fillCustomer();
 
+
     /*
-     * Atualiza a sacola já normalizada
-     * com os preços atuais.
+     * Garante que a interface reflita:
+     *
+     * Sacola: 0 itens
+     * Subtotal da montagem atual
+     * Complementos: 0
      */
     renderCart();
 
+
     /*
-     * O cliente volta para a primeira etapa,
-     * podendo revisar, alterar quantidade,
-     * remover itens ou adicionar outros.
+     * Abre sempre na primeira etapa.
      */
     showStep(1);
 
+
     /*
-     * Esta era a parte que estava faltando:
-     * abrir o modal automaticamente.
+     * Abre o montador automaticamente.
      */
     openModal();
 
+
+    /*
+     * Pequena orientação para deixar claro
+     * que o cliente deve escolher novamente
+     * os complementos.
+     */
     if (d.cartFeedback) {
+        const message =
+            "Tamanho do pedido anterior selecionado. Escolha seus complementos novamente.";
+
         d.cartFeedback.textContent =
-            "Pedido anterior carregado na sacola. Confira antes de continuar.";
+            message;
+
 
         window.setTimeout(() => {
             if (
                 d.cartFeedback &&
                 d.cartFeedback.textContent ===
-                "Pedido anterior carregado na sacola. Confira antes de continuar."
+                message
             ) {
-                d.cartFeedback.textContent = "";
+                d.cartFeedback.textContent =
+                    "";
             }
         }, 5000);
     }
 }
 
 
+/* =========================================
+   INICIALIZAÇÃO DA INTERFACE
+========================================= */
+
 function initializeInterface() {
     if (state.interfaceReady) {
         renderSizes();
+
         renderComplements();
+
         updateWhatsapp();
+
         renderCart();
+
         updateStore();
+
         selectFirstAvailableSize();
 
         return;
     }
 
-    state.interfaceReady = true;
+
+    state.interfaceReady =
+        true;
+
 
     renderSizes();
+
+
     renderComplements();
 
+
     /*
-     * Aqui a azurySacola é lida e os preços
-     * são recalculados com o cardápio atual.
+     * Carrega uma sacola normal caso
+     * o cliente já estivesse comprando.
+     *
+     * No fluxo "Pedir novamente",
+     * o pedidos.js já removeu a sacola antiga.
      */
     loadCart();
 
+
     updateWhatsapp();
+
+
     setupZip();
+
+
     bind();
-    selectFirstAvailableSize();
-    renderCart();
-    showStep(1);
-    updateStore();
+
 
     /*
-     * Se o cliente veio pelo botão
-     * "Pedir novamente", abre a sacola.
+     * Seleção padrão enquanto verificamos
+     * se existe um pedido sendo repetido.
+     */
+    selectFirstAvailableSize();
+
+
+    renderCart();
+
+
+    showStep(1);
+
+
+    updateStore();
+
+
+    /*
+     * Se veio de "Pedir novamente",
+     * essa função substitui a seleção padrão
+     * pelo tamanho correto do pedido anterior.
+     *
+     * A sacola permanece vazia.
      */
     void openRepeatedOrderIfNeeded();
+
 
     window.setInterval(
         updateStore,
