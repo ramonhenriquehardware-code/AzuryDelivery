@@ -84,11 +84,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     const OPERATION_RECOVERY_INTERVAL = 30000;
 
     // REGRAS DO NOVO CARDÁPIO — 06-08-2026
+    // Os copos atuais continuam usando o tamanho em ml.
+    // As futuras Azury Box já ficam cadastradas por chave,
+    // para a mesma barra aceitar 4, 5 e 6 complementos grátis.
     const FREE_COMPLEMENT_LIMITS = new Map([
         [300, 2],
         [400, 3],
         [500, 3],
-        [700, 4]
+        [700, 4],
+
+        ["azury-box-p", 4],
+        ["azury-box-m", 5],
+        ["azury-box-g", 6]
+    ]);
+
+    const CUP_PRODUCT_NAMES = new Map([
+        [300, "Azury Mini"],
+        [400, "Azury Clássico"],
+        [500, "Azury Max"],
+        [700, "Azury Extra"]
     ]);
 
     const ALWAYS_PAID_COMPLEMENT_TERMS = [
@@ -133,8 +147,118 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? Number(value)
             : fallback;
 
-    const freeComplementLimit = size =>
-        FREE_COMPLEMENT_LIMITS.get(Number(size)) || 0;
+    function freeComplementLimit(product) {
+        if (
+            product &&
+            typeof product === "object"
+        ) {
+            const explicitLimit = Number(
+                product.complementos_gratis ??
+                product.limite_complementos_gratis ??
+                product.limite_gratis
+            );
+
+            if (
+                Number.isFinite(explicitLimit) &&
+                explicitLimit >= 0
+            ) {
+                return Math.floor(explicitLimit);
+            }
+
+            const candidates = [
+                product.produto_chave,
+                product.chave,
+                product.slug,
+                product.codigo,
+                product.nome,
+                product.tamanho,
+                product.tamanho_ml
+            ];
+
+            for (const candidate of candidates) {
+                const resolved =
+                    freeComplementLimit(candidate);
+
+                if (resolved > 0) {
+                    return resolved;
+                }
+            }
+
+            return 0;
+        }
+
+        const numeric =
+            Number(product);
+
+        if (
+            Number.isFinite(numeric) &&
+            FREE_COMPLEMENT_LIMITS.has(numeric)
+        ) {
+            return (
+                FREE_COMPLEMENT_LIMITS.get(numeric) ||
+                0
+            );
+        }
+
+        const normalized =
+            norm(product);
+
+        const futureKey =
+            normalized === "azury box p" ||
+            normalized === "box p" ||
+            normalized === "azury-box-p"
+                ? "azury-box-p"
+                : normalized === "azury box m" ||
+                    normalized === "box m" ||
+                    normalized === "azury-box-m"
+                    ? "azury-box-m"
+                    : normalized === "azury box g" ||
+                        normalized === "box g" ||
+                        normalized === "azury-box-g"
+                        ? "azury-box-g"
+                        : "";
+
+        return futureKey
+            ? (
+                FREE_COMPLEMENT_LIMITS.get(
+                    futureKey
+                ) || 0
+            )
+            : 0;
+    }
+
+    function productDisplayName(product) {
+        const size =
+            Number(
+                product &&
+                typeof product === "object"
+                    ? product.tamanho_ml
+                    : product
+            );
+
+        const cupName =
+            CUP_PRODUCT_NAMES.get(size);
+
+        if (cupName) {
+            return `${cupName} • ${size} ml`;
+        }
+
+        if (
+            product &&
+            typeof product === "object"
+        ) {
+            const rawName =
+                String(product.nome || "").trim();
+
+            if (rawName) {
+                return rawName;
+            }
+        }
+
+        return Number.isFinite(size) && size > 0
+            ? `Açaí • ${size} ml`
+            : "Açaí";
+    }
 
     const isAlwaysPaidComplement = name => {
         const normalizedName = norm(name);
@@ -615,8 +739,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                             <div>
                                 <strong>
-                                    ${index + 1}. Monte o Seu •
-                                    ${esc(item.tamanho_ml)}ml
+                                    ${index + 1}.
+                                    ${esc(
+                    productDisplayName(
+                        item.tamanho_ml
+                    )
+                )}
                                 </strong>
 
                                 <small>
@@ -703,7 +831,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span>
                             ${index + 1}.
                             ${esc(item.quantidade)}×
-                            Açaí ${esc(item.tamanho_ml)}ml
+                            ${esc(
+                    productDisplayName(
+                        item.tamanho_ml
+                    )
+                )}
                         </span>
 
                         <strong>
@@ -820,13 +952,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         resetBuilder();
 
         if (d.cartFeedback) {
+            const addedProductName =
+                productDisplayName(
+                    item.tamanho_ml
+                );
+
             d.cartFeedback.textContent =
-                `Açaí de ${item.tamanho_ml}ml adicionado à sacola.`;
+                `${addedProductName} adicionado à sacola.`;
 
             window.setTimeout(() => {
                 if (
                     d.cartFeedback?.textContent.includes(
-                        `${item.tamanho_ml}ml`
+                        addedProductName
                     )
                 ) {
                     d.cartFeedback.textContent = "";
@@ -1672,13 +1809,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (title) {
                 title.textContent =
-                    item.nome ||
-                    `Monte o Seu • ${item.tamanho_ml}ml`;
+                    productDisplayName(item);
             }
 
             if (description) {
                 const freeLimit =
-                    freeComplementLimit(item.tamanho_ml);
+                    freeComplementLimit(item);
 
                 description.textContent =
                     available && freeLimit > 0
@@ -1743,12 +1879,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                         <span>
                             <strong>
-                                ${esc(item.tamanho_ml)} ml
+                                ${esc(
+                                    productDisplayName(
+                                        item
+                                    )
+                                )}
                             </strong>
 
                             <small>
                                 ${available
-                        ? `${money(item.preco_base)} • ${freeComplementLimit(item.tamanho_ml)} grátis`
+                        ? `${money(item.preco_base)} • ${freeComplementLimit(item)} grátis`
                         : "Em breve"
                     }
                             </small>
@@ -1863,43 +2003,113 @@ document.addEventListener("DOMContentLoaded", async () => {
                 color: #0051ff;
             }
 
-            .azury-complementos-contador {
+            .azury-complementos-progresso {
                 width: 100%;
                 margin: 0 0 16px;
-                padding: 12px 14px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
+                padding: 13px 14px 14px;
                 color: #334155;
                 background: #f8fbff;
                 border: 1px solid #d7e4ff;
-                border-radius: 13px;
-                font-size: 14px;
+                border-radius: 14px;
+                box-sizing: border-box;
+                transition:
+                    background 180ms ease,
+                    border-color 180ms ease;
+            }
+
+            .azury-complementos-progresso-cabecalho {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 9px;
+            }
+
+            .azury-complementos-progresso-titulo {
+                color: #334155;
+                font-size: 13px;
+                font-weight: 800;
+                line-height: 1.3;
+            }
+
+            .azury-complementos-progresso-contagem {
+                flex: 0 0 auto;
+                color: #0051ff;
+                font-size: 13px;
+                font-weight: 900;
+                line-height: 1.3;
+            }
+
+            .azury-complementos-progresso-trilho {
+                width: 100%;
+                height: 10px;
+                overflow: hidden;
+                border-radius: 999px;
+                background: #dce7f8;
+                box-shadow:
+                    inset 0 1px 2px
+                    rgba(15, 23, 42, 0.08);
+            }
+
+            .azury-complementos-progresso-barra {
+                display: block;
+                width: 0%;
+                height: 100%;
+                border-radius: inherit;
+                background:
+                    linear-gradient(
+                        90deg,
+                        #0051ff 0%,
+                        #2875ff 100%
+                    );
+                transition:
+                    width 260ms ease;
+            }
+
+            .azury-complementos-progresso-mensagem {
+                display: block;
+                margin-top: 8px;
+                color: #64748b;
+                font-size: 12px;
                 font-weight: 700;
                 line-height: 1.4;
-                text-align: center;
             }
 
-            .azury-complementos-contador strong {
-                color: #0051ff;
-                font-weight: 900;
-            }
-
-            .azury-complementos-contador.limite-atingido {
-                color: #0758f8;
+            .azury-complementos-progresso.limite-atingido {
                 background: #eef4ff;
                 border-color: #9fbcff;
             }
 
-            .azury-complementos-contador.com-extras {
-                color: #9a4c00;
+            .azury-complementos-progresso.limite-atingido
+            .azury-complementos-progresso-mensagem {
+                color: #0758f8;
+            }
+
+            .azury-complementos-progresso.com-extras {
                 background: #fff8ed;
                 border-color: #f3c98b;
             }
 
-            .azury-complementos-contador.com-extras strong {
+            .azury-complementos-progresso.com-extras
+            .azury-complementos-progresso-contagem,
+            .azury-complementos-progresso.com-extras
+            .azury-complementos-progresso-mensagem {
                 color: #b45309;
+            }
+
+            @media (max-width: 420px) {
+                .azury-complementos-progresso {
+                    padding: 12px;
+                }
+
+                .azury-complementos-progresso-cabecalho {
+                    gap: 8px;
+                }
+
+                .azury-complementos-progresso-titulo,
+                .azury-complementos-progresso-contagem {
+                    font-size: 12px;
+                }
             }
 
             .lista-complementos.azury-complementos-grid {
@@ -2138,7 +2348,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             let freeCounter =
                 middleGroup.querySelector(
-                    ".azury-complementos-contador"
+                    ".azury-complementos-progresso"
                 );
 
             if (!freeCounter) {
@@ -2146,7 +2356,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     document.createElement("div");
 
                 freeCounter.className =
-                    "azury-complementos-contador";
+                    "azury-complementos-progresso";
 
                 freeCounter.id =
                     "contadorComplementosGratis";
@@ -2160,6 +2370,47 @@ document.addEventListener("DOMContentLoaded", async () => {
                     "aria-live",
                     "polite"
                 );
+
+                freeCounter.innerHTML = `
+                    <div
+                        class="azury-complementos-progresso-cabecalho"
+                    >
+                        <strong
+                            class="azury-complementos-progresso-titulo"
+                        >
+                            Complementos grátis
+                        </strong>
+
+                        <span
+                            class="azury-complementos-progresso-contagem"
+                            id="contadorComplementosGratisTexto"
+                        >
+                            0 de 0
+                        </span>
+                    </div>
+
+                    <div
+                        class="azury-complementos-progresso-trilho"
+                        id="barraComplementosGratis"
+                        role="progressbar"
+                        aria-label="Uso dos complementos grátis"
+                        aria-valuemin="0"
+                        aria-valuemax="0"
+                        aria-valuenow="0"
+                    >
+                        <span
+                            class="azury-complementos-progresso-barra"
+                            id="barraComplementosGratisPreenchimento"
+                        ></span>
+                    </div>
+
+                    <small
+                        class="azury-complementos-progresso-mensagem"
+                        id="mensagemComplementosGratis"
+                    >
+                        Escolha seus complementos grátis.
+                    </small>
+                `;
 
                 help.insertAdjacentElement(
                     "afterend",
@@ -2806,15 +3057,52 @@ document.addEventListener("DOMContentLoaded", async () => {
                 "contadorComplementosGratis"
             );
 
-        if (!counter) {
+        const countText =
+            document.getElementById(
+                "contadorComplementosGratisTexto"
+            );
+
+        const progressTrack =
+            document.getElementById(
+                "barraComplementosGratis"
+            );
+
+        const progressFill =
+            document.getElementById(
+                "barraComplementosGratisPreenchimento"
+            );
+
+        const messageText =
+            document.getElementById(
+                "mensagemComplementosGratis"
+            );
+
+        if (
+            !counter ||
+            !countText ||
+            !progressTrack ||
+            !progressFill ||
+            !messageText
+        ) {
             return;
         }
 
-        const size =
-            Number(d.size?.value);
+        const selectedProduct =
+            d.size?.value || "";
+
+        const currentSizeItem =
+            state.sizes.find(item =>
+                String(item.tamanho_ml) ===
+                    String(selectedProduct) ||
+                Number(item.tamanho_ml) ===
+                    Number(selectedProduct)
+            );
 
         const limit =
-            freeComplementLimit(size);
+            freeComplementLimit(
+                currentSizeItem ||
+                selectedProduct
+            );
 
         if (limit <= 0) {
             counter.hidden = true;
@@ -2826,8 +3114,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         /*
          * Complementos especiais sempre pagos
          * não consomem vagas grátis.
-         * Cada tipo é contado uma única vez,
-         * então "Nos dois" continua valendo 1.
+         *
+         * Cada tipo de complemento é contado
+         * uma única vez. Assim, "Nos dois"
+         * continua valendo apenas 1 complemento.
          */
         const eligibleKeys =
             new Set(
@@ -2858,6 +3148,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                 0
             );
 
+        const percentage =
+            Math.min(
+                (usedFree / limit) * 100,
+                100
+            );
+
+        progressFill.style.width =
+            `${percentage}%`;
+
+        progressTrack.setAttribute(
+            "aria-valuemax",
+            String(limit)
+        );
+
+        progressTrack.setAttribute(
+            "aria-valuenow",
+            String(usedFree)
+        );
+
+        countText.textContent =
+            `${usedFree} de ${limit}`;
+
         counter.classList.toggle(
             "limite-atingido",
             usedFree >= limit &&
@@ -2870,21 +3182,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
 
         if (extras > 0) {
-            counter.innerHTML =
-                `<strong>${usedFree} de ${limit}</strong> complementos grátis • ` +
-                `<strong>${extras} ${extras === 1 ? "extra" : "extras"}</strong>`;
+            messageText.textContent =
+                `${usedFree} de ${limit} grátis • ` +
+                `${extras} ${extras === 1 ? "extra" : "extras"} ` +
+                `${extras === 1 ? "será cobrado" : "serão cobrados"}.`;
+
             return;
         }
 
         if (usedFree >= limit) {
-            counter.innerHTML =
-                `<strong>${usedFree} de ${limit}</strong> complementos grátis • ` +
-                `Limite grátis atingido`;
+            messageText.textContent =
+                "Limite grátis atingido.";
+
             return;
         }
 
-        counter.innerHTML =
-            `<strong>${usedFree} de ${limit}</strong> complementos grátis`;
+        const remaining =
+            limit - usedFree;
+
+        messageText.textContent =
+            remaining === 1
+                ? "Você ainda pode escolher 1 complemento grátis."
+                : `Você ainda pode escolher ${remaining} complementos grátis.`;
     }
 
     function calculate() {
@@ -3541,7 +3860,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                             );
 
                     return (
-                        `*${index + 1}. ${item.quantidade}× Monte o Seu • ${item.tamanho_ml}ml*\n` +
+                        `*${index + 1}. ${item.quantidade}× ${productDisplayName(item.tamanho_ml)}*\n` +
 
                         `Subtotal do item: ${money(
                             item.preco_unitario *
