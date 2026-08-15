@@ -240,7 +240,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             CUP_PRODUCT_NAMES.get(size);
 
         if (cupName) {
-            return `${cupName} • ${size} ml`;
+            return `${cupName} • ${size}ml`;
         }
 
         if (
@@ -256,7 +256,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         return Number.isFinite(size) && size > 0
-            ? `Açaí • ${size} ml`
+            ? `Açaí • ${size}ml`
             : "Açaí";
     }
 
@@ -2130,16 +2130,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                     rgba(15, 23, 42, 0.07);
                 transition:
                     border-color 180ms ease,
+                    background 180ms ease,
                     box-shadow 180ms ease,
                     transform 180ms ease;
             }
 
             .complemento-card.selecionado {
                 border-color: #0051ff;
+                background: #f4f8ff;
                 box-shadow:
-                    0 10px 28px
-                    rgba(0, 81, 255, 0.14);
-                transform: translateY(-1px);
+                    0 12px 30px
+                    rgba(0, 81, 255, 0.18),
+                    inset 0 0 0 1px #0051ff;
+                transform: translateY(-2px);
             }
 
             .complemento-card-selecao {
@@ -2150,6 +2153,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                 align-items: center;
                 padding: 14px;
                 cursor: pointer;
+                transition:
+                    background 180ms ease;
+            }
+
+            .complemento-card.selecionado
+            .complemento-card-selecao {
+                background:
+                    linear-gradient(
+                        135deg,
+                        rgba(0, 81, 255, 0.08),
+                        rgba(0, 81, 255, 0.02)
+                    );
             }
 
             .complemento-card-imagem {
@@ -2158,8 +2173,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                 display: grid;
                 place-items: center;
                 overflow: hidden;
+                border: 1px solid transparent;
                 border-radius: 15px;
                 background: #f8fafc;
+                transition:
+                    border-color 180ms ease,
+                    box-shadow 180ms ease,
+                    background 180ms ease;
+            }
+
+            .complemento-card.selecionado
+            .complemento-card-imagem {
+                border-color:
+                    rgba(0, 81, 255, 0.18);
+                background: #ffffff;
+                box-shadow:
+                    0 5px 14px
+                    rgba(0, 81, 255, 0.10);
             }
 
             .complemento-card-imagem img {
@@ -2183,6 +2213,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 line-height: 1.3;
             }
 
+            .complemento-card.selecionado
+            .complemento-card-info strong {
+                color: #003fc7;
+            }
+
             .complemento-card-info small {
                 display: block;
                 margin-top: 5px;
@@ -2196,11 +2231,40 @@ document.addEventListener("DOMContentLoaded", async () => {
                 font-weight: 700;
             }
 
+            .complemento-card.selecionado
+            .complemento-card-info::after {
+                content: "✓ Selecionado";
+                width: fit-content;
+                display: inline-flex;
+                align-items: center;
+                margin-top: 7px;
+                padding: 4px 8px;
+                border-radius: 999px;
+                background: #0051ff;
+                color: #ffffff;
+                font-size: 11px;
+                font-weight: 900;
+                line-height: 1;
+                letter-spacing: 0.01em;
+            }
+
             .complemento-card-check {
-                width: 22px;
-                height: 22px;
+                width: 24px;
+                height: 24px;
                 accent-color: #0051ff;
                 cursor: pointer;
+                transition:
+                    transform 160ms ease,
+                    filter 160ms ease;
+            }
+
+            .complemento-card-check:checked {
+                transform: scale(1.10);
+                filter:
+                    drop-shadow(
+                        0 2px 4px
+                        rgba(0, 81, 255, 0.24)
+                    );
             }
 
             .complemento-camadas {
@@ -2226,25 +2290,46 @@ document.addEventListener("DOMContentLoaded", async () => {
                 font-weight: 700;
                 cursor: pointer;
                 user-select: none;
+                transition:
+                    border-color 160ms ease,
+                    background 160ms ease,
+                    color 160ms ease,
+                    box-shadow 160ms ease,
+                    transform 160ms ease;
             }
 
             .complemento-camadas label:has(
-                input:checked
+                input:checked:not(:disabled)
             ) {
                 border-color: #0051ff;
-                background: #eef4ff;
-                color: #0051ff;
+                background: #0051ff;
+                color: #ffffff;
+                box-shadow:
+                    0 5px 12px
+                    rgba(0, 81, 255, 0.18);
+                transform: translateY(-1px);
             }
 
             .complemento-camadas label:has(
                 input:disabled
             ) {
-                opacity: 0.48;
+                opacity: 0.44;
                 cursor: default;
+                background: #f8fafc;
+                border-color: #dbe5f5;
+                color: #64748b;
+                box-shadow: none;
+                transform: none;
             }
 
             .complemento-camadas input {
                 accent-color: #0051ff;
+            }
+
+            .complemento-camadas label:has(
+                input:checked:not(:disabled)
+            ) input {
+                accent-color: #ffffff;
             }
 
             @media (max-width: 720px) {
