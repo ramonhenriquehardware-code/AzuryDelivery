@@ -2112,11 +2112,98 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }
 
+            /*
+             * Mantém os quatro nomes dos copos alinhados
+             * em uma única linha nos cards principais.
+             */
+            .menu-grid > li h3 {
+                white-space: nowrap;
+                font-size: 19px;
+                line-height: 1.25;
+                letter-spacing: -0.02em;
+            }
+
             .lista-complementos.azury-complementos-grid {
                 display: grid;
                 grid-template-columns:
                     repeat(2, minmax(0, 1fr));
                 gap: 14px;
+            }
+
+            .azury-complementos-secao {
+                grid-column: 1 / -1;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin: 2px 0 0;
+                padding: 12px 14px;
+                border: 1px solid #d7e4ff;
+                border-radius: 14px;
+                background: #f8fbff;
+            }
+
+            .azury-complementos-secao-texto {
+                min-width: 0;
+            }
+
+            .azury-complementos-secao strong {
+                display: block;
+                color: #17305c;
+                font-size: 14px;
+                font-weight: 900;
+                line-height: 1.3;
+            }
+
+            .azury-complementos-secao small {
+                display: block;
+                margin-top: 3px;
+                color: #64748b;
+                font-size: 11px;
+                font-weight: 600;
+                line-height: 1.4;
+            }
+
+            .azury-complementos-secao-badge {
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 28px;
+                padding: 5px 9px;
+                border-radius: 999px;
+                background: #e8f0ff;
+                color: #0051ff;
+                font-size: 11px;
+                font-weight: 900;
+                line-height: 1;
+                white-space: nowrap;
+            }
+
+            .azury-complementos-secao.especiais {
+                margin-top: 8px;
+                border-color: #f3c98b;
+                background: #fff8ed;
+            }
+
+            .azury-complementos-secao.especiais strong {
+                color: #9a4c00;
+            }
+
+            .azury-complementos-secao.especiais
+            .azury-complementos-secao-badge {
+                background: #ffedd5;
+                color: #b45309;
+            }
+
+            .complemento-card.especial-pago:not(.selecionado) {
+                border-color: #f1d2a7;
+                background: #fffaf4;
+            }
+
+            .complemento-card.especial-pago:not(.selecionado)
+            .complemento-card-imagem {
+                background: #ffffff;
             }
 
             .complemento-card {
@@ -2333,8 +2420,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             @media (max-width: 720px) {
+                .menu-grid > li h3 {
+                    font-size: 18px;
+                }
+
                 .lista-complementos.azury-complementos-grid {
                     grid-template-columns: 1fr;
+                }
+
+                .azury-complementos-secao {
+                    align-items: flex-start;
+                    padding: 11px 12px;
+                }
+
+                .azury-complementos-secao strong {
+                    font-size: 13px;
+                }
+
+                .azury-complementos-secao small {
+                    font-size: 10.5px;
                 }
 
                 .complemento-card-selecao {
@@ -2508,118 +2612,208 @@ document.addEventListener("DOMContentLoaded", async () => {
             "azury-complementos-grid"
         );
 
-        d.middle.innerHTML =
-            state.complements
-                .map((item, index) => {
-                    const alwaysPaid =
-                        isAlwaysPaidComplement(
-                            item.nome
-                        );
+        const indexedComplements =
+            state.complements.map(
+                (item, index) => ({
+                    item,
+                    index
+                })
+            );
 
-                    const priceText =
-                        alwaysPaid
-                            ? `Adicional pago • ${money(item.preco)}`
-                            : `Grátis dentro do limite • Extra ${money(item.preco)}`;
+        const regularComplements =
+            indexedComplements.filter(
+                ({ item }) =>
+                    !isAlwaysPaidComplement(
+                        item.nome
+                    )
+            );
 
-                    const image =
-                        complementImagePath(
-                            item.nome
-                        );
+        const specialComplements =
+            indexedComplements.filter(
+                ({ item }) =>
+                    isAlwaysPaidComplement(
+                        item.nome
+                    )
+            );
 
-                    const groupName =
-                        `camada-complemento-${index}`;
+        const renderComplementCard =
+            ({ item, index }) => {
+                const alwaysPaid =
+                    isAlwaysPaidComplement(
+                        item.nome
+                    );
 
-                    return `
-                        <div
-                            class="complemento-card"
-                            data-complement-card
+                const priceText =
+                    alwaysPaid
+                        ? `Adicional pago • ${money(item.preco)}`
+                        : `Grátis dentro do limite • Extra ${money(item.preco)}`;
+
+                const image =
+                    complementImagePath(
+                        item.nome
+                    );
+
+                const groupName =
+                    `camada-complemento-${index}`;
+
+                return `
+                    <div
+                        class="complemento-card ${alwaysPaid ? "especial-pago" : ""}"
+                        data-complement-card
+                    >
+                        <label
+                            class="complemento-card-selecao"
+                            for="complemento-${index}"
                         >
-                            <label
-                                class="complemento-card-selecao"
-                                for="complemento-${index}"
+                            <span
+                                class="complemento-card-imagem ${image ? "" : "sem-imagem"}"
                             >
-                                <span
-                                    class="complemento-card-imagem ${image ? "" : "sem-imagem"}"
+                                ${image
+                                    ? `
+                                        <img
+                                            src="${esc(image)}"
+                                            alt="${esc(item.nome)}"
+                                            loading="lazy"
+                                        >
+                                    `
+                                    : ""
+                                }
+                            </span>
+
+                            <span
+                                class="complemento-card-info"
+                            >
+                                <strong>
+                                    ${esc(item.nome)}
+                                </strong>
+
+                                <small
+                                    class="${alwaysPaid ? "especial" : ""}"
                                 >
-                                    ${image
-                                        ? `
-                                            <img
-                                                src="${esc(image)}"
-                                                alt="${esc(item.nome)}"
-                                                loading="lazy"
-                                            >
-                                        `
-                                        : ""
-                                    }
-                                </span>
+                                    ${esc(priceText)}
+                                </small>
+                            </span>
 
-                                <span
-                                    class="complemento-card-info"
-                                >
-                                    <strong>
-                                        ${esc(item.nome)}
-                                    </strong>
+                            <input
+                                type="checkbox"
+                                class="complemento-monte-seu complemento-card-check"
+                                value="${esc(item.nome)}"
+                                data-id="${esc(item.id || "")}"
+                                data-preco="${esc(item.preco)}"
+                                data-especial-pago="${alwaysPaid ? "true" : "false"}"
+                                id="complemento-${index}"
+                            >
+                        </label>
 
-                                    <small
-                                        class="${alwaysPaid ? "especial" : ""}"
-                                    >
-                                        ${esc(priceText)}
-                                    </small>
-                                </span>
-
+                        <div
+                            class="complemento-camadas"
+                            aria-label="Posição de ${esc(item.nome)}"
+                        >
+                            <label>
                                 <input
-                                    type="checkbox"
-                                    class="complemento-monte-seu complemento-card-check"
-                                    value="${esc(item.nome)}"
-                                    data-id="${esc(item.id || "")}"
-                                    data-preco="${esc(item.preco)}"
-                                    data-especial-pago="${alwaysPaid ? "true" : "false"}"
-                                    id="complemento-${index}"
+                                    type="radio"
+                                    class="complemento-camada"
+                                    name="${groupName}"
+                                    value="meio"
+                                    disabled
                                 >
+                                Meio
                             </label>
 
-                            <div
-                                class="complemento-camadas"
-                                aria-label="Posição de ${esc(item.nome)}"
-                            >
-                                <label>
-                                    <input
-                                        type="radio"
-                                        class="complemento-camada"
-                                        name="${groupName}"
-                                        value="meio"
-                                        disabled
-                                    >
-                                    Meio
-                                </label>
+                            <label>
+                                <input
+                                    type="radio"
+                                    class="complemento-camada"
+                                    name="${groupName}"
+                                    value="cobertura"
+                                    disabled
+                                >
+                                Cobertura
+                            </label>
 
-                                <label>
-                                    <input
-                                        type="radio"
-                                        class="complemento-camada"
-                                        name="${groupName}"
-                                        value="cobertura"
-                                        disabled
-                                    >
-                                    Cobertura
-                                </label>
-
-                                <label>
-                                    <input
-                                        type="radio"
-                                        class="complemento-camada"
-                                        name="${groupName}"
-                                        value="ambos"
-                                        checked
-                                        disabled
-                                    >
-                                    Nos dois
-                                </label>
-                            </div>
+                            <label>
+                                <input
+                                    type="radio"
+                                    class="complemento-camada"
+                                    name="${groupName}"
+                                    value="ambos"
+                                    checked
+                                    disabled
+                                >
+                                Nos dois
+                            </label>
                         </div>
-                    `;
-                })
-                .join("");
+                    </div>
+                `;
+            };
+
+        const regularSection =
+            regularComplements.length
+                ? `
+                    <div
+                        class="azury-complementos-secao"
+                        aria-label="Complementos grátis e extras"
+                    >
+                        <div
+                            class="azury-complementos-secao-texto"
+                        >
+                            <strong>
+                                Complementos grátis / extras
+                            </strong>
+
+                            <small>
+                                Entram no limite grátis do seu açaí. Depois do limite, o valor extra é cobrado.
+                            </small>
+                        </div>
+
+                        <span
+                            class="azury-complementos-secao-badge"
+                        >
+                            Limite do produto
+                        </span>
+                    </div>
+
+                    ${regularComplements
+                        .map(renderComplementCard)
+                        .join("")}
+                `
+                : "";
+
+        const specialSection =
+            specialComplements.length
+                ? `
+                    <div
+                        class="azury-complementos-secao especiais"
+                        aria-label="Complementos especiais pagos"
+                    >
+                        <div
+                            class="azury-complementos-secao-texto"
+                        >
+                            <strong>
+                                Especiais pagos
+                            </strong>
+
+                            <small>
+                                São cobrados à parte e não ocupam nenhuma vaga dos complementos grátis.
+                            </small>
+                        </div>
+
+                        <span
+                            class="azury-complementos-secao-badge"
+                        >
+                            Sempre pagos
+                        </span>
+                    </div>
+
+                    ${specialComplements
+                        .map(renderComplementCard)
+                        .join("")}
+                `
+                : "";
+
+        d.middle.innerHTML =
+            regularSection +
+            specialSection;
 
         d.middle
             .querySelectorAll(
