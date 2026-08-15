@@ -4865,49 +4865,165 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function selectFirstAvailableSize() {
-        const firstAvailable =
-            state.sizes.find(item =>
-                item.disponivel === true &&
-                item.visivel === true
-            );
+    const firstAvailable =
+        state.sizes.find(item =>
+            item.disponivel === true &&
+            item.visivel === true
+        );
 
-        if (firstAvailable) {
-            selectSize(
-                firstAvailable.tamanho_ml,
-                firstAvailable.preco_base
-            );
-        }
-    }
-
-    function initializeInterface() {
-        if (state.interfaceReady) {
-            renderSizes();
-            renderComplements();
-            updateWhatsapp();
-            renderCart();
-            updateStore();
-            selectFirstAvailableSize();
-            return;
-        }
-
-        state.interfaceReady = true;
-
-        renderSizes();
-        renderComplements();
-        loadCart();
-        updateWhatsapp();
-        setupZip();
-        bind();
-        selectFirstAvailableSize();
-        renderCart();
-        showStep(1);
-        updateStore();
-
-        window.setInterval(
-            updateStore,
-            30000
+    if (firstAvailable) {
+        selectSize(
+            firstAvailable.tamanho_ml,
+            firstAvailable.preco_base
         );
     }
+}
+
+
+/* =========================================
+   PEDIR NOVAMENTE
+   Abre automaticamente a sacola reconstruída
+========================================= */
+
+async function openRepeatedOrderIfNeeded() {
+    let repeatedOrder = "";
+
+    try {
+        repeatedOrder =
+            sessionStorage.getItem(
+                "azuryPedidoRepetido"
+            ) || "";
+    } catch (_) {
+        repeatedOrder = "";
+    }
+
+    if (!repeatedOrder) {
+        return;
+    }
+
+    /*
+     * O pedidos.js já colocou o pedido antigo
+     * em azurySacola.
+     *
+     * loadCart() já:
+     * - valida os produtos atuais;
+     * - valida complementos atuais;
+     * - recalcula os preços;
+     * - remove itens indisponíveis.
+     */
+
+    if (!state.cart.length) {
+        try {
+            sessionStorage.removeItem(
+                "azuryPedidoRepetido"
+            );
+        } catch (_) {
+        }
+
+        alert(
+            "Não foi possível reconstruir este pedido com o cardápio atual."
+        );
+
+        return;
+    }
+
+    /*
+     * Remove o marcador antes de abrir.
+     * Assim, se o cliente atualizar a página,
+     * o modal não fica abrindo sozinho novamente.
+     */
+    try {
+        sessionStorage.removeItem(
+            "azuryPedidoRepetido"
+        );
+    } catch (_) {
+    }
+
+    /*
+     * Preenche os dados do cliente logado
+     * exatamente como acontece quando ele
+     * abre o montador normalmente.
+     */
+    await fillCustomer();
+
+    /*
+     * Atualiza a sacola já normalizada
+     * com os preços atuais.
+     */
+    renderCart();
+
+    /*
+     * O cliente volta para a primeira etapa,
+     * podendo revisar, alterar quantidade,
+     * remover itens ou adicionar outros.
+     */
+    showStep(1);
+
+    /*
+     * Esta era a parte que estava faltando:
+     * abrir o modal automaticamente.
+     */
+    openModal();
+
+    if (d.cartFeedback) {
+        d.cartFeedback.textContent =
+            "Pedido anterior carregado na sacola. Confira antes de continuar.";
+
+        window.setTimeout(() => {
+            if (
+                d.cartFeedback &&
+                d.cartFeedback.textContent ===
+                "Pedido anterior carregado na sacola. Confira antes de continuar."
+            ) {
+                d.cartFeedback.textContent = "";
+            }
+        }, 5000);
+    }
+}
+
+
+function initializeInterface() {
+    if (state.interfaceReady) {
+        renderSizes();
+        renderComplements();
+        updateWhatsapp();
+        renderCart();
+        updateStore();
+        selectFirstAvailableSize();
+
+        return;
+    }
+
+    state.interfaceReady = true;
+
+    renderSizes();
+    renderComplements();
+
+    /*
+     * Aqui a azurySacola é lida e os preços
+     * são recalculados com o cardápio atual.
+     */
+    loadCart();
+
+    updateWhatsapp();
+    setupZip();
+    bind();
+    selectFirstAvailableSize();
+    renderCart();
+    showStep(1);
+    updateStore();
+
+    /*
+     * Se o cliente veio pelo botão
+     * "Pedir novamente", abre a sacola.
+     */
+    void openRepeatedOrderIfNeeded();
+
+    window.setInterval(
+        updateStore,
+        30000
+    );
+}
 
     function showOperationUnavailable() {
         state.operationReady = false;
