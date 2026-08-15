@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         stickyBar: null,
         stickyProduct: null,
         stickySubtotal: null,
+        stickyCart: null,
         stickyAdd: null,
 
         name: $("#nomeCliente"),
@@ -2153,14 +2154,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                 pointer-events: none;
             }
 
+            .azury-barra-montagem[hidden] {
+                display: none !important;
+            }
+
             .azury-barra-montagem {
                 position: fixed;
                 left: 50%;
                 bottom: max(10px, env(safe-area-inset-bottom));
-                z-index: 99990;
-                width: min(720px, calc(100vw - 24px));
+                z-index: 100050;
+                width: min(860px, calc(100vw - 24px));
                 display: grid;
-                grid-template-columns: minmax(0, 1fr) auto auto;
+                grid-template-columns: minmax(0, 1fr) auto auto auto;
                 gap: 12px;
                 align-items: center;
                 padding: 11px 12px;
@@ -2201,6 +2206,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                 line-height: 1.25;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+            }
+
+            .azury-barra-montagem-sacola {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                min-height: 34px;
+                padding: 7px 10px;
+                border: 1px solid #d7e4ff;
+                border-radius: 999px;
+                background: #f5f8ff;
+                color: #17305c;
+                font-size: 12px;
+                font-weight: 900;
+                line-height: 1.2;
+                white-space: nowrap;
+            }
+
+            .azury-barra-montagem-sacola span[aria-hidden="true"] {
+                font-size: 14px;
+                line-height: 1;
             }
 
             .azury-barra-montagem-preco {
@@ -2548,14 +2575,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
 
                 .azury-barra-montagem-espaco {
-                    height: 134px;
+                    height: 172px;
                 }
 
                 .azury-barra-montagem {
                     width: calc(100vw - 16px);
                     bottom: max(8px, env(safe-area-inset-bottom));
                     grid-template-columns: minmax(0, 1fr) auto;
-                    gap: 9px 12px;
+                    gap: 8px 10px;
                     padding: 10px;
                     border-radius: 16px;
                 }
@@ -2566,6 +2593,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 .azury-barra-montagem-preco strong {
                     font-size: 16px;
+                }
+
+                .azury-barra-montagem-sacola {
+                    grid-column: 1 / -1;
+                    justify-content: flex-start;
+                    width: 100%;
+                    min-height: 32px;
+                    padding: 6px 9px;
+                    box-sizing: border-box;
+                    font-size: 11.5px;
                 }
 
                 .azury-barra-montagem-adicionar {
@@ -2627,32 +2664,32 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        let bar =
+        let spacer =
             d.step1.querySelector(
-                "#barraFixaMontagem"
+                ".azury-barra-montagem-espaco"
+            );
+
+        if (!spacer) {
+            spacer =
+                document.createElement("div");
+
+            spacer.className =
+                "azury-barra-montagem-espaco";
+
+            spacer.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            d.step1.appendChild(spacer);
+        }
+
+        let bar =
+            document.getElementById(
+                "barraFixaMontagem"
             );
 
         if (!bar) {
-            let spacer =
-                d.step1.querySelector(
-                    ".azury-barra-montagem-espaco"
-                );
-
-            if (!spacer) {
-                spacer =
-                    document.createElement("div");
-
-                spacer.className =
-                    "azury-barra-montagem-espaco";
-
-                spacer.setAttribute(
-                    "aria-hidden",
-                    "true"
-                );
-
-                d.step1.appendChild(spacer);
-            }
-
             bar =
                 document.createElement("div");
 
@@ -2661,6 +2698,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             bar.className =
                 "azury-barra-montagem";
+
+            bar.hidden = true;
 
             bar.setAttribute(
                 "aria-label",
@@ -2677,6 +2716,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                         id="barraFixaMontagemProduto"
                     >
                         Açaí
+                    </strong>
+                </div>
+
+                <div
+                    class="azury-barra-montagem-sacola"
+                    aria-label="Resumo da sacola"
+                >
+                    <span aria-hidden="true">🛍️</span>
+
+                    <strong
+                        id="barraFixaMontagemSacola"
+                    >
+                        Sacola: 0 itens • ${money(0)}
                     </strong>
                 </div>
 
@@ -2701,7 +2753,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </button>
             `;
 
-            d.step1.appendChild(bar);
+            /*
+             * A barra fica diretamente no body.
+             * Isso evita que overflow/transform do modal
+             * esconda o position: fixed em navegadores mobile.
+             */
+            document.body.appendChild(bar);
         }
 
         if (d.add) {
@@ -2722,6 +2779,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 "#barraFixaMontagemSubtotal"
             );
 
+        d.stickyCart =
+            bar.querySelector(
+                "#barraFixaMontagemSacola"
+            );
+
         d.stickyAdd =
             bar.querySelector(
                 "#btnAdicionarSacolaFixo"
@@ -2730,6 +2792,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateAssemblyStickyBar(
             state.subtotal
         );
+
+        syncAssemblyStickyBarVisibility();
+    }
+
+    function syncAssemblyStickyBarVisibility(
+        firstStep = null
+    ) {
+        if (!d.stickyBar) {
+            return;
+        }
+
+        const modalOpen =
+            d.modal?.style.display ===
+            "flex";
+
+        const builderOpen =
+            firstStep === null
+                ? Boolean(
+                    d.step1 &&
+                    !d.step1.hidden
+                )
+                : Boolean(firstStep);
+
+        d.stickyBar.hidden =
+            !(modalOpen && builderOpen);
     }
 
     function updateAssemblyStickyBar(
@@ -2762,6 +2849,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (d.stickySubtotal) {
             d.stickySubtotal.textContent =
                 money(value);
+        }
+
+        if (d.stickyCart) {
+            const units = cartUnits();
+            const subtotal = cartSubtotal();
+
+            d.stickyCart.textContent =
+                `Sacola: ${units} ${units === 1 ? "item" : "itens"} • ${money(subtotal)}`;
         }
 
         const currentStatus =
@@ -3899,6 +3994,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (d.content) {
             d.content.scrollTop = 0;
         }
+
+        syncAssemblyStickyBarVisibility(
+            first
+        );
     }
 
     function openModal() {
@@ -3908,6 +4007,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         d.modal.style.display = "flex";
         document.body.style.overflow = "hidden";
+
+        syncAssemblyStickyBarVisibility();
     }
 
     function closeModal() {
@@ -3917,6 +4018,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         d.modal.style.display = "none";
         document.body.style.overflow = "";
+
+        syncAssemblyStickyBarVisibility(
+            false
+        );
     }
 
     function resetAddress(
