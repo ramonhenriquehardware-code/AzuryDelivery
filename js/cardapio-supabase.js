@@ -40,6 +40,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         feeText: $("#resumoTaxaEntrega"),
         total: $("#totalMonteSeu"),
 
+        stickyBar: null,
+        stickyProduct: null,
+        stickySubtotal: null,
+        stickyAdd: null,
+
         name: $("#nomeCliente"),
         phone: $("#telefoneCliente"),
         zip: $("#cepCliente"),
@@ -77,6 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const CART_KEY = "azurySacola";
+    const LAST_ORDER_KEY = "azuryUltimoPedido";
     const MAX_CART_UNITS = 20;
     const OPERATION_CACHE_KEY = "azuryOperacaoPublica";
     const OPERATION_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
@@ -488,6 +494,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         } catch (error) {
             console.warn(
                 "Não foi possível salvar a sacola nesta sessão.",
+                error
+            );
+        }
+    }
+
+    function saveLastOrderSnapshot(order) {
+        try {
+            sessionStorage.setItem(
+                LAST_ORDER_KEY,
+                JSON.stringify(order)
+            );
+        } catch (error) {
+            console.warn(
+                "Não foi possível salvar os dados do último pedido nesta sessão.",
                 error
             );
         }
@@ -2123,6 +2143,109 @@ document.addEventListener("DOMContentLoaded", async () => {
                 letter-spacing: -0.02em;
             }
 
+            #btnAdicionarSacola.azury-adicionar-substituido {
+                display: none !important;
+            }
+
+            .azury-barra-montagem-espaco {
+                width: 100%;
+                height: 104px;
+                pointer-events: none;
+            }
+
+            .azury-barra-montagem {
+                position: fixed;
+                left: 50%;
+                bottom: max(10px, env(safe-area-inset-bottom));
+                z-index: 99990;
+                width: min(720px, calc(100vw - 24px));
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto auto;
+                gap: 12px;
+                align-items: center;
+                padding: 11px 12px;
+                border: 1px solid rgba(0, 81, 255, 0.18);
+                border-radius: 18px;
+                background: rgba(255, 255, 255, 0.97);
+                box-shadow:
+                    0 14px 38px rgba(15, 23, 42, 0.20),
+                    0 2px 10px rgba(0, 81, 255, 0.08);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                box-sizing: border-box;
+                transform: translateX(-50%);
+            }
+
+            .azury-barra-montagem-produto {
+                min-width: 0;
+            }
+
+            .azury-barra-montagem-produto small,
+            .azury-barra-montagem-preco small {
+                display: block;
+                margin-bottom: 2px;
+                color: #64748b;
+                font-size: 10.5px;
+                font-weight: 800;
+                line-height: 1.2;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .azury-barra-montagem-produto strong {
+                display: block;
+                overflow: hidden;
+                color: #17305c;
+                font-size: 14px;
+                font-weight: 900;
+                line-height: 1.25;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .azury-barra-montagem-preco {
+                text-align: right;
+                white-space: nowrap;
+            }
+
+            .azury-barra-montagem-preco strong {
+                display: block;
+                color: #0051ff;
+                font-size: 17px;
+                font-weight: 900;
+                line-height: 1.2;
+            }
+
+            .azury-barra-montagem-adicionar {
+                min-height: 46px;
+                padding: 10px 17px;
+                border: 0;
+                border-radius: 13px;
+                background: #0051ff;
+                color: #ffffff;
+                box-shadow: 0 7px 18px rgba(0, 81, 255, 0.24);
+                font: inherit;
+                font-size: 13px;
+                font-weight: 900;
+                line-height: 1.1;
+                cursor: pointer;
+                transition:
+                    transform 160ms ease,
+                    box-shadow 160ms ease,
+                    opacity 160ms ease;
+            }
+
+            .azury-barra-montagem-adicionar:hover:not(:disabled) {
+                transform: translateY(-1px);
+                box-shadow: 0 9px 22px rgba(0, 81, 255, 0.30);
+            }
+
+            .azury-barra-montagem-adicionar:disabled {
+                cursor: default;
+                opacity: 0.55;
+                box-shadow: none;
+            }
+
             .lista-complementos.azury-complementos-grid {
                 display: grid;
                 grid-template-columns:
@@ -2424,6 +2547,34 @@ document.addEventListener("DOMContentLoaded", async () => {
                     font-size: 18px;
                 }
 
+                .azury-barra-montagem-espaco {
+                    height: 134px;
+                }
+
+                .azury-barra-montagem {
+                    width: calc(100vw - 16px);
+                    bottom: max(8px, env(safe-area-inset-bottom));
+                    grid-template-columns: minmax(0, 1fr) auto;
+                    gap: 9px 12px;
+                    padding: 10px;
+                    border-radius: 16px;
+                }
+
+                .azury-barra-montagem-produto strong {
+                    font-size: 13px;
+                }
+
+                .azury-barra-montagem-preco strong {
+                    font-size: 16px;
+                }
+
+                .azury-barra-montagem-adicionar {
+                    grid-column: 1 / -1;
+                    width: 100%;
+                    min-height: 43px;
+                    padding: 9px 12px;
+                }
+
                 .lista-complementos.azury-complementos-grid {
                     grid-template-columns: 1fr;
                 }
@@ -2471,12 +2622,170 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
     }
 
+    function ensureAssemblyStickyBar() {
+        if (!d.step1) {
+            return;
+        }
+
+        let bar =
+            d.step1.querySelector(
+                "#barraFixaMontagem"
+            );
+
+        if (!bar) {
+            let spacer =
+                d.step1.querySelector(
+                    ".azury-barra-montagem-espaco"
+                );
+
+            if (!spacer) {
+                spacer =
+                    document.createElement("div");
+
+                spacer.className =
+                    "azury-barra-montagem-espaco";
+
+                spacer.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+                d.step1.appendChild(spacer);
+            }
+
+            bar =
+                document.createElement("div");
+
+            bar.id =
+                "barraFixaMontagem";
+
+            bar.className =
+                "azury-barra-montagem";
+
+            bar.setAttribute(
+                "aria-label",
+                "Resumo da montagem atual"
+            );
+
+            bar.innerHTML = `
+                <div
+                    class="azury-barra-montagem-produto"
+                >
+                    <small>Montagem atual</small>
+
+                    <strong
+                        id="barraFixaMontagemProduto"
+                    >
+                        Açaí
+                    </strong>
+                </div>
+
+                <div
+                    class="azury-barra-montagem-preco"
+                >
+                    <small>Subtotal</small>
+
+                    <strong
+                        id="barraFixaMontagemSubtotal"
+                    >
+                        ${money(0)}
+                    </strong>
+                </div>
+
+                <button
+                    type="button"
+                    class="azury-barra-montagem-adicionar"
+                    id="btnAdicionarSacolaFixo"
+                >
+                    Adicionar à sacola
+                </button>
+            `;
+
+            d.step1.appendChild(bar);
+        }
+
+        if (d.add) {
+            d.add.classList.add(
+                "azury-adicionar-substituido"
+            );
+        }
+
+        d.stickyBar = bar;
+
+        d.stickyProduct =
+            bar.querySelector(
+                "#barraFixaMontagemProduto"
+            );
+
+        d.stickySubtotal =
+            bar.querySelector(
+                "#barraFixaMontagemSubtotal"
+            );
+
+        d.stickyAdd =
+            bar.querySelector(
+                "#btnAdicionarSacolaFixo"
+            );
+
+        updateAssemblyStickyBar(
+            state.subtotal
+        );
+    }
+
+    function updateAssemblyStickyBar(
+        value = state.subtotal,
+        status = null
+    ) {
+        if (!d.stickyBar) {
+            return;
+        }
+
+        const selectedProduct =
+            d.size?.value || "";
+
+        const currentSizeItem =
+            state.sizes.find(item =>
+                String(item.tamanho_ml) ===
+                    String(selectedProduct) ||
+                Number(item.tamanho_ml) ===
+                    Number(selectedProduct)
+            );
+
+        if (d.stickyProduct) {
+            d.stickyProduct.textContent =
+                productDisplayName(
+                    currentSizeItem ||
+                    selectedProduct
+                );
+        }
+
+        if (d.stickySubtotal) {
+            d.stickySubtotal.textContent =
+                money(value);
+        }
+
+        const currentStatus =
+            status ||
+            storeState();
+
+        if (d.stickyAdd) {
+            d.stickyAdd.disabled =
+                !currentStatus.open;
+
+            d.stickyAdd.textContent =
+                currentStatus.open
+                    ? "Adicionar à sacola"
+                    : "Loja fechada";
+        }
+    }
+
     function renderComplements() {
         if (!d.middle) {
             return;
         }
 
         ensureComplementPickerStyles();
+        ensureAssemblyStickyBar();
 
         const middleGroup =
             d.middle.closest(
@@ -2801,7 +3110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span
                             class="azury-complementos-secao-badge"
                         >
-                            Sempre pagos
+                            Pagos
                         </span>
                     </div>
 
@@ -3158,6 +3467,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ? "Finalizar pedido"
                         : "Sacola vazia";
         }
+
+        updateAssemblyStickyBar(
+            state.subtotal,
+            status
+        );
     }
 
     function updateStore() {
@@ -3513,6 +3827,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             d.subtotal.textContent =
                 money(value);
         }
+
+        updateAssemblyStickyBar(
+            value
+        );
 
         return value;
     }
@@ -4198,6 +4516,71 @@ document.addEventListener("DOMContentLoaded", async () => {
             const url =
                 `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 
+            saveLastOrderSnapshot({
+                codigo: code,
+
+                pedido_id:
+                    data?.pedido_id ??
+                    data?.id ??
+                    null,
+
+                criado_em:
+                    data?.criado_em ??
+                    data?.created_at ??
+                    new Date().toISOString(),
+
+                valor_produtos:
+                    productValue,
+
+                taxa_entrega:
+                    fee,
+
+                valor_total:
+                    total,
+
+                cliente: {
+                    ...payload.cliente
+                },
+
+                entrega: {
+                    ...payload.entrega,
+                    bairro:
+                        d.district.value.trim()
+                },
+
+                pagamento: {
+                    ...payload.pagamento,
+                    forma_label:
+                        paymentLabel(pay)
+                },
+
+                itens: state.cart.map(item => ({
+                    tamanho_ml:
+                        Number(item.tamanho_ml),
+
+                    produto:
+                        productDisplayName(
+                            item.tamanho_ml
+                        ),
+
+                    quantidade:
+                        Number(item.quantidade),
+
+                    preco_unitario:
+                        num(item.preco_unitario),
+
+                    complementos:
+                        (item.complementos || [])
+                            .map(complement => ({
+                                nome:
+                                    complement.nome,
+
+                                camada:
+                                    complement.camada
+                            }))
+                }))
+            });
+
             closeModal();
 
             showOrderSuccess(code);
@@ -4263,6 +4646,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         d.add?.addEventListener(
+            "click",
+            addCurrentToCart
+        );
+
+        d.stickyAdd?.addEventListener(
             "click",
             addCurrentToCart
         );
@@ -4445,6 +4833,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (d.add) {
             d.add.disabled = true;
+        }
+
+        if (d.stickyAdd) {
+            d.stickyAdd.disabled = true;
+            d.stickyAdd.textContent =
+                "Carregando cardápio...";
         }
 
         if (d.next) {
