@@ -1863,6 +1863,45 @@ document.addEventListener("DOMContentLoaded", async () => {
                 color: #0051ff;
             }
 
+            .azury-complementos-contador {
+                width: 100%;
+                margin: 0 0 16px;
+                padding: 12px 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                color: #334155;
+                background: #f8fbff;
+                border: 1px solid #d7e4ff;
+                border-radius: 13px;
+                font-size: 14px;
+                font-weight: 700;
+                line-height: 1.4;
+                text-align: center;
+            }
+
+            .azury-complementos-contador strong {
+                color: #0051ff;
+                font-weight: 900;
+            }
+
+            .azury-complementos-contador.limite-atingido {
+                color: #0758f8;
+                background: #eef4ff;
+                border-color: #9fbcff;
+            }
+
+            .azury-complementos-contador.com-extras {
+                color: #9a4c00;
+                background: #fff8ed;
+                border-color: #f3c98b;
+            }
+
+            .azury-complementos-contador.com-extras strong {
+                color: #b45309;
+            }
+
             .lista-complementos.azury-complementos-grid {
                 display: grid;
                 grid-template-columns:
@@ -2096,6 +2135,37 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             help.innerHTML =
                 `Escolha o complemento <strong>uma vez</strong> e defina onde ele vai: meio, cobertura ou nos dois. <strong>“Nos dois” continua contando como 1 complemento.</strong>`;
+
+            let freeCounter =
+                middleGroup.querySelector(
+                    ".azury-complementos-contador"
+                );
+
+            if (!freeCounter) {
+                freeCounter =
+                    document.createElement("div");
+
+                freeCounter.className =
+                    "azury-complementos-contador";
+
+                freeCounter.id =
+                    "contadorComplementosGratis";
+
+                freeCounter.setAttribute(
+                    "role",
+                    "status"
+                );
+
+                freeCounter.setAttribute(
+                    "aria-live",
+                    "polite"
+                );
+
+                help.insertAdjacentElement(
+                    "afterend",
+                    freeCounter
+                );
+            }
         }
 
         d.middle.classList.add(
@@ -2559,6 +2629,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         : "Sacola vazia";
         }
     }
+
     function updateStore() {
         const status = storeState();
 
@@ -2727,6 +2798,95 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
     }
 
+    function updateFreeComplementCounter(
+        complements = currentComplementSelections()
+    ) {
+        const counter =
+            document.getElementById(
+                "contadorComplementosGratis"
+            );
+
+        if (!counter) {
+            return;
+        }
+
+        const size =
+            Number(d.size?.value);
+
+        const limit =
+            freeComplementLimit(size);
+
+        if (limit <= 0) {
+            counter.hidden = true;
+            return;
+        }
+
+        counter.hidden = false;
+
+        /*
+         * Complementos especiais sempre pagos
+         * não consomem vagas grátis.
+         * Cada tipo é contado uma única vez,
+         * então "Nos dois" continua valendo 1.
+         */
+        const eligibleKeys =
+            new Set(
+                (complements || [])
+                    .filter(complement =>
+                        !isAlwaysPaidComplement(
+                            complement.nome
+                        )
+                    )
+                    .map(complement =>
+                        norm(complement.nome)
+                    )
+                    .filter(Boolean)
+            );
+
+        const selectedCount =
+            eligibleKeys.size;
+
+        const usedFree =
+            Math.min(
+                selectedCount,
+                limit
+            );
+
+        const extras =
+            Math.max(
+                selectedCount - limit,
+                0
+            );
+
+        counter.classList.toggle(
+            "limite-atingido",
+            usedFree >= limit &&
+            extras === 0
+        );
+
+        counter.classList.toggle(
+            "com-extras",
+            extras > 0
+        );
+
+        if (extras > 0) {
+            counter.innerHTML =
+                `<strong>${usedFree} de ${limit}</strong> complementos grátis • ` +
+                `<strong>${extras} ${extras === 1 ? "extra" : "extras"}</strong>`;
+            return;
+        }
+
+        if (usedFree >= limit) {
+            counter.innerHTML =
+                `<strong>${usedFree} de ${limit}</strong> complementos grátis • ` +
+                `Limite grátis atingido`;
+            return;
+        }
+
+        counter.innerHTML =
+            `<strong>${usedFree} de ${limit}</strong> complementos grátis`;
+    }
+
     function calculate() {
         const size =
             Number(d.size?.value);
@@ -2736,6 +2896,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const complements =
             currentComplementSelections();
+
+        updateFreeComplementCounter(
+            complements
+        );
 
         const value =
             itemUnitPrice(
@@ -3177,6 +3341,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             d.number?.value.trim()
         );
     }
+
     async function createOrder() {
         if (
             state.sending ||
@@ -3584,6 +3749,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         );
     }
+
     function ensureDistrictField() {
         if (
             d.districtId ||
