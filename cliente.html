@@ -20,7 +20,7 @@
 
     <link
         rel="stylesheet"
-        href="/css/cliente.css?v=20260722-10"
+        href="/css/cliente.css?v=20260816-1"
     >
 
     <style>
@@ -2321,6 +2321,492 @@
 
         }
 
+
+
+        /* =====================================
+           ITEM 10 — REFINAMENTOS FINAIS
+        ====================================== */
+
+        .perfil-cliente {
+            min-height: 286px;
+
+            margin-bottom: 16px;
+
+            padding:
+                146px
+                26px
+                20px;
+        }
+
+
+        .titulo-azury {
+            margin:
+                5px 0
+                3px;
+
+            font-size: 44px;
+        }
+
+
+        .saudacao-cliente {
+            margin:
+                3px 0
+                12px;
+
+            font-size: 23px;
+        }
+
+
+        .nivel-cliente {
+            min-height: 34px;
+
+            padding:
+                6px
+                16px;
+
+            font-size: 15px;
+        }
+
+
+        .dashboard-cliente {
+            gap: 16px;
+        }
+
+
+        .resumo-cliente-grid {
+            gap: 14px;
+        }
+
+
+        .resumo-cliente-card {
+            min-height: 124px;
+
+            padding:
+                17px
+                18px;
+
+            gap: 14px;
+        }
+
+
+        .resumo-cliente-icone {
+            width: 52px;
+            height: 52px;
+
+            flex:
+                0 0
+                52px;
+
+            border-radius: 16px;
+
+            font-size: 24px;
+        }
+
+
+        .resumo-cliente-rotulo {
+            margin-bottom: 4px;
+
+            font-size: 12px;
+        }
+
+
+        .resumo-cliente-valor {
+            font-size: 28px;
+        }
+
+
+        .proxima-recompensa
+        .resumo-cliente-valor {
+            font-size: 18px;
+        }
+
+
+        .resumo-cliente-ajuda {
+            margin-top: 6px;
+
+            font-size: 11px;
+        }
+
+
+        .resumo-progresso {
+            height: 6px;
+
+            margin-top: 8px;
+        }
+
+
+        .dashboard-bloco {
+            padding: 20px;
+        }
+
+
+        .dashboard-cabecalho {
+            margin-bottom: 14px;
+        }
+
+
+        .atalho-cliente {
+            min-height: 94px;
+
+            padding: 14px;
+        }
+
+
+        .atalho-cliente-icone {
+            width: 44px;
+            height: 44px;
+
+            flex:
+                0 0
+                44px;
+
+            border-radius: 13px;
+        }
+
+
+        .pedido-andamento-vazio {
+            min-height: 76px;
+
+            padding: 16px;
+        }
+
+
+        .lista-pedidos {
+            min-height: 0;
+        }
+
+
+        #pedidos > p {
+            margin:
+                4px 0
+                8px;
+
+            color: #657086;
+
+            font-size: 13px;
+        }
+
+
+        #pedidosRecentesArea {
+            padding-bottom: 18px;
+        }
+
+
+        #pedidos .pedido {
+            padding: 14px;
+        }
+
+
+        #pedidos .detalhes-complementos-pedido,
+        #pedidos .endereco-pedido-cliente,
+        #pedidos .rastreamento-pedido {
+            display: none;
+        }
+
+
+        #pedidos .valores-pedido-cliente {
+            margin:
+                8px 0;
+
+            padding: 9px;
+        }
+
+
+        #pedidos .pedido p {
+            margin:
+                3px 0;
+        }
+
+
+        #pedidos .acoes-pedido-cliente {
+            margin-top: 10px;
+        }
+
+
+        .linha-inferior-dashboard {
+            grid-template-columns:
+                minmax(
+                    0,
+                    1.15fr
+                )
+                minmax(
+                    320px,
+                    0.85fr
+                );
+
+            gap: 16px;
+        }
+
+
+        #recompensasArea {
+            align-self: start;
+        }
+
+
+        .conteudo-recompensas {
+            gap: 12px;
+        }
+
+
+        .recompensa-item {
+            min-height: 190px;
+
+            padding: 16px;
+
+            gap: 12px;
+        }
+
+
+        .recompensa-informacoes {
+            gap: 6px;
+        }
+
+
+        .recompensa-informacoes strong {
+            font-size: 16px;
+        }
+
+
+        .recompensa-informacoes > span {
+            font-size: 13px;
+        }
+
+
+        #recompensasArea:not(.recompensas-expandidas)
+        .conteudo-recompensas
+        .recompensa-item:nth-child(n + 3) {
+            display: none;
+        }
+
+
+        .btn-ver-mais-recompensas {
+            min-height: 34px;
+
+            padding:
+                6px
+                11px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #0758f8;
+            background: #f3f7ff;
+
+            border:
+                1px solid
+                #cbd9fb;
+
+            border-radius: 9px;
+
+            font-size: 12px;
+            font-weight: 900;
+
+            white-space: nowrap;
+        }
+
+
+        .btn-ver-mais-recompensas:hover {
+            color: #ffffff;
+            background: #0758f8;
+
+            border-color: #0758f8;
+        }
+
+
+        .btn-ver-mais-recompensas[hidden] {
+            display: none;
+        }
+
+
+        .outdoor-recompensas {
+            min-height: 100%;
+
+            padding: 26px;
+
+            align-self: stretch;
+        }
+
+
+        .outdoor-marca {
+            margin-bottom: 15px;
+        }
+
+
+        .outdoor-recompensas h2 {
+            margin-bottom: 10px;
+
+            font-size: 26px;
+        }
+
+
+        .outdoor-recompensas p {
+            margin-bottom: 18px;
+
+            font-size: 13px;
+        }
+
+
+        @media (
+            max-width:
+            900px
+        ) {
+
+            .linha-inferior-dashboard {
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            #recompensasArea {
+                align-self: stretch;
+            }
+
+
+            .outdoor-recompensas {
+                min-height: 270px;
+            }
+
+        }
+
+
+        @media (
+            max-width:
+            700px
+        ) {
+
+            .conteudo-recompensas {
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+
+        @media (
+            max-width:
+            650px
+        ) {
+
+            .perfil-cliente {
+                min-height: 258px;
+
+                margin-bottom: 14px;
+
+                padding:
+                    136px
+                    18px
+                    18px;
+            }
+
+
+            .titulo-azury {
+                font-size: 36px;
+            }
+
+
+            .saudacao-cliente {
+                margin-bottom: 10px;
+
+                font-size: 19px;
+            }
+
+
+            .nivel-cliente {
+                min-height: 32px;
+
+                padding:
+                    5px
+                    13px;
+
+                font-size: 13px;
+            }
+
+
+            .resumo-cliente-card,
+            .proxima-recompensa {
+                min-height: 104px;
+
+                padding:
+                    12px
+                    8px;
+
+                gap: 7px;
+            }
+
+
+            .resumo-cliente-icone {
+                width: 36px;
+                height: 36px;
+
+                flex-basis: 36px;
+
+                border-radius: 11px;
+
+                font-size: 17px;
+            }
+
+
+            .resumo-cliente-rotulo {
+                margin-bottom: 2px;
+
+                font-size: 9px;
+            }
+
+
+            .resumo-cliente-valor,
+            .proxima-recompensa
+            .resumo-cliente-valor {
+                font-size: 18px;
+            }
+
+
+            .dashboard-bloco {
+                padding: 16px;
+            }
+
+
+            .atalho-cliente {
+                min-height: 88px;
+
+                padding:
+                    8px
+                    5px;
+            }
+
+
+            .atalho-cliente-icone {
+                width: 36px;
+                height: 36px;
+
+                flex-basis: 36px;
+
+                border-radius: 11px;
+            }
+
+
+            .pedido-andamento-vazio {
+                min-height: 72px;
+
+                padding: 14px;
+            }
+
+
+            .recompensa-item {
+                min-height: 178px;
+            }
+
+
+            .outdoor-recompensas {
+                min-height: 250px;
+
+                padding:
+                    22px
+                    18px;
+            }
+
+        }
+
     </style>
 
 </head>
@@ -2833,6 +3319,18 @@
                         <h2>
                             Suas recompensas
                         </h2>
+
+
+                        <button
+                            type="button"
+                            class="btn-ver-mais-recompensas"
+                            id="btnVerMaisRecompensas"
+                            aria-expanded="false"
+                            aria-controls="recompensas"
+                            hidden
+                        >
+                            Ver mais
+                        </button>
 
                     </div>
 
@@ -3353,9 +3851,164 @@
 
 
     <script
-        src="./js/cliente.js?v=20260815-2"
+        src="./js/cliente.js?v=20260816-1"
         defer
     ></script>
+
+
+    <!-- =====================================
+         ITEM 10 — VER MAIS RECOMPENSAS
+    ====================================== -->
+
+    <script>
+
+        (() => {
+
+            "use strict";
+
+
+            const area =
+                document.getElementById(
+                    "recompensasArea"
+                );
+
+
+            const lista =
+                document.getElementById(
+                    "recompensas"
+                );
+
+
+            const botao =
+                document.getElementById(
+                    "btnVerMaisRecompensas"
+                );
+
+
+            if (
+                !area ||
+                !lista ||
+                !botao
+            ) {
+                return;
+            }
+
+
+            function obterItens() {
+
+                return Array.from(
+                    lista.querySelectorAll(
+                        ".recompensa-item"
+                    )
+                );
+
+            }
+
+
+            function atualizarBotao() {
+
+                const itens =
+                    obterItens();
+
+
+                if (
+                    itens.length <= 2
+                ) {
+
+                    area.classList.remove(
+                        "recompensas-expandidas"
+                    );
+
+
+                    botao.hidden =
+                        true;
+
+
+                    botao.textContent =
+                        "Ver mais";
+
+
+                    botao.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+
+
+                    return;
+                }
+
+
+                botao.hidden =
+                    false;
+
+            }
+
+
+            botao.addEventListener(
+                "click",
+                () => {
+
+                    const expandido =
+                        area.classList.toggle(
+                            "recompensas-expandidas"
+                        );
+
+
+                    botao.textContent =
+                        expandido
+                            ? "Ver menos"
+                            : "Ver mais";
+
+
+                    botao.setAttribute(
+                        "aria-expanded",
+                        String(
+                            expandido
+                        )
+                    );
+
+
+                    if (
+                        !expandido
+                    ) {
+
+                        area.scrollIntoView({
+                            behavior:
+                                "smooth",
+
+                            block:
+                                "start"
+                        });
+
+                    }
+
+                }
+            );
+
+
+            const observador =
+                new MutationObserver(
+                    atualizarBotao
+                );
+
+
+            observador.observe(
+                lista,
+                {
+                    childList:
+                        true,
+
+                    subtree:
+                        true
+                }
+            );
+
+
+            atualizarBotao();
+
+        })();
+
+    </script>
 
 
 </body>
