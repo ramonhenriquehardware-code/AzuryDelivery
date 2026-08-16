@@ -14,20 +14,16 @@
         content="Área do Cliente Azury"
     >
 
-    <title>Área do Cliente - AZURY</title>
+    <title>
+        Área do Cliente - AZURY
+    </title>
 
-    <!-- O ARQUIVO CONTINUA SENDO CARREGADO,
-         MAS O VISUAL PRINCIPAL TAMBÉM ESTÁ
-         PROTEGIDO PELO CSS INTERNO ABAIXO. -->
     <link
         rel="stylesheet"
         href="/css/cliente.css?v=20260722-10"
     >
 
     <style>
-        /* =====================================
-           CONFIGURAÇÕES GERAIS
-        ====================================== */
 
         *,
         *::before,
@@ -35,13 +31,16 @@
             box-sizing: border-box;
         }
 
+
         html {
             width: 100%;
             min-width: 320px;
+
             margin: 0;
 
             scroll-behavior: smooth;
         }
+
 
         body.pagina-cliente {
             width: 100%;
@@ -57,12 +56,22 @@
             background:
                 radial-gradient(
                     circle at 12% 90%,
-                    rgba(255, 239, 209, 0.38),
+                    rgba(
+                        255,
+                        239,
+                        209,
+                        0.38
+                    ),
                     transparent 30%
                 ),
                 radial-gradient(
                     circle at 90% 20%,
-                    rgba(220, 230, 255, 0.48),
+                    rgba(
+                        220,
+                        230,
+                        255,
+                        0.48
+                    ),
                     transparent 35%
                 ),
                 #f7f9fd;
@@ -73,14 +82,19 @@
                 sans-serif;
         }
 
+
         button,
-        input {
+        input,
+        textarea,
+        select {
             font: inherit;
         }
+
 
         button {
             cursor: pointer;
         }
+
 
 
         /* =====================================
@@ -99,16 +113,31 @@
 
             overflow: hidden;
 
-            background: rgba(255, 255, 255, 0.98);
-            border-bottom: 1px solid #e8ecf3;
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.98
+                );
+
+            border-bottom:
+                1px solid
+                #e8ecf3;
 
             box-shadow:
                 0 5px 18px
-                rgba(24, 48, 92, 0.06);
+                rgba(
+                    24,
+                    48,
+                    92,
+                    0.06
+                );
 
             position: relative;
             z-index: 100;
         }
+
 
         .cliente-header-container {
             width: 100%;
@@ -122,8 +151,8 @@
             gap: 20px;
         }
 
+
         .cliente-logo {
-            width: auto;
             height: 62px;
 
             display: inline-flex;
@@ -142,6 +171,7 @@
             text-decoration: none;
         }
 
+
         .cliente-logo img {
             width: 78px;
             height: 54px;
@@ -157,17 +187,15 @@
 
             object-fit: contain;
             object-position: center;
-
-            margin: 0;
-            padding: 0;
-
-            transform: none;
         }
+
 
         .cliente-logo span {
             display: inline-block;
+
             flex-shrink: 0;
         }
+
 
         .acoes-cliente {
             display: flex;
@@ -176,9 +204,11 @@
             gap: 18px;
         }
 
+
         .btn-inicio-cliente,
         .btn-sair {
             min-height: 40px;
+
             padding: 0 5px;
 
             display: inline-flex;
@@ -188,7 +218,7 @@
             color: #0758f8;
             background: transparent;
 
-            border: none;
+            border: 0;
 
             font-size: 15px;
             font-weight: 700;
@@ -197,10 +227,12 @@
             white-space: nowrap;
         }
 
+
         .btn-inicio-cliente:hover,
         .btn-sair:hover {
             color: #003fbd;
         }
+
 
 
         /* =====================================
@@ -208,25 +240,37 @@
         ====================================== */
 
         .painel-cliente {
-            width: calc(100% - 40px);
+            width:
+                calc(
+                    100% - 40px
+                );
+
             max-width: 1135px;
 
-            margin: 20px auto 50px;
-
-            display: block;
+            margin:
+                20px auto
+                50px;
         }
+
 
 
         /* =====================================
            PERFIL
+           MANTIDO COMO JÁ ESTAVA
         ====================================== */
 
         .perfil-cliente {
             width: 100%;
             min-height: 316px;
 
-            margin: 0 0 20px;
-            padding: 154px 30px 26px;
+            margin:
+                0 0
+                20px;
+
+            padding:
+                154px
+                30px
+                26px;
 
             display: flex;
             flex-direction: column;
@@ -237,25 +281,46 @@
 
             text-align: center;
 
-            background: rgba(255, 255, 255, 0.96);
-            border: 1px solid #edf0f5;
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.96
+                );
+
+            border:
+                1px solid
+                #edf0f5;
+
             border-radius: 18px;
 
             box-shadow:
                 0 12px 35px
-                rgba(29, 52, 91, 0.08);
+                rgba(
+                    29,
+                    52,
+                    91,
+                    0.08
+                );
         }
+
 
         .avatar-container {
             width: 172px;
             height: 172px;
 
             position: absolute;
+
             top: -5px;
             left: 50%;
 
-            transform: translateX(-50%);
+            transform:
+                translateX(
+                    -50%
+                );
         }
+
 
         .avatar-cliente {
             width: 168px;
@@ -276,9 +341,13 @@
                     #edf3ff
                 );
 
-            border: 3px solid #0758f8;
+            border:
+                3px solid
+                #0758f8;
+
             border-radius: 50%;
         }
+
 
         #avatarInicial {
             width: 100%;
@@ -296,6 +365,7 @@
             line-height: 1;
         }
 
+
         #avatarInicial::before {
             content: "";
 
@@ -303,14 +373,20 @@
             height: 42px;
 
             position: absolute;
+
             top: 38px;
             left: 50%;
 
-            transform: translateX(-50%);
+            transform:
+                translateX(
+                    -50%
+                );
 
             background: #0758f8;
+
             border-radius: 50%;
         }
+
 
         #avatarInicial::after {
             content: "";
@@ -319,17 +395,29 @@
             height: 48px;
 
             position: absolute;
+
             left: 50%;
             bottom: 35px;
 
-            transform: translateX(-50%);
+            transform:
+                translateX(
+                    -50%
+                );
 
             background: #0758f8;
-            border-radius: 48px 48px 24px 24px;
+
+            border-radius:
+                48px
+                48px
+                24px
+                24px;
         }
 
+
         .titulo-azury {
-            margin: 8px 0 4px;
+            margin:
+                8px 0
+                4px;
 
             color: #0758f8;
 
@@ -339,8 +427,11 @@
             letter-spacing: 2px;
         }
 
+
         .saudacao-cliente {
-            margin: 4px 0 16px;
+            margin:
+                4px 0
+                16px;
 
             color: #161616;
 
@@ -349,14 +440,20 @@
             line-height: 1.25;
         }
 
+
         .saudacao-cliente strong {
             color: #0758f8;
+
             font-weight: 800;
         }
 
+
         .nivel-cliente {
             min-height: 37px;
-            padding: 7px 18px;
+
+            padding:
+                7px
+                18px;
 
             display: inline-flex;
             align-items: center;
@@ -365,7 +462,10 @@
             color: #232323;
             background: #ffffff;
 
-            border: 1.5px solid #b9cdfd;
+            border:
+                1.5px solid
+                #b9cdfd;
+
             border-radius: 999px;
 
             font-size: 17px;
@@ -373,248 +473,502 @@
         }
 
 
+
         /* =====================================
-           CARDS PRINCIPAIS
+           DASHBOARD
         ====================================== */
 
-        .cliente-grid {
+        .dashboard-cliente {
             width: 100%;
 
-            margin: 0 0 20px;
-
             display: grid;
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(0, 1fr)
-                );
 
-            align-items: start;
             gap: 20px;
         }
 
-        .card {
+
+
+        /* =====================================
+           RESUMO
+        ====================================== */
+
+        .resumo-cliente-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap: 16px;
+        }
+
+
+        .resumo-cliente-card {
             min-width: 0;
+            min-height: 142px;
 
-            padding: 24px 22px;
-
-            position: relative;
-
-            background: rgba(255, 255, 255, 0.97);
-            border: 1px solid #edf0f5;
-            border-radius: 16px;
-
-            box-shadow:
-                0 10px 28px
-                rgba(29, 52, 91, 0.08);
-        }
-
-        .card-pontos,
-        .card-pedidos {
-            min-height: 320px;
-        }
-
-        .card-pedidos {
-            padding-bottom: 70px;
-        }
-
-        .card-recompensas {
-            grid-column: 1 / -1;
-        }
-
-        .card-titulo {
-            margin: 0 0 20px;
+            padding: 20px;
 
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
 
-            color: #171717;
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.98
+                );
 
-            font-size: 20px;
-            font-weight: 800;
-            line-height: 1.2;
-        }
+            border:
+                1px solid
+                #e6ebf4;
 
-        .icone-card {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            border-radius: 18px;
 
-            font-size: 25px;
-            line-height: 1;
-        }
-
-        .icone-pontos {
-            color: #ffba00;
-        }
-
-        .icone-recompensa {
-            color: #ff671d;
-        }
-
-        .icone-pedidos {
-            color: #a98e72;
-        }
-
-        .icone-historico {
-            color: #6d35ff;
+            box-shadow:
+                0 10px 28px
+                rgba(
+                    29,
+                    52,
+                    91,
+                    0.07
+                );
         }
 
 
-        /* =====================================
-           PONTOS
-        ====================================== */
+        .resumo-cliente-icone {
+            width: 58px;
+            height: 58px;
 
-        .quantidade-pontos {
-            margin-bottom: 15px;
+            flex:
+                0 0
+                58px;
+
+            display: grid;
+
+            place-items: center;
+
+            border-radius: 18px;
+
+            font-size: 27px;
         }
 
-        .quantidade-pontos strong {
+
+        .pedidos-realizados
+        .resumo-cliente-icone {
+            color: #0758f8;
+            background: #edf3ff;
+        }
+
+
+        .pontos-disponiveis
+        .resumo-cliente-icone {
+            color: #6b35ff;
+            background: #f1edff;
+        }
+
+
+        .proxima-recompensa
+        .resumo-cliente-icone {
+            color: #137d4b;
+            background: #eaf9f1;
+        }
+
+
+        .resumo-cliente-conteudo {
+            min-width: 0;
+        }
+
+
+        .resumo-cliente-rotulo {
             display: block;
 
-            color: #0758f8;
+            margin-bottom: 5px;
 
-            font-size: 46px;
-            font-weight: 900;
-            line-height: 1;
+            color: #657086;
+
+            font-size: 13px;
+            font-weight: 700;
         }
 
-        .quantidade-pontos span {
+
+        .resumo-cliente-valor {
             display: block;
 
-            margin-top: 5px;
+            color: #17233c;
 
-            color: #0758f8;
-
-            font-size: 14px;
+            font-size: 30px;
             font-weight: 900;
+            line-height: 1.05;
         }
 
-        .pontos-acumulados-resumo {
-            margin: 0 0 15px;
 
-            color: #4b4f56;
-
-            font-size: 14px;
+        .pontos-disponiveis
+        .resumo-cliente-valor {
+            color: #0758f8;
         }
 
-        .barra-pontos {
+
+        .proxima-recompensa
+        .resumo-cliente-valor {
+            font-size: 19px;
+            line-height: 1.25;
+        }
+
+
+        .resumo-cliente-ajuda {
+            display: block;
+
+            margin-top: 7px;
+
+            color: #7a8495;
+
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+
+        .resumo-progresso {
             width: 100%;
-            height: 12px;
+            height: 7px;
 
-            margin: 0 0 12px;
+            margin-top: 10px;
 
             overflow: hidden;
 
-            background: #e5e8ed;
+            background: #edf0f5;
+
             border-radius: 999px;
         }
 
-        .progresso {
+
+        .resumo-progresso > span {
             width: 0;
             height: 100%;
 
-            background: #0758f8;
-            border-radius: 999px;
+            display: block;
 
-            transition: width 0.3s ease;
+            background:
+                linear-gradient(
+                    90deg,
+                    #0758f8,
+                    #5b8cff
+                );
+
+            border-radius: inherit;
+
+            transition:
+                width
+                0.3s ease;
         }
 
-        .texto-progresso {
-            min-height: 42px;
-
-            margin: 0 0 18px;
-
-            color: #414141;
-
-            font-size: 14px;
-            line-height: 1.5;
-        }
 
 
         /* =====================================
-           BOTÕES
+           BLOCOS DO DASHBOARD
         ====================================== */
 
-        .btn,
-        .btn-detalhes,
-        .btn-resgatar-recompensa {
-            width: 100%;
-            min-height: 44px;
+        .dashboard-bloco {
+            min-width: 0;
 
-            padding: 10px 16px;
+            padding: 22px;
 
-            display: inline-flex;
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.98
+                );
+
+            border:
+                1px solid
+                #e7ebf2;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 10px 30px
+                rgba(
+                    29,
+                    52,
+                    91,
+                    0.07
+                );
+        }
+
+
+        .dashboard-cabecalho {
+            margin-bottom: 16px;
+
+            display: flex;
             align-items: center;
-            justify-content: center;
-
-            color: #ffffff;
-            background: #0758f8;
-
-            border: 1px solid #0758f8;
-            border-radius: 10px;
-
-            font-size: 15px;
-            font-weight: 800;
-
-            text-decoration: none;
+            justify-content: space-between;
+            gap: 14px;
         }
 
-        .btn:hover,
-        .btn-detalhes:hover,
-        .btn-resgatar-recompensa:hover:not(:disabled) {
-            background: #0048df;
+
+        .dashboard-cabecalho h2 {
+            margin: 0;
+
+            color: #17233c;
+
+            font-size: 19px;
+            font-weight: 900;
         }
 
-        .btn-outline {
-            color: #0758f8;
-            background: #ffffff;
-        }
 
-        .btn-outline:hover {
-            color: #ffffff;
-            background: #0758f8;
-        }
-
-        .btn-resgatar-recompensa:disabled {
-            color: #737b87;
-            background: #e5e8ed;
-
-            border-color: #d8dce3;
-
-            cursor: not-allowed;
-        }
-
-        .link-card {
+        .dashboard-link {
             padding: 0;
 
             color: #0758f8;
             background: transparent;
 
-            border: none;
+            border: 0;
+
+            font-size: 13px;
+            font-weight: 800;
+
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+
+        .dashboard-link:hover {
+            color: #003fbd;
+        }
+
+
+
+        /* =====================================
+           ACESSO RÁPIDO
+        ====================================== */
+
+        .acesso-rapido-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap: 12px;
+        }
+
+
+        .atalho-cliente {
+            min-width: 0;
+            min-height: 108px;
+
+            padding: 16px;
+
+            display: flex;
+            align-items: center;
+            gap: 13px;
+
+            color: #17233c;
+
+            background: #fbfcff;
+
+            border:
+                1px solid
+                #dde5f2;
+
+            border-radius: 15px;
+
+            text-align: left;
+
+            text-decoration: none;
+
+            transition:
+                transform 0.18s ease,
+                border-color 0.18s ease,
+                box-shadow 0.18s ease;
+        }
+
+
+        .atalho-cliente:hover {
+            transform:
+                translateY(
+                    -2px
+                );
+
+            border-color: #b8caf4;
+
+            box-shadow:
+                0 8px 20px
+                rgba(
+                    0,
+                    81,
+                    255,
+                    0.08
+                );
+        }
+
+
+        .atalho-cliente-icone {
+            width: 46px;
+            height: 46px;
+
+            flex:
+                0 0
+                46px;
+
+            display: grid;
+
+            place-items: center;
+
+            color: #ffffff;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #0758f8,
+                    #003fbd
+                );
+
+            border-radius: 14px;
+
+            font-size: 20px;
+
+            box-shadow:
+                0 8px 18px
+                rgba(
+                    7,
+                    88,
+                    248,
+                    0.18
+                );
+        }
+
+
+        .atalho-cliente:nth-child(2)
+        .atalho-cliente-icone {
+            background:
+                linear-gradient(
+                    145deg,
+                    #713cff,
+                    #4c22d4
+                );
+        }
+
+
+        .atalho-cliente:nth-child(3)
+        .atalho-cliente-icone {
+            background:
+                linear-gradient(
+                    145deg,
+                    #f2ad22,
+                    #d88800
+                );
+        }
+
+
+        .atalho-cliente:nth-child(4)
+        .atalho-cliente-icone {
+            background:
+                linear-gradient(
+                    145deg,
+                    #18a86b,
+                    #087b4a
+                );
+        }
+
+
+        .atalho-cliente strong {
+            display: block;
+
+            margin-bottom: 4px;
 
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 900;
         }
 
-        .card-pedidos > .link-card {
-            position: absolute;
-            right: 22px;
-            bottom: 23px;
+
+        .atalho-cliente small {
+            display: block;
+
+            color: #7a8495;
+
+            font-size: 11px;
+            line-height: 1.35;
         }
+
 
 
         /* =====================================
            PEDIDOS
         ====================================== */
 
+        .pedido-andamento-area {
+            border-color:
+                rgba(
+                    7,
+                    88,
+                    248,
+                    0.18
+                );
+
+            background:
+                radial-gradient(
+                    circle at 92% 18%,
+                    rgba(
+                        7,
+                        88,
+                        248,
+                        0.08
+                    ),
+                    transparent 28%
+                ),
+                #ffffff;
+        }
+
+
+        .pedido-andamento-vazio {
+            min-height: 118px;
+
+            padding: 22px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+
+            color: #657086;
+
+            background: #f8faff;
+
+            border:
+                1px dashed
+                #cbd7ec;
+
+            border-radius: 14px;
+
+            text-align: center;
+
+            font-size: 14px;
+        }
+
+
         .lista-pedidos {
-            min-height: 130px;
+            min-height: 120px;
 
             display: grid;
+
             gap: 12px;
         }
+
 
         .pedido {
             width: 100%;
@@ -622,37 +976,56 @@
             padding: 15px;
 
             color: #252525;
+
             background: #fbfcff;
 
-            border: 1px solid #dfe6f2;
-            border-left: 4px solid #0758f8;
+            border:
+                1px solid
+                #dfe6f2;
+
+            border-left:
+                4px solid
+                #0758f8;
+
             border-radius: 11px;
 
             font-size: 13px;
             line-height: 1.5;
         }
 
+
         .pedido h4 {
-            margin: 0 0 9px;
+            margin:
+                0 0
+                9px;
 
             font-size: 15px;
         }
 
+
         .pedido p {
-            margin: 5px 0;
+            margin:
+                5px 0;
         }
+
 
         .detalhes-complementos-pedido,
         .endereco-pedido-cliente,
         .valores-pedido-cliente {
-            margin: 10px 0;
+            margin:
+                10px 0;
+
             padding: 11px;
 
             background: #ffffff;
 
-            border: 1px solid #e1e6ef;
+            border:
+                1px solid
+                #e1e6ef;
+
             border-radius: 9px;
         }
+
 
         .status-pedido,
         .status-preparacao,
@@ -661,8 +1034,12 @@
         .status-cancelado {
             width: fit-content;
 
-            margin-top: 11px !important;
-            padding: 6px 10px;
+            margin-top:
+                11px !important;
+
+            padding:
+                6px
+                10px;
 
             border-radius: 999px;
 
@@ -670,25 +1047,30 @@
             font-weight: 800;
         }
 
+
         .status-pedido {
             color: #8a6200;
             background: #fff8dc;
         }
+
 
         .status-preparacao {
             color: #9a4c00;
             background: #fff2e5;
         }
 
+
         .status-entrega {
             color: #174ea6;
             background: #eaf2ff;
         }
 
+
         .status-entregue {
             color: #18713d;
             background: #eafaf0;
         }
+
 
         .status-cancelado {
             color: #ad2828;
@@ -696,26 +1078,51 @@
         }
 
 
+
         /* =====================================
            RECOMPENSAS
         ====================================== */
+
+        .linha-inferior-dashboard {
+            display: grid;
+
+            grid-template-columns:
+                minmax(
+                    0,
+                    1.1fr
+                )
+                minmax(
+                    320px,
+                    0.9fr
+                );
+
+            gap: 20px;
+
+            align-items: stretch;
+        }
+
 
         .conteudo-recompensas {
             width: 100%;
 
             display: grid;
+
             grid-template-columns:
                 repeat(
                     2,
-                    minmax(0, 1fr)
+                    minmax(
+                        0,
+                        1fr
+                    )
                 );
 
             gap: 14px;
         }
 
+
         .recompensa-item {
             min-width: 0;
-            min-height: 230px;
+            min-height: 210px;
 
             padding: 18px;
 
@@ -726,19 +1133,30 @@
 
             background: #fbfcff;
 
-            border: 1px solid #dfe6f2;
+            border:
+                1px solid
+                #dfe6f2;
+
             border-radius: 14px;
 
             box-shadow:
                 0 6px 18px
-                rgba(29, 52, 91, 0.06);
+                rgba(
+                    29,
+                    52,
+                    91,
+                    0.06
+                );
         }
+
 
         .recompensa-informacoes {
             display: flex;
             flex-direction: column;
+
             gap: 8px;
         }
+
 
         .recompensa-informacoes strong {
             color: #1d1d1d;
@@ -747,6 +1165,7 @@
             line-height: 1.35;
         }
 
+
         .recompensa-informacoes > span {
             color: #555d68;
 
@@ -754,19 +1173,27 @@
             line-height: 1.45;
         }
 
+
         .pontos-recompensa {
             width: fit-content;
 
-            padding: 5px 10px;
+            padding:
+                5px
+                10px;
 
-            color: #0758f8 !important;
+            color:
+                #0758f8 !important;
+
             background: #edf3ff;
 
             border-radius: 999px;
 
-            font-size: 13px !important;
+            font-size:
+                13px !important;
+
             font-weight: 800;
         }
+
 
         .limite-recompensa {
             color: #666d78;
@@ -774,6 +1201,7 @@
             font-size: 12px;
             font-weight: 600;
         }
+
 
         .status-recompensa {
             margin: 0;
@@ -786,65 +1214,317 @@
         }
 
 
+        .btn-resgatar-recompensa {
+            width: 100%;
+            min-height: 44px;
+
+            padding:
+                10px
+                16px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #ffffff;
+            background: #0758f8;
+
+            border:
+                1px solid
+                #0758f8;
+
+            border-radius: 10px;
+
+            font-size: 15px;
+            font-weight: 800;
+
+            text-decoration: none;
+        }
+
+
+        .btn-resgatar-recompensa:disabled {
+            color: #737b87;
+
+            background: #e5e8ed;
+
+            border-color: #d8dce3;
+
+            cursor: not-allowed;
+        }
+
+
+
         /* =====================================
-           HISTÓRICO
+           OUTDOOR
         ====================================== */
 
-        .card-historico {
-            width: 100%;
-            min-height: 184px;
+        .outdoor-recompensas {
+            min-height: 100%;
 
-            margin-top: 20px;
-            padding: 24px 22px 26px;
-        }
+            padding: 28px;
 
-        .historico-cabecalho .card-titulo {
-            margin-bottom: 16px;
-        }
-
-        .lista-historico {
-            width: 100%;
-
-            display: grid;
-            grid-template-columns:
-                repeat(
-                    4,
-                    minmax(135px, 1fr)
-                );
+            position: relative;
 
             overflow: hidden;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            color: #ffffff;
+
+            background:
+                radial-gradient(
+                    circle at 88% 12%,
+                    rgba(
+                        255,
+                        199,
+                        67,
+                        0.34
+                    ),
+                    transparent 25%
+                ),
+                radial-gradient(
+                    circle at 82% 76%,
+                    rgba(
+                        0,
+                        81,
+                        255,
+                        0.55
+                    ),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #071847 0%,
+                    #0c1c79 56%,
+                    #27137f 100%
+                );
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 16px 38px
+                rgba(
+                    8,
+                    22,
+                    76,
+                    0.20
+                );
         }
 
-        .lista-historico > p,
-        .lista-historico > div {
-            min-height: 78px;
 
-            margin: 0;
-            padding: 7px 18px;
+        .outdoor-recompensas::before {
+            content: "★";
 
-            color: #242424;
+            position: absolute;
 
-            border-right: 1px solid #e0e4eb;
+            right: 22px;
+            top: 18px;
+
+            color: #ffc43d;
+
+            font-size: 44px;
+
+            transform:
+                rotate(
+                    12deg
+                );
+
+            opacity: 0.95;
+        }
+
+
+        .outdoor-recompensas::after {
+            content: "";
+
+            width: 210px;
+            height: 210px;
+
+            position: absolute;
+
+            right: -78px;
+            bottom: -95px;
+
+            border:
+                34px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.07
+                );
+
+            border-radius: 50%;
+        }
+
+
+        .outdoor-marca {
+            width: fit-content;
+
+            margin-bottom: 18px;
+
+            padding:
+                7px
+                12px;
+
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            color: #ffca45;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.12
+                );
+
+            border-radius: 999px;
+
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+
+
+        .outdoor-recompensas h2 {
+            max-width: 430px;
+
+            margin:
+                0 0
+                12px;
+
+            color: #ffffff;
+
+            font-size: 28px;
+            font-weight: 900;
+            line-height: 1.08;
+        }
+
+
+        .outdoor-recompensas h2 span {
+            color: #ffca45;
+        }
+
+
+        .outdoor-recompensas p {
+            max-width: 430px;
+
+            margin:
+                0 0
+                22px;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.84
+                );
+
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+
+        .outdoor-botao {
+            width: fit-content;
+            min-height: 42px;
+
+            padding:
+                0 18px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #ffffff;
+            background: #0758f8;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.12
+                );
+
+            border-radius: 11px;
 
             font-size: 13px;
-            line-height: 1.6;
+            font-weight: 900;
+
+            text-decoration: none;
         }
 
-        .lista-historico > :last-child {
-            border-right: none;
+
+
+        /* =====================================
+           BOTÕES
+        ====================================== */
+
+        .btn,
+        .btn-detalhes {
+            width: 100%;
+            min-height: 44px;
+
+            padding:
+                10px
+                16px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #ffffff;
+            background: #0758f8;
+
+            border:
+                1px solid
+                #0758f8;
+
+            border-radius: 10px;
+
+            font-size: 15px;
+            font-weight: 800;
+
+            text-decoration: none;
         }
 
-        .historico-vazio {
-            grid-column: 1 / -1;
 
-            border-right: none !important;
+        .btn-outline {
+            color: #0758f8;
+            background: #ffffff;
         }
 
-        .link-historico {
-            display: block;
 
-            margin: 18px 0 0 auto;
+        .btn-outline:hover {
+            color: #ffffff;
+            background: #0758f8;
         }
+
 
 
         /* =====================================
@@ -862,16 +1542,27 @@
             justify-content: center;
 
             position: fixed;
+
             inset: 0;
+
             z-index: 9999;
 
             overflow-y: auto;
 
             background:
-                rgba(8, 18, 39, 0.65);
+                rgba(
+                    8,
+                    18,
+                    39,
+                    0.65
+                );
 
-            backdrop-filter: blur(4px);
+            backdrop-filter:
+                blur(
+                    4px
+                );
         }
+
 
         .modal-content {
             width: 100%;
@@ -890,21 +1581,32 @@
 
             box-shadow:
                 0 25px 70px
-                rgba(0, 0, 0, 0.24);
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.24
+                );
         }
 
+
         .modal-content h2 {
-            margin: 0 0 16px;
+            margin:
+                0 0
+                16px;
 
             color: #171717;
 
             font-size: 24px;
         }
 
+
         .modal-content p {
             color: #555555;
+
             line-height: 1.5;
         }
+
 
         .modal-pedidos,
         .modal-historico {
@@ -913,44 +1615,67 @@
             text-align: left;
         }
 
+
         .modal-pedidos > h2,
         .modal-historico > h2 {
             text-align: center;
         }
 
+
         #listaTodosPedidos {
-            margin: 15px 0 20px;
+            margin:
+                15px 0
+                20px;
 
             display: grid;
+
             grid-template-columns:
                 repeat(
                     2,
-                    minmax(0, 1fr)
+                    minmax(
+                        0,
+                        1fr
+                    )
                 );
 
             gap: 14px;
         }
 
+
         #listaTodoHistorico {
-            margin: 15px 0 20px;
+            margin:
+                15px 0
+                20px;
         }
 
-        .historico-item {
-            padding: 12px 5px;
 
-            border-bottom: 1px solid #e4e8ef;
+        .historico-item {
+            padding:
+                12px
+                5px;
+
+            border-bottom:
+                1px solid
+                #e4e8ef;
 
             line-height: 1.6;
         }
 
+
         #codigoCupom {
-            margin: 12px 0 22px;
+            margin:
+                12px 0
+                22px;
+
             padding: 13px;
 
             color: #0758f8;
             background: #f2f6ff;
 
-            border: 1px dashed #0758f8;
+            border:
+                1px dashed
+                #0758f8;
+
             border-radius: 10px;
 
             font-size: 24px;
@@ -958,8 +1683,80 @@
         }
 
 
+        .resumo-pontos-modal strong {
+            display: block;
+
+            color: #0758f8;
+
+            font-size: 42px;
+        }
+
+
+        .nivel-modal {
+            margin:
+                18px 0
+                12px;
+
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+
+        .lista-niveis {
+            margin:
+                18px 0;
+
+            text-align: left;
+        }
+
+
+        .lista-niveis p {
+            padding: 12px;
+
+            background: #f8faff;
+
+            border:
+                1px solid
+                #e2e8f3;
+
+            border-radius: 10px;
+        }
+
+
+        .barra-pontos {
+            width: 100%;
+            height: 12px;
+
+            margin:
+                0 0
+                12px;
+
+            overflow: hidden;
+
+            background: #e5e8ed;
+
+            border-radius: 999px;
+        }
+
+
+        .progresso {
+            width: 0;
+            height: 100%;
+
+            background: #0758f8;
+
+            border-radius: 999px;
+
+            transition:
+                width
+                0.3s ease;
+        }
+
+
+
         /* =====================================
-           MODAL DA RECOMPENSA
+           MODAL DE RECOMPENSA
         ====================================== */
 
         .modal-recompensa-acai {
@@ -968,25 +1765,33 @@
             text-align: left;
         }
 
+
         .modal-recompensa-acai > h2,
         .modal-recompensa-acai > p {
             text-align: center;
         }
 
+
         .seletores-complementos {
             width: 100%;
 
-            margin: 22px 0;
+            margin:
+                22px 0;
 
             display: grid;
+
             grid-template-columns:
                 repeat(
                     auto-fit,
-                    minmax(270px, 1fr)
+                    minmax(
+                        270px,
+                        1fr
+                    )
                 );
 
             gap: 18px;
         }
+
 
         .grupo-complementos-recompensa {
             min-width: 0;
@@ -994,33 +1799,46 @@
             padding: 16px;
 
             display: grid;
+
             grid-template-columns:
                 repeat(
                     2,
-                    minmax(0, 1fr)
+                    minmax(
+                        0,
+                        1fr
+                    )
                 );
 
             gap: 9px;
 
             background: #f8faff;
 
-            border: 1px solid #dce4f2;
+            border:
+                1px solid
+                #dce4f2;
+
             border-radius: 13px;
         }
 
-        .grupo-complementos-recompensa legend {
-            grid-column: 1 / -1;
 
-            padding: 0 6px;
+        .grupo-complementos-recompensa legend {
+            grid-column:
+                1 / -1;
+
+            padding:
+                0 6px;
 
             font-size: 16px;
             font-weight: 800;
         }
 
+
         .opcao-complemento-recompensa {
             min-height: 42px;
 
-            padding: 9px 10px;
+            padding:
+                9px
+                10px;
 
             display: flex;
             align-items: center;
@@ -1029,12 +1847,16 @@
             color: #343434;
             background: #ffffff;
 
-            border: 1px solid #e1e6ef;
+            border:
+                1px solid
+                #e1e6ef;
+
             border-radius: 9px;
 
             font-size: 13px;
             font-weight: 600;
         }
+
 
         .opcao-complemento-recompensa input {
             width: 17px;
@@ -1043,26 +1865,33 @@
             accent-color: #0758f8;
         }
 
+
         .acoes-modal-recompensa {
             display: flex;
+
             gap: 12px;
         }
+
 
         .acoes-modal-recompensa .btn {
             flex: 1;
         }
 
+
         #mensagemRecompensa {
             display: none;
 
             margin-bottom: 14px;
+
             padding: 12px;
 
             border-radius: 10px;
 
             text-align: center;
+
             font-weight: 700;
         }
+
 
         #mensagemRecompensa.erro {
             display: block;
@@ -1070,8 +1899,11 @@
             color: #ad2626;
             background: #fff0f0;
 
-            border: 1px solid #efb3b3;
+            border:
+                1px solid
+                #efb3b3;
         }
+
 
         #mensagemRecompensa.sucesso {
             display: block;
@@ -1079,58 +1911,100 @@
             color: #187b43;
             background: #eafff1;
 
-            border: 1px solid #a2dfb9;
+            border:
+                1px solid
+                #a2dfb9;
         }
+
+
+        .compatibilidade-historico {
+            display:
+                none !important;
+        }
+
 
 
         /* =====================================
            RESPONSIVIDADE
         ====================================== */
 
-        @media (max-width: 760px) {
-            #listaTodosPedidos {
-                grid-template-columns: 1fr;
+        @media (
+            max-width:
+            900px
+        ) {
+
+            .resumo-cliente-grid {
+                grid-template-columns:
+                    1fr 1fr;
             }
+
+
+            .proxima-recompensa {
+                grid-column:
+                    1 / -1;
+            }
+
+
+            .linha-inferior-dashboard {
+                grid-template-columns:
+                    1fr;
+            }
+
         }
 
-        @media (max-width: 700px) {
-            .cliente-grid,
+
+        @media (
+            max-width:
+            760px
+        ) {
+
+            #listaTodosPedidos {
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+
+        @media (
+            max-width:
+            700px
+        ) {
+
             .conteudo-recompensas {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
             }
 
-            .card-recompensas {
-                grid-column: auto;
-            }
-
-            .lista-historico {
-                display: block;
-            }
-
-            .lista-historico > p,
-            .lista-historico > div {
-                padding: 13px 5px;
-
-                border-right: none;
-                border-bottom: 1px solid #e0e4eb;
-            }
 
             .grupo-complementos-recompensa {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
             }
+
 
             .acoes-modal-recompensa {
-                flex-direction: column;
+                flex-direction:
+                    column;
             }
+
         }
 
-        @media (max-width: 650px) {
+
+        @media (
+            max-width:
+            650px
+        ) {
+
             .cliente-header {
                 height: 70px;
                 min-height: 70px;
 
-                padding: 7px 14px;
+                padding:
+                    7px
+                    14px;
             }
+
 
             .cliente-logo {
                 height: 54px;
@@ -1139,6 +2013,7 @@
 
                 font-size: 22px;
             }
+
 
             .cliente-logo img {
                 width: 58px;
@@ -1153,69 +2028,260 @@
                 flex-basis: 58px;
             }
 
+
             .acoes-cliente {
                 gap: 8px;
             }
+
 
             .btn-inicio-cliente,
             .btn-sair {
                 font-size: 12px;
             }
 
+
             .painel-cliente {
-                width: calc(100% - 24px);
+                width:
+                    calc(
+                        100% - 24px
+                    );
 
                 margin-top: 14px;
             }
 
+
             .perfil-cliente {
                 min-height: 280px;
 
-                padding: 139px 20px 26px;
+                padding:
+                    139px
+                    20px
+                    26px;
             }
+
 
             .avatar-container {
                 width: 145px;
                 height: 145px;
             }
 
+
             .avatar-cliente {
                 width: 142px;
                 height: 142px;
             }
 
+
             #avatarInicial::before {
                 width: 36px;
                 height: 36px;
+
                 top: 31px;
             }
+
 
             #avatarInicial::after {
                 width: 70px;
                 height: 42px;
+
                 bottom: 29px;
             }
+
 
             .titulo-azury {
                 font-size: 38px;
             }
 
+
             .saudacao-cliente {
                 font-size: 21px;
             }
 
-            .card-pontos,
-            .card-pedidos {
-                min-height: auto;
+
+            .dashboard-cliente {
+                gap: 14px;
             }
 
-            .card-pedidos {
-                padding-bottom: 68px;
+
+            .resumo-cliente-grid {
+                grid-template-columns:
+                    repeat(
+                        3,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
+
+                gap: 8px;
             }
+
+
+            .resumo-cliente-card,
+            .proxima-recompensa {
+                min-height: 104px;
+
+                padding:
+                    12px
+                    8px;
+
+                grid-column: auto;
+
+                flex-direction: column;
+                justify-content: center;
+
+                gap: 7px;
+
+                text-align: center;
+
+                border-radius: 14px;
+            }
+
+
+            .resumo-cliente-icone {
+                width: 36px;
+                height: 36px;
+
+                flex-basis: 36px;
+
+                border-radius: 11px;
+
+                font-size: 17px;
+            }
+
+
+            .resumo-cliente-rotulo {
+                margin-bottom: 2px;
+
+                font-size: 9px;
+                line-height: 1.15;
+            }
+
+
+            .resumo-cliente-valor,
+            .proxima-recompensa
+            .resumo-cliente-valor {
+                font-size: 18px;
+                line-height: 1.05;
+            }
+
+
+            .resumo-cliente-ajuda,
+            .resumo-progresso {
+                display: none;
+            }
+
+
+            .dashboard-bloco {
+                padding: 17px;
+
+                border-radius: 15px;
+            }
+
+
+            .dashboard-cabecalho {
+                margin-bottom: 13px;
+            }
+
+
+            .dashboard-cabecalho h2 {
+                font-size: 17px;
+            }
+
+
+            .acesso-rapido-grid {
+                grid-template-columns:
+                    repeat(
+                        4,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
+
+                gap: 7px;
+            }
+
+
+            .atalho-cliente {
+                min-height: 92px;
+
+                padding:
+                    9px
+                    5px;
+
+                flex-direction: column;
+                justify-content: center;
+
+                gap: 7px;
+
+                text-align: center;
+
+                border-radius: 12px;
+            }
+
+
+            .atalho-cliente-icone {
+                width: 36px;
+                height: 36px;
+
+                flex-basis: 36px;
+
+                border-radius: 11px;
+
+                font-size: 16px;
+            }
+
+
+            .atalho-cliente strong {
+                margin: 0;
+
+                font-size: 10px;
+                line-height: 1.1;
+            }
+
+
+            .atalho-cliente small {
+                display: none;
+            }
+
+
+            .pedido-andamento-vazio {
+                min-height: 95px;
+
+                padding: 16px;
+
+                font-size: 12px;
+            }
+
+
+            .outdoor-recompensas {
+                min-height: 290px;
+
+                padding:
+                    24px
+                    20px;
+            }
+
+
+            .outdoor-recompensas h2 {
+                max-width: 270px;
+
+                font-size: 24px;
+            }
+
+
+            .outdoor-recompensas p {
+                max-width: 290px;
+
+                font-size: 13px;
+            }
+
 
             .modal {
                 padding: 10px;
             }
+
 
             .modal-content {
                 max-height:
@@ -1223,18 +2289,28 @@
                         100vh - 20px
                     );
 
-                padding: 24px 17px;
+                padding:
+                    24px
+                    17px;
             }
+
         }
 
-        @media (max-width: 420px) {
+
+        @media (
+            max-width:
+            420px
+        ) {
+
             .cliente-logo span {
                 font-size: 18px;
             }
 
+
             .modal {
                 padding: 0;
             }
+
 
             .modal-content {
                 min-height: 100vh;
@@ -1242,11 +2318,16 @@
 
                 border-radius: 0;
             }
+
         }
+
     </style>
+
 </head>
 
+
 <body class="pagina-cliente">
+
 
     <!-- =====================================
          CABEÇALHO
@@ -1285,6 +2366,7 @@
                     ← Início
                 </a>
 
+
                 <button
                     type="button"
                     id="btnSair"
@@ -1300,13 +2382,18 @@
     </header>
 
 
+
     <!-- =====================================
-         CONTEÚDO PRINCIPAL
+         CONTEÚDO
     ====================================== -->
 
     <main class="painel-cliente">
 
-        <!-- PERFIL -->
+
+        <!-- =====================================
+             PERFIL ATUAL
+             NÃO ALTERADO
+        ====================================== -->
 
         <section class="perfil-cliente">
 
@@ -1324,9 +2411,11 @@
 
             </div>
 
+
             <h1 class="titulo-azury">
                 AZURY
             </h1>
+
 
             <h2 class="saudacao-cliente">
 
@@ -1342,6 +2431,7 @@
 
             </h2>
 
+
             <span
                 id="nivelClienteCard"
                 class="nivel-cliente"
@@ -1352,88 +2442,362 @@
         </section>
 
 
+
         <!-- =====================================
-             CARDS
+             DASHBOARD
         ====================================== -->
 
-        <section class="cliente-grid">
+        <div class="dashboard-cliente">
 
-            <!-- PONTOS -->
 
-            <article class="card card-pontos">
+            <!-- =====================================
+                 RESUMO
+            ====================================== -->
 
-                <h2 class="card-titulo">
+            <section
+                class="resumo-cliente-grid"
+                aria-label="Resumo da conta"
+            >
 
-                    <span class="icone-card icone-pontos">
+
+                <!-- PEDIDOS REALIZADOS -->
+
+                <article
+                    class="
+                        resumo-cliente-card
+                        pedidos-realizados
+                    "
+                >
+
+                    <span
+                        class="resumo-cliente-icone"
+                        aria-hidden="true"
+                    >
+                        🛍️
+                    </span>
+
+
+                    <div class="resumo-cliente-conteudo">
+
+                        <span class="resumo-cliente-rotulo">
+                            Pedidos realizados
+                        </span>
+
+
+                        <strong
+                            class="resumo-cliente-valor"
+                            id="totalPedidosResumo"
+                        >
+                            0
+                        </strong>
+
+
+                        <span class="resumo-cliente-ajuda">
+                            Desde que você entrou na Azury
+                        </span>
+
+                    </div>
+
+                </article>
+
+
+
+                <!-- PONTOS DISPONÍVEIS -->
+
+                <article
+                    class="
+                        resumo-cliente-card
+                        pontos-disponiveis
+                    "
+                >
+
+                    <span
+                        class="resumo-cliente-icone"
+                        aria-hidden="true"
+                    >
                         ★
                     </span>
 
-                    Meus Pontos
 
-                </h2>
+                    <div class="resumo-cliente-conteudo">
 
-                <div class="quantidade-pontos">
+                        <span class="resumo-cliente-rotulo">
+                            Pontos disponíveis
+                        </span>
 
-                    <strong id="pontos">
-                        0
-                    </strong>
 
-                    <span>
-                        PONTOS DISPONÍVEIS
+                        <strong
+                            class="resumo-cliente-valor"
+                            id="pontos"
+                        >
+                            0
+                        </strong>
+
+
+                        <span class="resumo-cliente-ajuda">
+                            Use seus pontos e ganhe benefícios
+                        </span>
+
+                    </div>
+
+                </article>
+
+
+
+                <!-- PRÓXIMA RECOMPENSA -->
+
+                <article
+                    class="
+                        resumo-cliente-card
+                        proxima-recompensa
+                    "
+                >
+
+                    <span
+                        class="resumo-cliente-icone"
+                        aria-hidden="true"
+                    >
+                        🎁
                     </span>
+
+
+                    <div class="resumo-cliente-conteudo">
+
+                        <span class="resumo-cliente-rotulo">
+                            Próxima recompensa
+                        </span>
+
+
+                        <strong
+                            class="resumo-cliente-valor"
+                            id="proximaRecompensaResumo"
+                        >
+                            Calculando...
+                        </strong>
+
+
+                        <span
+                            class="resumo-cliente-ajuda"
+                            id="faltamRecompensaResumo"
+                        >
+                            Continue acumulando pontos
+                        </span>
+
+
+                        <div
+                            class="resumo-progresso"
+                            aria-hidden="true"
+                        >
+
+                            <span
+                                id="progressoRecompensaResumo"
+                            ></span>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+
+            <!-- =====================================
+                 ACESSO RÁPIDO
+            ====================================== -->
+
+            <section class="dashboard-bloco">
+
+                <div class="dashboard-cabecalho">
+
+                    <h2>
+                        Acesso rápido
+                    </h2>
 
                 </div>
 
-                <p class="pontos-acumulados-resumo">
 
-                    Total acumulado:
+                <div class="acesso-rapido-grid">
 
-                    <strong id="pontosAcumuladosResumo">
-                        0
-                    </strong>
 
-                </p>
+                    <a
+                        href="#pedidosRecentesArea"
+                        class="atalho-cliente"
+                    >
 
-                <div class="barra-pontos">
+                        <span class="atalho-cliente-icone">
+                            🛍️
+                        </span>
 
-                    <div
-                        class="progresso"
-                        id="progresso"
-                    ></div>
+
+                        <span>
+
+                            <strong>
+                                Meus pedidos
+                            </strong>
+
+                            <small>
+                                Acompanhe seus pedidos
+                            </small>
+
+                        </span>
+
+                    </a>
+
+
+
+                    <a
+                        href="#recompensasArea"
+                        class="atalho-cliente"
+                    >
+
+                        <span class="atalho-cliente-icone">
+                            🎁
+                        </span>
+
+
+                        <span>
+
+                            <strong>
+                                Recompensas
+                            </strong>
+
+                            <small>
+                                Veja seus benefícios
+                            </small>
+
+                        </span>
+
+                    </a>
+
+
+
+                    <button
+                        type="button"
+                        class="atalho-cliente"
+                        id="btnVerTodoHistorico"
+                    >
+
+                        <span class="atalho-cliente-icone">
+                            🕘
+                        </span>
+
+
+                        <span>
+
+                            <strong>
+                                Histórico
+                            </strong>
+
+                            <small>
+                                Veja suas atividades
+                            </small>
+
+                        </span>
+
+                    </button>
+
+
+
+                    <button
+                        type="button"
+                        class="atalho-cliente"
+                        id="btnVerDetalhes"
+                    >
+
+                        <span class="atalho-cliente-icone">
+                            ⭐
+                        </span>
+
+
+                        <span>
+
+                            <strong>
+                                Meus pontos
+                            </strong>
+
+                            <small>
+                                Confira seu progresso
+                            </small>
+
+                        </span>
+
+                    </button>
 
                 </div>
 
-                <p
-                    id="faltam"
-                    class="texto-progresso"
-                >
-                    Faltam 100 pontos para a primeira recompensa.
-                </p>
-
-                <button
-                    type="button"
-                    class="btn btn-detalhes"
-                    id="btnVerDetalhes"
-                >
-                    Ver detalhes
-                </button>
-
-            </article>
+            </section>
 
 
-            <!-- PEDIDOS -->
 
-            <article class="card card-pedidos">
+            <!-- =====================================
+                 PEDIDO EM ANDAMENTO
+            ====================================== -->
 
-                <h2 class="card-titulo">
+            <section
+                class="
+                    dashboard-bloco
+                    pedido-andamento-area
+                "
+                id="pedidoEmAndamentoArea"
+            >
 
-                    <span class="icone-card icone-pedidos">
-                        🛍
-                    </span>
+                <div class="dashboard-cabecalho">
 
-                    Meus Pedidos
+                    <h2>
+                        🛵 Pedido em andamento
+                    </h2>
 
-                </h2>
+                </div>
+
+
+                <div id="pedidoEmAndamentoResumo">
+
+                    <div class="pedido-andamento-vazio">
+
+                        <span aria-hidden="true">
+                            📦
+                        </span>
+
+                        <span>
+                            Nenhum pedido em andamento no momento.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =====================================
+                 PEDIDOS RECENTES
+            ====================================== -->
+
+            <section
+                class="dashboard-bloco"
+                id="pedidosRecentesArea"
+            >
+
+                <div class="dashboard-cabecalho">
+
+                    <h2>
+                        Pedidos recentes
+                    </h2>
+
+
+                    <button
+                        type="button"
+                        class="dashboard-link"
+                        id="btnVerTodosPedidos"
+                    >
+                        Ver todos
+                    </button>
+
+                </div>
+
 
                 <div
                     id="pedidos"
@@ -1446,95 +2810,165 @@
 
                 </div>
 
-                <button
-                    type="button"
-                    class="link-card"
-                    id="btnVerTodosPedidos"
-                >
-                    Ver todos os pedidos
-                </button>
-
-            </article>
+            </section>
 
 
-            <!-- RECOMPENSAS -->
 
-            <article class="card card-recompensas">
+            <!-- =====================================
+                 RECOMPENSAS + OUTDOOR
+            ====================================== -->
 
-                <h2 class="card-titulo">
+            <section class="linha-inferior-dashboard">
 
-                    <span class="icone-card icone-recompensa">
-                        🎁
-                    </span>
 
-                    Recompensas
-
-                </h2>
+                <!-- SUAS RECOMPENSAS -->
 
                 <div
-                    id="recompensas"
-                    class="conteudo-recompensas"
+                    class="dashboard-bloco"
+                    id="recompensasArea"
                 >
 
+                    <div class="dashboard-cabecalho">
+
+                        <h2>
+                            Suas recompensas
+                        </h2>
+
+                    </div>
+
+
+                    <div
+                        id="recompensas"
+                        class="conteudo-recompensas"
+                    >
+
+                        <p>
+                            Carregando recompensas...
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- OUTDOOR -->
+
+                <aside class="outdoor-recompensas">
+
+                    <span class="outdoor-marca">
+                        👑 AZURY RECOMPENSAS
+                    </span>
+
+
+                    <h2>
+
+                        Quanto mais você pede,
+
+                        <span>
+                            mais benefícios ganha!
+                        </span>
+
+                    </h2>
+
+
                     <p>
-                        Carregando recompensas...
+
+                        Junte pontos em cada pedido
+                        e troque por recompensas
+                        exclusivas da Azury.
+
+                    </p>
+
+
+                    <a
+                        href="#recompensasArea"
+                        class="outdoor-botao"
+                    >
+                        Ver recompensas
+                    </a>
+
+                </aside>
+
+            </section>
+
+
+
+            <!-- =====================================
+                 IDS DE COMPATIBILIDADE
+                 PARA OS JS QUE JÁ EXISTEM
+            ====================================== -->
+
+            <section
+                class="compatibilidade-historico"
+                aria-hidden="true"
+            >
+
+                <div
+                    id="listaHistorico"
+                    class="lista-historico"
+                >
+
+                    <p class="historico-vazio">
+                        Nenhuma atividade ainda.
                     </p>
 
                 </div>
 
-            </article>
-
-        </section>
+            </section>
 
 
-        <!-- HISTÓRICO -->
 
-        <section class="card card-historico">
+            <p
+                class="pontos-acumulados-resumo"
+                hidden
+            >
 
-            <div class="historico-cabecalho">
+                Total acumulado:
 
-                <h2 class="card-titulo">
+                <strong id="pontosAcumuladosResumo">
+                    0
+                </strong>
 
-                    <span class="icone-card icone-historico">
-                        ▣
-                    </span>
+            </p>
 
-                    Histórico
 
-                </h2>
-
-            </div>
 
             <div
-                id="listaHistorico"
-                class="lista-historico"
+                class="barra-pontos"
+                hidden
             >
 
-                <p class="historico-vazio">
-                    Nenhuma atividade ainda.
-                </p>
+                <div
+                    class="progresso"
+                    id="progresso"
+                ></div>
 
             </div>
 
-            <button
-                type="button"
-                class="link-card link-historico"
-                id="btnVerTodoHistorico"
+
+
+            <p
+                id="faltam"
+                class="texto-progresso"
+                hidden
             >
-                Ver todo histórico
-            </button>
-
-        </section>
+                Faltam 100 pontos para a primeira recompensa.
+            </p>
 
 
-        <span
-            id="pontosCard"
-            hidden
-        >
-            0
-        </span>
+
+            <span
+                id="pontosCard"
+                hidden
+            >
+                0
+            </span>
+
+        </div>
 
     </main>
+
 
 
     <!-- =====================================
@@ -1553,6 +2987,7 @@
                 ⭐ Detalhes dos Pontos
             </h2>
 
+
             <div class="resumo-pontos-modal">
 
                 <strong id="pontosDisponiveisModal">
@@ -1565,6 +3000,7 @@
 
             </div>
 
+
             <p class="pontos-acumulados-modal">
 
                 Total acumulado:
@@ -1574,6 +3010,7 @@
                 </strong>
 
             </p>
+
 
             <div class="nivel-modal">
 
@@ -1587,6 +3024,7 @@
 
             </div>
 
+
             <div class="barra-pontos">
 
                 <div
@@ -1596,13 +3034,16 @@
 
             </div>
 
+
             <p id="faltamModal">
                 Faltam 100 pontos para o nível Prata.
             </p>
 
+
             <div class="lista-niveis">
 
                 <p>
+
                     <strong>
                         🥉 Bronze — de 0 a 99 pontos
                     </strong>
@@ -1610,9 +3051,12 @@
                     <br>
 
                     Continue acumulando para liberar sua primeira recompensa.
+
                 </p>
 
+
                 <p>
+
                     <strong>
                         🥈 Prata — de 100 a 299 pontos
                     </strong>
@@ -1620,9 +3064,12 @@
                     <br>
 
                     Libera 1 Açaí de 400 ml com 2 complementos.
+
                 </p>
 
+
                 <p>
+
                     <strong>
                         🥇 Ouro — de 300 a 599 pontos
                     </strong>
@@ -1630,9 +3077,12 @@
                     <br>
 
                     Libera também 1 código de 50% de desconto.
+
                 </p>
 
+
                 <p>
+
                     <strong>
                         💎 Diamante — a partir de 600 pontos
                     </strong>
@@ -1641,9 +3091,11 @@
 
                     Libera 1 Açaí de 700 ml com 4 complementos
                     e, aos 800 pontos, 2 copos de 700 ml.
+
                 </p>
 
             </div>
+
 
             <button
                 type="button"
@@ -1656,6 +3108,7 @@
         </div>
 
     </div>
+
 
 
     <!-- =====================================
@@ -1674,6 +3127,7 @@
                 📦 Todos os Pedidos
             </h2>
 
+
             <div id="listaTodosPedidos">
 
                 <p>
@@ -1681,6 +3135,7 @@
                 </p>
 
             </div>
+
 
             <button
                 type="button"
@@ -1693,6 +3148,7 @@
         </div>
 
     </div>
+
 
 
     <!-- =====================================
@@ -1711,6 +3167,7 @@
                 📜 Todo o Histórico
             </h2>
 
+
             <div id="listaTodoHistorico">
 
                 <p>
@@ -1718,6 +3175,7 @@
                 </p>
 
             </div>
+
 
             <button
                 type="button"
@@ -1730,6 +3188,7 @@
         </div>
 
     </div>
+
 
 
     <!-- =====================================
@@ -1748,11 +3207,14 @@
                 🎉 Código de desconto resgatado!
             </h2>
 
+
             <p>
                 Seu código exclusivo de 50% é:
             </p>
 
+
             <h1 id="codigoCupom"></h1>
+
 
             <button
                 type="button"
@@ -1761,6 +3223,7 @@
             >
                 📋 Copiar código
             </button>
+
 
             <button
                 type="button"
@@ -1773,6 +3236,7 @@
         </div>
 
     </div>
+
 
 
     <!-- =====================================
@@ -1791,14 +3255,17 @@
                 Monte sua recompensa
             </h2>
 
+
             <p id="descricaoModalRecompensa">
                 Escolha os complementos da sua recompensa.
             </p>
+
 
             <div
                 id="seletoresComplementos"
                 class="seletores-complementos"
             ></div>
+
 
             <div
                 id="mensagemRecompensa"
@@ -1806,6 +3273,7 @@
                 role="alert"
                 aria-live="polite"
             ></div>
+
 
             <div class="acoes-modal-recompensa">
 
@@ -1816,6 +3284,7 @@
                 >
                     Confirmar resgate
                 </button>
+
 
                 <button
                     type="button"
@@ -1832,51 +3301,703 @@
     </div>
 
 
+
     <!-- =====================================
          SCRIPTS
-
-         O parâmetro de versão impede que o
-         navegador utilize os arquivos antigos.
     ====================================== -->
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./js/supabase.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
 
-   
+
+    <script
+        src="./js/supabase.js"
+    ></script>
+
+
     <script
         src="./js/pontos.js?v=20260724-1"
         defer
     ></script>
 
-    <script
-        src="./js/pedidos.js?v=20260724-1"
-        defer
-    ></script>
 
     <script
         src="./js/historico.js?v=20260724-1"
         defer
     ></script>
 
+
     <script
         src="./js/recompensas.js?v=20260724-1"
         defer
     ></script>
 
-   <script
-    src="./js/perfil.js?v=20260815-2"
-    defer
-></script>
 
-<script
-    src="./js/pedidos.js?v=20260815-2"
-    defer
-></script>
+    <script
+        src="./js/perfil.js?v=20260815-2"
+        defer
+    ></script>
 
-<script
-    src="./js/cliente.js?v=20260815-2"
-    defer
-></script>
+
+    <script
+        src="./js/pedidos.js?v=20260815-2"
+        defer
+    ></script>
+
+
+    <script
+        src="./js/ui.js?v=20260724-1"
+        defer
+    ></script>
+
+
+    <script
+        src="./js/cliente.js?v=20260815-2"
+        defer
+    ></script>
+
+
+
+    <!-- =====================================
+         ITEM 10
+         ALIMENTA O NOVO DASHBOARD
+         SEM ALTERAR OS JS EXTERNOS
+    ====================================== -->
+
+    <script>
+
+        (() => {
+
+            "use strict";
+
+
+            function numeroSeguro(
+                valor
+            ) {
+
+                const numero =
+                    Number(
+                        valor
+                    );
+
+                return Number.isFinite(
+                    numero
+                )
+                    ? numero
+                    : 0;
+
+            }
+
+
+
+            function textoNormalizado(
+                valor
+            ) {
+
+                return String(
+                    valor ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase()
+                    .normalize(
+                        "NFD"
+                    )
+                    .replace(
+                        /[\u0300-\u036f]/g,
+                        ""
+                    );
+
+            }
+
+
+
+            function obterUsuarioDashboard() {
+
+                try {
+
+                    if (
+                        window
+                            .AzuryCliente
+                            ?.usuario
+                    ) {
+
+                        return window
+                            .AzuryCliente
+                            .usuario;
+
+                    }
+
+
+                    return (
+                        JSON.parse(
+                            localStorage
+                                .getItem(
+                                    "clienteAzury"
+                                )
+                        ) ||
+
+                        JSON.parse(
+                            localStorage
+                                .getItem(
+                                    "usuarioAzury"
+                                )
+                        ) ||
+
+                        null
+                    );
+
+                } catch (
+                    erro
+                ) {
+
+                    return null;
+
+                }
+
+            }
+
+
+
+            function estaEntregue(
+                pedido
+            ) {
+
+                return textoNormalizado(
+
+                    pedido?.statusInterno ||
+                    pedido?.status ||
+                    ""
+
+                ) ===
+                "entregue";
+
+            }
+
+
+
+            function estaCancelado(
+                pedido
+            ) {
+
+                return textoNormalizado(
+
+                    pedido?.statusInterno ||
+                    pedido?.status ||
+                    ""
+
+                ).includes(
+                    "cancelado"
+                );
+
+            }
+
+
+
+            function estaEmAndamento(
+                pedido
+            ) {
+
+                return (
+                    !estaEntregue(
+                        pedido
+                    ) &&
+                    !estaCancelado(
+                        pedido
+                    )
+                );
+
+            }
+
+
+
+            function atualizarResumoDashboard() {
+
+                const usuario =
+                    obterUsuarioDashboard();
+
+
+                if (
+                    !usuario
+                ) {
+                    return;
+                }
+
+
+
+                const pedidos =
+                    Array.isArray(
+                        usuario.pedidos
+                    )
+                        ? usuario.pedidos
+                        : [];
+
+
+
+                /* =================================
+                   TOTAL DE PEDIDOS
+                ================================= */
+
+                const totalPedidosResumo =
+                    document
+                        .getElementById(
+                            "totalPedidosResumo"
+                        );
+
+
+                if (
+                    totalPedidosResumo
+                ) {
+
+                    totalPedidosResumo
+                        .textContent =
+                        String(
+                            pedidos.length
+                        );
+
+                }
+
+
+
+                /* =================================
+                   PONTOS DISPONÍVEIS
+                ================================= */
+
+                const pontosDisponiveis =
+                    numeroSeguro(
+
+                        usuario.saldoPontos ??
+
+                        usuario.saldo_pontos ??
+
+                        usuario.pontosDisponiveis ??
+
+                        usuario.pontos_disponiveis ??
+
+                        usuario.pontos ??
+
+                        document
+                            .getElementById(
+                                "pontos"
+                            )
+                            ?.textContent
+
+                    );
+
+
+
+                /* =================================
+                   PRÓXIMA RECOMPENSA
+                ================================= */
+
+                const recompensas =
+                    Array.isArray(
+                        usuario.recompensas
+                    )
+                        ? usuario.recompensas
+                        : [];
+
+
+
+                const recompensasFuturas =
+                    recompensas
+
+                        .map(
+                            item => ({
+
+                                item,
+
+                                pontos:
+                                    numeroSeguro(
+
+                                        item
+                                            ?.pontos_necessarios ??
+
+                                        item
+                                            ?.pontosNecessarios ??
+
+                                        item
+                                            ?.pontos ??
+
+                                        item
+                                            ?.custo_pontos
+
+                                    )
+
+                            })
+                        )
+
+                        .filter(
+                            ({
+                                pontos
+                            }) =>
+                                pontos >
+                                pontosDisponiveis
+                        )
+
+                        .sort(
+                            (
+                                a,
+                                b
+                            ) =>
+                                a.pontos -
+                                b.pontos
+                        );
+
+
+
+                const proxima =
+                    recompensasFuturas[
+                        0
+                    ] ||
+                    null;
+
+
+
+                const titulo =
+                    document
+                        .getElementById(
+                            "proximaRecompensaResumo"
+                        );
+
+
+                const faltam =
+                    document
+                        .getElementById(
+                            "faltamRecompensaResumo"
+                        );
+
+
+                const progresso =
+                    document
+                        .getElementById(
+                            "progressoRecompensaResumo"
+                        );
+
+
+
+                if (
+                    proxima
+                ) {
+
+                    const nome =
+                        proxima
+                            .item
+                            ?.nome ||
+
+                        proxima
+                            .item
+                            ?.titulo ||
+
+                        "Próxima recompensa";
+
+
+
+                    const restante =
+                        Math.max(
+
+                            proxima.pontos -
+                            pontosDisponiveis,
+
+                            0
+
+                        );
+
+
+
+                    if (
+                        titulo
+                    ) {
+
+                        titulo.textContent =
+                            nome;
+
+                    }
+
+
+
+                    if (
+                        faltam
+                    ) {
+
+                        faltam.textContent =
+                            `Faltam ${restante} pontos`;
+
+                    }
+
+
+
+                    if (
+                        progresso
+                    ) {
+
+                        const porcentagem =
+                            Math.min(
+
+                                100,
+
+                                Math.max(
+
+                                    0,
+
+                                    (
+                                        pontosDisponiveis /
+                                        proxima.pontos
+                                    ) *
+                                    100
+
+                                )
+
+                            );
+
+
+                        progresso
+                            .style
+                            .width =
+                            `${porcentagem}%`;
+
+                    }
+
+
+                } else {
+
+
+                    if (
+                        titulo
+                    ) {
+
+                        titulo.textContent =
+                            "Continue acumulando";
+
+                    }
+
+
+                    if (
+                        faltam
+                    ) {
+
+                        faltam.textContent =
+                            "Veja suas recompensas disponíveis";
+
+                    }
+
+
+                    if (
+                        progresso
+                    ) {
+
+                        progresso
+                            .style
+                            .width =
+                            "100%";
+
+                    }
+
+                }
+
+
+
+                /* =================================
+                   PEDIDO EM ANDAMENTO
+                ================================= */
+
+                const pedidoAtual =
+                    pedidos
+                        .find(
+                            estaEmAndamento
+                        ) ||
+                    null;
+
+
+
+                const destinoAndamento =
+                    document
+                        .getElementById(
+                            "pedidoEmAndamentoResumo"
+                        );
+
+
+
+                if (
+                    destinoAndamento
+                ) {
+
+
+                    if (
+                        pedidoAtual &&
+                        typeof window
+                            .criarHtmlPedido ===
+                            "function"
+                    ) {
+
+
+                        destinoAndamento
+                            .innerHTML =
+                            window
+                                .criarHtmlPedido(
+                                    pedidoAtual
+                                );
+
+
+                    } else {
+
+
+                        destinoAndamento
+                            .innerHTML =
+                            `
+
+                                <div
+                                    class="
+                                        pedido-andamento-vazio
+                                    "
+                                >
+
+                                    <span
+                                        aria-hidden="true"
+                                    >
+                                        📦
+                                    </span>
+
+                                    <span>
+                                        Nenhum pedido em andamento no momento.
+                                    </span>
+
+                                </div>
+
+                            `;
+
+                    }
+
+                }
+
+
+
+                /* =================================
+                   PEDIDOS RECENTES
+                ================================= */
+
+                const pedidosRecentes =
+                    document
+                        .getElementById(
+                            "pedidos"
+                        );
+
+
+
+                if (
+                    pedidosRecentes &&
+                    typeof window
+                        .criarHtmlPedido ===
+                        "function"
+                ) {
+
+
+                    const recentes =
+                        pedidos
+
+                            .filter(
+                                pedido =>
+                                    pedido !==
+                                    pedidoAtual
+                            )
+
+                            .slice(
+                                0,
+                                3
+                            );
+
+
+
+                    pedidosRecentes
+                        .innerHTML =
+                        recentes.length
+
+                            ? recentes
+                                .map(
+                                    window
+                                        .criarHtmlPedido
+                                )
+                                .join(
+                                    ""
+                                )
+
+                            : "<p>Nenhum pedido anterior.</p>";
+
+                }
+
+            }
+
+
+
+            /* =====================================
+               ESPERA OS DADOS DO SUPABASE
+            ====================================== */
+
+            function iniciarDashboard() {
+
+                let tentativas =
+                    0;
+
+
+
+                const timer =
+                    window
+                        .setInterval(
+
+                            () => {
+
+                                tentativas +=
+                                    1;
+
+
+                                atualizarResumoDashboard();
+
+
+
+                                if (
+                                    window
+                                        .AzuryCliente
+                                        ?.usuario ||
+
+                                    tentativas >=
+                                    30
+                                ) {
+
+
+                                    window
+                                        .clearInterval(
+                                            timer
+                                        );
+
+
+                                    atualizarResumoDashboard();
+
+                                }
+
+                            },
+
+                            200
+
+                        );
+
+            }
+
+
+
+            window
+                .addEventListener(
+
+                    "DOMContentLoaded",
+
+                    iniciarDashboard
+
+                );
+
+        })();
+
+    </script>
+
 
 </body>
 
