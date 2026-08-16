@@ -1,51 +1,41 @@
 document.addEventListener("DOMContentLoaded", async () => {
     "use strict";
-
     let sb = window.azurySupabase;
     const $ = selector => document.querySelector(selector);
     const $$ = selector => Array.from(document.querySelectorAll(selector));
-
     const d = {
         modal: $("#modalMonteSeu"),
         content: $("#modalMonteSeu .conteudo-monte-seu"),
         close: $("#btnFecharMonteSeu"),
-
         step1: $("#painelPedido"),
         step2: $("#painelEntrega"),
         indicators: $$(".etapa-indicador"),
-
         add: $("#btnAdicionarSacola"),
         next: $("#btnContinuarPedido"),
         back: $("#btnVoltarPedido"),
         send: $("#btnEnviarMonteSeu"),
-
         cartList: $("#listaSacolaPedido"),
         cartEmpty: $("#sacolaVazia"),
         cartCount: $("#quantidadeSacola"),
         cartSubtotal: $("#subtotalSacolaPedido"),
         cartFeedback: $("#sacolaFeedback"),
         cartReview: $("#listaResumoSacola"),
-
         store: $("#statusLoja"),
         storeTitle: $("#statusLojaTitulo"),
         storeMsg: $("#statusLojaMensagem"),
-
         size: $("#tamanhoMonteSeu"),
         base: $("#precoBaseMonteSeu"),
         middle: $("#complementosMeio"),
         top: $("#complementosTopo"),
-
         subtotal: $("#subtotalMonteSeu"),
         subtotal2: $("#resumoSubtotalPedido"),
         feeText: $("#resumoTaxaEntrega"),
         total: $("#totalMonteSeu"),
-
         stickyBar: null,
         stickyProduct: null,
         stickySubtotal: null,
         stickyCart: null,
         stickyAdd: null,
-
         name: $("#nomeCliente"),
         phone: $("#telefoneCliente"),
         zip: $("#cepCliente"),
@@ -68,10 +58,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         districts: [],
         districtMap: new Map(),
         aliases: [],
-
         cart: [],
         subtotal: 0,
-
         sending: false,
         consultingZip: false,
         zipRequest: 0,
@@ -90,16 +78,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const OPERATION_RETRY_DELAYS = [0, 1500, 3500];
     const OPERATION_RECOVERY_INTERVAL = 30000;
 
-    // REGRAS DO NOVO CARDÁPIO — 06-08-2026
-    // Os copos atuais continuam usando o tamanho em ml.
-    // As futuras Azury Box já ficam cadastradas por chave,
-    // para a mesma barra aceitar 4, 5 e 6 complementos grátis.
     const FREE_COMPLEMENT_LIMITS = new Map([
         [300, 2],
         [400, 3],
         [500, 3],
         [700, 4],
-
         ["azury-box-p", 4],
         ["azury-box-m", 5],
         ["azury-box-g", 6]
@@ -276,7 +259,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     function priceComplements(complements, size) {
-        const limit = freeComplementLimit(size);
+        const limit =
+            freeComplementLimit(size);
 
         const rows = (complements || []).map(
             (complement, index) => ({
@@ -309,14 +293,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             })
         );
 
-        /*
-         * REGRA AZURY:
-         * o limite grátis é por TIPO de complemento.
-         *
-         * Exemplo:
-         * leite em pó no meio + leite em pó na cobertura
-         * continua sendo 1 único complemento.
-         */
         const groups = new Map();
 
         rows.forEach(row => {
@@ -337,17 +313,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
 
-            const group = groups.get(key);
+            const group =
+                groups.get(key);
 
-            group.ordem_selecao = Math.min(
-                group.ordem_selecao,
-                row.ordem_selecao
-            );
+            group.ordem_selecao =
+                Math.min(
+                    group.ordem_selecao,
+                    row.ordem_selecao
+                );
 
-            group.primeiro_indice = Math.min(
-                group.primeiro_indice,
-                row._index
-            );
+            group.primeiro_indice =
+                Math.min(
+                    group.primeiro_indice,
+                    row._index
+                );
         });
 
         const uniqueComplements =
@@ -365,36 +344,40 @@ document.addEventListener("DOMContentLoaded", async () => {
                     )
             );
 
-        const freeKeys = new Set(
-            eligible
-                .slice(0, limit)
-                .map(complement =>
-                    complement.key
-                )
-        );
+        const freeKeys =
+            new Set(
+                eligible
+                    .slice(0, limit)
+                    .map(complement =>
+                        complement.key
+                    )
+            );
 
         return rows.map(row => {
-            const key = norm(row.nome);
-            const group = groups.get(key);
+            const key =
+                norm(row.nome);
+
+            const group =
+                groups.get(key);
 
             const alwaysPaid =
-                isAlwaysPaidComplement(row.nome);
+                isAlwaysPaidComplement(
+                    row.nome
+                );
 
             const free =
                 !alwaysPaid &&
                 freeKeys.has(key);
 
-            /*
-             * Mesmo que dados antigos tenham o mesmo
-             * complemento repetido em duas camadas,
-             * ele só pode ser cobrado uma vez.
-             */
             const firstOccurrence =
                 !group ||
                 row._index ===
                     group.primeiro_indice;
 
-            const { _index, ...clean } = row;
+            const {
+                _index,
+                ...clean
+            } = row;
 
             return {
                 ...clean,
@@ -413,44 +396,74 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    function itemUnitPrice(size, base, complements) {
+    function itemUnitPrice(
+        size,
+        base,
+        complements
+    ) {
         return (
             num(base, 0) +
-            priceComplements(complements, size)
-                .reduce(
-                    (total, complement) =>
-                        total + num(complement.preco_cobrado),
-                    0
-                )
+            priceComplements(
+                complements,
+                size
+            ).reduce(
+                (
+                    total,
+                    complement
+                ) =>
+                    total +
+                    num(
+                        complement.preco_cobrado
+                    ),
+                0
+            )
         );
     }
 
     const timeMinutes = value => {
-        const parts = String(value || "").split(":");
+        const parts =
+            String(
+                value || ""
+            ).split(":");
 
         if (parts.length < 2) {
             return null;
         }
 
-        const hours = Number(parts[0]);
-        const minutes = Number(parts[1]);
+        const hours =
+            Number(parts[0]);
 
-        return Number.isFinite(hours) && Number.isFinite(minutes)
+        const minutes =
+            Number(parts[1]);
+
+        return (
+            Number.isFinite(hours) &&
+            Number.isFinite(minutes)
+        )
             ? (hours * 60) + minutes
             : null;
     };
 
     const timeLabel = value => {
-        const minutes = timeMinutes(value);
+        const minutes =
+            timeMinutes(value);
 
         if (minutes === null) {
             return "";
         }
 
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
+        const hours =
+            Math.floor(
+                minutes / 60
+            );
 
-        return `${String(hours).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}`;
+        const remainingMinutes =
+            minutes % 60;
+
+        return (
+            `${String(hours).padStart(2, "0")}:` +
+            `${String(remainingMinutes).padStart(2, "0")}`
+        );
     };
 
     const newId = () =>
@@ -460,7 +473,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const cartUnits = () =>
         state.cart.reduce(
             (total, item) =>
-                total + Math.max(1, Number(item.quantidade) || 1),
+                total +
+                Math.max(
+                    1,
+                    Number(item.quantidade) || 1
+                ),
             0
         );
 
@@ -470,27 +487,35 @@ document.addEventListener("DOMContentLoaded", async () => {
                 total +
                 (
                     num(item.preco_unitario) *
-                    Math.max(1, Number(item.quantidade) || 1)
+                    Math.max(
+                        1,
+                        Number(item.quantidade) || 1
+                    )
                 ),
             0
         );
 
     const itemSignature = item => {
-        const complements = (item.complementos || [])
-            .map(complement =>
-                `${complement.camada}:${norm(complement.nome)}`
-            )
-            .sort()
-            .join("|");
+        const complements =
+            (item.complementos || [])
+                .map(complement =>
+                    `${complement.camada}:${norm(complement.nome)}`
+                )
+                .sort()
+                .join("|");
 
-        return `${Number(item.tamanho_ml)}::${complements}`;
+        return (
+            `${Number(item.tamanho_ml)}::${complements}`
+        );
     };
 
     function saveCart() {
         try {
             sessionStorage.setItem(
                 CART_KEY,
-                JSON.stringify(state.cart)
+                JSON.stringify(
+                    state.cart
+                )
             );
         } catch (error) {
             console.warn(
@@ -515,30 +540,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function normalizeCartItem(raw) {
-        const size = state.sizes.find(item =>
-            Number(item.tamanho_ml) === Number(raw?.tamanho_ml) &&
-            item.disponivel === true &&
-            item.visivel === true
-        );
+        const size =
+            state.sizes.find(item =>
+                Number(item.tamanho_ml) ===
+                    Number(raw?.tamanho_ml) &&
+                item.disponivel === true &&
+                item.visivel === true
+            );
 
         if (!size) {
             return null;
         }
 
-        /*
-         * Também converte sacolas antigas, onde o mesmo
-         * complemento podia aparecer duas vezes:
-         * uma no meio e outra na cobertura.
-         */
-        const complementMap = new Map();
+        const complementMap =
+            new Map();
 
-        if (Array.isArray(raw?.complementos)) {
+        if (
+            Array.isArray(
+                raw?.complementos
+            )
+        ) {
             raw.complementos.forEach(
-                (complement, index) => {
+                (
+                    complement,
+                    index
+                ) => {
                     const current =
-                        state.complements.find(item =>
-                            norm(item.nome) ===
-                            norm(complement?.nome)
+                        state.complements.find(
+                            item =>
+                                norm(item.nome) ===
+                                norm(
+                                    complement?.nome
+                                )
                         );
 
                     if (!current) {
@@ -547,14 +580,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     const rawLayer =
                         String(
-                            complement?.camada || ""
+                            complement?.camada ||
+                            ""
                         ).toLowerCase();
 
                     const layer =
                         rawLayer === "cobertura"
                             ? "cobertura"
-                            : rawLayer === "ambos" ||
+                            : (
+                                rawLayer === "ambos" ||
                                 rawLayer === "unica"
+                            )
                                 ? "ambos"
                                 : "meio";
 
@@ -573,7 +609,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                             )
                         );
 
-                    if (!complementMap.has(key)) {
+                    if (
+                        !complementMap.has(
+                            key
+                        )
+                    ) {
                         complementMap.set(
                             key,
                             {
@@ -601,7 +641,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
 
                     const existing =
-                        complementMap.get(key);
+                        complementMap.get(
+                            key
+                        );
 
                     if (
                         existing.camada !==
@@ -626,31 +668,44 @@ document.addEventListener("DOMContentLoaded", async () => {
                 complementMap.values()
             );
 
-        const unitPrice = itemUnitPrice(
-            size.tamanho_ml,
-            size.preco_base,
-            complements
-        );
+        const unitPrice =
+            itemUnitPrice(
+                size.tamanho_ml,
+                size.preco_base,
+                complements
+            );
 
         return {
-            id: String(raw?.id || newId()),
-            tamanho_ml: Number(size.tamanho_ml),
+            id:
+                String(
+                    raw?.id ||
+                    newId()
+                ),
 
-            quantidade: Math.max(
-                1,
-                Math.min(
-                    MAX_CART_UNITS,
-                    Math.floor(
-                        num(
-                            raw?.quantidade,
-                            1
+            tamanho_ml:
+                Number(
+                    size.tamanho_ml
+                ),
+
+            quantidade:
+                Math.max(
+                    1,
+                    Math.min(
+                        MAX_CART_UNITS,
+                        Math.floor(
+                            num(
+                                raw?.quantidade,
+                                1
+                            )
                         )
                     )
-                )
-            ),
+                ),
 
-            preco_unitario: unitPrice,
-            complementos: complements
+            preco_unitario:
+                unitPrice,
+
+            complementos:
+                complements
         };
     }
 
@@ -658,67 +713,95 @@ document.addEventListener("DOMContentLoaded", async () => {
         let stored = [];
 
         try {
-            stored = JSON.parse(
-                sessionStorage.getItem(CART_KEY) || "[]"
-            );
+            stored =
+                JSON.parse(
+                    sessionStorage.getItem(
+                        CART_KEY
+                    ) || "[]"
+                );
         } catch (_) {
             stored = [];
         }
 
         state.cart = [];
 
-        if (!Array.isArray(stored)) {
+        if (
+            !Array.isArray(stored)
+        ) {
             return;
         }
 
         for (const raw of stored) {
-            const item = normalizeCartItem(raw);
+            const item =
+                normalizeCartItem(raw);
 
             if (!item) {
                 continue;
             }
 
             const available =
-                MAX_CART_UNITS - cartUnits();
+                MAX_CART_UNITS -
+                cartUnits();
 
-            if (available <= 0) {
+            if (
+                available <= 0
+            ) {
                 break;
             }
 
-            item.quantidade = Math.min(
-                item.quantidade,
-                available
-            );
+            item.quantidade =
+                Math.min(
+                    item.quantidade,
+                    available
+                );
 
-            const signature = itemSignature(item);
+            const signature =
+                itemSignature(item);
 
-            const existing = state.cart.find(row =>
-                itemSignature(row) === signature
-            );
+            const existing =
+                state.cart.find(
+                    row =>
+                        itemSignature(row) ===
+                        signature
+                );
 
             if (existing) {
-                existing.quantidade += item.quantidade;
+                existing.quantidade +=
+                    item.quantidade;
             } else {
-                state.cart.push(item);
+                state.cart.push(
+                    item
+                );
             }
         }
 
         saveCart();
     }
 
-    function complementSummary(item, layer) {
-        const names = Array.from(
-            new Set(
-                (item.complementos || [])
-                    .filter(complement =>
-                        complement.camada === layer ||
-                        complement.camada === "ambos"
+    function complementSummary(
+        item,
+        layer
+    ) {
+        const names =
+            Array.from(
+                new Set(
+                    (
+                        item.complementos ||
+                        []
                     )
-                    .map(complement =>
-                        complement.nome
-                    )
-            )
-        );
+                        .filter(
+                            complement =>
+                                complement.camada ===
+                                    layer ||
+                                complement.camada ===
+                                    "ambos"
+                        )
+                        .map(
+                            complement =>
+                                complement.nome
+                        )
+                )
+            );
 
         return names.length
             ? names.join(", ")
@@ -726,12 +809,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderCart() {
-        const units = cartUnits();
-        const subtotal = cartSubtotal();
+        const units =
+            cartUnits();
+
+        const subtotal =
+            cartSubtotal();
 
         if (d.cartCount) {
             d.cartCount.textContent =
-                `${units} ${units === 1 ? "item" : "itens"}`;
+                `${units} ${
+                    units === 1
+                        ? "item"
+                        : "itens"
+                }`;
         }
 
         if (d.cartEmpty) {
@@ -750,8 +840,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (d.cartList) {
-            d.cartList.innerHTML = state.cart
-                .map((item, index) => `
+            d.cartList.innerHTML =
+                state.cart
+                    .map(
+                        (
+                            item,
+                            index
+                        ) => `
                     <article
                         class="item-sacola"
                         data-cart-id="${esc(item.id)}"
@@ -762,10 +857,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 <strong>
                                     ${index + 1}.
                                     ${esc(
-                    productDisplayName(
-                        item.tamanho_ml
-                    )
-                )}
+                                        productDisplayName(
+                                            item.tamanho_ml
+                                        )
+                                    )}
                                 </strong>
 
                                 <small>
@@ -776,9 +871,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                             <strong class="item-sacola-total">
                                 ${money(
-                    item.preco_unitario *
-                    item.quantidade
-                )}
+                                    item.preco_unitario *
+                                    item.quantidade
+                                )}
                             </strong>
 
                         </div>
@@ -786,18 +881,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <p>
                             <b>Meio:</b>
                             ${esc(
-                    complementSummary(item, "meio")
-                )}
+                                complementSummary(
+                                    item,
+                                    "meio"
+                                )
+                            )}
                         </p>
 
                         <p>
                             <b>Cobertura:</b>
                             ${esc(
-                    complementSummary(
-                        item,
-                        "cobertura"
-                    )
-                )}
+                                complementSummary(
+                                    item,
+                                    "cobertura"
+                                )
+                            )}
                         </p>
 
                         <div class="acoes-item-sacola">
@@ -840,52 +938,69 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                         </div>
                     </article>
-                `)
-                .join("");
+                `
+                    )
+                    .join("");
         }
 
         if (d.cartReview) {
-            d.cartReview.innerHTML = state.cart
-                .map((item, index) => `
+            d.cartReview.innerHTML =
+                state.cart
+                    .map(
+                        (
+                            item,
+                            index
+                        ) => `
                     <div class="resumo-item-entrega">
 
                         <span>
                             ${index + 1}.
                             ${esc(item.quantidade)}×
                             ${esc(
-                    productDisplayName(
-                        item.tamanho_ml
-                    )
-                )}
+                                productDisplayName(
+                                    item.tamanho_ml
+                                )
+                            )}
                         </span>
 
                         <strong>
                             ${money(
-                    item.preco_unitario *
-                    item.quantidade
-                )}
+                                item.preco_unitario *
+                                item.quantidade
+                            )}
                         </strong>
 
                     </div>
-                `)
-                .join("");
+                `
+                    )
+                    .join("");
         }
 
         updateTotal();
-        syncOrderButtons(storeState());
+        syncOrderButtons(
+            storeState()
+        );
     }
 
-    function changeCartItem(id, delta) {
-        const item = state.cart.find(row =>
-            row.id === id
-        );
+    function changeCartItem(
+        id,
+        delta
+    ) {
+        const item =
+            state.cart.find(
+                row =>
+                    row.id === id
+            );
 
         if (!item) {
             return;
         }
 
         if (delta > 0) {
-            if (cartUnits() >= MAX_CART_UNITS) {
+            if (
+                cartUnits() >=
+                MAX_CART_UNITS
+            ) {
                 alert(
                     `A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`
                 );
@@ -894,12 +1009,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             item.quantidade += 1;
-        } else if (item.quantidade > 1) {
+        } else if (
+            item.quantidade > 1
+        ) {
             item.quantidade -= 1;
         } else {
-            state.cart = state.cart.filter(row =>
-                row.id !== id
-            );
+            state.cart =
+                state.cart.filter(
+                    row =>
+                        row.id !== id
+                );
         }
 
         saveCart();
@@ -907,9 +1026,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function removeCartItem(id) {
-        state.cart = state.cart.filter(item =>
-            item.id !== id
-        );
+        state.cart =
+            state.cart.filter(
+                item =>
+                    item.id !== id
+            );
 
         saveCart();
         renderCart();
@@ -919,9 +1040,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         state.cart = [];
 
         try {
-            sessionStorage.removeItem(CART_KEY);
+            sessionStorage.removeItem(
+                CART_KEY
+            );
         } catch (_) {
-            // Não impede a limpeza visual da sacola.
         }
 
         renderCart();
@@ -932,7 +1054,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (cartUnits() >= MAX_CART_UNITS) {
+        if (
+            cartUnits() >=
+            MAX_CART_UNITS
+        ) {
             alert(
                 `A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`
             );
@@ -940,27 +1065,37 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        /*
-         * Cada complemento é salvo uma única vez.
-         * A propriedade "camada" informa se ele vai
-         * no meio, na cobertura ou nos dois.
-         */
         const complements =
             currentComplementSelections();
 
         const item = {
-            id: newId(),
-            tamanho_ml: Number(d.size?.value),
-            quantidade: 1,
-            preco_unitario: calculate(),
-            complementos: complements
+            id:
+                newId(),
+
+            tamanho_ml:
+                Number(
+                    d.size?.value
+                ),
+
+            quantidade:
+                1,
+
+            preco_unitario:
+                calculate(),
+
+            complementos:
+                complements
         };
 
-        const signature = itemSignature(item);
+        const signature =
+            itemSignature(item);
 
-        const existing = state.cart.find(row =>
-            itemSignature(row) === signature
-        );
+        const existing =
+            state.cart.find(
+                row =>
+                    itemSignature(row) ===
+                    signature
+            );
 
         if (existing) {
             existing.quantidade += 1;
@@ -981,33 +1116,47 @@ document.addEventListener("DOMContentLoaded", async () => {
             d.cartFeedback.textContent =
                 `${addedProductName} adicionado à sacola.`;
 
-            window.setTimeout(() => {
-                if (
-                    d.cartFeedback?.textContent.includes(
-                        addedProductName
-                    )
-                ) {
-                    d.cartFeedback.textContent = "";
-                }
-            }, 3000);
+            window.setTimeout(
+                () => {
+                    if (
+                        d.cartFeedback
+                            ?.textContent
+                            .includes(
+                                addedProductName
+                            )
+                    ) {
+                        d.cartFeedback.textContent =
+                            "";
+                    }
+                },
+                3000
+            );
         }
     }
 
-    function message(text, type = "") {
+    function message(
+        text,
+        type = ""
+    ) {
         if (!d.addressStatus) {
             return;
         }
 
-        d.addressStatus.textContent = text;
+        d.addressStatus.textContent =
+            text;
 
-        d.addressStatus.classList.remove(
-            "sucesso",
-            "erro",
-            "carregando"
-        );
+        d.addressStatus
+            .classList
+            .remove(
+                "sucesso",
+                "erro",
+                "carregando"
+            );
 
         if (type) {
-            d.addressStatus.classList.add(type);
+            d.addressStatus
+                .classList
+                .add(type);
         }
     }
 
@@ -1015,193 +1164,2208 @@ document.addEventListener("DOMContentLoaded", async () => {
         const styleId =
             "azury-pedido-sucesso-estilos";
 
-        if (!document.getElementById(styleId)) {
-            const style =
-                document.createElement("style");
+        let order = null;
 
-            style.id = styleId;
+        try {
+            const saved =
+                sessionStorage.getItem(
+                    LAST_ORDER_KEY
+                );
+
+            order =
+                saved
+                    ? JSON.parse(saved)
+                    : null;
+        } catch (error) {
+            console.warn(
+                "Não foi possível carregar o resumo do último pedido.",
+                error
+            );
+        }
+
+        const safeOrder =
+            order &&
+            typeof order === "object"
+                ? order
+                : {};
+
+        const customerName =
+            String(
+                safeOrder.cliente?.nome ||
+                "Cliente"
+            ).trim() ||
+            "Cliente";
+
+        const createdAt =
+            safeOrder.criado_em
+                ? new Date(
+                    safeOrder.criado_em
+                )
+                : new Date();
+
+        const validCreatedAt =
+            Number.isNaN(
+                createdAt.getTime()
+            )
+                ? new Date()
+                : createdAt;
+
+        const dateLabel =
+            validCreatedAt
+                .toLocaleDateString(
+                    "pt-BR"
+                );
+
+        const timeLabelOrder =
+            validCreatedAt
+                .toLocaleTimeString(
+                    "pt-BR",
+                    {
+                        hour:
+                            "2-digit",
+
+                        minute:
+                            "2-digit"
+                    }
+                );
+
+        const productValue =
+            num(
+                safeOrder.valor_produtos,
+                0
+            );
+
+        const deliveryFee =
+            num(
+                safeOrder.taxa_entrega,
+                0
+            );
+
+        const totalValue =
+            num(
+                safeOrder.valor_total,
+                productValue +
+                    deliveryFee
+            );
+
+        const paymentName =
+            safeOrder
+                .pagamento
+                ?.forma_label ||
+            paymentLabel(
+                safeOrder
+                    .pagamento
+                    ?.forma ||
+                ""
+            ) ||
+            "Não informado";
+
+        const pointsGenerated =
+            num(
+                safeOrder
+                    .pontos_gerados,
+                0
+            );
+
+        const pointsText =
+            pointsGenerated > 0
+                ? (
+                    `${pointsGenerated} ponto${
+                        pointsGenerated === 1
+                            ? ""
+                            : "s"
+                    } neste pedido`
+                )
+                : (
+                    "Seus pontos serão liberados após a entrega"
+                );
+
+        const estimatedDelivery =
+            (() => {
+                const config =
+                    state.config || {};
+
+                const directValue =
+                    config.estimativa_entrega ??
+                    config.tempo_estimado_entrega ??
+                    config.tempo_entrega ??
+                    config.prazo_entrega ??
+                    config.previsao_entrega ??
+                    null;
+
+                if (
+                    directValue !== null &&
+                    directValue !== undefined &&
+                    String(
+                        directValue
+                    ).trim()
+                ) {
+                    const raw =
+                        String(
+                            directValue
+                        ).trim();
+
+                    if (
+                        /^\d+$/.test(
+                            raw
+                        )
+                    ) {
+                        return (
+                            `Até ${raw} minutos`
+                        );
+                    }
+
+                    return raw;
+                }
+
+                const minimum =
+                    Number(
+                        config.tempo_entrega_min ??
+                        config.prazo_entrega_min ??
+                        config.estimativa_minutos_min
+                    );
+
+                const maximum =
+                    Number(
+                        config.tempo_entrega_max ??
+                        config.prazo_entrega_max ??
+                        config.estimativa_minutos_max
+                    );
+
+                if (
+                    Number.isFinite(
+                        minimum
+                    ) &&
+                    minimum > 0 &&
+                    Number.isFinite(
+                        maximum
+                    ) &&
+                    maximum >= minimum
+                ) {
+                    return (
+                        `${minimum} a ${maximum} minutos`
+                    );
+                }
+
+                if (
+                    Number.isFinite(
+                        maximum
+                    ) &&
+                    maximum > 0
+                ) {
+                    return (
+                        `Até ${maximum} minutos`
+                    );
+                }
+
+                if (
+                    Number.isFinite(
+                        minimum
+                    ) &&
+                    minimum > 0
+                ) {
+                    return (
+                        `A partir de ${minimum} minutos`
+                    );
+                }
+
+                return (
+                    "Acompanhe a atualização na Área do Cliente"
+                );
+            })();
+
+        const items =
+            Array.isArray(
+                safeOrder.itens
+            )
+                ? safeOrder.itens
+                : [];
+
+        const itemsHtml =
+            items.length
+                ? items
+                    .map(
+                        (
+                            item,
+                            index
+                        ) => {
+                            const complements =
+                                Array.isArray(
+                                    item.complementos
+                                )
+                                    ? item.complementos
+                                    : [];
+
+                            const complementNames =
+                                Array.from(
+                                    new Set(
+                                        complements
+                                            .map(
+                                                complement =>
+                                                    String(
+                                                        complement?.nome ||
+                                                        ""
+                                                    ).trim()
+                                            )
+                                            .filter(Boolean)
+                                    )
+                                );
+
+                            const quantity =
+                                Math.max(
+                                    1,
+                                    Number(
+                                        item.quantidade
+                                    ) || 1
+                                );
+
+                            const unitValue =
+                                num(
+                                    item.preco_unitario,
+                                    0
+                                );
+
+                            const productName =
+                                item.produto ||
+                                productDisplayName(
+                                    item.tamanho_ml
+                                );
+
+                            return `
+                            <article class="azury-pos-item">
+                                <div class="azury-pos-item-topo">
+                                    <div>
+                                        <span class="azury-pos-item-numero">
+                                            ${index + 1}
+                                        </span>
+
+                                        <strong>
+                                            ${esc(productName)}
+                                        </strong>
+                                    </div>
+
+                                    <strong class="azury-pos-item-preco">
+                                        ${money(
+                                            unitValue *
+                                            quantity
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <span class="azury-pos-item-meta">
+                                    ${quantity}× item${
+                                        quantity === 1
+                                            ? ""
+                                            : "s"
+                                    }
+                                </span>
+
+                                <div class="azury-pos-complementos">
+                                    <b>Complementos:</b>
+
+                                    <span>
+                                        ${
+                                            complementNames.length
+                                                ? esc(
+                                                    complementNames.join(
+                                                        ", "
+                                                    )
+                                                )
+                                                : "Nenhum complemento"
+                                        }
+                                    </span>
+                                </div>
+                            </article>
+                        `;
+                        }
+                    )
+                    .join("")
+                : `
+                    <div class="azury-pos-vazio">
+                        Resumo dos itens indisponível nesta sessão.
+                    </div>
+                `;
+
+        const street =
+            String(
+                safeOrder.entrega?.rua ||
+                ""
+            ).trim();
+
+        const number =
+            String(
+                safeOrder.entrega?.numero ||
+                ""
+            ).trim();
+
+        const district =
+            String(
+                safeOrder.entrega?.bairro ||
+                ""
+            ).trim();
+
+        const zipCode =
+            String(
+                safeOrder.entrega?.cep ||
+                ""
+            ).trim();
+
+        const addressExtra =
+            String(
+                safeOrder
+                    .entrega
+                    ?.complemento ||
+                ""
+            ).trim();
+
+        const addressMain =
+            [
+                street,
+
+                number
+                    ? `nº ${number}`
+                    : ""
+            ]
+                .filter(Boolean)
+                .join(", ");
+
+        const addressSecond =
+            [
+                district,
+
+                zipCode
+                    ? `CEP ${zipCode}`
+                    : ""
+            ]
+                .filter(Boolean)
+                .join(" • ");
+
+        if (
+            !document.getElementById(
+                styleId
+            )
+        ) {
+            const style =
+                document.createElement(
+                    "style"
+                );
+
+            style.id =
+                styleId;
+
             style.textContent = `
+                body.azury-pos-pedido-aberto {
+                    overflow: hidden !important;
+                }
+
                 #azuryPedidoSucesso {
                     position: fixed;
-                    top: max(16px, env(safe-area-inset-top));
-                    right: 16px;
+                    inset: 0;
                     z-index: 100000;
-                    width: min(420px, calc(100vw - 32px));
-                    display: grid;
-                    grid-template-columns: auto 1fr auto;
-                    gap: 12px;
-                    align-items: center;
-                    padding: 16px;
-                    border: 1px solid rgba(0, 81, 255, 0.20);
-                    border-left: 5px solid #16a34a;
-                    border-radius: 16px;
-                    background: #ffffff;
-                    box-shadow: 0 18px 45px rgba(0, 25, 80, 0.22);
-                    color: #13213c;
-                    font-family: inherit;
+
+                    overflow-x: hidden;
+                    overflow-y: auto;
+
+                    padding:
+                        max(
+                            18px,
+                            env(safe-area-inset-top)
+                        )
+                        18px
+                        max(
+                            18px,
+                            env(safe-area-inset-bottom)
+                        );
+
+                    background:
+                        radial-gradient(
+                            circle at 8% 4%,
+                            rgba(
+                                0,
+                                81,
+                                255,
+                                0.11
+                            ),
+                            transparent 30%
+                        ),
+                        radial-gradient(
+                            circle at 94% 92%,
+                            rgba(
+                                255,
+                                196,
+                                61,
+                                0.12
+                            ),
+                            transparent 28%
+                        ),
+                        rgba(
+                            244,
+                            248,
+                            255,
+                            0.97
+                        );
+
+                    backdrop-filter:
+                        blur(10px);
+
+                    -webkit-backdrop-filter:
+                        blur(10px);
+
                     opacity: 0;
-                    transform: translateY(-18px);
+
                     transition:
-                        opacity 220ms ease,
-                        transform 220ms ease;
+                        opacity
+                        220ms ease;
+
+                    font-family:
+                        inherit;
+
+                    color:
+                        #13213c;
                 }
 
                 #azuryPedidoSucesso.visivel {
                     opacity: 1;
-                    transform: translateY(0);
                 }
 
-                #azuryPedidoSucesso .azury-sucesso-icone {
-                    width: 42px;
-                    height: 42px;
-                    display: grid;
-                    place-items: center;
-                    border-radius: 50%;
-                    background: #dcfce7;
-                    color: #15803d;
-                    font-size: 24px;
-                    font-weight: 900;
+                #azuryPedidoSucesso * {
+                    box-sizing:
+                        border-box;
                 }
 
-                #azuryPedidoSucesso .azury-sucesso-texto {
-                    min-width: 0;
+                #azuryPedidoSucesso
+                .azury-pos-pedido-painel {
+                    width:
+                        min(
+                            1160px,
+                            100%
+                        );
+
+                    margin:
+                        0 auto;
+
+                    overflow:
+                        hidden;
+
+                    background:
+                        #ffffff;
+
+                    border:
+                        1px solid
+                        #dfe8f7;
+
+                    border-radius:
+                        26px;
+
+                    box-shadow:
+                        0 28px 80px
+                        rgba(
+                            15,
+                            39,
+                            86,
+                            0.17
+                        );
+
+                    transform:
+                        translateY(14px)
+                        scale(0.992);
+
+                    transition:
+                        transform
+                        240ms ease;
                 }
 
-                #azuryPedidoSucesso strong {
-                    display: block;
-                    margin-bottom: 3px;
-                    color: #0051ff;
-                    font-size: 16px;
-                    line-height: 1.3;
+                #azuryPedidoSucesso.visivel
+                .azury-pos-pedido-painel {
+                    transform:
+                        translateY(0)
+                        scale(1);
                 }
 
-                #azuryPedidoSucesso span {
-                    display: block;
-                    color: #475569;
-                    font-size: 14px;
-                    line-height: 1.4;
+                #azuryPedidoSucesso
+                .azury-pos-topo {
+                    min-height:
+                        74px;
+
+                    padding:
+                        14px
+                        22px;
+
+                    display:
+                        flex;
+
+                    align-items:
+                        center;
+
+                    justify-content:
+                        space-between;
+
+                    gap:
+                        18px;
+
+                    border-bottom:
+                        1px solid
+                        #e8eef8;
+
+                    background:
+                        linear-gradient(
+                            90deg,
+                            #ffffff 0%,
+                            #f8fbff 100%
+                        );
                 }
 
-                #azuryPedidoSucesso .azury-sucesso-fechar {
-                    width: 34px;
-                    height: 34px;
-                    display: grid;
-                    place-items: center;
-                    border: 0;
-                    border-radius: 50%;
-                    background: transparent;
-                    color: #64748b;
-                    font-size: 24px;
-                    line-height: 1;
-                    cursor: pointer;
+                #azuryPedidoSucesso
+                .azury-pos-marca {
+                    display:
+                        inline-flex;
+
+                    align-items:
+                        center;
+
+                    gap:
+                        10px;
+
+                    color:
+                        #0758f8;
+
+                    font-size:
+                        25px;
+
+                    font-weight:
+                        950;
+
+                    letter-spacing:
+                        0.04em;
                 }
 
-                #azuryPedidoSucesso .azury-sucesso-fechar:hover {
-                    background: #eff6ff;
-                    color: #0051ff;
+                #azuryPedidoSucesso
+                .azury-pos-coroa {
+                    width:
+                        42px;
+
+                    height:
+                        42px;
+
+                    display:
+                        grid;
+
+                    place-items:
+                        center;
+
+                    border-radius:
+                        13px;
+
+                    background:
+                        #edf3ff;
+
+                    font-size:
+                        23px;
                 }
 
-                @media (max-width: 520px) {
+                #azuryPedidoSucesso
+                .azury-pos-fechar {
+                    width:
+                        40px;
+
+                    height:
+                        40px;
+
+                    flex:
+                        0 0 40px;
+
+                    display:
+                        grid;
+
+                    place-items:
+                        center;
+
+                    border:
+                        1px solid
+                        #dfe7f3;
+
+                    border-radius:
+                        50%;
+
+                    background:
+                        #ffffff;
+
+                    color:
+                        #64748b;
+
+                    font-size:
+                        24px;
+
+                    line-height:
+                        1;
+
+                    cursor:
+                        pointer;
+
+                    transition:
+                        background
+                        160ms ease,
+                        color
+                        160ms ease,
+                        border-color
+                        160ms ease;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-fechar:hover {
+                    color:
+                        #0758f8;
+
+                    background:
+                        #f4f7ff;
+
+                    border-color:
+                        #b9cdfd;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-conteudo {
+                    display:
+                        grid;
+
+                    grid-template-columns:
+                        minmax(
+                            0,
+                            1.18fr
+                        )
+                        minmax(
+                            330px,
+                            0.82fr
+                        );
+
+                    gap:
+                        0;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-principal {
+                    min-width:
+                        0;
+
+                    padding:
+                        30px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-lateral {
+                    min-width:
+                        0;
+
+                    padding:
+                        28px;
+
+                    background:
+                        #f8faff;
+
+                    border-left:
+                        1px solid
+                        #e6edf8;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-sucesso {
+                    display:
+                        grid;
+
+                    grid-template-columns:
+                        auto
+                        minmax(
+                            0,
+                            1fr
+                        );
+
+                    gap:
+                        18px;
+
+                    align-items:
+                        center;
+
+                    margin-bottom:
+                        22px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-check {
+                    width:
+                        72px;
+
+                    height:
+                        72px;
+
+                    display:
+                        grid;
+
+                    place-items:
+                        center;
+
+                    border-radius:
+                        50%;
+
+                    color:
+                        #ffffff;
+
+                    background:
+                        linear-gradient(
+                            145deg,
+                            #22c55e,
+                            #16a34a
+                        );
+
+                    border:
+                        8px solid
+                        #dcfce7;
+
+                    box-shadow:
+                        0 10px 26px
+                        rgba(
+                            22,
+                            163,
+                            74,
+                            0.20
+                        );
+
+                    font-size:
+                        34px;
+
+                    font-weight:
+                        950;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-sucesso h2 {
+                    margin:
+                        0 0
+                        7px;
+
+                    color:
+                        #102044;
+
+                    font-size:
+                        clamp(
+                            25px,
+                            3vw,
+                            36px
+                        );
+
+                    line-height:
+                        1.08;
+
+                    font-weight:
+                        950;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-sucesso p {
+                    margin:
+                        0;
+
+                    color:
+                        #64748b;
+
+                    font-size:
+                        15px;
+
+                    line-height:
+                        1.5;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-sucesso p strong {
+                    color:
+                        #0758f8;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-destaques {
+                    display:
+                        grid;
+
+                    grid-template-columns:
+                        repeat(
+                            2,
+                            minmax(
+                                0,
+                                1fr
+                            )
+                        );
+
+                    gap:
+                        12px;
+
+                    margin-bottom:
+                        14px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-destaque {
+                    min-height:
+                        92px;
+
+                    padding:
+                        15px;
+
+                    display:
+                        flex;
+
+                    align-items:
+                        center;
+
+                    gap:
+                        12px;
+
+                    border:
+                        1px solid
+                        #dce7f8;
+
+                    border-radius:
+                        16px;
+
+                    background:
+                        #ffffff;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-destaque-icone {
+                    width:
+                        44px;
+
+                    height:
+                        44px;
+
+                    flex:
+                        0 0
+                        44px;
+
+                    display:
+                        grid;
+
+                    place-items:
+                        center;
+
+                    border-radius:
+                        13px;
+
+                    background:
+                        #edf3ff;
+
+                    font-size:
+                        21px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-destaque small {
+                    display:
+                        block;
+
+                    margin-bottom:
+                        4px;
+
+                    color:
+                        #64748b;
+
+                    font-size:
+                        11px;
+
+                    font-weight:
+                        800;
+
+                    text-transform:
+                        uppercase;
+
+                    letter-spacing:
+                        0.035em;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-destaque strong {
+                    display:
+                        block;
+
+                    color:
+                        #17233c;
+
+                    font-size:
+                        14px;
+
+                    line-height:
+                        1.35;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-numero {
+                    margin-bottom:
+                        14px;
+
+                    padding:
+                        18px
+                        20px;
+
+                    display:
+                        flex;
+
+                    align-items:
+                        center;
+
+                    justify-content:
+                        space-between;
+
+                    gap:
+                        18px;
+
+                    border:
+                        1px solid
+                        #bfd2ff;
+
+                    border-radius:
+                        17px;
+
+                    background:
+                        linear-gradient(
+                            135deg,
+                            #f7faff 0%,
+                            #edf4ff 100%
+                        );
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-numero span {
+                    display:
+                        block;
+
+                    margin-bottom:
+                        3px;
+
+                    color:
+                        #64748b;
+
+                    font-size:
+                        12px;
+
+                    font-weight:
+                        800;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-numero strong {
+                    display:
+                        block;
+
+                    color:
+                        #0758f8;
+
+                    font-size:
+                        clamp(
+                            30px,
+                            5vw,
+                            44px
+                        );
+
+                    font-weight:
+                        950;
+
+                    line-height:
+                        1;
+
+                    letter-spacing:
+                        0.015em;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-numero time {
+                    color:
+                        #64748b;
+
+                    font-size:
+                        12px;
+
+                    font-weight:
+                        700;
+
+                    white-space:
+                        nowrap;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-estimativa {
+                    margin-bottom:
+                        18px;
+
+                    padding:
+                        14px
+                        16px;
+
+                    display:
+                        flex;
+
+                    align-items:
+                        center;
+
+                    gap:
+                        12px;
+
+                    color:
+                        #7c4a03;
+
+                    background:
+                        #fff9eb;
+
+                    border:
+                        1px solid
+                        #f4d38a;
+
+                    border-radius:
+                        14px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-estimativa > span {
+                    font-size:
+                        23px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-estimativa strong {
+                    display:
+                        block;
+
+                    margin-bottom:
+                        2px;
+
+                    color:
+                        #6f4204;
+
+                    font-size:
+                        13px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-estimativa small {
+                    display:
+                        block;
+
+                    color:
+                        #8a5e20;
+
+                    font-size:
+                        12px;
+
+                    line-height:
+                        1.35;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-acoes {
+                    display:
+                        grid;
+
+                    grid-template-columns:
+                        minmax(
+                            0,
+                            1fr
+                        )
+                        minmax(
+                            0,
+                            1fr
+                        );
+
+                    gap:
+                        12px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-botao {
+                    min-height:
+                        48px;
+
+                    padding:
+                        11px
+                        16px;
+
+                    display:
+                        inline-flex;
+
+                    align-items:
+                        center;
+
+                    justify-content:
+                        center;
+
+                    gap:
+                        8px;
+
+                    border:
+                        1px solid
+                        #0758f8;
+
+                    border-radius:
+                        12px;
+
+                    color:
+                        #ffffff;
+
+                    background:
+                        #0758f8;
+
+                    font-size:
+                        14px;
+
+                    font-weight:
+                        900;
+
+                    line-height:
+                        1.2;
+
+                    text-align:
+                        center;
+
+                    text-decoration:
+                        none;
+
+                    cursor:
+                        pointer;
+
+                    transition:
+                        transform
+                        160ms ease,
+                        background
+                        160ms ease,
+                        box-shadow
+                        160ms ease;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-botao:hover {
+                    transform:
+                        translateY(-1px);
+
+                    background:
+                        #0045d8;
+
+                    box-shadow:
+                        0 9px 20px
+                        rgba(
+                            7,
+                            88,
+                            248,
+                            0.20
+                        );
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-botao.secundario {
+                    color:
+                        #0758f8;
+
+                    background:
+                        #ffffff;
+
+                    border-color:
+                        #bfd0f7;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-botao.secundario:hover {
+                    color:
+                        #0045d8;
+
+                    background:
+                        #f7faff;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-lateral h3 {
+                    margin:
+                        0 0
+                        15px;
+
+                    display:
+                        flex;
+
+                    align-items:
+                        center;
+
+                    gap:
+                        8px;
+
+                    color:
+                        #17233c;
+
+                    font-size:
+                        18px;
+
+                    font-weight:
+                        950;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-itens {
+                    display:
+                        grid;
+
+                    gap:
+                        10px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-item {
+                    padding:
+                        13px;
+
+                    border:
+                        1px solid
+                        #dfe7f4;
+
+                    border-radius:
+                        14px;
+
+                    background:
+                        #ffffff;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-item-topo {
+                    display:
+                        flex;
+
+                    align-items:
+                        flex-start;
+
+                    justify-content:
+                        space-between;
+
+                    gap:
+                        12px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-item-topo > div {
+                    min-width:
+                        0;
+
+                    display:
+                        flex;
+
+                    align-items:
+                        center;
+
+                    gap:
+                        8px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-item-numero {
+                    width:
+                        27px;
+
+                    height:
+                        27px;
+
+                    flex:
+                        0 0
+                        27px;
+
+                    display:
+                        grid;
+
+                    place-items:
+                        center;
+
+                    border-radius:
+                        9px;
+
+                    color:
+                        #0758f8;
+
+                    background:
+                        #edf3ff;
+
+                    font-size:
+                        11px;
+
+                    font-weight:
+                        950;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-item-topo strong {
+                    min-width:
+                        0;
+
+                    color:
+                        #17233c;
+
+                    font-size:
+                        13px;
+
+                    line-height:
+                        1.3;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-item-preco {
+                    flex:
+                        0 0
+                        auto;
+
+                    color:
+                        #0758f8
+                        !important;
+
+                    white-space:
+                        nowrap;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-item-meta {
+                    display:
+                        block;
+
+                    margin:
+                        7px 0
+                        5px 35px;
+
+                    color:
+                        #7a8495;
+
+                    font-size:
+                        11px;
+
+                    font-weight:
+                        700;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-complementos {
+                    margin-left:
+                        35px;
+
+                    color:
+                        #64748b;
+
+                    font-size:
+                        11px;
+
+                    line-height:
+                        1.45;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-complementos b {
+                    color:
+                        #334155;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-complementos span {
+                    display:
+                        block;
+
+                    margin-top:
+                        2px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-vazio {
+                    padding:
+                        16px;
+
+                    color:
+                        #64748b;
+
+                    background:
+                        #ffffff;
+
+                    border:
+                        1px dashed
+                        #ccd8ea;
+
+                    border-radius:
+                        12px;
+
+                    text-align:
+                        center;
+
+                    font-size:
+                        12px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-totais {
+                    margin-top:
+                        14px;
+
+                    padding:
+                        14px;
+
+                    border:
+                        1px solid
+                        #dfe7f4;
+
+                    border-radius:
+                        14px;
+
+                    background:
+                        #ffffff;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-total-linha {
+                    display:
+                        flex;
+
+                    align-items:
+                        center;
+
+                    justify-content:
+                        space-between;
+
+                    gap:
+                        12px;
+
+                    margin-bottom:
+                        8px;
+
+                    color:
+                        #64748b;
+
+                    font-size:
+                        12px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-total-linha:last-child {
+                    margin:
+                        10px 0
+                        0;
+
+                    padding-top:
+                        10px;
+
+                    border-top:
+                        1px solid
+                        #e6edf6;
+
+                    color:
+                        #17233c;
+
+                    font-size:
+                        14px;
+
+                    font-weight:
+                        950;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-total-linha:last-child strong {
+                    color:
+                        #0758f8;
+
+                    font-size:
+                        17px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-info {
+                    margin-top:
+                        12px;
+
+                    padding:
+                        13px
+                        14px;
+
+                    border:
+                        1px solid
+                        #dfe7f4;
+
+                    border-radius:
+                        14px;
+
+                    background:
+                        #ffffff;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-info strong {
+                    display:
+                        block;
+
+                    margin-bottom:
+                        5px;
+
+                    color:
+                        #17233c;
+
+                    font-size:
+                        12px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-info p {
+                    margin:
+                        0;
+
+                    color:
+                        #556176;
+
+                    font-size:
+                        12px;
+
+                    line-height:
+                        1.5;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-info p + p {
+                    margin-top:
+                        2px;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-whatsapp {
+                    margin-top:
+                        12px;
+
+                    padding:
+                        12px
+                        14px;
+
+                    display:
+                        flex;
+
+                    align-items:
+                        center;
+
+                    gap:
+                        10px;
+
+                    border-radius:
+                        13px;
+
+                    color:
+                        #17633a;
+
+                    background:
+                        #eefbf3;
+
+                    border:
+                        1px solid
+                        #c8ebd6;
+
+                    font-size:
+                        11px;
+
+                    line-height:
+                        1.45;
+                }
+
+                #azuryPedidoSucesso
+                .azury-pos-whatsapp span {
+                    font-size:
+                        18px;
+                }
+
+                @media (
+                    max-width:
+                    860px
+                ) {
+                    #azuryPedidoSucesso
+                    .azury-pos-conteudo {
+                        grid-template-columns:
+                            1fr;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-lateral {
+                        border-left:
+                            0;
+
+                        border-top:
+                            1px solid
+                            #e6edf8;
+                    }
+                }
+
+                @media (
+                    max-width:
+                    600px
+                ) {
                     #azuryPedidoSucesso {
-                        top: max(10px, env(safe-area-inset-top));
-                        right: 10px;
-                        width: calc(100vw - 20px);
-                        padding: 14px;
+                        padding:
+                            max(
+                                8px,
+                                env(safe-area-inset-top)
+                            )
+                            8px
+                            max(
+                                8px,
+                                env(safe-area-inset-bottom)
+                            );
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-pedido-painel {
+                        border-radius:
+                            18px;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-topo {
+                        min-height:
+                            62px;
+
+                        padding:
+                            10px
+                            13px;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-marca {
+                        font-size:
+                            20px;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-coroa {
+                        width:
+                            36px;
+
+                        height:
+                            36px;
+
+                        flex-basis:
+                            36px;
+
+                        border-radius:
+                            11px;
+
+                        font-size:
+                            19px;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-fechar {
+                        width:
+                            36px;
+
+                        height:
+                            36px;
+
+                        flex-basis:
+                            36px;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-principal,
+                    #azuryPedidoSucesso
+                    .azury-pos-lateral {
+                        padding:
+                            18px
+                            14px;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-sucesso {
+                        grid-template-columns:
+                            1fr;
+
+                        gap:
+                            12px;
+
+                        text-align:
+                            center;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-check {
+                        width:
+                            62px;
+
+                        height:
+                            62px;
+
+                        margin:
+                            0 auto;
+
+                        border-width:
+                            7px;
+
+                        font-size:
+                            29px;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-destaques {
+                        grid-template-columns:
+                            1fr;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-numero {
+                        align-items:
+                            flex-start;
+
+                        flex-direction:
+                            column;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-numero time {
+                        white-space:
+                            normal;
+                    }
+
+                    #azuryPedidoSucesso
+                    .azury-pos-acoes {
+                        grid-template-columns:
+                            1fr;
                     }
                 }
             `;
 
-            document.head.appendChild(style);
+            document.head.appendChild(
+                style
+            );
         }
 
         document
-            .getElementById("azuryPedidoSucesso")
+            .getElementById(
+                "azuryPedidoSucesso"
+            )
             ?.remove();
 
-        const notification =
-            document.createElement("div");
+        document.body.classList.add(
+            "azury-pos-pedido-aberto"
+        );
 
-        notification.id =
+        const screen =
+            document.createElement(
+                "div"
+            );
+
+        screen.id =
             "azuryPedidoSucesso";
 
-        notification.setAttribute(
+        screen.setAttribute(
             "role",
-            "status"
+            "dialog"
         );
 
-        notification.setAttribute(
-            "aria-live",
-            "polite"
+        screen.setAttribute(
+            "aria-modal",
+            "true"
         );
 
-        notification.innerHTML = `
-            <div class="azury-sucesso-icone" aria-hidden="true">
-                ✓
-            </div>
+        screen.setAttribute(
+            "aria-label",
+            "Pedido realizado com sucesso"
+        );
 
-            <div class="azury-sucesso-texto">
-                <strong>
-                    Pedido ${esc(code)} registrado com sucesso!
-                </strong>
+        screen.innerHTML = `
+            <section class="azury-pos-pedido-painel">
 
-                <span>
-                    Agora confirme o pedido pelo WhatsApp.
-                </span>
-            </div>
+                <header class="azury-pos-topo">
 
-            <button
-                type="button"
-                class="azury-sucesso-fechar"
-                aria-label="Fechar confirmação"
-            >
-                ×
-            </button>
+                    <div class="azury-pos-marca">
+
+                        <span
+                            class="azury-pos-coroa"
+                            aria-hidden="true"
+                        >
+                            👑
+                        </span>
+
+                        AZURY
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="azury-pos-fechar"
+                        aria-label="Fechar tela de confirmação"
+                    >
+                        ×
+                    </button>
+
+                </header>
+
+
+                <div class="azury-pos-conteudo">
+
+
+                    <main class="azury-pos-principal">
+
+
+                        <div class="azury-pos-sucesso">
+
+                            <div
+                                class="azury-pos-check"
+                                aria-hidden="true"
+                            >
+                                ✓
+                            </div>
+
+
+                            <div>
+
+                                <h2>
+                                    Pedido realizado com sucesso!
+                                </h2>
+
+
+                                <p>
+                                    Obrigado,
+                                    <strong>
+                                        ${esc(customerName)}
+                                    </strong>!
+
+                                    Seu pedido foi registrado na Azury.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="azury-pos-destaques">
+
+
+                            <div class="azury-pos-destaque">
+
+                                <span
+                                    class="azury-pos-destaque-icone"
+                                    aria-hidden="true"
+                                >
+                                    ⭐
+                                </span>
+
+
+                                <div>
+
+                                    <small>
+                                        Pontos
+                                    </small>
+
+                                    <strong>
+                                        ${esc(pointsText)}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="azury-pos-destaque">
+
+                                <span
+                                    class="azury-pos-destaque-icone"
+                                    aria-hidden="true"
+                                >
+                                    💳
+                                </span>
+
+
+                                <div>
+
+                                    <small>
+                                        Pagamento
+                                    </small>
+
+                                    <strong>
+                                        ${esc(paymentName)}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="azury-pos-numero">
+
+                            <div>
+
+                                <span>
+                                    Número do pedido
+                                </span>
+
+                                <strong>
+                                    ${esc(
+                                        code ||
+                                        safeOrder.codigo ||
+                                        "—"
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            <time
+                                datetime="${esc(
+                                    validCreatedAt
+                                        .toISOString()
+                                )}"
+                            >
+                                ${esc(dateLabel)}
+                                às
+                                ${esc(timeLabelOrder)}
+                            </time>
+
+                        </div>
+
+
+
+                        <div class="azury-pos-estimativa">
+
+                            <span
+                                aria-hidden="true"
+                            >
+                                🕒
+                            </span>
+
+
+                            <div>
+
+                                <strong>
+                                    Estimativa de entrega
+                                </strong>
+
+                                <small>
+                                    ${esc(estimatedDelivery)}
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="azury-pos-acoes">
+
+                            <a
+                                href="cliente.html"
+                                class="azury-pos-botao"
+                            >
+                                👤 Ver pedido na Área do Cliente
+                            </a>
+
+
+                            <a
+                                href="index.html"
+                                class="azury-pos-botao secundario"
+                            >
+                                ← Voltar para o início
+                            </a>
+
+                        </div>
+
+                    </main>
+
+
+
+                    <aside class="azury-pos-lateral">
+
+                        <h3>
+                            🧾 Resumo do pedido
+                        </h3>
+
+
+                        <div class="azury-pos-itens">
+                            ${itemsHtml}
+                        </div>
+
+
+                        <div class="azury-pos-totais">
+
+                            <div class="azury-pos-total-linha">
+
+                                <span>
+                                    Produtos
+                                </span>
+
+                                <strong>
+                                    ${money(productValue)}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="azury-pos-total-linha">
+
+                                <span>
+                                    Taxa de entrega
+                                </span>
+
+                                <strong>
+                                    ${money(deliveryFee)}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="azury-pos-total-linha">
+
+                                <span>
+                                    Total
+                                </span>
+
+                                <strong>
+                                    ${money(totalValue)}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="azury-pos-info">
+
+                            <strong>
+                                📍 Endereço de entrega
+                            </strong>
+
+
+                            <p>
+                                ${esc(
+                                    addressMain ||
+                                    "Endereço informado no pedido"
+                                )}
+                            </p>
+
+
+                            ${
+                                addressSecond
+                                    ? `
+                                        <p>
+                                            ${esc(addressSecond)}
+                                        </p>
+                                    `
+                                    : ""
+                            }
+
+
+                            ${
+                                addressExtra
+                                    ? `
+                                        <p>
+                                            Complemento:
+                                            ${esc(addressExtra)}
+                                        </p>
+                                    `
+                                    : ""
+                            }
+
+                        </div>
+
+
+
+                        <div class="azury-pos-info">
+
+                            <strong>
+                                💳 Forma de pagamento
+                            </strong>
+
+                            <p>
+                                ${esc(paymentName)}
+                            </p>
+
+                        </div>
+
+
+
+                        <div class="azury-pos-whatsapp">
+
+                            <span
+                                aria-hidden="true"
+                            >
+                                💬
+                            </span>
+
+                            <div>
+                                O WhatsApp será aberto para você confirmar o pedido com a Azury.
+                            </div>
+
+                        </div>
+
+
+                    </aside>
+
+
+                </div>
+
+
+            </section>
         `;
 
         document.body.appendChild(
-            notification
+            screen
         );
 
-        const closeNotification = () => {
-            if (!notification.isConnected) {
+        const closeScreen = () => {
+            if (!screen.isConnected) {
                 return;
             }
 
-            notification.classList.remove(
+            screen.classList.remove(
                 "visivel"
             );
 
+            document.body.classList.remove(
+                "azury-pos-pedido-aberto"
+            );
+
             window.setTimeout(
-                () => notification.remove(),
+                () =>
+                    screen.remove(),
                 240
             );
         };
 
-        notification
-            .querySelector(".azury-sucesso-fechar")
+        screen
+            .querySelector(
+                ".azury-pos-fechar"
+            )
             ?.addEventListener(
                 "click",
-                closeNotification
+                closeScreen
             );
 
-        window.requestAnimationFrame(() => {
-            notification.classList.add(
-                "visivel"
-            );
-        });
-
+        window.requestAnimationFrame(
+            () => {
+                screen.classList.add(
+                    "visivel"
+                );
+            }
+        );
     }
-
 
     function showOrderWarning(text) {
         const styleId =
             "azury-pedido-aviso-estilos";
 
-        if (!document.getElementById(styleId)) {
+        if (
+            !document.getElementById(
+                styleId
+            )
+        ) {
             const style =
-                document.createElement("style");
+                document.createElement(
+                    "style"
+                );
 
-            style.id = styleId;
+            style.id =
+                styleId;
 
             style.textContent = `
                 #azuryPedidoAviso {
@@ -1209,100 +3373,237 @@ document.addEventListener("DOMContentLoaded", async () => {
                     top: max(16px, env(safe-area-inset-top));
                     right: 16px;
                     z-index: 100000;
-                    width: min(420px, calc(100vw - 32px));
+
+                    width:
+                        min(
+                            420px,
+                            calc(100vw - 32px)
+                        );
+
                     display: grid;
-                    grid-template-columns: auto 1fr auto;
-                    gap: 12px;
-                    align-items: center;
-                    padding: 16px;
-                    border: 1px solid rgba(245, 158, 11, 0.28);
-                    border-left: 5px solid #f59e0b;
-                    border-radius: 16px;
-                    background: #ffffff;
-                    box-shadow: 0 18px 45px rgba(0, 25, 80, 0.22);
-                    color: #13213c;
-                    font-family: inherit;
-                    opacity: 0;
-                    transform: translateY(-18px);
+
+                    grid-template-columns:
+                        auto
+                        1fr
+                        auto;
+
+                    gap:
+                        12px;
+
+                    align-items:
+                        center;
+
+                    padding:
+                        16px;
+
+                    border:
+                        1px solid
+                        rgba(
+                            245,
+                            158,
+                            11,
+                            0.28
+                        );
+
+                    border-left:
+                        5px solid
+                        #f59e0b;
+
+                    border-radius:
+                        16px;
+
+                    background:
+                        #ffffff;
+
+                    box-shadow:
+                        0 18px 45px
+                        rgba(
+                            0,
+                            25,
+                            80,
+                            0.22
+                        );
+
+                    color:
+                        #13213c;
+
+                    font-family:
+                        inherit;
+
+                    opacity:
+                        0;
+
+                    transform:
+                        translateY(-18px);
+
                     transition:
-                        opacity 220ms ease,
-                        transform 220ms ease;
+                        opacity
+                        220ms ease,
+                        transform
+                        220ms ease;
                 }
 
                 #azuryPedidoAviso.visivel {
-                    opacity: 1;
-                    transform: translateY(0);
+                    opacity:
+                        1;
+
+                    transform:
+                        translateY(0);
                 }
 
-                #azuryPedidoAviso .azury-aviso-icone {
-                    width: 42px;
-                    height: 42px;
-                    display: grid;
-                    place-items: center;
-                    border-radius: 50%;
-                    background: #fef3c7;
-                    color: #b45309;
-                    font-size: 22px;
-                    font-weight: 900;
+                #azuryPedidoAviso
+                .azury-aviso-icone {
+                    width:
+                        42px;
+
+                    height:
+                        42px;
+
+                    display:
+                        grid;
+
+                    place-items:
+                        center;
+
+                    border-radius:
+                        50%;
+
+                    background:
+                        #fef3c7;
+
+                    color:
+                        #b45309;
+
+                    font-size:
+                        22px;
+
+                    font-weight:
+                        900;
                 }
 
-                #azuryPedidoAviso .azury-aviso-texto {
-                    min-width: 0;
+                #azuryPedidoAviso
+                .azury-aviso-texto {
+                    min-width:
+                        0;
                 }
 
                 #azuryPedidoAviso strong {
-                    display: block;
-                    margin-bottom: 3px;
-                    color: #b45309;
-                    font-size: 16px;
-                    line-height: 1.3;
+                    display:
+                        block;
+
+                    margin-bottom:
+                        3px;
+
+                    color:
+                        #b45309;
+
+                    font-size:
+                        16px;
+
+                    line-height:
+                        1.3;
                 }
 
                 #azuryPedidoAviso span {
-                    display: block;
-                    color: #475569;
-                    font-size: 14px;
-                    line-height: 1.4;
+                    display:
+                        block;
+
+                    color:
+                        #475569;
+
+                    font-size:
+                        14px;
+
+                    line-height:
+                        1.4;
                 }
 
-                #azuryPedidoAviso .azury-aviso-fechar {
-                    width: 34px;
-                    height: 34px;
-                    display: grid;
-                    place-items: center;
-                    border: 0;
-                    border-radius: 50%;
-                    background: transparent;
-                    color: #64748b;
-                    font-size: 24px;
-                    line-height: 1;
-                    cursor: pointer;
+                #azuryPedidoAviso
+                .azury-aviso-fechar {
+                    width:
+                        34px;
+
+                    height:
+                        34px;
+
+                    display:
+                        grid;
+
+                    place-items:
+                        center;
+
+                    border:
+                        0;
+
+                    border-radius:
+                        50%;
+
+                    background:
+                        transparent;
+
+                    color:
+                        #64748b;
+
+                    font-size:
+                        24px;
+
+                    line-height:
+                        1;
+
+                    cursor:
+                        pointer;
                 }
 
-                #azuryPedidoAviso .azury-aviso-fechar:hover {
-                    background: #fff7ed;
-                    color: #b45309;
+                #azuryPedidoAviso
+                .azury-aviso-fechar:hover {
+                    background:
+                        #fff7ed;
+
+                    color:
+                        #b45309;
                 }
 
-                @media (max-width: 520px) {
+                @media (
+                    max-width:
+                    520px
+                ) {
                     #azuryPedidoAviso {
-                        top: max(10px, env(safe-area-inset-top));
-                        right: 10px;
-                        width: calc(100vw - 20px);
-                        padding: 14px;
+                        top:
+                            max(
+                                10px,
+                                env(safe-area-inset-top)
+                            );
+
+                        right:
+                            10px;
+
+                        width:
+                            calc(
+                                100vw -
+                                20px
+                            );
+
+                        padding:
+                            14px;
                     }
                 }
             `;
 
-            document.head.appendChild(style);
+            document.head.appendChild(
+                style
+            );
         }
 
         document
-            .getElementById("azuryPedidoAviso")
+            .getElementById(
+                "azuryPedidoAviso"
+            )
             ?.remove();
 
         const notification =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         notification.id =
             "azuryPedidoAviso";
@@ -1318,11 +3619,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
 
         notification.innerHTML = `
-            <div class="azury-aviso-icone" aria-hidden="true">
+            <div
+                class="azury-aviso-icone"
+                aria-hidden="true"
+            >
                 !
             </div>
 
             <div class="azury-aviso-texto">
+
                 <strong>
                     Verifique o endereço
                 </strong>
@@ -1330,6 +3635,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <span>
                     ${esc(text)}
                 </span>
+
             </div>
 
             <button
@@ -1345,33 +3651,47 @@ document.addEventListener("DOMContentLoaded", async () => {
             notification
         );
 
-        const closeNotification = () => {
-            if (!notification.isConnected) {
-                return;
-            }
+        const closeNotification =
+            () => {
+                if (
+                    !notification
+                        .isConnected
+                ) {
+                    return;
+                }
 
-            notification.classList.remove(
-                "visivel"
-            );
+                notification
+                    .classList
+                    .remove(
+                        "visivel"
+                    );
 
-            window.setTimeout(
-                () => notification.remove(),
-                240
-            );
-        };
+                window.setTimeout(
+                    () =>
+                        notification
+                            .remove(),
+                    240
+                );
+            };
 
         notification
-            .querySelector(".azury-aviso-fechar")
+            .querySelector(
+                ".azury-aviso-fechar"
+            )
             ?.addEventListener(
                 "click",
                 closeNotification
             );
 
-        window.requestAnimationFrame(() => {
-            notification.classList.add(
-                "visivel"
-            );
-        });
+        window.requestAnimationFrame(
+            () => {
+                notification
+                    .classList
+                    .add(
+                        "visivel"
+                    );
+            }
+        );
 
         window.setTimeout(
             closeNotification,
@@ -1379,17 +3699,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
     }
 
+    async function table(
+        name,
+        configure
+    ) {
+        let query =
+            sb
+                .from(name)
+                .select("*");
 
-    async function table(name, configure) {
-        let query = sb
-            .from(name)
-            .select("*");
+        query =
+            configure
+                ? configure(query)
+                : query;
 
-        query = configure
-            ? configure(query)
-            : query;
-
-        const { data, error } = await query;
+        const {
+            data,
+            error
+        } =
+            await query;
 
         if (error) {
             throw error;
@@ -1403,7 +3731,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             localStorage.setItem(
                 OPERATION_CACHE_KEY,
                 JSON.stringify({
-                    savedAt: Date.now(),
+                    savedAt:
+                        Date.now(),
+
                     data
                 })
             );
@@ -1417,23 +3747,35 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function readOperationCache() {
         try {
-            const stored = JSON.parse(
-                localStorage.getItem(OPERATION_CACHE_KEY) || "null"
-            );
+            const stored =
+                JSON.parse(
+                    localStorage.getItem(
+                        OPERATION_CACHE_KEY
+                    ) || "null"
+                );
 
             if (
                 !stored ||
                 !stored.data ||
-                !Number.isFinite(Number(stored.savedAt))
+                !Number.isFinite(
+                    Number(
+                        stored.savedAt
+                    )
+                )
             ) {
                 return null;
             }
 
-            const age = Date.now() - Number(stored.savedAt);
+            const age =
+                Date.now() -
+                Number(
+                    stored.savedAt
+                );
 
             if (
                 age < 0 ||
-                age > OPERATION_CACHE_MAX_AGE
+                age >
+                    OPERATION_CACHE_MAX_AGE
             ) {
                 localStorage.removeItem(
                     OPERATION_CACHE_KEY
@@ -1500,68 +3842,109 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
         }
 
-        state.sizes = sizes;
+        state.sizes =
+            sizes;
 
         state.complements =
-            Array.isArray(complements)
-                ? complements.filter(item =>
-                    item.disponivel !== false &&
-                    item.visivel !== false
-                )
+            Array.isArray(
+                complements
+            )
+                ? complements
+                    .filter(
+                        item =>
+                            item.disponivel !==
+                                false &&
+                            item.visivel !==
+                                false
+                    )
                 : [];
 
-        state.districts = districts.filter(item =>
-            item.ativo !== false
-        );
+        state.districts =
+            districts.filter(
+                item =>
+                    item.ativo !==
+                    false
+            );
 
         state.schedules =
-            Array.isArray(schedules)
+            Array.isArray(
+                schedules
+            )
                 ? schedules
                 : [];
 
-        state.config = config;
-        state.operationReady = true;
-        state.operationSource = source;
+        state.config =
+            config;
+
+        state.operationReady =
+            true;
+
+        state.operationSource =
+            source;
 
         state.districtMap.clear();
 
-        state.districts.forEach(item => {
-            const aliases = Array.isArray(item.aliases)
-                ? item.aliases
-                : [];
+        state.districts.forEach(
+            item => {
+                const aliases =
+                    Array.isArray(
+                        item.aliases
+                    )
+                        ? item.aliases
+                        : [];
 
-            [
-                item.nome,
-                ...aliases
-            ]
-                .filter(Boolean)
-                .forEach(alias => {
-                    state.districtMap.set(
-                        norm(alias),
-                        item
+                [
+                    item.nome,
+                    ...aliases
+                ]
+                    .filter(Boolean)
+                    .forEach(
+                        alias => {
+                            state.districtMap
+                                .set(
+                                    norm(alias),
+                                    item
+                                );
+                        }
                     );
-                });
-        });
+            }
+        );
 
-        state.aliases = Array
-            .from(state.districtMap.keys())
-            .sort((a, b) =>
-                b.length - a.length
-            );
+        state.aliases =
+            Array
+                .from(
+                    state.districtMap
+                        .keys()
+                )
+                .sort(
+                    (a, b) =>
+                        b.length -
+                        a.length
+                );
 
         if (saveCache) {
             saveOperationCache({
-                tamanhos: sizes,
-                complementos: complements,
-                bairros: districts,
-                horarios: schedules,
-                configuracao_loja: config
+                tamanhos:
+                    sizes,
+
+                complementos:
+                    complements,
+
+                bairros:
+                    districts,
+
+                horarios:
+                    schedules,
+
+                configuracao_loja:
+                    config
             });
         }
     }
 
     function applyCachedOperation() {
-        const cached = readOperationCache();
+        const cached =
+            readOperationCache();
 
         if (!cached) {
             return false;
@@ -1571,8 +3954,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             applyOperation(
                 cached,
                 {
-                    saveCache: false,
-                    source: "cache"
+                    saveCache:
+                        false,
+
+                    source:
+                        "cache"
                 }
             );
 
@@ -1592,7 +3978,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     OPERATION_CACHE_KEY
                 );
             } catch (_) {
-                // Não impede uma nova tentativa online.
             }
 
             return false;
@@ -1606,63 +3991,98 @@ document.addEventListener("DOMContentLoaded", async () => {
             districts,
             schedules,
             configRows
-        ] = await Promise.all([
-            table(
-                "tamanhos_acai",
-                query =>
-                    query.order(
-                        "ordem",
-                        { ascending: true }
-                    )
-            ),
-
-            table(
-                "complementos",
-                query =>
-                    query
-                        .eq("disponivel", true)
-                        .eq("visivel", true)
-                        .order(
+        ] =
+            await Promise.all([
+                table(
+                    "tamanhos_acai",
+                    query =>
+                        query.order(
                             "ordem",
-                            { ascending: true }
+                            {
+                                ascending:
+                                    true
+                            }
                         )
-            ),
+                ),
 
-            table(
-                "bairros_entrega",
-                query =>
-                    query
-                        .eq("ativo", true)
-                        .order(
-                            "ordem",
-                            { ascending: true }
+                table(
+                    "complementos",
+                    query =>
+                        query
+                            .eq(
+                                "disponivel",
+                                true
+                            )
+                            .eq(
+                                "visivel",
+                                true
+                            )
+                            .order(
+                                "ordem",
+                                {
+                                    ascending:
+                                        true
+                                }
+                            )
+                ),
+
+                table(
+                    "bairros_entrega",
+                    query =>
+                        query
+                            .eq(
+                                "ativo",
+                                true
+                            )
+                            .order(
+                                "ordem",
+                                {
+                                    ascending:
+                                        true
+                                }
+                            )
+                ),
+
+                table(
+                    "horarios_funcionamento",
+                    query =>
+                        query.order(
+                            "dia_semana",
+                            {
+                                ascending:
+                                    true
+                            }
                         )
-            ),
+                ),
 
-            table(
-                "horarios_funcionamento",
-                query =>
-                    query.order(
-                        "dia_semana",
-                        { ascending: true }
-                    )
-            ),
-
-            table(
-                "configuracoes_loja",
-                query =>
-                    query
-                        .eq("id", 1)
-                        .limit(1)
-            )
-        ]);
+                table(
+                    "configuracoes_loja",
+                    query =>
+                        query
+                            .eq(
+                                "id",
+                                1
+                            )
+                            .limit(1)
+                )
+            ]);
 
         applyOperation({
-            tamanhos: sizes,
-            complementos: complements,
-            bairros: districts,
-            horarios: schedules,
-            configuracao_loja: configRows[0] || null
+            tamanhos:
+                sizes,
+
+            complementos:
+                complements,
+
+            bairros:
+                districts,
+
+            horarios:
+                schedules,
+
+            configuracao_loja:
+                configRows[0] ||
+                null
         });
     }
 
@@ -1675,25 +4095,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         let lastError = null;
 
-        for (const name of functionNames) {
-            const { data, error } =
-                await sb.rpc(name);
+        for (
+            const name
+            of functionNames
+        ) {
+            const {
+                data,
+                error
+            } =
+                await sb.rpc(
+                    name
+                );
 
-            if (!error && data) {
+            if (
+                !error &&
+                data
+            ) {
                 applyOperation(data);
                 return;
             }
 
             if (error) {
-                lastError = error;
+                lastError =
+                    error;
             }
 
-            const errorMessage = String(
-                error?.message || ""
-            ).toLowerCase();
+            const errorMessage =
+                String(
+                    error?.message ||
+                    ""
+                ).toLowerCase();
 
             const missing =
-                error?.code === "PGRST202" ||
+                error?.code ===
+                    "PGRST202" ||
                 errorMessage.includes(
                     "could not find the function"
                 ) ||
@@ -1701,7 +4136,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                     "does not exist"
                 );
 
-            if (error && !missing) {
+            if (
+                error &&
+                !missing
+            ) {
                 throw error;
             }
         }
@@ -1738,15 +4176,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function loadOperation() {
-        let lastError = null;
+        let lastError =
+            null;
 
         for (
             let attempt = 0;
-            attempt < OPERATION_RETRY_DELAYS.length;
+            attempt <
+                OPERATION_RETRY_DELAYS.length;
             attempt += 1
         ) {
             const delay =
-                OPERATION_RETRY_DELAYS[attempt];
+                OPERATION_RETRY_DELAYS[
+                    attempt
+                ];
 
             if (delay > 0) {
                 await wait(delay);
@@ -1756,7 +4198,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await loadOperationOnce();
                 return;
             } catch (error) {
-                lastError = error;
+                lastError =
+                    error;
 
                 console.warn(
                     `Tentativa ${attempt + 1} de carregar o cardápio falhou.`,
@@ -1774,131 +4217,190 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderSizes() {
-        $$(".menu-grid > li").forEach(card => {
-            const button =
-                card.querySelector(".btn-montar");
+        $$(".menu-grid > li")
+            .forEach(
+                card => {
+                    const button =
+                        card.querySelector(
+                            ".btn-montar"
+                        );
 
-            const current =
-                Number(button?.dataset.tamanho);
+                    const current =
+                        Number(
+                            button
+                                ?.dataset
+                                .tamanho
+                        );
 
-            const item = state.sizes.find(size =>
-                Number(size.tamanho_ml) === current
-            );
+                    const item =
+                        state.sizes.find(
+                            size =>
+                                Number(
+                                    size.tamanho_ml
+                                ) ===
+                                current
+                        );
 
-            if (!button || !item) {
-                return;
-            }
+                    if (
+                        !button ||
+                        !item
+                    ) {
+                        return;
+                    }
 
-            const available =
-                item.disponivel === true &&
-                item.visivel === true;
+                    const available =
+                        item.disponivel ===
+                            true &&
+                        item.visivel ===
+                            true;
 
-            card.hidden =
-                item.visivel === false;
+                    card.hidden =
+                        item.visivel ===
+                        false;
 
-            card.classList.toggle(
-                "produto-em-breve",
-                !available
-            );
-
-            const badge =
-                card.querySelector(".badge");
-
-            const title =
-                card.querySelector("h3");
-
-            const description =
-                card.querySelector("h3 + p");
-
-            const price =
-                card.querySelector("h3 + p + strong");
-
-            if (badge) {
-                badge.textContent =
-                    item.badge ||
-                    (
-                        available
-                            ? "Disponível"
-                            : "Em breve"
+                    card.classList.toggle(
+                        "produto-em-breve",
+                        !available
                     );
 
-                badge.classList.toggle(
-                    "badge-em-breve",
-                    !available
-                );
-            }
+                    const badge =
+                        card.querySelector(
+                            ".badge"
+                        );
 
-            if (title) {
-                title.textContent =
-                    productDisplayName(item);
-            }
+                    const title =
+                        card.querySelector(
+                            "h3"
+                        );
 
-            if (description) {
-                const freeLimit =
-                    freeComplementLimit(item);
+                    const description =
+                        card.querySelector(
+                            "h3 + p"
+                        );
 
-                description.textContent =
-                    available && freeLimit > 0
-                        ? `${freeLimit} complementos grátis. Extras e ingredientes especiais são cobrados à parte.`
-                        : item.descricao ||
-                        "Escolha os complementos do meio e da cobertura.";
-            }
+                    const price =
+                        card.querySelector(
+                            "h3 + p + strong"
+                        );
 
-            if (price) {
-                price.textContent =
-                    `${available
-                        ? "A partir de"
-                        : "Preço previsto:"
-                    } ${money(item.preco_base)}`;
-            }
+                    if (badge) {
+                        badge.textContent =
+                            item.badge ||
+                            (
+                                available
+                                    ? "Disponível"
+                                    : "Em breve"
+                            );
 
-            button.dataset.precoBase =
-                String(item.preco_base);
+                        badge.classList.toggle(
+                            "badge-em-breve",
+                            !available
+                        );
+                    }
 
-            button.dataset.disponibilidade =
-                available
-                    ? "disponivel"
-                    : "em-breve";
+                    if (title) {
+                        title.textContent =
+                            productDisplayName(
+                                item
+                            );
+                    }
 
-            button.disabled = !available;
-        });
+                    if (description) {
+                        const freeLimit =
+                            freeComplementLimit(
+                                item
+                            );
+
+                        description.textContent =
+                            available &&
+                            freeLimit > 0
+                                ? (
+                                    `${freeLimit} complementos grátis. Extras e ingredientes especiais são cobrados à parte.`
+                                )
+                                : (
+                                    item.descricao ||
+                                    "Escolha os complementos do meio e da cobertura."
+                                );
+                    }
+
+                    if (price) {
+                        price.textContent =
+                            `${
+                                available
+                                    ? "A partir de"
+                                    : "Preço previsto:"
+                            } ${money(
+                                item.preco_base
+                            )}`;
+                    }
+
+                    button.dataset.precoBase =
+                        String(
+                            item.preco_base
+                        );
+
+                    button.dataset.disponibilidade =
+                        available
+                            ? "disponivel"
+                            : "em-breve";
+
+                    button.disabled =
+                        !available;
+                }
+            );
 
         const container =
-            $(".opcoes-tamanho-monte-seu");
+            $(
+                ".opcoes-tamanho-monte-seu"
+            );
 
         if (!container) {
             return;
         }
 
-        container.innerHTML = state.sizes
-            .filter(item =>
-                item.visivel !== false
-            )
-            .map((item, index) => {
-                const available =
-                    item.disponivel === true;
+        container.innerHTML =
+            state.sizes
+                .filter(
+                    item =>
+                        item.visivel !==
+                        false
+                )
+                .map(
+                    (
+                        item,
+                        index
+                    ) => {
+                        const available =
+                            item.disponivel ===
+                            true;
 
-                return `
+                        return `
                     <label
                         class="opcao-tamanho-produto
-                        ${available
-                        ? ""
-                        : "opcao-tamanho-indisponivel"
-                    }"
+                        ${
+                            available
+                                ? ""
+                                : "opcao-tamanho-indisponivel"
+                        }"
                     >
+
                         <input
                             type="radio"
                             name="tamanhoMonteSeuOpcao"
                             value="${esc(item.tamanho_ml)}"
                             data-preco-base="${esc(item.preco_base)}"
                             ${available ? "" : "disabled"}
-                            ${index === 0 && available
-                        ? "checked"
-                        : ""
-                    }
+                            ${
+                                index === 0 &&
+                                available
+                                    ? "checked"
+                                    : ""
+                            }
                         >
 
+
                         <span>
+
                             <strong>
                                 ${esc(
                                     productDisplayName(
@@ -1907,36 +4409,49 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 )}
                             </strong>
 
+
                             <small>
-                                ${available
-                        ? `${money(item.preco_base)} • ${freeComplementLimit(item)} grátis`
-                        : "Em breve"
-                    }
+                                ${
+                                    available
+                                        ? `${money(item.preco_base)} • ${freeComplementLimit(item)} grátis`
+                                        : "Em breve"
+                                }
                             </small>
+
                         </span>
+
+
                     </label>
                 `;
-            })
-            .join("");
+                    }
+                )
+                .join("");
 
-        $$("input[name='tamanhoMonteSeuOpcao']")
-            .forEach(input => {
+        $$(
+            "input[name='tamanhoMonteSeuOpcao']"
+        ).forEach(
+            input => {
                 input.addEventListener(
                     "change",
                     () => {
-                        if (input.checked) {
+                        if (
+                            input.checked
+                        ) {
                             selectSize(
                                 input.value,
-                                input.dataset.precoBase
+                                input.dataset
+                                    .precoBase
                             );
                         }
                     }
                 );
-            });
+            }
+        );
     }
 
     function complementImagePath(name) {
-        const key = norm(name);
+        const key =
+            norm(name);
 
         const images = {
             "granola":
@@ -1983,11 +4498,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             return images[key];
         }
 
-        const partial = Object.keys(images)
-            .find(imageKey =>
-                key.includes(imageKey) ||
-                imageKey.includes(key)
-            );
+        const partial =
+            Object
+                .keys(images)
+                .find(
+                    imageKey =>
+                        key.includes(
+                            imageKey
+                        ) ||
+                        imageKey.includes(
+                            key
+                        )
+                );
 
         return partial
             ? images[partial]
@@ -2007,7 +4529,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const style =
-            document.createElement("style");
+            document.createElement(
+                "style"
+            );
 
         style.id =
             styleId;
@@ -2133,10 +4657,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }
 
-            /*
-             * Mantém os quatro nomes dos copos alinhados
-             * em uma única linha nos cards principais.
-             */
             .menu-grid > li h3 {
                 white-space: nowrap;
                 font-size: 19px;
@@ -2570,6 +5090,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             @media (max-width: 720px) {
+
                 .menu-grid > li h3 {
                     font-size: 18px;
                 }
@@ -2580,8 +5101,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 .azury-barra-montagem {
                     width: calc(100vw - 16px);
-                    bottom: max(8px, env(safe-area-inset-bottom));
-                    grid-template-columns: minmax(0, 1fr) auto;
+                    bottom:
+                        max(
+                            8px,
+                            env(safe-area-inset-bottom)
+                        );
+                    grid-template-columns:
+                        minmax(0, 1fr) auto;
                     gap: 8px 10px;
                     padding: 10px;
                     border-radius: 16px;
@@ -2641,6 +5167,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             @media (max-width: 420px) {
+
                 .complemento-camadas {
                     gap: 5px;
                     padding:
@@ -2671,7 +5198,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!spacer) {
             spacer =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
             spacer.className =
                 "azury-barra-montagem-espaco";
@@ -2681,7 +5210,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 "true"
             );
 
-            d.step1.appendChild(spacer);
+            d.step1.appendChild(
+                spacer
+            );
         }
 
         let bar =
@@ -2691,7 +5222,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!bar) {
             bar =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
             bar.id =
                 "barraFixaMontagem";
@@ -2699,7 +5232,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             bar.className =
                 "azury-barra-montagem";
 
-            bar.hidden = true;
+            bar.hidden =
+                true;
 
             bar.setAttribute(
                 "aria-label",
@@ -2710,7 +5244,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div
                     class="azury-barra-montagem-produto"
                 >
-                    <small>Montagem atual</small>
+                    <small>
+                        Montagem atual
+                    </small>
 
                     <strong
                         id="barraFixaMontagemProduto"
@@ -2719,23 +5255,33 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </strong>
                 </div>
 
+
                 <div
                     class="azury-barra-montagem-sacola"
                     aria-label="Resumo da sacola"
                 >
-                    <span aria-hidden="true">🛍️</span>
+
+                    <span
+                        aria-hidden="true"
+                    >
+                        🛍️
+                    </span>
 
                     <strong
                         id="barraFixaMontagemSacola"
                     >
                         Sacola: 0 itens • ${money(0)}
                     </strong>
+
                 </div>
+
 
                 <div
                     class="azury-barra-montagem-preco"
                 >
-                    <small>Subtotal</small>
+                    <small>
+                        Subtotal
+                    </small>
 
                     <strong
                         id="barraFixaMontagemSubtotal"
@@ -2743,6 +5289,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ${money(0)}
                     </strong>
                 </div>
+
 
                 <button
                     type="button"
@@ -2753,12 +5300,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </button>
             `;
 
-            /*
-             * A barra fica diretamente no body.
-             * Isso evita que overflow/transform do modal
-             * esconda o position: fixed em navegadores mobile.
-             */
-            document.body.appendChild(bar);
+            document.body.appendChild(
+                bar
+            );
         }
 
         if (d.add) {
@@ -2767,7 +5311,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
         }
 
-        d.stickyBar = bar;
+        d.stickyBar =
+            bar;
 
         d.stickyProduct =
             bar.querySelector(
@@ -2816,7 +5361,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 : Boolean(firstStep);
 
         d.stickyBar.hidden =
-            !(modalOpen && builderOpen);
+            !(
+                modalOpen &&
+                builderOpen
+            );
     }
 
     function updateAssemblyStickyBar(
@@ -2828,14 +5376,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const selectedProduct =
-            d.size?.value || "";
+            d.size?.value ||
+            "";
 
         const currentSizeItem =
-            state.sizes.find(item =>
-                String(item.tamanho_ml) ===
-                    String(selectedProduct) ||
-                Number(item.tamanho_ml) ===
-                    Number(selectedProduct)
+            state.sizes.find(
+                item =>
+                    String(
+                        item.tamanho_ml
+                    ) ===
+                        String(
+                            selectedProduct
+                        ) ||
+                    Number(
+                        item.tamanho_ml
+                    ) ===
+                        Number(
+                            selectedProduct
+                        )
             );
 
         if (d.stickyProduct) {
@@ -2852,11 +5410,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (d.stickyCart) {
-            const units = cartUnits();
-            const subtotal = cartSubtotal();
+            const units =
+                cartUnits();
+
+            const subtotal =
+                cartSubtotal();
 
             d.stickyCart.textContent =
-                `Sacola: ${units} ${units === 1 ? "item" : "itens"} • ${money(subtotal)}`;
+                `Sacola: ${units} ${
+                    units === 1
+                        ? "item"
+                        : "itens"
+                } • ${money(subtotal)}`;
         }
 
         const currentStatus =
@@ -2894,18 +5459,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (
             topGroup &&
-            topGroup !== middleGroup
+            topGroup !==
+                middleGroup
         ) {
-            topGroup.hidden = true;
+            topGroup.hidden =
+                true;
         }
 
         if (d.top) {
-            d.top.innerHTML = "";
+            d.top.innerHTML =
+                "";
         }
 
         if (middleGroup) {
             const title =
-                middleGroup.querySelector("h3");
+                middleGroup.querySelector(
+                    "h3"
+                );
 
             if (title) {
                 title.textContent =
@@ -2919,7 +5489,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (!help) {
                 help =
-                    document.createElement("p");
+                    document.createElement(
+                        "p"
+                    );
 
                 help.className =
                     "azury-complementos-ajuda";
@@ -2946,7 +5518,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (!freeCounter) {
                 freeCounter =
-                    document.createElement("div");
+                    document.createElement(
+                        "div"
+                    );
 
                 freeCounter.className =
                     "azury-complementos-progresso";
@@ -2968,11 +5542,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <div
                         class="azury-complementos-progresso-cabecalho"
                     >
+
                         <strong
                             class="azury-complementos-progresso-titulo"
                         >
                             Complementos grátis
                         </strong>
+
 
                         <span
                             class="azury-complementos-progresso-contagem"
@@ -2980,7 +5556,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                         >
                             0 de 0
                         </span>
+
                     </div>
+
 
                     <div
                         class="azury-complementos-progresso-trilho"
@@ -2991,11 +5569,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                         aria-valuemax="0"
                         aria-valuenow="0"
                     >
+
                         <span
                             class="azury-complementos-progresso-barra"
                             id="barraComplementosGratisPreenchimento"
                         ></span>
+
                     </div>
+
 
                     <small
                         class="azury-complementos-progresso-mensagem"
@@ -3018,7 +5599,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const indexedComplements =
             state.complements.map(
-                (item, index) => ({
+                (
+                    item,
+                    index
+                ) => ({
                     item,
                     index
                 })
@@ -3041,7 +5625,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
 
         const renderComplementCard =
-            ({ item, index }) => {
+            ({
+                item,
+                index
+            }) => {
                 const alwaysPaid =
                     isAlwaysPaidComplement(
                         item.nome
@@ -3065,38 +5652,48 @@ document.addEventListener("DOMContentLoaded", async () => {
                         class="complemento-card ${alwaysPaid ? "especial-pago" : ""}"
                         data-complement-card
                     >
+
                         <label
                             class="complemento-card-selecao"
                             for="complemento-${index}"
                         >
+
                             <span
                                 class="complemento-card-imagem ${image ? "" : "sem-imagem"}"
                             >
-                                ${image
-                                    ? `
-                                        <img
-                                            src="${esc(image)}"
-                                            alt="${esc(item.nome)}"
-                                            loading="lazy"
-                                        >
-                                    `
-                                    : ""
+
+                                ${
+                                    image
+                                        ? `
+                                            <img
+                                                src="${esc(image)}"
+                                                alt="${esc(item.nome)}"
+                                                loading="lazy"
+                                            >
+                                        `
+                                        : ""
                                 }
+
                             </span>
+
 
                             <span
                                 class="complemento-card-info"
                             >
+
                                 <strong>
                                     ${esc(item.nome)}
                                 </strong>
+
 
                                 <small
                                     class="${alwaysPaid ? "especial" : ""}"
                                 >
                                     ${esc(priceText)}
                                 </small>
+
                             </span>
+
 
                             <input
                                 type="checkbox"
@@ -3107,13 +5704,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 data-especial-pago="${alwaysPaid ? "true" : "false"}"
                                 id="complemento-${index}"
                             >
+
                         </label>
+
 
                         <div
                             class="complemento-camadas"
                             aria-label="Posição de ${esc(item.nome)}"
                         >
+
                             <label>
+
                                 <input
                                     type="radio"
                                     class="complemento-camada"
@@ -3121,10 +5722,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     value="meio"
                                     disabled
                                 >
+
                                 Meio
+
                             </label>
 
+
                             <label>
+
                                 <input
                                     type="radio"
                                     class="complemento-camada"
@@ -3132,10 +5737,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     value="cobertura"
                                     disabled
                                 >
+
                                 Cobertura
+
                             </label>
 
+
                             <label>
+
                                 <input
                                     type="radio"
                                     class="complemento-camada"
@@ -3144,9 +5753,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     checked
                                     disabled
                                 >
+
                                 Nos dois
+
                             </label>
+
                         </div>
+
                     </div>
                 `;
             };
@@ -3158,28 +5771,37 @@ document.addEventListener("DOMContentLoaded", async () => {
                         class="azury-complementos-secao"
                         aria-label="Complementos grátis e extras"
                     >
+
                         <div
                             class="azury-complementos-secao-texto"
                         >
+
                             <strong>
                                 Complementos grátis / extras
                             </strong>
 
+
                             <small>
                                 Entram no limite grátis do seu açaí. Depois do limite, o valor extra é cobrado.
                             </small>
+
                         </div>
+
 
                         <span
                             class="azury-complementos-secao-badge"
                         >
                             Limite do produto
                         </span>
+
                     </div>
 
                     ${regularComplements
-                        .map(renderComplementCard)
-                        .join("")}
+                        .map(
+                            renderComplementCard
+                        )
+                        .join("")
+                    }
                 `
                 : "";
 
@@ -3190,28 +5812,37 @@ document.addEventListener("DOMContentLoaded", async () => {
                         class="azury-complementos-secao especiais"
                         aria-label="Complementos especiais pagos"
                     >
+
                         <div
                             class="azury-complementos-secao-texto"
                         >
+
                             <strong>
                                 Especiais pagos
                             </strong>
 
+
                             <small>
                                 São cobrados à parte e não ocupam nenhuma vaga dos complementos grátis.
                             </small>
+
                         </div>
+
 
                         <span
                             class="azury-complementos-secao-badge"
                         >
                             Pagos
                         </span>
+
                     </div>
 
                     ${specialComplements
-                        .map(renderComplementCard)
-                        .join("")}
+                        .map(
+                            renderComplementCard
+                        )
+                        .join("")
+                    }
                 `
                 : "";
 
@@ -3223,192 +5854,271 @@ document.addEventListener("DOMContentLoaded", async () => {
             .querySelectorAll(
                 ".complemento-card-imagem img"
             )
-            .forEach(image => {
-                image.addEventListener(
-                    "error",
-                    () => {
-                        image
-                            .closest(
-                                ".complemento-card-imagem"
-                            )
-                            ?.classList.add(
-                                "sem-imagem"
-                            );
-
-                        image.remove();
-                    },
-                    { once: true }
-                );
-            });
-
-        allComplements()
-            .forEach(input => {
-                input.addEventListener(
-                    "change",
-                    () => {
-                        const card =
-                            input.closest(
-                                ".complemento-card"
-                            );
-
-                        const layerInputs =
-                            card
-                                ? Array.from(
-                                    card.querySelectorAll(
-                                        ".complemento-camada"
-                                    )
+            .forEach(
+                image => {
+                    image.addEventListener(
+                        "error",
+                        () => {
+                            image
+                                .closest(
+                                    ".complemento-card-imagem"
                                 )
-                                : [];
-
-                        if (input.checked) {
-                            complementSelectionCounter += 1;
-
-                            input.dataset.ordemSelecao =
-                                String(
-                                    complementSelectionCounter
+                                ?.classList
+                                .add(
+                                    "sem-imagem"
                                 );
 
-                            layerInputs
-                                .forEach(layerInput => {
-                                    layerInput.disabled =
-                                        false;
-                                });
+                            image.remove();
+                        },
+                        {
+                            once:
+                                true
+                        }
+                    );
+                }
+            );
+
+        allComplements()
+            .forEach(
+                input => {
+                    input.addEventListener(
+                        "change",
+                        () => {
+                            const card =
+                                input.closest(
+                                    ".complemento-card"
+                                );
+
+                            const layerInputs =
+                                card
+                                    ? Array.from(
+                                        card.querySelectorAll(
+                                            ".complemento-camada"
+                                        )
+                                    )
+                                    : [];
 
                             if (
-                                !layerInputs.some(
-                                    layerInput =>
-                                        layerInput.checked
-                                )
+                                input.checked
                             ) {
-                                const both =
-                                    layerInputs.find(
-                                        layerInput =>
-                                            layerInput.value ===
-                                            "ambos"
+                                complementSelectionCounter +=
+                                    1;
+
+                                input.dataset.ordemSelecao =
+                                    String(
+                                        complementSelectionCounter
                                     );
 
-                                if (both) {
-                                    both.checked = true;
+                                layerInputs
+                                    .forEach(
+                                        layerInput => {
+                                            layerInput.disabled =
+                                                false;
+                                        }
+                                    );
+
+                                if (
+                                    !layerInputs.some(
+                                        layerInput =>
+                                            layerInput.checked
+                                    )
+                                ) {
+                                    const both =
+                                        layerInputs.find(
+                                            layerInput =>
+                                                layerInput.value ===
+                                                "ambos"
+                                        );
+
+                                    if (both) {
+                                        both.checked =
+                                            true;
+                                    }
                                 }
+                            } else {
+                                delete input
+                                    .dataset
+                                    .ordemSelecao;
+
+                                layerInputs
+                                    .forEach(
+                                        layerInput => {
+                                            layerInput.disabled =
+                                                true;
+                                        }
+                                    );
                             }
-                        } else {
-                            delete input.dataset.ordemSelecao;
 
-                            layerInputs
-                                .forEach(layerInput => {
-                                    layerInput.disabled =
-                                        true;
-                                });
+                            card?.classList.toggle(
+                                "selecionado",
+                                input.checked
+                            );
+
+                            calculate();
                         }
-
-                        card?.classList.toggle(
-                            "selecionado",
-                            input.checked
-                        );
-
-                        calculate();
-                    }
-                );
-            });
+                    );
+                }
+            );
 
         d.middle
             .querySelectorAll(
                 ".complemento-camada"
             )
-            .forEach(input => {
-                input.addEventListener(
-                    "change",
-                    () => {
-                        calculate();
-                    }
-                );
-            });
+            .forEach(
+                input => {
+                    input.addEventListener(
+                        "change",
+                        () => {
+                            calculate();
+                        }
+                    );
+                }
+            );
     }
 
     function nowLocal() {
-        const parts = new Intl.DateTimeFormat(
-            "en-CA",
-            {
-                timeZone:
-                    state.config?.fuso_horario ||
-                    "America/Sao_Paulo",
+        const parts =
+            new Intl.DateTimeFormat(
+                "en-CA",
+                {
+                    timeZone:
+                        state.config
+                            ?.fuso_horario ||
+                        "America/Sao_Paulo",
 
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                hourCycle: "h23"
-            }
-        ).formatToParts(new Date());
+                    year:
+                        "numeric",
 
-        const values = Object.fromEntries(
-            parts
-                .filter(part =>
-                    part.type !== "literal"
-                )
-                .map(part => [
-                    part.type,
-                    Number(part.value)
-                ])
-        );
+                    month:
+                        "2-digit",
+
+                    day:
+                        "2-digit",
+
+                    hour:
+                        "2-digit",
+
+                    minute:
+                        "2-digit",
+
+                    hourCycle:
+                        "h23"
+                }
+            ).formatToParts(
+                new Date()
+            );
+
+        const values =
+            Object.fromEntries(
+                parts
+                    .filter(
+                        part =>
+                            part.type !==
+                            "literal"
+                    )
+                    .map(
+                        part => [
+                            part.type,
+                            Number(
+                                part.value
+                            )
+                        ]
+                    )
+            );
 
         return {
-            day: new Date(
-                Date.UTC(
-                    values.year,
-                    values.month - 1,
-                    values.day
-                )
-            ).getUTCDay(),
+            day:
+                new Date(
+                    Date.UTC(
+                        values.year,
+                        values.month - 1,
+                        values.day
+                    )
+                ).getUTCDay(),
 
             minutes:
-                (values.hour * 60) +
+                (
+                    values.hour *
+                    60
+                ) +
                 values.minute
         };
     }
 
     function schedule(day) {
-        return state.schedules.find(item =>
-            Number(item.dia_semana) ===
-            Number(day)
+        return state.schedules.find(
+            item =>
+                Number(
+                    item.dia_semana
+                ) ===
+                Number(day)
         );
     }
 
     function storeState() {
-        if (!state.operationReady) {
+        if (
+            !state.operationReady
+        ) {
             return {
-                open: false,
-                title: "CARREGANDO CARDÁPIO",
-                text: "Aguarde alguns segundos.",
-                alert: "O cardápio ainda está carregando."
+                open:
+                    false,
+
+                title:
+                    "CARREGANDO CARDÁPIO",
+
+                text:
+                    "Aguarde alguns segundos.",
+
+                alert:
+                    "O cardápio ainda está carregando."
             };
         }
 
-        if (state.config.pedidos_ativos !== true) {
+        if (
+            state.config
+                .pedidos_ativos !==
+            true
+        ) {
             const text =
-                state.config.mensagem_pausa ||
+                state.config
+                    .mensagem_pausa ||
                 "Os pedidos estão temporariamente pausados.";
 
             return {
-                open: false,
-                title: "PEDIDOS PAUSADOS",
+                open:
+                    false,
+
+                title:
+                    "PEDIDOS PAUSADOS",
+
                 text,
-                alert: text
+
+                alert:
+                    text
             };
         }
 
-        const now = nowLocal();
-        const today = schedule(now.day);
+        const now =
+            nowLocal();
 
-        let open = false;
+        const today =
+            schedule(
+                now.day
+            );
+
+        let open =
+            false;
 
         if (today?.ativo) {
             const start =
-                timeMinutes(today.abre_as);
+                timeMinutes(
+                    today.abre_as
+                );
 
             const end =
-                timeMinutes(today.fecha_as);
+                timeMinutes(
+                    today.fecha_as
+                );
 
             if (
                 start !== null &&
@@ -3417,23 +6127,39 @@ document.addEventListener("DOMContentLoaded", async () => {
                 open =
                     end > start
                         ? (
-                            now.minutes >= start &&
-                            now.minutes < end
+                            now.minutes >=
+                                start &&
+                            now.minutes <
+                                end
                         )
-                        : now.minutes >= start;
+                        : (
+                            now.minutes >=
+                            start
+                        );
             }
         }
 
         if (!open) {
             const previous =
-                schedule((now.day + 6) % 7);
+                schedule(
+                    (
+                        now.day +
+                        6
+                    ) % 7
+                );
 
-            if (previous?.ativo) {
+            if (
+                previous?.ativo
+            ) {
                 const start =
-                    timeMinutes(previous.abre_as);
+                    timeMinutes(
+                        previous.abre_as
+                    );
 
                 const end =
-                    timeMinutes(previous.fecha_as);
+                    timeMinutes(
+                        previous.fecha_as
+                    );
 
                 if (
                     start !== null &&
@@ -3441,22 +6167,31 @@ document.addEventListener("DOMContentLoaded", async () => {
                     end < start &&
                     now.minutes < end
                 ) {
-                    open = true;
+                    open =
+                        true;
                 }
             }
         }
 
         if (open) {
             return {
-                open: true,
-                title: "ABERTO AGORA",
+                open:
+                    true,
+
+                title:
+                    "ABERTO AGORA",
 
                 text:
-                    `Faça seu pedido — atendimento até ${timeLabel(today?.fecha_as) ||
-                    "00:00"
+                    `Faça seu pedido — atendimento até ${
+                        timeLabel(
+                            today
+                                ?.fecha_as
+                        ) ||
+                        "00:00"
                     }.`,
 
-                alert: ""
+                alert:
+                    ""
             };
         }
 
@@ -3476,20 +6211,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             offset += 1
         ) {
             const day =
-                (now.day + offset) % 7;
+                (
+                    now.day +
+                    offset
+                ) % 7;
 
             const item =
                 schedule(day);
 
             const start =
-                timeMinutes(item?.abre_as);
+                timeMinutes(
+                    item?.abre_as
+                );
 
             if (
                 !item?.ativo ||
                 start === null ||
                 (
                     offset === 0 &&
-                    now.minutes >= start
+                    now.minutes >=
+                        start
                 )
             ) {
                 continue;
@@ -3506,8 +6247,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 `Abrimos ${when} às ${timeLabel(item.abre_as)}.`;
 
             return {
-                open: false,
-                title: "FECHADO NO MOMENTO",
+                open:
+                    false,
+
+                title:
+                    "FECHADO NO MOMENTO",
+
                 text,
 
                 alert:
@@ -3516,16 +6261,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         return {
-            open: false,
-            title: "FECHADO NO MOMENTO",
-            text: "Consulte novamente em breve.",
-            alert: "A Azury está fechada no momento."
+            open:
+                false,
+
+            title:
+                "FECHADO NO MOMENTO",
+
+            text:
+                "Consulte novamente em breve.",
+
+            alert:
+                "A Azury está fechada no momento."
         };
     }
 
-    function syncOrderButtons(status) {
+    function syncOrderButtons(
+        status
+    ) {
         const hasItems =
-            state.cart.length > 0;
+            state.cart.length >
+            0;
 
         if (d.add) {
             d.add.disabled =
@@ -3550,7 +6305,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                         : "Adicione um item à sacola";
         }
 
-        if (d.send && !state.sending) {
+        if (
+            d.send &&
+            !state.sending
+        ) {
             d.send.disabled =
                 !status.open ||
                 !hasItems;
@@ -3570,7 +6328,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function updateStore() {
-        const status = storeState();
+        const status =
+            storeState();
 
         d.store?.classList.toggle(
             "aberta",
@@ -3592,63 +6351,91 @@ document.addEventListener("DOMContentLoaded", async () => {
                 status.text;
         }
 
-        $$(".btn-montar").forEach(button => {
-            const available =
-                button.dataset.disponibilidade !==
-                "em-breve";
+        $$(".btn-montar")
+            .forEach(
+                button => {
+                    const available =
+                        button.dataset
+                            .disponibilidade !==
+                        "em-breve";
 
-            button.disabled =
-                !available ||
-                !status.open;
+                    button.disabled =
+                        !available ||
+                        !status.open;
 
-            button.classList.toggle(
-                "btn-loja-fechada",
-                available && !status.open
+                    button.classList.toggle(
+                        "btn-loja-fechada",
+                        available &&
+                        !status.open
+                    );
+
+                    button.textContent =
+                        !available
+                            ? "Disponível em breve"
+                            : status.open
+                                ? "Montar meu açaí"
+                                : "Loja fechada";
+                }
             );
 
-            button.textContent =
-                !available
-                    ? "Disponível em breve"
-                    : status.open
-                        ? "Montar meu açaí"
-                        : "Loja fechada";
-        });
-
-        syncOrderButtons(status);
+        syncOrderButtons(
+            status
+        );
 
         return status;
     }
 
     function requireOpen() {
-        const status = updateStore();
+        const status =
+            updateStore();
 
         if (status.open) {
             return true;
         }
 
-        alert(status.alert);
+        alert(
+            status.alert
+        );
+
         return false;
     }
 
     function updateWhatsapp() {
-        const number = String(
-            state.config?.whatsapp ||
-            "5511960220402"
-        ).replace(/\D/g, "");
+        const number =
+            String(
+                state.config
+                    ?.whatsapp ||
+                "5511960220402"
+            ).replace(
+                /\D/g,
+                ""
+            );
 
         $$(".js-pedido-horario")
-            .forEach(link => {
-                link.href =
-                    `https://wa.me/${number}`;
-            });
+            .forEach(
+                link => {
+                    link.href =
+                        `https://wa.me/${number}`;
+                }
+            );
     }
 
-    function selectSize(size, base) {
-        const item = state.sizes.find(row =>
-            Number(row.tamanho_ml) === Number(size) &&
-            row.disponivel === true &&
-            row.visivel === true
-        );
+    function selectSize(
+        size,
+        base
+    ) {
+        const item =
+            state.sizes.find(
+                row =>
+                    Number(
+                        row.tamanho_ml
+                    ) ===
+                        Number(size) &&
+                    row.disponivel ===
+                        true &&
+                    row.visivel ===
+                        true
+            );
 
         if (!item) {
             return;
@@ -3656,89 +6443,116 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (d.size) {
             d.size.value =
-                String(item.tamanho_ml);
+                String(
+                    item.tamanho_ml
+                );
         }
 
         if (d.base) {
             d.base.value =
                 String(
-                    item.preco_base ?? base
+                    item.preco_base ??
+                    base
                 );
         }
 
-        $$("input[name='tamanhoMonteSeuOpcao']")
-            .forEach(input => {
+        $$(
+            "input[name='tamanhoMonteSeuOpcao']"
+        ).forEach(
+            input => {
                 input.checked =
-                    Number(input.value) ===
-                    Number(item.tamanho_ml);
-            });
+                    Number(
+                        input.value
+                    ) ===
+                    Number(
+                        item.tamanho_ml
+                    );
+            }
+        );
 
         calculate();
     }
 
     function allComplements() {
-        return $$(".complemento-monte-seu");
+        return $$(
+            ".complemento-monte-seu"
+        );
     }
 
     function currentComplementSelections() {
         return allComplements()
-            .filter(input =>
-                input.checked
+            .filter(
+                input =>
+                    input.checked
             )
-            .map((input, index) => {
-                const card =
-                    input.closest(
-                        ".complemento-card"
-                    );
+            .map(
+                (
+                    input,
+                    index
+                ) => {
+                    const card =
+                        input.closest(
+                            ".complemento-card"
+                        );
 
-                const layerInput =
-                    card?.querySelector(
-                        ".complemento-camada:checked"
-                    );
+                    const layerInput =
+                        card?.querySelector(
+                            ".complemento-camada:checked"
+                        );
 
-                return {
-                    id:
-                        input.dataset.id ||
-                        null,
+                    return {
+                        id:
+                            input.dataset
+                                .id ||
+                            null,
 
-                    nome:
-                        input.value,
+                        nome:
+                            input.value,
 
-                    camada:
-                        layerInput?.value ||
-                        "ambos",
+                        camada:
+                            layerInput
+                                ?.value ||
+                            "ambos",
 
-                    preco:
-                        num(
-                            input.dataset.preco,
-                            0
-                        ),
+                        preco:
+                            num(
+                                input.dataset
+                                    .preco,
+                                0
+                            ),
 
-                    ordem_selecao:
-                        Math.max(
-                            1,
-                            Math.floor(
-                                num(
-                                    input.dataset
-                                        .ordemSelecao,
-                                    index + 1
+                        ordem_selecao:
+                            Math.max(
+                                1,
+                                Math.floor(
+                                    num(
+                                        input.dataset
+                                            .ordemSelecao,
+                                        index + 1
+                                    )
                                 )
                             )
-                        )
-                };
-            });
-    }
-
-    function selected(layer) {
-        return currentComplementSelections()
-            .filter(complement =>
-                complement.camada === layer ||
-                complement.camada === "ambos"
+                    };
+                }
             );
     }
 
+    function selected(layer) {
+        return (
+            currentComplementSelections()
+                .filter(
+                    complement =>
+                        complement.camada ===
+                            layer ||
+                        complement.camada ===
+                            "ambos"
+                )
+        );
+    }
+
     function updateFreeComplementCounter(
-        complements = currentComplementSelections()
+        complements =
+            currentComplementSelections()
     ) {
         const counter =
             document.getElementById(
@@ -3776,14 +6590,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const selectedProduct =
-            d.size?.value || "";
+            d.size?.value ||
+            "";
 
         const currentSizeItem =
-            state.sizes.find(item =>
-                String(item.tamanho_ml) ===
-                    String(selectedProduct) ||
-                Number(item.tamanho_ml) ===
-                    Number(selectedProduct)
+            state.sizes.find(
+                item =>
+                    String(
+                        item.tamanho_ml
+                    ) ===
+                        String(
+                            selectedProduct
+                        ) ||
+                    Number(
+                        item.tamanho_ml
+                    ) ===
+                        Number(
+                            selectedProduct
+                        )
             );
 
         const limit =
@@ -3793,30 +6617,32 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
 
         if (limit <= 0) {
-            counter.hidden = true;
+            counter.hidden =
+                true;
+
             return;
         }
 
-        counter.hidden = false;
+        counter.hidden =
+            false;
 
-        /*
-         * Complementos especiais sempre pagos
-         * não consomem vagas grátis.
-         *
-         * Cada tipo de complemento é contado
-         * uma única vez. Assim, "Nos dois"
-         * continua valendo apenas 1 complemento.
-         */
         const eligibleKeys =
             new Set(
-                (complements || [])
-                    .filter(complement =>
-                        !isAlwaysPaidComplement(
-                            complement.nome
-                        )
+                (
+                    complements ||
+                    []
+                )
+                    .filter(
+                        complement =>
+                            !isAlwaysPaidComplement(
+                                complement.nome
+                            )
                     )
-                    .map(complement =>
-                        norm(complement.nome)
+                    .map(
+                        complement =>
+                            norm(
+                                complement.nome
+                            )
                     )
                     .filter(Boolean)
             );
@@ -3832,13 +6658,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const extras =
             Math.max(
-                selectedCount - limit,
+                selectedCount -
+                    limit,
                 0
             );
 
         const percentage =
             Math.min(
-                (usedFree / limit) * 100,
+                (
+                    usedFree /
+                    limit
+                ) * 100,
                 100
             );
 
@@ -3872,13 +6702,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (extras > 0) {
             messageText.textContent =
                 `${usedFree} de ${limit} grátis • ` +
-                `${extras} ${extras === 1 ? "extra" : "extras"} ` +
-                `${extras === 1 ? "será cobrado" : "serão cobrados"}.`;
+                `${extras} ${
+                    extras === 1
+                        ? "extra"
+                        : "extras"
+                } ` +
+                `${
+                    extras === 1
+                        ? "será cobrado"
+                        : "serão cobrados"
+                }.`;
 
             return;
         }
 
-        if (usedFree >= limit) {
+        if (
+            usedFree >= limit
+        ) {
             messageText.textContent =
                 "Limite grátis atingido.";
 
@@ -3886,7 +6726,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const remaining =
-            limit - usedFree;
+            limit -
+            usedFree;
 
         messageText.textContent =
             remaining === 1
@@ -3896,10 +6737,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function calculate() {
         const size =
-            Number(d.size?.value);
+            Number(
+                d.size?.value
+            );
 
         const base =
-            num(d.base?.value, 0);
+            num(
+                d.base?.value,
+                0
+            );
 
         const complements =
             currentComplementSelections();
@@ -3936,11 +6782,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const fee =
             subtotal > 0
-                ? num(d.fee?.value, 0)
+                ? num(
+                    d.fee?.value,
+                    0
+                )
                 : 0;
 
         const total =
-            subtotal + fee;
+            subtotal +
+            fee;
 
         if (d.total) {
             d.total.textContent =
@@ -3974,25 +6824,29 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
         }
 
-        d.indicators.forEach(item => {
-            const value =
-                Number(
-                    item.dataset.indicadorEtapa
+        d.indicators.forEach(
+            item => {
+                const value =
+                    Number(
+                        item.dataset
+                            .indicadorEtapa
+                    );
+
+                item.classList.toggle(
+                    "ativa",
+                    value === step
                 );
 
-            item.classList.toggle(
-                "ativa",
-                value === step
-            );
-
-            item.classList.toggle(
-                "concluida",
-                value < step
-            );
-        });
+                item.classList.toggle(
+                    "concluida",
+                    value < step
+                );
+            }
+        );
 
         if (d.content) {
-            d.content.scrollTop = 0;
+            d.content.scrollTop =
+                0;
         }
 
         syncAssemblyStickyBarVisibility(
@@ -4005,8 +6859,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        d.modal.style.display = "flex";
-        document.body.style.overflow = "hidden";
+        d.modal.style.display =
+            "flex";
+
+        document.body.style.overflow =
+            "hidden";
 
         syncAssemblyStickyBarVisibility();
     }
@@ -4016,8 +6873,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        d.modal.style.display = "none";
-        document.body.style.overflow = "";
+        d.modal.style.display =
+            "none";
+
+        document.body.style.overflow =
+            "";
 
         syncAssemblyStickyBarVisibility(
             false
@@ -4025,30 +6885,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function resetAddress(
-        text = "Informe um CEP válido para calcular a entrega.",
+        text =
+            "Informe um CEP válido para calcular a entrega.",
         type = ""
     ) {
-        state.zipRequest += 1;
-        state.consultingZip = false;
+        state.zipRequest +=
+            1;
+
+        state.consultingZip =
+            false;
 
         if (d.addressOk) {
-            d.addressOk.value = "false";
+            d.addressOk.value =
+                "false";
         }
 
         if (d.fee) {
-            d.fee.value = "0";
+            d.fee.value =
+                "0";
         }
 
         if (d.districtId) {
-            d.districtId.value = "";
+            d.districtId.value =
+                "";
         }
 
         if (d.street) {
-            d.street.value = "";
+            d.street.value =
+                "";
         }
 
         if (d.district) {
-            d.district.value = "";
+            d.district.value =
+                "";
         }
 
         if (d.feeText) {
@@ -4056,28 +6925,46 @@ document.addEventListener("DOMContentLoaded", async () => {
                 "A calcular";
         }
 
-        message(text, type);
+        message(
+            text,
+            type
+        );
+
         updateTotal();
     }
 
     function findDistrict(name) {
-        const key = norm(name);
+        const key =
+            norm(name);
 
         if (!key) {
             return null;
         }
 
-        if (state.districtMap.has(key)) {
-            return state.districtMap.get(key);
+        if (
+            state.districtMap
+                .has(key)
+        ) {
+            return (
+                state.districtMap
+                    .get(key)
+            );
         }
 
-        const alias = state.aliases.find(item =>
-            key.includes(item) ||
-            item.includes(key)
-        );
+        const alias =
+            state.aliases.find(
+                item =>
+                    key.includes(
+                        item
+                    ) ||
+                    item.includes(
+                        key
+                    )
+            );
 
         return alias
-            ? state.districtMap.get(alias)
+            ? state.districtMap
+                .get(alias)
             : null;
     }
 
@@ -4085,7 +6972,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const requestId =
             ++state.zipRequest;
 
-        state.consultingZip = true;
+        state.consultingZip =
+            true;
 
         message(
             "Consultando o CEP...",
@@ -4093,9 +6981,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
 
         try {
-            const response = await fetch(
-                `https://viacep.com.br/ws/${zip}/json/`
-            );
+            const response =
+                await fetch(
+                    `https://viacep.com.br/ws/${zip}/json/`
+                );
 
             if (!response.ok) {
                 throw new Error(
@@ -4107,7 +6996,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await response.json();
 
             if (
-                requestId !== state.zipRequest
+                requestId !==
+                state.zipRequest
             ) {
                 return;
             }
@@ -4126,7 +7016,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             const district =
-                findDistrict(data.bairro);
+                findDistrict(
+                    data.bairro
+                );
 
             if (!district) {
                 resetAddress(
@@ -4149,21 +7041,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (d.districtId) {
                 d.districtId.value =
-                    String(district.id);
+                    String(
+                        district.id
+                    );
             }
 
             if (d.addressOk) {
-                d.addressOk.value = "true";
+                d.addressOk.value =
+                    "true";
             }
 
             if (d.fee) {
                 d.fee.value =
-                    String(district.taxa);
+                    String(
+                        district.taxa
+                    );
             }
 
             if (d.feeText) {
                 d.feeText.textContent =
-                    money(district.taxa);
+                    money(
+                        district.taxa
+                    );
             }
 
             message(
@@ -4174,7 +7073,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             updateTotal();
         } catch (error) {
             if (
-                requestId === state.zipRequest
+                requestId ===
+                state.zipRequest
             ) {
                 resetAddress(
                     "Não foi possível validar o CEP agora. Tente novamente.",
@@ -4183,9 +7083,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         } finally {
             if (
-                requestId === state.zipRequest
+                requestId ===
+                state.zipRequest
             ) {
-                state.consultingZip = false;
+                state.consultingZip =
+                    false;
             }
         }
     }
@@ -4194,9 +7096,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         d.zip?.addEventListener(
             "input",
             () => {
-                const digits = d.zip.value
-                    .replace(/\D/g, "")
-                    .slice(0, 8);
+                const digits =
+                    d.zip.value
+                        .replace(
+                            /\D/g,
+                            ""
+                        )
+                        .slice(
+                            0,
+                            8
+                        );
 
                 d.zip.value =
                     digits.length > 5
@@ -4205,8 +7114,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 resetAddress();
 
-                if (digits.length === 8) {
-                    consultZip(digits);
+                if (
+                    digits.length ===
+                    8
+                ) {
+                    consultZip(
+                        digits
+                    );
                 }
             }
         );
@@ -4214,11 +7128,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function fillCustomer() {
         try {
-            const { data } =
-                await sb.auth.getSession();
+            const {
+                data
+            } =
+                await sb.auth
+                    .getSession();
 
             const user =
-                data.session?.user;
+                data.session
+                    ?.user;
 
             if (!user) {
                 return;
@@ -4226,15 +7144,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             let profile = {};
 
-            const result = await sb
-                .from("perfis")
-                .select("*")
-                .eq("id", user.id)
-                .maybeSingle();
+            const result =
+                await sb
+                    .from(
+                        "perfis"
+                    )
+                    .select("*")
+                    .eq(
+                        "id",
+                        user.id
+                    )
+                    .maybeSingle();
 
-            if (!result.error) {
+            if (
+                !result.error
+            ) {
                 profile =
-                    result.data || {};
+                    result.data ||
+                    {};
             }
 
             if (
@@ -4244,8 +7171,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 d.name.value =
                     profile.nome ||
                     profile.nome_completo ||
-                    user.user_metadata?.nome ||
-                    user.email?.split("@")[0] ||
+                    user.user_metadata
+                        ?.nome ||
+                    user.email
+                        ?.split("@")[0] ||
                     "";
             }
 
@@ -4254,51 +7183,57 @@ document.addEventListener("DOMContentLoaded", async () => {
                 !d.phone.value.trim()
             ) {
                 d.phone.value =
-                    profile.telefone || "";
+                    profile.telefone ||
+                    "";
             }
         } catch (_) {
-            // O cliente ainda pode informar os dados manualmente.
         }
     }
 
     function resetBuilder() {
-        complementSelectionCounter = 0;
+        complementSelectionCounter =
+            0;
 
-        allComplements().forEach(input => {
-            input.checked = false;
+        allComplements()
+            .forEach(
+                input => {
+                    input.checked =
+                        false;
 
-            delete input.dataset
-                .ordemSelecao;
+                    delete input
+                        .dataset
+                        .ordemSelecao;
 
-            const card =
-                input.closest(
-                    ".complemento-card"
-                );
+                    const card =
+                        input.closest(
+                            ".complemento-card"
+                        );
 
-            card?.classList.remove(
-                "selecionado"
-            );
+                    card?.classList.remove(
+                        "selecionado"
+                    );
 
-            const layerInputs =
-                card
-                    ? Array.from(
-                        card.querySelectorAll(
-                            ".complemento-camada"
-                        )
-                    )
-                    : [];
+                    const layerInputs =
+                        card
+                            ? Array.from(
+                                card.querySelectorAll(
+                                    ".complemento-camada"
+                                )
+                            )
+                            : [];
 
-            layerInputs.forEach(
-                layerInput => {
-                    layerInput.disabled =
-                        true;
+                    layerInputs.forEach(
+                        layerInput => {
+                            layerInput.disabled =
+                                true;
 
-                    layerInput.checked =
-                        layerInput.value ===
-                        "ambos";
+                            layerInput.checked =
+                                layerInput.value ===
+                                "ambos";
+                        }
+                    );
                 }
             );
-        });
 
         calculate();
     }
@@ -4306,25 +7241,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     function resetOrder() {
         resetBuilder();
 
-        $$("input[name='formaPagamentoMonteSeu']")
-            .forEach(item => {
-                item.checked = false;
-            });
+        $$(
+            "input[name='formaPagamentoMonteSeu']"
+        ).forEach(
+            item => {
+                item.checked =
+                    false;
+            }
+        );
 
         if (d.zip) {
-            d.zip.value = "";
+            d.zip.value =
+                "";
         }
 
         if (d.number) {
-            d.number.value = "";
+            d.number.value =
+                "";
         }
 
         if (d.addressExtra) {
-            d.addressExtra.value = "";
+            d.addressExtra.value =
+                "";
         }
 
         if (d.change) {
-            d.change.value = "";
+            d.change.value =
+                "";
         }
 
         resetAddress();
@@ -4332,33 +7275,60 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function payment() {
         const value =
-            $("input[name='formaPagamentoMonteSeu']:checked")
-                ?.value || "";
+            $(
+                "input[name='formaPagamentoMonteSeu']:checked"
+            )?.value ||
+            "";
 
         return {
-            "Cartão de crédito": "cartao_credito",
-            "Cartão de débito": "cartao_debito",
-            "Pix": "pix",
-            "Dinheiro": "dinheiro"
+            "Cartão de crédito":
+                "cartao_credito",
+
+            "Cartão de débito":
+                "cartao_debito",
+
+            "Pix":
+                "pix",
+
+            "Dinheiro":
+                "dinheiro"
         }[value] || value;
     }
 
     function paymentLabel(value) {
         return {
-            cartao_credito: "Cartão de crédito",
-            cartao_debito: "Cartão de débito",
-            pix: "Pix",
-            dinheiro: "Dinheiro"
+            cartao_credito:
+                "Cartão de crédito",
+
+            cartao_debito:
+                "Cartão de débito",
+
+            pix:
+                "Pix",
+
+            dinheiro:
+                "Dinheiro"
         }[value] || value;
     }
 
     function addressValid() {
         return (
-            d.addressOk?.value === "true" &&
+            d.addressOk?.value ===
+                "true" &&
+
             d.districtId?.value &&
+
             d.name?.value.trim() &&
-            d.zip?.value.replace(/\D/g, "").length === 8 &&
+
+            d.zip?.value
+                .replace(
+                    /\D/g,
+                    ""
+                ).length ===
+                8 &&
+
             d.street?.value.trim() &&
+
             d.number?.value.trim()
         );
     }
@@ -4371,16 +7341,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (!state.cart.length) {
+        if (
+            !state.cart.length
+        ) {
             alert(
                 "Adicione pelo menos um açaí à sacola."
             );
 
             showStep(1);
+
             return;
         }
 
-        if (state.consultingZip) {
+        if (
+            state.consultingZip
+        ) {
             alert(
                 "Aguarde a validação do CEP."
             );
@@ -4388,7 +7363,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (!addressValid()) {
+        if (
+            !addressValid()
+        ) {
             showOrderWarning(
                 "Informe um endereço válido de um bairro atendido."
             );
@@ -4396,7 +7373,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        const pay = payment();
+        const pay =
+            payment();
 
         if (!pay) {
             alert(
@@ -4406,10 +7384,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        const { data: sessionData } =
-            await sb.auth.getSession();
+        const {
+            data:
+                sessionData
+        } =
+            await sb.auth
+                .getSession();
 
-        if (!sessionData.session) {
+        if (
+            !sessionData.session
+        ) {
             saveCart();
 
             sessionStorage.setItem(
@@ -4427,9 +7411,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        state.sending = true;
+        state.sending =
+            true;
 
-        d.send.disabled = true;
+        d.send.disabled =
+            true;
+
         d.send.textContent =
             "Registrando pedido...";
 
@@ -4442,71 +7429,105 @@ document.addEventListener("DOMContentLoaded", async () => {
         const payload = {
             cliente: {
                 nome:
-                    d.name.value.trim(),
+                    d.name.value
+                        .trim(),
 
                 telefone:
-                    d.phone?.value.trim() ||
+                    d.phone?.value
+                        .trim() ||
                     null
             },
 
             entrega: {
                 bairro_entrega_id:
-                    Number(d.districtId.value),
+                    Number(
+                        d.districtId
+                            .value
+                    ),
 
                 cep:
-                    d.zip.value.trim(),
+                    d.zip.value
+                        .trim(),
 
                 rua:
-                    d.street.value.trim(),
+                    d.street.value
+                        .trim(),
 
                 numero:
-                    d.number.value.trim(),
+                    d.number.value
+                        .trim(),
 
                 complemento:
-                    d.addressExtra?.value.trim() ||
+                    d.addressExtra
+                        ?.value
+                        .trim() ||
                     null
             },
 
             pagamento: {
-                forma: pay,
+                forma:
+                    pay,
 
                 troco_para:
-                    pay === "dinheiro" &&
+                    (
+                        pay ===
+                            "dinheiro" &&
                         d.change?.value
+                    )
                         ? Number(
-                            String(d.change.value)
-                                .replace(",", ".")
+                            String(
+                                d.change.value
+                            ).replace(
+                                ",",
+                                "."
+                            )
                         )
                         : null
             },
 
-            itens: state.cart.map(item => ({
-                tamanho_ml:
-                    Number(item.tamanho_ml),
+            itens:
+                state.cart.map(
+                    item => ({
+                        tamanho_ml:
+                            Number(
+                                item.tamanho_ml
+                            ),
 
-                quantidade:
-                    Number(item.quantidade),
+                        quantidade:
+                            Number(
+                                item.quantidade
+                            ),
 
-                complementos:
-                    (item.complementos || [])
-                        .map(complement => ({
-                            nome:
-                                complement.nome,
+                        complementos:
+                            (
+                                item.complementos ||
+                                []
+                            ).map(
+                                complement => ({
+                                    nome:
+                                        complement.nome,
 
-                            camada:
-                                complement.camada
-                        }))
-            })),
+                                    camada:
+                                        complement.camada
+                                })
+                            )
+                    })
+                ),
 
-            observacoes: null
+            observacoes:
+                null
         };
 
         try {
-            const { data, error } =
+            const {
+                data,
+                error
+            } =
                 await sb.rpc(
                     "criar_pedido_completo",
                     {
-                        p_dados: payload
+                        p_dados:
+                            payload
                     }
                 );
 
@@ -4515,68 +7536,87 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             const code =
-                data?.codigo || "";
+                data?.codigo ||
+                "";
 
-            const productValue = num(
-                data?.valor_produtos,
-                cartSubtotal()
-            );
-
-            const fee = num(
-                data?.taxa_entrega,
-                d.fee.value
-            );
-
-            const total = num(
-                data?.valor_total,
-                productValue + fee
-            );
-
-            const list = items =>
-                items.length
-                    ? items
-                        .map(item =>
-                            `• ${item.nome}`
-                        )
-                        .join("\n")
-                    : "• Nenhum complemento";
-
-            const itemsText = state.cart
-                .map((item, index) => {
-                    const middle =
-                        (item.complementos || [])
-                            .filter(complement =>
-                                complement.camada ===
-                                    "meio" ||
-                                complement.camada ===
-                                    "ambos"
-                            );
-
-                    const top =
-                        (item.complementos || [])
-                            .filter(complement =>
-                                complement.camada ===
-                                    "cobertura" ||
-                                complement.camada ===
-                                    "ambos"
-                            );
-
-                    return (
-                        `*${index + 1}. ${item.quantidade}× ${productDisplayName(item.tamanho_ml)}*\n` +
-
-                        `Subtotal do item: ${money(
-                            item.preco_unitario *
-                            item.quantidade
-                        )}\n\n` +
-
-                        `*Complementos no meio:*\n${list(middle)}\n\n` +
-
-                        `*Complementos na cobertura:*\n${list(top)}`
-                    );
-                })
-                .join(
-                    "\n\n————————————\n\n"
+            const productValue =
+                num(
+                    data?.valor_produtos,
+                    cartSubtotal()
                 );
+
+            const fee =
+                num(
+                    data?.taxa_entrega,
+                    d.fee.value
+                );
+
+            const total =
+                num(
+                    data?.valor_total,
+                    productValue +
+                    fee
+                );
+
+            const list =
+                items =>
+                    items.length
+                        ? items
+                            .map(
+                                item =>
+                                    `• ${item.nome}`
+                            )
+                            .join("\n")
+                        : "• Nenhum complemento";
+
+            const itemsText =
+                state.cart
+                    .map(
+                        (
+                            item,
+                            index
+                        ) => {
+                            const middle =
+                                (
+                                    item.complementos ||
+                                    []
+                                ).filter(
+                                    complement =>
+                                        complement.camada ===
+                                            "meio" ||
+                                        complement.camada ===
+                                            "ambos"
+                                );
+
+                            const top =
+                                (
+                                    item.complementos ||
+                                    []
+                                ).filter(
+                                    complement =>
+                                        complement.camada ===
+                                            "cobertura" ||
+                                        complement.camada ===
+                                            "ambos"
+                                );
+
+                            return (
+                                `*${index + 1}. ${item.quantidade}× ${productDisplayName(item.tamanho_ml)}*\n` +
+
+                                `Subtotal do item: ${money(
+                                    item.preco_unitario *
+                                    item.quantidade
+                                )}\n\n` +
+
+                                `*Complementos no meio:*\n${list(middle)}\n\n` +
+
+                                `*Complementos na cobertura:*\n${list(top)}`
+                            );
+                        }
+                    )
+                    .join(
+                        "\n\n————————————\n\n"
+                    );
 
             const text =
                 `Olá! Quero confirmar este pedido na AZURY:\n\n` +
@@ -4593,8 +7633,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 `CEP: ${d.zip.value.trim()}\n` +
 
-                `Complemento: ${d.addressExtra?.value.trim() ||
-                "Não informado"
+                `Complemento: ${
+                    d.addressExtra
+                        ?.value
+                        .trim() ||
+                    "Não informado"
                 }\n\n` +
 
                 `💳 *Forma de pagamento:*\n` +
@@ -4613,16 +7656,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 `💰 *Total: ${money(total)}*`;
 
-            const number = String(
-                state.config.whatsapp ||
-                "5511960220402"
-            ).replace(/\D/g, "");
+            const number =
+                String(
+                    state.config
+                        .whatsapp ||
+                    "5511960220402"
+                ).replace(
+                    /\D/g,
+                    ""
+                );
 
             const url =
                 `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 
             saveLastOrderSnapshot({
-                codigo: code,
+                codigo:
+                    code,
 
                 pedido_id:
                     data?.pedido_id ??
@@ -4632,7 +7681,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 criado_em:
                     data?.criado_em ??
                     data?.created_at ??
-                    new Date().toISOString(),
+                    new Date()
+                        .toISOString(),
 
                 valor_produtos:
                     productValue,
@@ -4643,54 +7693,81 @@ document.addEventListener("DOMContentLoaded", async () => {
                 valor_total:
                     total,
 
+                pontos_gerados:
+                    num(
+                        data?.pontos_gerados,
+                        0
+                    ),
+
                 cliente: {
                     ...payload.cliente
                 },
 
                 entrega: {
                     ...payload.entrega,
+
                     bairro:
-                        d.district.value.trim()
+                        d.district.value
+                            .trim()
                 },
 
                 pagamento: {
                     ...payload.pagamento,
+
                     forma_label:
-                        paymentLabel(pay)
+                        paymentLabel(
+                            pay
+                        )
                 },
 
-                itens: state.cart.map(item => ({
-                    tamanho_ml:
-                        Number(item.tamanho_ml),
+                itens:
+                    state.cart.map(
+                        item => ({
+                            tamanho_ml:
+                                Number(
+                                    item.tamanho_ml
+                                ),
 
-                    produto:
-                        productDisplayName(
-                            item.tamanho_ml
-                        ),
+                            produto:
+                                productDisplayName(
+                                    item.tamanho_ml
+                                ),
 
-                    quantidade:
-                        Number(item.quantidade),
+                            quantidade:
+                                Number(
+                                    item.quantidade
+                                ),
 
-                    preco_unitario:
-                        num(item.preco_unitario),
+                            preco_unitario:
+                                num(
+                                    item.preco_unitario
+                                ),
 
-                    complementos:
-                        (item.complementos || [])
-                            .map(complement => ({
-                                nome:
-                                    complement.nome,
+                            complementos:
+                                (
+                                    item.complementos ||
+                                    []
+                                ).map(
+                                    complement => ({
+                                        nome:
+                                            complement.nome,
 
-                                camada:
-                                    complement.camada
-                            }))
-                }))
+                                        camada:
+                                            complement.camada
+                                    })
+                                )
+                        })
+                    )
             });
 
             closeModal();
 
-            showOrderSuccess(code);
+            showOrderSuccess(
+                code
+            );
 
             clearCart();
+
             resetOrder();
 
             if (whatsappWindow) {
@@ -4704,7 +7781,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 );
             }
         } catch (error) {
-            whatsappWindow?.close();
+            whatsappWindow
+                ?.close();
 
             console.error(
                 "Erro ao registrar pedido:",
@@ -4716,39 +7794,50 @@ document.addEventListener("DOMContentLoaded", async () => {
                 "Não foi possível registrar o pedido."
             );
         } finally {
-            state.sending = false;
+            state.sending =
+                false;
+
             updateStore();
         }
     }
 
     function bind() {
-        $$(".btn-montar").forEach(button => {
-            button.addEventListener(
-                "click",
-                async () => {
-                    if (
-                        button.dataset.disponibilidade ===
-                        "em-breve" ||
-                        !requireOpen()
-                    ) {
-                        return;
-                    }
+        $$(".btn-montar")
+            .forEach(
+                button => {
+                    button.addEventListener(
+                        "click",
+                        async () => {
+                            if (
+                                button.dataset
+                                    .disponibilidade ===
+                                    "em-breve" ||
+                                !requireOpen()
+                            ) {
+                                return;
+                            }
 
-                    resetBuilder();
+                            resetBuilder();
 
-                    selectSize(
-                        button.dataset.tamanho,
-                        button.dataset.precoBase
+                            selectSize(
+                                button.dataset
+                                    .tamanho,
+
+                                button.dataset
+                                    .precoBase
+                            );
+
+                            await fillCustomer();
+
+                            renderCart();
+
+                            showStep(1);
+
+                            openModal();
+                        }
                     );
-
-                    await fillCustomer();
-
-                    renderCart();
-                    showStep(1);
-                    openModal();
                 }
             );
-        });
 
         d.add?.addEventListener(
             "click",
@@ -4763,26 +7852,47 @@ document.addEventListener("DOMContentLoaded", async () => {
         d.cartList?.addEventListener(
             "click",
             event => {
-                const button = event.target.closest(
-                    "button[data-cart-action]"
-                );
+                const button =
+                    event.target.closest(
+                        "button[data-cart-action]"
+                    );
 
                 if (!button) {
                     return;
                 }
 
                 const id =
-                    button.dataset.id || "";
+                    button.dataset
+                        .id ||
+                    "";
 
                 const action =
-                    button.dataset.cartAction;
+                    button.dataset
+                        .cartAction;
 
-                if (action === "increase") {
-                    changeCartItem(id, 1);
-                } else if (action === "decrease") {
-                    changeCartItem(id, -1);
-                } else if (action === "remove") {
-                    removeCartItem(id);
+                if (
+                    action ===
+                    "increase"
+                ) {
+                    changeCartItem(
+                        id,
+                        1
+                    );
+                } else if (
+                    action ===
+                    "decrease"
+                ) {
+                    changeCartItem(
+                        id,
+                        -1
+                    );
+                } else if (
+                    action ===
+                    "remove"
+                ) {
+                    removeCartItem(
+                        id
+                    );
                 }
             }
         );
@@ -4790,11 +7900,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         d.next?.addEventListener(
             "click",
             () => {
-                if (!requireOpen()) {
+                if (
+                    !requireOpen()
+                ) {
                     return;
                 }
 
-                if (!state.cart.length) {
+                if (
+                    !state.cart.length
+                ) {
                     alert(
                         "Adicione pelo menos um açaí à sacola."
                     );
@@ -4803,13 +7917,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
 
                 renderCart();
+
                 showStep(2);
             }
         );
 
         d.back?.addEventListener(
             "click",
-            () => showStep(1)
+            () =>
+                showStep(1)
         );
 
         d.close?.addEventListener(
@@ -4820,7 +7936,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         d.modal?.addEventListener(
             "click",
             event => {
-                if (event.target === d.modal) {
+                if (
+                    event.target ===
+                    d.modal
+                ) {
                     closeModal();
                 }
             }
@@ -4834,7 +7953,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.addEventListener(
             "keydown",
             event => {
-                if (event.key === "Escape") {
+                if (
+                    event.key ===
+                    "Escape"
+                ) {
                     closeModal();
                 }
             }
@@ -4850,300 +7972,213 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const hidden =
-            document.createElement("input");
+            document.createElement(
+                "input"
+            );
 
-        hidden.type = "hidden";
-        hidden.id = "bairroEntregaId";
-        hidden.value = "";
+        hidden.type =
+            "hidden";
+
+        hidden.id =
+            "bairroEntregaId";
+
+        hidden.value =
+            "";
 
         d.addressOk.insertAdjacentElement(
             "afterend",
             hidden
         );
 
-        d.districtId = hidden;
+        d.districtId =
+            hidden;
     }
 
-   function selectFirstAvailableSize() {
-    const firstAvailable =
-        state.sizes.find(item =>
-            item.disponivel === true &&
-            item.visivel === true
-        );
-
-    if (firstAvailable) {
-        selectSize(
-            firstAvailable.tamanho_ml,
-            firstAvailable.preco_base
-        );
-    }
-}
-
-
-/* =========================================
-   PEDIR NOVAMENTE
-   Abre o montador com:
-   - mesmo tamanho
-   - sacola vazia
-   - complementos zerados
-========================================= */
-
-async function openRepeatedOrderIfNeeded() {
-    let repeatedOrder = null;
-
-    try {
-        const stored =
-            sessionStorage.getItem(
-                "azuryPedidoRepetido"
+    function selectFirstAvailableSize() {
+        const firstAvailable =
+            state.sizes.find(
+                item =>
+                    item.disponivel ===
+                        true &&
+                    item.visivel ===
+                        true
             );
 
-        repeatedOrder =
-            stored
-                ? JSON.parse(stored)
-                : null;
+        if (firstAvailable) {
+            selectSize(
+                firstAvailable
+                    .tamanho_ml,
 
-    } catch (_) {
-        repeatedOrder =
+                firstAvailable
+                    .preco_base
+            );
+        }
+    }
+
+    async function openRepeatedOrderIfNeeded() {
+        let repeatedOrder =
             null;
-    }
 
+        try {
+            const stored =
+                sessionStorage.getItem(
+                    "azuryPedidoRepetido"
+                );
 
-    if (!repeatedOrder) {
-        return;
-    }
+            repeatedOrder =
+                stored
+                    ? JSON.parse(
+                        stored
+                    )
+                    : null;
+        } catch (_) {
+            repeatedOrder =
+                null;
+        }
 
+        if (!repeatedOrder) {
+            return;
+        }
 
-    const tamanho =
-        Number(
-            repeatedOrder.tamanho_ml
-        );
-
-
-    /*
-     * O marcador é usado somente uma vez.
-     */
-    try {
-        sessionStorage.removeItem(
-            "azuryPedidoRepetido"
-        );
-    } catch (_) {
-    }
-
-
-    /*
-     * Confirma que o tamanho do pedido antigo
-     * ainda existe e está disponível hoje.
-     */
-    const size =
-        state.sizes.find(item =>
+        const tamanho =
             Number(
-                item.tamanho_ml
-            ) === tamanho &&
-            item.disponivel === true &&
-            item.visivel === true
+                repeatedOrder
+                    .tamanho_ml
+            );
+
+        try {
+            sessionStorage.removeItem(
+                "azuryPedidoRepetido"
+            );
+        } catch (_) {
+        }
+
+        const size =
+            state.sizes.find(
+                item =>
+                    Number(
+                        item.tamanho_ml
+                    ) ===
+                        tamanho &&
+                    item.disponivel ===
+                        true &&
+                    item.visivel ===
+                        true
+            );
+
+        if (!size) {
+            alert(
+                "O tamanho deste pedido não está disponível no cardápio atual."
+            );
+
+            return;
+        }
+
+        state.cart =
+            [];
+
+        try {
+            sessionStorage.removeItem(
+                CART_KEY
+            );
+        } catch (_) {
+        }
+
+        renderCart();
+
+        resetBuilder();
+
+        selectSize(
+            size.tamanho_ml,
+            size.preco_base
         );
 
+        await fillCustomer();
 
-    if (!size) {
-        alert(
-            "O tamanho deste pedido não está disponível no cardápio atual."
-        );
+        renderCart();
 
-        return;
+        showStep(1);
+
+        openModal();
+
+        if (d.cartFeedback) {
+            const message =
+                "Tamanho do pedido anterior selecionado. Escolha seus complementos novamente.";
+
+            d.cartFeedback.textContent =
+                message;
+
+            window.setTimeout(
+                () => {
+                    if (
+                        d.cartFeedback &&
+                        d.cartFeedback
+                            .textContent ===
+                            message
+                    ) {
+                        d.cartFeedback
+                            .textContent =
+                            "";
+                    }
+                },
+                5000
+            );
+        }
     }
 
+    function initializeInterface() {
+        if (
+            state.interfaceReady
+        ) {
+            renderSizes();
 
-    /* =========================================
-       SACOLA
+            renderComplements();
 
-       Pedir novamente NÃO copia o pedido antigo.
+            updateWhatsapp();
 
-       A sacola começa completamente vazia.
-    ========================================= */
+            renderCart();
 
-    state.cart = [];
+            updateStore();
 
+            selectFirstAvailableSize();
 
-    try {
-        sessionStorage.removeItem(
-            CART_KEY
-        );
-    } catch (_) {
-    }
+            return;
+        }
 
+        state.interfaceReady =
+            true;
 
-    renderCart();
-
-
-    /* =========================================
-       COMPLEMENTOS
-
-       Nenhum complemento antigo é reutilizado.
-
-       Volta para:
-       0 de 2
-       0 de 3
-       0 de 4
-       etc.
-    ========================================= */
-
-    resetBuilder();
-
-
-    /* =========================================
-       TAMANHO
-
-       Mantém somente o tamanho usado
-       no pedido anterior.
-    ========================================= */
-
-    selectSize(
-        size.tamanho_ml,
-        size.preco_base
-    );
-
-
-    /*
-     * Preenche nome, telefone e demais
-     * informações do cliente logado.
-     */
-    await fillCustomer();
-
-
-    /*
-     * Garante que a interface reflita:
-     *
-     * Sacola: 0 itens
-     * Subtotal da montagem atual
-     * Complementos: 0
-     */
-    renderCart();
-
-
-    /*
-     * Abre sempre na primeira etapa.
-     */
-    showStep(1);
-
-
-    /*
-     * Abre o montador automaticamente.
-     */
-    openModal();
-
-
-    /*
-     * Pequena orientação para deixar claro
-     * que o cliente deve escolher novamente
-     * os complementos.
-     */
-    if (d.cartFeedback) {
-        const message =
-            "Tamanho do pedido anterior selecionado. Escolha seus complementos novamente.";
-
-        d.cartFeedback.textContent =
-            message;
-
-
-        window.setTimeout(() => {
-            if (
-                d.cartFeedback &&
-                d.cartFeedback.textContent ===
-                message
-            ) {
-                d.cartFeedback.textContent =
-                    "";
-            }
-        }, 5000);
-    }
-}
-
-
-/* =========================================
-   INICIALIZAÇÃO DA INTERFACE
-========================================= */
-
-function initializeInterface() {
-    if (state.interfaceReady) {
         renderSizes();
 
         renderComplements();
 
+        loadCart();
+
         updateWhatsapp();
 
-        renderCart();
+        setupZip();
 
-        updateStore();
+        bind();
 
         selectFirstAvailableSize();
 
-        return;
+        renderCart();
+
+        showStep(1);
+
+        updateStore();
+
+        void openRepeatedOrderIfNeeded();
+
+        window.setInterval(
+            updateStore,
+            30000
+        );
     }
 
-
-    state.interfaceReady =
-        true;
-
-
-    renderSizes();
-
-
-    renderComplements();
-
-
-    /*
-     * Carrega uma sacola normal caso
-     * o cliente já estivesse comprando.
-     *
-     * No fluxo "Pedir novamente",
-     * o pedidos.js já removeu a sacola antiga.
-     */
-    loadCart();
-
-
-    updateWhatsapp();
-
-
-    setupZip();
-
-
-    bind();
-
-
-    /*
-     * Seleção padrão enquanto verificamos
-     * se existe um pedido sendo repetido.
-     */
-    selectFirstAvailableSize();
-
-
-    renderCart();
-
-
-    showStep(1);
-
-
-    updateStore();
-
-
-    /*
-     * Se veio de "Pedir novamente",
-     * essa função substitui a seleção padrão
-     * pelo tamanho correto do pedido anterior.
-     *
-     * A sacola permanece vazia.
-     */
-    void openRepeatedOrderIfNeeded();
-
-
-    window.setInterval(
-        updateStore,
-        30000
-    );
-}
-
     function showOperationUnavailable() {
-        state.operationReady = false;
+        state.operationReady =
+            false;
 
         if (d.storeTitle) {
             d.storeTitle.textContent =
@@ -5163,33 +8198,45 @@ function initializeInterface() {
             "fechada"
         );
 
-        $$(".btn-montar").forEach(button => {
-            button.disabled = true;
-            button.textContent =
-                "Carregando cardápio...";
-        });
+        $$(".btn-montar")
+            .forEach(
+                button => {
+                    button.disabled =
+                        true;
+
+                    button.textContent =
+                        "Carregando cardápio...";
+                }
+            );
 
         if (d.add) {
-            d.add.disabled = true;
+            d.add.disabled =
+                true;
         }
 
         if (d.stickyAdd) {
-            d.stickyAdd.disabled = true;
+            d.stickyAdd.disabled =
+                true;
+
             d.stickyAdd.textContent =
                 "Carregando cardápio...";
         }
 
         if (d.next) {
-            d.next.disabled = true;
+            d.next.disabled =
+                true;
         }
 
         if (d.send) {
-            d.send.disabled = true;
+            d.send.disabled =
+                true;
         }
     }
 
     function stopOperationRecovery() {
-        if (!state.recoveryTimer) {
+        if (
+            !state.recoveryTimer
+        ) {
             return;
         }
 
@@ -5197,20 +8244,25 @@ function initializeInterface() {
             state.recoveryTimer
         );
 
-        state.recoveryTimer = null;
+        state.recoveryTimer =
+            null;
     }
 
     async function recoverOperation() {
-        if (state.refreshingOperation) {
+        if (
+            state.refreshingOperation
+        ) {
             return;
         }
 
-        state.refreshingOperation = true;
+        state.refreshingOperation =
+            true;
 
         try {
             await loadOperation();
 
             initializeInterface();
+
             stopOperationRecovery();
 
             console.info(
@@ -5222,12 +8274,15 @@ function initializeInterface() {
                 error
             );
         } finally {
-            state.refreshingOperation = false;
+            state.refreshingOperation =
+                false;
         }
     }
 
     function startOperationRecovery() {
-        if (state.recoveryTimer) {
+        if (
+            state.recoveryTimer
+        ) {
             return;
         }
 
@@ -5242,6 +8297,7 @@ function initializeInterface() {
 
     try {
         await loadOperation();
+
         initializeInterface();
     } catch (error) {
         console.error(
