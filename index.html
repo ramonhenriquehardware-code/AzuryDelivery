@@ -33,7 +33,7 @@
 
     <style>
         .install-app-section {
-            padding: 0 24px 72px;
+            padding: 0 24px 24px;
             background: #ffffff;
         }
 
@@ -188,9 +188,22 @@
         }
 
         .btn-install-app:disabled {
-            cursor: wait;
+            cursor: default;
             opacity: 0.72;
             transform: none;
+        }
+
+        .btn-install-app.is-info,
+        .btn-install-app.is-info:disabled {
+            cursor: default;
+            opacity: 1;
+            transform: none;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+        }
+
+        .btn-install-app.is-info:hover {
+            transform: none;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
         }
 
         .btn-install-app svg {
@@ -199,9 +212,13 @@
             flex: 0 0 auto;
         }
 
+        #Cardapio {
+            padding-top: 46px;
+        }
+
         @media (max-width: 760px) {
             .install-app-section {
-                padding: 0 20px 56px;
+                padding: 0 20px 24px;
             }
 
             .install-app-card {
@@ -243,6 +260,10 @@
             .btn-install-app {
                 width: 100%;
                 min-height: 54px;
+            }
+
+            #Cardapio {
+                padding-top: 38px;
             }
         }
 
@@ -537,22 +558,19 @@
     </section>
 
 
-
     <!-- INSTALAR APP AZURY -->
     <section id="instalarAzury" class="install-app-section" hidden aria-labelledby="tituloInstalarAzury">
 
         <div class="install-app-card">
 
             <div class="install-app-icon-wrap" aria-hidden="true">
-
                 <img src="../Imagens/azury-app-192.png" class="install-app-icon" alt="">
-
             </div>
 
             <div class="install-app-copy">
 
                 <span class="install-app-eyebrow">
-                    App Azury
+                    APP AZURY
                 </span>
 
                 <h2 id="tituloInstalarAzury">
@@ -560,11 +578,11 @@
                 </h2>
 
                 <p id="textoInstalarAzury">
-                    Abra a Azury como aplicativo e faça seus pedidos com acesso mais rápido, direto do seu celular ou computador.
+                    Instale o app e faça seus pedidos com mais rapidez, direto do seu celular ou computador.
                 </p>
 
                 <p id="ajudaInstalacaoIOS" class="install-app-ios-help" hidden>
-                    No iPhone ou iPad, abra esta página no Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”.
+                    No iPhone ou iPad, toque em Compartilhar e escolha “Adicionar à Tela de Início”.
                 </p>
 
             </div>
@@ -574,18 +592,11 @@
                 <button type="button" id="btnInstalarAzury" class="btn-install-app">
 
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-
-                        <path d="M12 3v11" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        </path>
-
+                        <path d="M12 3v11" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
                         <path d="m8 10 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
-                        </path>
-
+                            stroke-linejoin="round"></path>
                         <path d="M5 16v3h14v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
-                        </path>
-
+                            stroke-linejoin="round"></path>
                     </svg>
 
                     <span id="textoBtnInstalarAzury">
@@ -1623,6 +1634,12 @@
             const textoBotao =
                 document.getElementById("textoBtnInstalarAzury");
 
+            const tituloInstalar =
+                document.getElementById("tituloInstalarAzury");
+
+            const textoInstalar =
+                document.getElementById("textoInstalarAzury");
+
             const ajudaIOS =
                 document.getElementById("ajudaInstalacaoIOS");
 
@@ -1630,6 +1647,8 @@
                 !secaoInstalar ||
                 !botaoInstalar ||
                 !textoBotao ||
+                !tituloInstalar ||
+                !textoInstalar ||
                 !ajudaIOS
             ) {
                 return;
@@ -1663,19 +1682,94 @@
                 );
 
 
+            const firefox =
+                /firefox/i.test(
+                    userAgent
+                );
+
+
+            const dispositivoMovel =
+                /android|iphone|ipad|ipod|mobile/i.test(
+                    userAgent
+                );
+
+
+            const firefoxDesktop =
+                firefox &&
+                !dispositivoMovel;
+
+
+            const firefoxMobile =
+                firefox &&
+                dispositivoMovel;
+
+
             function mostrarCard() {
-
-                secaoInstalar.hidden =
-                    false;
-
+                secaoInstalar.hidden = false;
             }
 
 
             function ocultarCard() {
+                secaoInstalar.hidden = true;
+            }
 
-                secaoInstalar.hidden =
+
+            function transformarBotaoEmAviso(
+                texto
+            ) {
+
+                textoBotao.textContent =
+                    texto;
+
+                botaoInstalar.disabled =
                     true;
 
+                botaoInstalar.classList.add(
+                    "is-info"
+                );
+
+            }
+
+
+            if (firefoxDesktop) {
+
+                tituloInstalar.textContent =
+                    "Instale a Azury como aplicativo";
+
+                textoInstalar.textContent =
+                    "Para instalar a Azury no computador, abra este site pelo Google Chrome ou Microsoft Edge.";
+
+                ajudaIOS.hidden =
+                    true;
+
+                transformarBotaoEmAviso(
+                    "Use Chrome ou Edge"
+                );
+
+                mostrarCard();
+
+                return;
+            }
+
+
+            if (firefoxMobile && !dispositivoIOS) {
+
+                tituloInstalar.textContent =
+                    "Tenha a Azury na sua tela inicial";
+
+                textoInstalar.textContent =
+                    "No Firefox, use o menu do navegador e escolha a opção de instalar ou adicionar à tela inicial.";
+
+                ajudaIOS.hidden =
+                    true;
+
+                transformarBotaoEmAviso(
+                    "Instale pelo menu do Firefox"
+                );
+
+                mostrarCard();
+
+                return;
             }
 
 
@@ -1688,6 +1782,12 @@
                     eventoInstalacao =
                         event;
 
+                    tituloInstalar.textContent =
+                        "Tenha a Azury na sua tela inicial";
+
+                    textoInstalar.textContent =
+                        "Instale o app e faça seus pedidos com mais rapidez, direto do seu celular ou computador.";
+
                     textoBotao.textContent =
                         "Instalar Azury";
 
@@ -1696,6 +1796,10 @@
 
                     botaoInstalar.disabled =
                         false;
+
+                    botaoInstalar.classList.remove(
+                        "is-info"
+                    );
 
                     mostrarCard();
 
@@ -1745,7 +1849,6 @@
                             null;
 
                         return;
-
                     }
 
 
