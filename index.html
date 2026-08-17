@@ -4,9 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0051ff">
+    <meta name="application-name" content="Azury">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Azury">
+
     <title>Azury</title>
 
+    <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" type="image/png" href="../Imagens/favicon-azury.png">
+    <link rel="apple-touch-icon" href="../Imagens/azury-app-192.png">
 
     <meta name="description"
         content="Peça o melhor açaí da região. Delivery rápido, ingredientes selecionados e atendimento pelo WhatsApp.">
@@ -612,18 +621,18 @@
                     <a href="https://wa.me/5511960220402" target="_blank" rel="noopener noreferrer"
                         class="footer-telefone" aria-label="Falar com a Azury pelo WhatsApp">
 
-                        📲 (11) 96022-0402
+                        &#x1F4F2; (11) 96022-0402
 
                     </a>
 
                 </p>
 
                 <p>
-                    🕒 Terça a domingo, das 15:00 às 00:00
+                    &#x1F552; Terça a domingo, das 15:00 às 00:00
                 </p>
 
                 <p>
-                    📍 Delivery em bairros selecionados da região
+                    &#x1F4CD; Delivery em bairros selecionados da região
                 </p>
 
                 <p>
@@ -633,7 +642,7 @@
                 <div class="aviso-delivery-rodape">
 
                     <strong>
-                        🛵 EXCLUSIVO PARA DELIVERY
+                        &#x1F6F5; EXCLUSIVO PARA DELIVERY
                     </strong>
 
                     <span>
@@ -680,7 +689,7 @@
                     rel="noopener noreferrer" aria-label="Abrir o WhatsApp da Ksa Do Surf">
 
                     <span class="parceria-emoji" aria-hidden="true">
-                        🏄
+                        &#x1F3C4;
                     </span>
 
                     <strong>
@@ -693,7 +702,7 @@
                     rel="noopener noreferrer" aria-label="Abrir o site da PH Sabor & Cia">
 
                     <span class="parceria-emoji" aria-hidden="true">
-                        🍱
+                        &#x1F371;
                     </span>
 
                     <strong>
@@ -727,7 +736,7 @@
             <header class="cabecalho-pedido">
 
                 <h2>
-                    🥤 Monte o Seu Açaí
+                    &#x1F964; Monte o Seu Açaí
                 </h2>
 
                 <p>
@@ -922,7 +931,7 @@
                         <div>
 
                             <h3 id="tituloSacolaPedido">
-                                🛍️ Sua sacola
+                                &#x1F6CD;&#xFE0F; Sua sacola
                             </h3>
 
                             <small>
@@ -1200,7 +1209,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./js/supabase.js"></script>
     <script src="./js/sessao.js"></script>
-    <script src="./js/cardapio-supabase.js?v=20260817-1"></script>
+    <script src="./js/cardapio-supabase.js?v=20260817-2"></script>
+
     <script>
         (function () {
 
@@ -1291,6 +1301,47 @@
                         fecharMenu();
                     }
 
+                }
+            );
+
+        })();
+    </script>
+
+    <script>
+        (function () {
+
+            if (!("serviceWorker" in navigator)) {
+                return;
+            }
+
+            window.addEventListener(
+                "load",
+                function () {
+
+                    navigator.serviceWorker
+                        .register(
+                            "./sw.js",
+                            {
+                                scope: "./",
+                                updateViaCache: "none"
+                            }
+                        )
+                        .then(function (registration) {
+
+                            registration.update().catch(function () {
+                            });
+
+                            console.info(
+                                "Azury PWA: service worker registrado."
+                            );
+                        })
+                        .catch(function (error) {
+
+                            console.warn(
+                                "Azury PWA: não foi possível registrar o service worker.",
+                                error
+                            );
+                        });
                 }
             );
 
