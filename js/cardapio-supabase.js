@@ -7618,14 +7618,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                         "\n\n————————————\n\n"
                     );
 
-            const text =
+                        const text =
                 `Olá! Quero confirmar este pedido na AZURY:\n\n` +
 
-                `🧾 *Pedido:* ${code}\n` +
+                `\u{1F9FE} *Pedido:* ${code}\n` +
 
-                `👤 *Cliente:* ${d.name.value.trim()}\n\n` +
+                `\u{1F464} *Cliente:* ${d.name.value.trim()}\n\n` +
 
-                `📍 *Endereço de entrega:*\n` +
+                `\u{1F4CD} *Endereço de entrega:*\n` +
 
                 `${d.street.value.trim()}, nº ${d.number.value.trim()}\n` +
 
@@ -7640,22 +7640,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                     "Não informado"
                 }\n\n` +
 
-                `💳 *Forma de pagamento:*\n` +
+                `\u{1F4B3} *Forma de pagamento:*\n` +
 
                 `${paymentLabel(pay)}\n\n` +
 
-                `🥤 *Itens da sacola:*\n\n` +
+                `\u{1F964} *Itens da sacola:*\n\n` +
 
                 `${itemsText}\n\n` +
 
-                `🧾 *Resumo:*\n` +
+                `\u{1F9FE} *Resumo:*\n` +
 
                 `Produtos: ${money(productValue)}\n` +
 
                 `Entrega: ${money(fee)}\n` +
 
-                `💰 *Total: ${money(total)}*`;
-
+                `\u{1F4B0} *Total: ${money(total)}*`;
             const number =
                 String(
                     state.config
