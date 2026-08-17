@@ -30,6 +30,245 @@
     <link rel="stylesheet" href="../css/cta.css">
     <link rel="stylesheet" href="../css/footer.css?v=2">
     <link rel="stylesheet" href="../styles.css">
+
+    <style>
+        .install-app-section {
+            padding: 0 24px 72px;
+            background: #ffffff;
+        }
+
+        .install-app-section[hidden] {
+            display: none !important;
+        }
+
+        .install-app-card {
+            position: relative;
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 30px 34px;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 26px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 30px;
+            background:
+                radial-gradient(circle at 88% 20%, rgba(255, 255, 255, 0.22), transparent 24%),
+                linear-gradient(135deg, #001b67 0%, #0051ff 58%, #1676ff 100%);
+            box-shadow: 0 24px 55px rgba(0, 81, 255, 0.20);
+            color: #ffffff;
+        }
+
+        .install-app-card::before,
+        .install-app-card::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .install-app-card::before {
+            width: 210px;
+            height: 210px;
+            top: -125px;
+            right: 18%;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+        }
+
+        .install-app-card::after {
+            width: 150px;
+            height: 150px;
+            right: -75px;
+            bottom: -82px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .install-app-icon-wrap,
+        .install-app-copy,
+        .install-app-action {
+            position: relative;
+            z-index: 1;
+        }
+
+        .install-app-icon-wrap {
+            width: 96px;
+            height: 96px;
+            padding: 5px;
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.16);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.20);
+        }
+
+        .install-app-icon {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 22px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+        }
+
+        .install-app-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 7px;
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.10);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+        }
+
+        .install-app-copy h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: clamp(1.45rem, 2.3vw, 2.05rem);
+            line-height: 1.08;
+        }
+
+        .install-app-copy p {
+            max-width: 650px;
+            margin: 9px 0 0;
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 0.98rem;
+            line-height: 1.55;
+        }
+
+        .install-app-ios-help {
+            margin-top: 12px !important;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.14);
+        }
+
+        .install-app-action {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-install-app {
+            min-width: 205px;
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 13px 20px;
+            border: 0;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #0051ff;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease,
+                opacity 0.18s ease;
+        }
+
+        .btn-install-app:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.20);
+        }
+
+        .btn-install-app:active {
+            transform: translateY(0);
+        }
+
+        .btn-install-app:focus-visible {
+            outline: 3px solid rgba(255, 255, 255, 0.80);
+            outline-offset: 4px;
+        }
+
+        .btn-install-app:disabled {
+            cursor: wait;
+            opacity: 0.72;
+            transform: none;
+        }
+
+        .btn-install-app svg {
+            width: 21px;
+            height: 21px;
+            flex: 0 0 auto;
+        }
+
+        @media (max-width: 760px) {
+            .install-app-section {
+                padding: 0 20px 56px;
+            }
+
+            .install-app-card {
+                grid-template-columns: 74px minmax(0, 1fr);
+                gap: 17px;
+                padding: 23px 20px;
+                border-radius: 24px;
+            }
+
+            .install-app-icon-wrap {
+                width: 74px;
+                height: 74px;
+                border-radius: 21px;
+            }
+
+            .install-app-icon {
+                border-radius: 18px;
+            }
+
+            .install-app-eyebrow {
+                margin-bottom: 6px;
+                padding: 5px 8px;
+                font-size: 0.64rem;
+            }
+
+            .install-app-copy h2 {
+                font-size: 1.35rem;
+            }
+
+            .install-app-copy p {
+                font-size: 0.90rem;
+            }
+
+            .install-app-action {
+                grid-column: 1 / -1;
+                width: 100%;
+            }
+
+            .btn-install-app {
+                width: 100%;
+                min-height: 54px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .install-app-section {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .install-app-card {
+                grid-template-columns: 64px minmax(0, 1fr);
+                padding: 20px 16px;
+            }
+
+            .install-app-icon-wrap {
+                width: 64px;
+                height: 64px;
+                border-radius: 18px;
+            }
+
+            .install-app-icon {
+                border-radius: 15px;
+            }
+        }
+    </style>
+
 </head>
 
 <body>
@@ -294,6 +533,70 @@
             </div>
 
         </article>
+
+    </section>
+
+
+
+    <!-- INSTALAR APP AZURY -->
+    <section id="instalarAzury" class="install-app-section" hidden aria-labelledby="tituloInstalarAzury">
+
+        <div class="install-app-card">
+
+            <div class="install-app-icon-wrap" aria-hidden="true">
+
+                <img src="../Imagens/azury-app-192.png" class="install-app-icon" alt="">
+
+            </div>
+
+            <div class="install-app-copy">
+
+                <span class="install-app-eyebrow">
+                    App Azury
+                </span>
+
+                <h2 id="tituloInstalarAzury">
+                    Tenha a Azury na sua tela inicial
+                </h2>
+
+                <p id="textoInstalarAzury">
+                    Abra a Azury como aplicativo e faça seus pedidos com acesso mais rápido, direto do seu celular ou computador.
+                </p>
+
+                <p id="ajudaInstalacaoIOS" class="install-app-ios-help" hidden>
+                    No iPhone ou iPad, abra esta página no Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”.
+                </p>
+
+            </div>
+
+            <div class="install-app-action">
+
+                <button type="button" id="btnInstalarAzury" class="btn-install-app">
+
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+                        <path d="M12 3v11" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        </path>
+
+                        <path d="m8 10 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                        </path>
+
+                        <path d="M5 16v3h14v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                        </path>
+
+                    </svg>
+
+                    <span id="textoBtnInstalarAzury">
+                        Instalar Azury
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
 
     </section>
 
@@ -1303,6 +1606,184 @@
 
                 }
             );
+
+        })();
+    </script>
+
+
+    <script>
+        (function () {
+
+            const secaoInstalar =
+                document.getElementById("instalarAzury");
+
+            const botaoInstalar =
+                document.getElementById("btnInstalarAzury");
+
+            const textoBotao =
+                document.getElementById("textoBtnInstalarAzury");
+
+            const ajudaIOS =
+                document.getElementById("ajudaInstalacaoIOS");
+
+            if (
+                !secaoInstalar ||
+                !botaoInstalar ||
+                !textoBotao ||
+                !ajudaIOS
+            ) {
+                return;
+            }
+
+
+            const emModoApp =
+                window.matchMedia(
+                    "(display-mode: standalone)"
+                ).matches ||
+                window.navigator.standalone === true;
+
+
+            if (emModoApp) {
+                return;
+            }
+
+
+            let eventoInstalacao =
+                null;
+
+
+            const userAgent =
+                window.navigator.userAgent ||
+                "";
+
+
+            const dispositivoIOS =
+                /iphone|ipad|ipod/i.test(
+                    userAgent
+                );
+
+
+            function mostrarCard() {
+
+                secaoInstalar.hidden =
+                    false;
+
+            }
+
+
+            function ocultarCard() {
+
+                secaoInstalar.hidden =
+                    true;
+
+            }
+
+
+            window.addEventListener(
+                "beforeinstallprompt",
+                function (event) {
+
+                    event.preventDefault();
+
+                    eventoInstalacao =
+                        event;
+
+                    textoBotao.textContent =
+                        "Instalar Azury";
+
+                    ajudaIOS.hidden =
+                        true;
+
+                    botaoInstalar.disabled =
+                        false;
+
+                    mostrarCard();
+
+                }
+            );
+
+
+            botaoInstalar.addEventListener(
+                "click",
+                async function () {
+
+                    if (eventoInstalacao) {
+
+                        botaoInstalar.disabled =
+                            true;
+
+                        eventoInstalacao.prompt();
+
+                        try {
+
+                            const escolha =
+                                await eventoInstalacao.userChoice;
+
+                            if (
+                                escolha.outcome ===
+                                "accepted"
+                            ) {
+                                ocultarCard();
+                            } else {
+                                botaoInstalar.disabled =
+                                    false;
+                            }
+
+                        } catch (error) {
+
+                            botaoInstalar.disabled =
+                                false;
+
+                            console.warn(
+                                "Azury PWA: não foi possível abrir a instalação.",
+                                error
+                            );
+
+                        }
+
+                        eventoInstalacao =
+                            null;
+
+                        return;
+
+                    }
+
+
+                    if (dispositivoIOS) {
+
+                        ajudaIOS.hidden =
+                            false;
+
+                        textoBotao.textContent =
+                            "Veja as instruções";
+
+                    }
+
+                }
+            );
+
+
+            window.addEventListener(
+                "appinstalled",
+                function () {
+
+                    eventoInstalacao =
+                        null;
+
+                    ocultarCard();
+
+                }
+            );
+
+
+            if (dispositivoIOS) {
+
+                textoBotao.textContent =
+                    "Como instalar no iPhone";
+
+                mostrarCard();
+
+            }
 
         })();
     </script>
