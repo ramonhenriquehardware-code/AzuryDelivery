@@ -1,854 +1,586 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    "use strict";
-    let sb = window.azurySupabase;
-    const $ = selector => document.querySelector(selector);
-    const $$ = selector => Array.from(document.querySelectorAll(selector));
-    const d = {
-        modal: $("#modalMonteSeu"),
-        content: $("#modalMonteSeu .conteudo-monte-seu"),
-        close: $("#btnFecharMonteSeu"),
-        step1: $("#painelPedido"),
-        step2: $("#painelEntrega"),
-        indicators: $$(".etapa-indicador"),
-        add: $("#btnAdicionarSacola"),
-        next: $("#btnContinuarPedido"),
-        back: $("#btnVoltarPedido"),
-        send: $("#btnEnviarMonteSeu"),
-        cartList: $("#listaSacolaPedido"),
-        cartEmpty: $("#sacolaVazia"),
-        cartCount: $("#quantidadeSacola"),
-        cartSubtotal: $("#subtotalSacolaPedido"),
-        cartFeedback: $("#sacolaFeedback"),
-        cartReview: $("#listaResumoSacola"),
-        store: $("#statusLoja"),
-        storeTitle: $("#statusLojaTitulo"),
-        storeMsg: $("#statusLojaMensagem"),
-        size: $("#tamanhoMonteSeu"),
-        base: $("#precoBaseMonteSeu"),
-        middle: $("#complementosMeio"),
-        top: $("#complementosTopo"),
-        subtotal: $("#subtotalMonteSeu"),
-        subtotal2: $("#resumoSubtotalPedido"),
-        feeText: $("#resumoTaxaEntrega"),
-        total: $("#totalMonteSeu"),
-        stickyBar: null,
-        stickyProduct: null,
-        stickySubtotal: null,
-        stickyCart: null,
-        stickyAdd: null,
-        name: $("#nomeCliente"),
-        phone: $("#telefoneCliente"),
-        zip: $("#cepCliente"),
-        street: $("#ruaCliente"),
-        number: $("#numeroCliente"),
-        district: $("#bairroCliente"),
-        addressExtra: $("#complementoCliente"),
-        addressStatus: $("#statusEndereco"),
-        addressOk: $("#enderecoValidado"),
-        fee: $("#taxaEntrega"),
-        districtId: $("#bairroEntregaId"),
-        change: $("#trocoParaCliente")
-    };
+  "use strict";
+  let sb = window.azurySupabase;
+  const $ = (selector) => document.querySelector(selector);
+  const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+  const d = {
+    modal: $("#modalMonteSeu"),
+    content: $("#modalMonteSeu .conteudo-monte-seu"),
+    close: $("#btnFecharMonteSeu"),
+    step1: $("#painelPedido"),
+    step2: $("#painelEntrega"),
+    indicators: $$(".etapa-indicador"),
+    add: $("#btnAdicionarSacola"),
+    next: $("#btnContinuarPedido"),
+    back: $("#btnVoltarPedido"),
+    send: $("#btnEnviarMonteSeu"),
+    cartList: $("#listaSacolaPedido"),
+    cartEmpty: $("#sacolaVazia"),
+    cartCount: $("#quantidadeSacola"),
+    cartSubtotal: $("#subtotalSacolaPedido"),
+    cartFeedback: $("#sacolaFeedback"),
+    cartReview: $("#listaResumoSacola"),
+    store: $("#statusLoja"),
+    storeTitle: $("#statusLojaTitulo"),
+    storeMsg: $("#statusLojaMensagem"),
+    size: $("#tamanhoMonteSeu"),
+    base: $("#precoBaseMonteSeu"),
+    middle: $("#complementosMeio"),
+    top: $("#complementosTopo"),
+    subtotal: $("#subtotalMonteSeu"),
+    subtotal2: $("#resumoSubtotalPedido"),
+    feeText: $("#resumoTaxaEntrega"),
+    total: $("#totalMonteSeu"),
+    stickyBar: null,
+    stickyProduct: null,
+    stickySubtotal: null,
+    stickyCart: null,
+    stickyAdd: null,
+    name: $("#nomeCliente"),
+    phone: $("#telefoneCliente"),
+    zip: $("#cepCliente"),
+    street: $("#ruaCliente"),
+    number: $("#numeroCliente"),
+    district: $("#bairroCliente"),
+    addressExtra: $("#complementoCliente"),
+    addressStatus: $("#statusEndereco"),
+    addressOk: $("#enderecoValidado"),
+    fee: $("#taxaEntrega"),
+    districtId: $("#bairroEntregaId"),
+    change: $("#trocoParaCliente"),
+  };
 
-    const state = {
-        config: null,
-        schedules: [],
-        sizes: [],
-        complements: [],
-        districts: [],
-        districtMap: new Map(),
-        aliases: [],
-        cart: [],
-        subtotal: 0,
-        sending: false,
-        consultingZip: false,
-        zipRequest: 0,
-        operationReady: false,
-        interfaceReady: false,
-        refreshingOperation: false,
-        recoveryTimer: null,
-        operationSource: null
-    };
+  const state = {
+    config: null,
+    schedules: [],
+    sizes: [],
+    complements: [],
+    districts: [],
+    districtMap: new Map(),
+    aliases: [],
+    cart: [],
+    subtotal: 0,
+    sending: false,
+    consultingZip: false,
+    zipRequest: 0,
+    operationReady: false,
+    interfaceReady: false,
+    refreshingOperation: false,
+    recoveryTimer: null,
+    operationSource: null,
+  };
 
-    const CART_KEY = "azurySacola";
-    const LAST_ORDER_KEY = "azuryUltimoPedido";
-    const MAX_CART_UNITS = 20;
-    const OPERATION_CACHE_KEY = "azuryOperacaoPublica";
-    const OPERATION_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
-    const OPERATION_RETRY_DELAYS = [0, 1500, 3500];
-    const OPERATION_RECOVERY_INTERVAL = 30000;
+  const CART_KEY = "azurySacola";
+  const LAST_ORDER_KEY = "azuryUltimoPedido";
+  const MAX_CART_UNITS = 20;
+  const OPERATION_CACHE_KEY = "azuryOperacaoPublica";
+  const OPERATION_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+  const OPERATION_RETRY_DELAYS = [0, 1500, 3500];
+  const OPERATION_RECOVERY_INTERVAL = 30000;
 
-    const FREE_COMPLEMENT_LIMITS = new Map([
-        [300, 2],
-        [400, 3],
-        [500, 3],
-        [700, 4],
-        ["azury-box-p", 4],
-        ["azury-box-m", 5],
-        ["azury-box-g", 6]
-    ]);
+  const FREE_COMPLEMENT_LIMITS = new Map([
+    [300, 2],
+    [400, 3],
+    [500, 3],
+    [700, 4],
+    ["azury-box-p", 4],
+    ["azury-box-m", 5],
+    ["azury-box-g", 6],
+  ]);
 
-    const CUP_PRODUCT_NAMES = new Map([
-        [300, "Azury Mini"],
-        [400, "Azury Clássico"],
-        [500, "Azury Max"],
-        [700, "Azury Extra"]
-    ]);
+  const CUP_PRODUCT_NAMES = new Map([
+    [300, "Azury Mini"],
+    [400, "Azury Clássico"],
+    [500, "Azury Max"],
+    [700, "Azury Extra"],
+  ]);
 
-    const ALWAYS_PAID_COMPLEMENT_TERMS = [
-        "nutella",
-        "oreo",
-        "morango",
-        "uva",
-        "confete",
-        "power ball"
-    ];
+  const ALWAYS_PAID_COMPLEMENT_TERMS = [
+    "nutella",
+    "oreo",
+    "morango",
+    "uva",
+    "confete",
+    "power ball",
+  ];
 
-    let complementSelectionCounter = 0;
+  let complementSelectionCounter = 0;
 
-    const wait = milliseconds =>
-        new Promise(resolve =>
-            window.setTimeout(resolve, milliseconds)
-        );
+  const wait = (milliseconds) =>
+    new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 
-    const money = value =>
-        Number(value || 0).toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
+  const money = (value) =>
+    Number(value || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+
+  const esc = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  const norm = (value) =>
+    String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const num = (value, fallback = 0) =>
+    Number.isFinite(Number(value)) ? Number(value) : fallback;
+
+  function freeComplementLimit(product) {
+    if (product && typeof product === "object") {
+      const explicitLimit = Number(
+        product.complementos_gratis ??
+          product.limite_complementos_gratis ??
+          product.limite_gratis,
+      );
+
+      if (Number.isFinite(explicitLimit) && explicitLimit >= 0) {
+        return Math.floor(explicitLimit);
+      }
+
+      const candidates = [
+        product.produto_chave,
+        product.chave,
+        product.slug,
+        product.codigo,
+        product.nome,
+        product.tamanho,
+        product.tamanho_ml,
+      ];
+
+      for (const candidate of candidates) {
+        const resolved = freeComplementLimit(candidate);
+
+        if (resolved > 0) {
+          return resolved;
+        }
+      }
+
+      return 0;
+    }
+
+    const numeric = Number(product);
+
+    if (Number.isFinite(numeric) && FREE_COMPLEMENT_LIMITS.has(numeric)) {
+      return FREE_COMPLEMENT_LIMITS.get(numeric) || 0;
+    }
+
+    const normalized = norm(product);
+
+    const futureKey =
+      normalized === "azury box p" ||
+      normalized === "box p" ||
+      normalized === "azury-box-p"
+        ? "azury-box-p"
+        : normalized === "azury box m" ||
+            normalized === "box m" ||
+            normalized === "azury-box-m"
+          ? "azury-box-m"
+          : normalized === "azury box g" ||
+              normalized === "box g" ||
+              normalized === "azury-box-g"
+            ? "azury-box-g"
+            : "";
+
+    return futureKey ? FREE_COMPLEMENT_LIMITS.get(futureKey) || 0 : 0;
+  }
+
+  function productDisplayName(product) {
+    const size = Number(
+      product && typeof product === "object" ? product.tamanho_ml : product,
+    );
+
+    const cupName = CUP_PRODUCT_NAMES.get(size);
+
+    if (cupName) {
+      return `${cupName} • ${size}ml`;
+    }
+
+    if (product && typeof product === "object") {
+      const rawName = String(product.nome || "").trim();
+
+      if (rawName) {
+        return rawName;
+      }
+    }
+
+    return Number.isFinite(size) && size > 0 ? `Açaí • ${size}ml` : "Açaí";
+  }
+
+  const isAlwaysPaidComplement = (name) => {
+    const normalizedName = norm(name);
+
+    return ALWAYS_PAID_COMPLEMENT_TERMS.some((term) =>
+      normalizedName.includes(term),
+    );
+  };
+
+  function priceComplements(complements, size) {
+    const limit = freeComplementLimit(size);
+
+    const rows = (complements || []).map((complement, index) => ({
+      ...complement,
+
+      nome: String(complement?.nome ?? complement?.value ?? ""),
+
+      preco: num(complement?.preco ?? complement?.dataset?.preco, 0),
+
+      ordem_selecao: Math.max(
+        1,
+        Math.floor(
+          num(
+            complement?.ordem_selecao ?? complement?.dataset?.ordemSelecao,
+            index + 1,
+          ),
+        ),
+      ),
+
+      _index: index,
+    }));
+
+    const groups = new Map();
+
+    rows.forEach((row) => {
+      const key = norm(row.nome);
+
+      if (!key) {
+        return;
+      }
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          nome: row.nome,
+          ordem_selecao: row.ordem_selecao,
+          primeiro_indice: row._index,
         });
 
-    const esc = value =>
-        String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        return;
+      }
 
-    const norm = value =>
-        String(value || "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
+      const group = groups.get(key);
 
-    const num = (value, fallback = 0) =>
-        Number.isFinite(Number(value))
-            ? Number(value)
-            : fallback;
+      group.ordem_selecao = Math.min(group.ordem_selecao, row.ordem_selecao);
 
-    function freeComplementLimit(product) {
-        if (
-            product &&
-            typeof product === "object"
-        ) {
-            const explicitLimit = Number(
-                product.complementos_gratis ??
-                product.limite_complementos_gratis ??
-                product.limite_gratis
-            );
+      group.primeiro_indice = Math.min(group.primeiro_indice, row._index);
+    });
 
-            if (
-                Number.isFinite(explicitLimit) &&
-                explicitLimit >= 0
-            ) {
-                return Math.floor(explicitLimit);
-            }
+    const uniqueComplements = Array.from(groups.values()).sort(
+      (a, b) =>
+        a.ordem_selecao - b.ordem_selecao ||
+        a.primeiro_indice - b.primeiro_indice,
+    );
 
-            const candidates = [
-                product.produto_chave,
-                product.chave,
-                product.slug,
-                product.codigo,
-                product.nome,
-                product.tamanho,
-                product.tamanho_ml
-            ];
+    const eligible = uniqueComplements.filter(
+      (complement) => !isAlwaysPaidComplement(complement.nome),
+    );
 
-            for (const candidate of candidates) {
-                const resolved =
-                    freeComplementLimit(candidate);
+    const freeKeys = new Set(
+      eligible.slice(0, limit).map((complement) => complement.key),
+    );
 
-                if (resolved > 0) {
-                    return resolved;
-                }
-            }
+    return rows.map((row) => {
+      const key = norm(row.nome);
 
-            return 0;
-        }
+      const group = groups.get(key);
 
-        const numeric =
-            Number(product);
+      const alwaysPaid = isAlwaysPaidComplement(row.nome);
 
-        if (
-            Number.isFinite(numeric) &&
-            FREE_COMPLEMENT_LIMITS.has(numeric)
-        ) {
-            return (
-                FREE_COMPLEMENT_LIMITS.get(numeric) ||
-                0
-            );
-        }
+      const free = !alwaysPaid && freeKeys.has(key);
 
-        const normalized =
-            norm(product);
+      const firstOccurrence = !group || row._index === group.primeiro_indice;
 
-        const futureKey =
-            normalized === "azury box p" ||
-            normalized === "box p" ||
-            normalized === "azury-box-p"
-                ? "azury-box-p"
-                : normalized === "azury box m" ||
-                    normalized === "box m" ||
-                    normalized === "azury-box-m"
-                    ? "azury-box-m"
-                    : normalized === "azury box g" ||
-                        normalized === "box g" ||
-                        normalized === "azury-box-g"
-                        ? "azury-box-g"
-                        : "";
+      const { _index, ...clean } = row;
 
-        return futureKey
-            ? (
-                FREE_COMPLEMENT_LIMITS.get(
-                    futureKey
-                ) || 0
-            )
-            : 0;
+      return {
+        ...clean,
+
+        especial_pago: alwaysPaid,
+
+        gratuito: free,
+
+        preco_cobrado: free || !firstOccurrence ? 0 : row.preco,
+      };
+    });
+  }
+
+  function itemUnitPrice(size, base, complements) {
+    return (
+      num(base, 0) +
+      priceComplements(complements, size).reduce(
+        (total, complement) => total + num(complement.preco_cobrado),
+        0,
+      )
+    );
+  }
+
+  const timeMinutes = (value) => {
+    const parts = String(value || "").split(":");
+
+    if (parts.length < 2) {
+      return null;
     }
 
-    function productDisplayName(product) {
-        const size =
-            Number(
-                product &&
-                typeof product === "object"
-                    ? product.tamanho_ml
-                    : product
-            );
+    const hours = Number(parts[0]);
 
-        const cupName =
-            CUP_PRODUCT_NAMES.get(size);
+    const minutes = Number(parts[1]);
 
-        if (cupName) {
-            return `${cupName} • ${size}ml`;
-        }
+    return Number.isFinite(hours) && Number.isFinite(minutes)
+      ? hours * 60 + minutes
+      : null;
+  };
 
-        if (
-            product &&
-            typeof product === "object"
-        ) {
-            const rawName =
-                String(product.nome || "").trim();
+  const timeLabel = (value) => {
+    const minutes = timeMinutes(value);
 
-            if (rawName) {
-                return rawName;
-            }
-        }
-
-        return Number.isFinite(size) && size > 0
-            ? `Açaí • ${size}ml`
-            : "Açaí";
+    if (minutes === null) {
+      return "";
     }
 
-    const isAlwaysPaidComplement = name => {
-        const normalizedName = norm(name);
+    const hours = Math.floor(minutes / 60);
 
-        return ALWAYS_PAID_COMPLEMENT_TERMS.some(term =>
-            normalizedName.includes(term)
+    const remainingMinutes = minutes % 60;
+
+    return (
+      `${String(hours).padStart(2, "0")}:` +
+      `${String(remainingMinutes).padStart(2, "0")}`
+    );
+  };
+
+  const newId = () =>
+    window.crypto?.randomUUID?.() ||
+    `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  const cartUnits = () =>
+    state.cart.reduce(
+      (total, item) => total + Math.max(1, Number(item.quantidade) || 1),
+      0,
+    );
+
+  const cartSubtotal = () =>
+    state.cart.reduce(
+      (total, item) =>
+        total +
+        num(item.preco_unitario) * Math.max(1, Number(item.quantidade) || 1),
+      0,
+    );
+
+  const itemSignature = (item) => {
+    const complements = (item.complementos || [])
+      .map((complement) => `${complement.camada}:${norm(complement.nome)}`)
+      .sort()
+      .join("|");
+
+    return `${Number(item.tamanho_ml)}::${complements}`;
+  };
+
+  function saveCart() {
+    try {
+      sessionStorage.setItem(CART_KEY, JSON.stringify(state.cart));
+    } catch (error) {
+      console.warn("Não foi possível salvar a sacola nesta sessão.", error);
+    }
+  }
+
+  function saveLastOrderSnapshot(order) {
+    try {
+      sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+    } catch (error) {
+      console.warn(
+        "Não foi possível salvar os dados do último pedido nesta sessão.",
+        error,
+      );
+    }
+  }
+
+  function normalizeCartItem(raw) {
+    const size = state.sizes.find(
+      (item) =>
+        Number(item.tamanho_ml) === Number(raw?.tamanho_ml) &&
+        item.disponivel === true &&
+        item.visivel === true,
+    );
+
+    if (!size) {
+      return null;
+    }
+
+    const complementMap = new Map();
+
+    if (Array.isArray(raw?.complementos)) {
+      raw.complementos.forEach((complement, index) => {
+        const current = state.complements.find(
+          (item) => norm(item.nome) === norm(complement?.nome),
         );
+
+        if (!current) {
+          return;
+        }
+
+        const rawLayer = String(complement?.camada || "").toLowerCase();
+
+        const layer =
+          rawLayer === "cobertura"
+            ? "cobertura"
+            : rawLayer === "ambos" || rawLayer === "unica"
+              ? "ambos"
+              : "meio";
+
+        const key = norm(current.nome);
+
+        const selectionOrder = Math.max(
+          1,
+          Math.floor(num(complement?.ordem_selecao, index + 1)),
+        );
+
+        if (!complementMap.has(key)) {
+          complementMap.set(key, {
+            id: current.id || null,
+
+            nome: current.nome,
+
+            camada: layer,
+
+            preco: num(current.preco),
+
+            ordem_selecao: selectionOrder,
+          });
+
+          return;
+        }
+
+        const existing = complementMap.get(key);
+
+        if (existing.camada !== layer) {
+          existing.camada = "ambos";
+        }
+
+        existing.ordem_selecao = Math.min(
+          existing.ordem_selecao,
+          selectionOrder,
+        );
+      });
+    }
+
+    const complements = Array.from(complementMap.values());
+
+    const unitPrice = itemUnitPrice(
+      size.tamanho_ml,
+      size.preco_base,
+      complements,
+    );
+
+    return {
+      id: String(raw?.id || newId()),
+
+      tamanho_ml: Number(size.tamanho_ml),
+
+      quantidade: Math.max(
+        1,
+        Math.min(MAX_CART_UNITS, Math.floor(num(raw?.quantidade, 1))),
+      ),
+
+      preco_unitario: unitPrice,
+
+      complementos: complements,
     };
+  }
 
-    function priceComplements(complements, size) {
-        const limit =
-            freeComplementLimit(size);
+  function loadCart() {
+    let stored = [];
 
-        const rows = (complements || []).map(
-            (complement, index) => ({
-                ...complement,
-
-                nome: String(
-                    complement?.nome ??
-                    complement?.value ??
-                    ""
-                ),
-
-                preco: num(
-                    complement?.preco ??
-                    complement?.dataset?.preco,
-                    0
-                ),
-
-                ordem_selecao: Math.max(
-                    1,
-                    Math.floor(
-                        num(
-                            complement?.ordem_selecao ??
-                            complement?.dataset?.ordemSelecao,
-                            index + 1
-                        )
-                    )
-                ),
-
-                _index: index
-            })
-        );
-
-        const groups = new Map();
-
-        rows.forEach(row => {
-            const key = norm(row.nome);
-
-            if (!key) {
-                return;
-            }
-
-            if (!groups.has(key)) {
-                groups.set(key, {
-                    key,
-                    nome: row.nome,
-                    ordem_selecao: row.ordem_selecao,
-                    primeiro_indice: row._index
-                });
-
-                return;
-            }
-
-            const group =
-                groups.get(key);
-
-            group.ordem_selecao =
-                Math.min(
-                    group.ordem_selecao,
-                    row.ordem_selecao
-                );
-
-            group.primeiro_indice =
-                Math.min(
-                    group.primeiro_indice,
-                    row._index
-                );
-        });
-
-        const uniqueComplements =
-            Array.from(groups.values())
-                .sort((a, b) =>
-                    a.ordem_selecao - b.ordem_selecao ||
-                    a.primeiro_indice - b.primeiro_indice
-                );
-
-        const eligible =
-            uniqueComplements.filter(
-                complement =>
-                    !isAlwaysPaidComplement(
-                        complement.nome
-                    )
-            );
-
-        const freeKeys =
-            new Set(
-                eligible
-                    .slice(0, limit)
-                    .map(complement =>
-                        complement.key
-                    )
-            );
-
-        return rows.map(row => {
-            const key =
-                norm(row.nome);
-
-            const group =
-                groups.get(key);
-
-            const alwaysPaid =
-                isAlwaysPaidComplement(
-                    row.nome
-                );
-
-            const free =
-                !alwaysPaid &&
-                freeKeys.has(key);
-
-            const firstOccurrence =
-                !group ||
-                row._index ===
-                    group.primeiro_indice;
-
-            const {
-                _index,
-                ...clean
-            } = row;
-
-            return {
-                ...clean,
-
-                especial_pago:
-                    alwaysPaid,
-
-                gratuito:
-                    free,
-
-                preco_cobrado:
-                    free || !firstOccurrence
-                        ? 0
-                        : row.preco
-            };
-        });
+    try {
+      stored = JSON.parse(sessionStorage.getItem(CART_KEY) || "[]");
+    } catch (_) {
+      stored = [];
     }
 
-    function itemUnitPrice(
-        size,
-        base,
-        complements
-    ) {
-        return (
-            num(base, 0) +
-            priceComplements(
-                complements,
-                size
-            ).reduce(
-                (
-                    total,
-                    complement
-                ) =>
-                    total +
-                    num(
-                        complement.preco_cobrado
-                    ),
-                0
-            )
-        );
+    state.cart = [];
+
+    if (!Array.isArray(stored)) {
+      return;
     }
 
-    const timeMinutes = value => {
-        const parts =
-            String(
-                value || ""
-            ).split(":");
+    for (const raw of stored) {
+      const item = normalizeCartItem(raw);
 
-        if (parts.length < 2) {
-            return null;
-        }
+      if (!item) {
+        continue;
+      }
 
-        const hours =
-            Number(parts[0]);
+      const available = MAX_CART_UNITS - cartUnits();
 
-        const minutes =
-            Number(parts[1]);
+      if (available <= 0) {
+        break;
+      }
 
-        return (
-            Number.isFinite(hours) &&
-            Number.isFinite(minutes)
-        )
-            ? (hours * 60) + minutes
-            : null;
-    };
+      item.quantidade = Math.min(item.quantidade, available);
 
-    const timeLabel = value => {
-        const minutes =
-            timeMinutes(value);
+      const signature = itemSignature(item);
 
-        if (minutes === null) {
-            return "";
-        }
+      const existing = state.cart.find(
+        (row) => itemSignature(row) === signature,
+      );
 
-        const hours =
-            Math.floor(
-                minutes / 60
-            );
-
-        const remainingMinutes =
-            minutes % 60;
-
-        return (
-            `${String(hours).padStart(2, "0")}:` +
-            `${String(remainingMinutes).padStart(2, "0")}`
-        );
-    };
-
-    const newId = () =>
-        window.crypto?.randomUUID?.() ||
-        `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-    const cartUnits = () =>
-        state.cart.reduce(
-            (total, item) =>
-                total +
-                Math.max(
-                    1,
-                    Number(item.quantidade) || 1
-                ),
-            0
-        );
-
-    const cartSubtotal = () =>
-        state.cart.reduce(
-            (total, item) =>
-                total +
-                (
-                    num(item.preco_unitario) *
-                    Math.max(
-                        1,
-                        Number(item.quantidade) || 1
-                    )
-                ),
-            0
-        );
-
-    const itemSignature = item => {
-        const complements =
-            (item.complementos || [])
-                .map(complement =>
-                    `${complement.camada}:${norm(complement.nome)}`
-                )
-                .sort()
-                .join("|");
-
-        return (
-            `${Number(item.tamanho_ml)}::${complements}`
-        );
-    };
-
-    function saveCart() {
-        try {
-            sessionStorage.setItem(
-                CART_KEY,
-                JSON.stringify(
-                    state.cart
-                )
-            );
-        } catch (error) {
-            console.warn(
-                "Não foi possível salvar a sacola nesta sessão.",
-                error
-            );
-        }
+      if (existing) {
+        existing.quantidade += item.quantidade;
+      } else {
+        state.cart.push(item);
+      }
     }
 
-    function saveLastOrderSnapshot(order) {
-        try {
-            sessionStorage.setItem(
-                LAST_ORDER_KEY,
-                JSON.stringify(order)
-            );
-        } catch (error) {
-            console.warn(
-                "Não foi possível salvar os dados do último pedido nesta sessão.",
-                error
-            );
-        }
+    saveCart();
+  }
+
+  function complementSummary(item, layer) {
+    const names = Array.from(
+      new Set(
+        (item.complementos || [])
+          .filter(
+            (complement) =>
+              complement.camada === layer || complement.camada === "ambos",
+          )
+          .map((complement) => complement.nome),
+      ),
+    );
+
+    return names.length ? names.join(", ") : "Nenhum";
+  }
+
+  function renderCart() {
+    const units = cartUnits();
+
+    const subtotal = cartSubtotal();
+
+    if (d.cartCount) {
+      d.cartCount.textContent = `${units} ${units === 1 ? "item" : "itens"}`;
     }
 
-    function normalizeCartItem(raw) {
-        const size =
-            state.sizes.find(item =>
-                Number(item.tamanho_ml) ===
-                    Number(raw?.tamanho_ml) &&
-                item.disponivel === true &&
-                item.visivel === true
-            );
-
-        if (!size) {
-            return null;
-        }
-
-        const complementMap =
-            new Map();
-
-        if (
-            Array.isArray(
-                raw?.complementos
-            )
-        ) {
-            raw.complementos.forEach(
-                (
-                    complement,
-                    index
-                ) => {
-                    const current =
-                        state.complements.find(
-                            item =>
-                                norm(item.nome) ===
-                                norm(
-                                    complement?.nome
-                                )
-                        );
-
-                    if (!current) {
-                        return;
-                    }
-
-                    const rawLayer =
-                        String(
-                            complement?.camada ||
-                            ""
-                        ).toLowerCase();
-
-                    const layer =
-                        rawLayer === "cobertura"
-                            ? "cobertura"
-                            : (
-                                rawLayer === "ambos" ||
-                                rawLayer === "unica"
-                            )
-                                ? "ambos"
-                                : "meio";
-
-                    const key =
-                        norm(current.nome);
-
-                    const selectionOrder =
-                        Math.max(
-                            1,
-                            Math.floor(
-                                num(
-                                    complement
-                                        ?.ordem_selecao,
-                                    index + 1
-                                )
-                            )
-                        );
-
-                    if (
-                        !complementMap.has(
-                            key
-                        )
-                    ) {
-                        complementMap.set(
-                            key,
-                            {
-                                id:
-                                    current.id ||
-                                    null,
-
-                                nome:
-                                    current.nome,
-
-                                camada:
-                                    layer,
-
-                                preco:
-                                    num(
-                                        current.preco
-                                    ),
-
-                                ordem_selecao:
-                                    selectionOrder
-                            }
-                        );
-
-                        return;
-                    }
-
-                    const existing =
-                        complementMap.get(
-                            key
-                        );
-
-                    if (
-                        existing.camada !==
-                        layer
-                    ) {
-                        existing.camada =
-                            "ambos";
-                    }
-
-                    existing.ordem_selecao =
-                        Math.min(
-                            existing
-                                .ordem_selecao,
-                            selectionOrder
-                        );
-                }
-            );
-        }
-
-        const complements =
-            Array.from(
-                complementMap.values()
-            );
-
-        const unitPrice =
-            itemUnitPrice(
-                size.tamanho_ml,
-                size.preco_base,
-                complements
-            );
-
-        return {
-            id:
-                String(
-                    raw?.id ||
-                    newId()
-                ),
-
-            tamanho_ml:
-                Number(
-                    size.tamanho_ml
-                ),
-
-            quantidade:
-                Math.max(
-                    1,
-                    Math.min(
-                        MAX_CART_UNITS,
-                        Math.floor(
-                            num(
-                                raw?.quantidade,
-                                1
-                            )
-                        )
-                    )
-                ),
-
-            preco_unitario:
-                unitPrice,
-
-            complementos:
-                complements
-        };
+    if (d.cartEmpty) {
+      d.cartEmpty.hidden = state.cart.length > 0;
     }
 
-    function loadCart() {
-        let stored = [];
-
-        try {
-            stored =
-                JSON.parse(
-                    sessionStorage.getItem(
-                        CART_KEY
-                    ) || "[]"
-                );
-        } catch (_) {
-            stored = [];
-        }
-
-        state.cart = [];
-
-        if (
-            !Array.isArray(stored)
-        ) {
-            return;
-        }
-
-        for (const raw of stored) {
-            const item =
-                normalizeCartItem(raw);
-
-            if (!item) {
-                continue;
-            }
-
-            const available =
-                MAX_CART_UNITS -
-                cartUnits();
-
-            if (
-                available <= 0
-            ) {
-                break;
-            }
-
-            item.quantidade =
-                Math.min(
-                    item.quantidade,
-                    available
-                );
-
-            const signature =
-                itemSignature(item);
-
-            const existing =
-                state.cart.find(
-                    row =>
-                        itemSignature(row) ===
-                        signature
-                );
-
-            if (existing) {
-                existing.quantidade +=
-                    item.quantidade;
-            } else {
-                state.cart.push(
-                    item
-                );
-            }
-        }
-
-        saveCart();
+    if (d.cartSubtotal) {
+      d.cartSubtotal.textContent = money(subtotal);
     }
 
-    function complementSummary(
-        item,
-        layer
-    ) {
-        const names =
-            Array.from(
-                new Set(
-                    (
-                        item.complementos ||
-                        []
-                    )
-                        .filter(
-                            complement =>
-                                complement.camada ===
-                                    layer ||
-                                complement.camada ===
-                                    "ambos"
-                        )
-                        .map(
-                            complement =>
-                                complement.nome
-                        )
-                )
-            );
-
-        return names.length
-            ? names.join(", ")
-            : "Nenhum";
+    if (d.subtotal2) {
+      d.subtotal2.textContent = money(subtotal);
     }
 
-    function renderCart() {
-        const units =
-            cartUnits();
-
-        const subtotal =
-            cartSubtotal();
-
-        if (d.cartCount) {
-            d.cartCount.textContent =
-                `${units} ${
-                    units === 1
-                        ? "item"
-                        : "itens"
-                }`;
-        }
-
-        if (d.cartEmpty) {
-            d.cartEmpty.hidden =
-                state.cart.length > 0;
-        }
-
-        if (d.cartSubtotal) {
-            d.cartSubtotal.textContent =
-                money(subtotal);
-        }
-
-        if (d.subtotal2) {
-            d.subtotal2.textContent =
-                money(subtotal);
-        }
-
-        if (d.cartList) {
-            d.cartList.innerHTML =
-                state.cart
-                    .map(
-                        (
-                            item,
-                            index
-                        ) => `
+    if (d.cartList) {
+      d.cartList.innerHTML = state.cart
+        .map(
+          (item, index) => `
                     <article
                         class="item-sacola"
                         data-cart-id="${esc(item.id)}"
@@ -858,11 +590,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                             <div>
                                 <strong>
                                     ${index + 1}.
-                                    ${esc(
-                                        productDisplayName(
-                                            item.tamanho_ml
-                                        )
-                                    )}
+                                    ${esc(productDisplayName(item.tamanho_ml))}
                                 </strong>
 
                                 <small>
@@ -872,32 +600,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                             </div>
 
                             <strong class="item-sacola-total">
-                                ${money(
-                                    item.preco_unitario *
-                                    item.quantidade
-                                )}
+                                ${money(item.preco_unitario * item.quantidade)}
                             </strong>
 
                         </div>
 
                         <p>
                             <b>Meio:</b>
-                            ${esc(
-                                complementSummary(
-                                    item,
-                                    "meio"
-                                )
-                            )}
+                            ${esc(complementSummary(item, "meio"))}
                         </p>
 
                         <p>
                             <b>Cobertura:</b>
-                            ${esc(
-                                complementSummary(
-                                    item,
-                                    "cobertura"
-                                )
-                            )}
+                            ${esc(complementSummary(item, "cobertura"))}
                         </p>
 
                         <div class="acoes-item-sacola">
@@ -940,500 +655,284 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                         </div>
                     </article>
-                `
-                    )
-                    .join("");
-        }
+                `,
+        )
+        .join("");
+    }
 
-        if (d.cartReview) {
-            d.cartReview.innerHTML =
-                state.cart
-                    .map(
-                        (
-                            item,
-                            index
-                        ) => `
+    if (d.cartReview) {
+      d.cartReview.innerHTML = state.cart
+        .map(
+          (item, index) => `
                     <div class="resumo-item-entrega">
 
                         <span>
                             ${index + 1}.
                             ${esc(item.quantidade)}×
-                            ${esc(
-                                productDisplayName(
-                                    item.tamanho_ml
-                                )
-                            )}
+                            ${esc(productDisplayName(item.tamanho_ml))}
                         </span>
 
                         <strong>
-                            ${money(
-                                item.preco_unitario *
-                                item.quantidade
-                            )}
+                            ${money(item.preco_unitario * item.quantidade)}
                         </strong>
 
                     </div>
-                `
-                    )
-                    .join("");
-        }
-
-        updateTotal();
-        syncOrderButtons(
-            storeState()
-        );
+                `,
+        )
+        .join("");
     }
 
-    function changeCartItem(
-        id,
-        delta
-    ) {
-        const item =
-            state.cart.find(
-                row =>
-                    row.id === id
-            );
+    updateTotal();
+    syncOrderButtons(storeState());
+  }
 
-        if (!item) {
-            return;
-        }
+  function changeCartItem(id, delta) {
+    const item = state.cart.find((row) => row.id === id);
 
-        if (delta > 0) {
-            if (
-                cartUnits() >=
-                MAX_CART_UNITS
-            ) {
-                alert(
-                    `A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`
-                );
-
-                return;
-            }
-
-            item.quantidade += 1;
-        } else if (
-            item.quantidade > 1
-        ) {
-            item.quantidade -= 1;
-        } else {
-            state.cart =
-                state.cart.filter(
-                    row =>
-                        row.id !== id
-                );
-        }
-
-        saveCart();
-        renderCart();
+    if (!item) {
+      return;
     }
 
-    function removeCartItem(id) {
-        state.cart =
-            state.cart.filter(
-                item =>
-                    item.id !== id
-            );
+    if (delta > 0) {
+      if (cartUnits() >= MAX_CART_UNITS) {
+        alert(`A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`);
 
-        saveCart();
-        renderCart();
+        return;
+      }
+
+      item.quantidade += 1;
+    } else if (item.quantidade > 1) {
+      item.quantidade -= 1;
+    } else {
+      state.cart = state.cart.filter((row) => row.id !== id);
     }
 
-    function clearCart() {
-        state.cart = [];
+    saveCart();
+    renderCart();
+  }
 
-        try {
-            sessionStorage.removeItem(
-                CART_KEY
-            );
-        } catch (_) {
-        }
+  function removeCartItem(id) {
+    state.cart = state.cart.filter((item) => item.id !== id);
 
-        renderCart();
+    saveCart();
+    renderCart();
+  }
+
+  function clearCart() {
+    state.cart = [];
+
+    try {
+      sessionStorage.removeItem(CART_KEY);
+    } catch (_) {}
+
+    renderCart();
+  }
+
+  function addCurrentToCart() {
+    if (!requireOpen()) {
+      return;
     }
 
-    function addCurrentToCart() {
-        if (!requireOpen()) {
-            return;
+    if (cartUnits() >= MAX_CART_UNITS) {
+      alert(`A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`);
+
+      return;
+    }
+
+    const complements = currentComplementSelections();
+
+    const item = {
+      id: newId(),
+
+      tamanho_ml: Number(d.size?.value),
+
+      quantidade: 1,
+
+      preco_unitario: calculate(),
+
+      complementos: complements,
+    };
+
+    const signature = itemSignature(item);
+
+    const existing = state.cart.find((row) => itemSignature(row) === signature);
+
+    if (existing) {
+      existing.quantidade += 1;
+    } else {
+      state.cart.push(item);
+    }
+
+    saveCart();
+    renderCart();
+    resetBuilder();
+
+    if (d.cartFeedback) {
+      const addedProductName = productDisplayName(item.tamanho_ml);
+
+      d.cartFeedback.textContent = `${addedProductName} adicionado à sacola.`;
+
+      window.setTimeout(() => {
+        if (d.cartFeedback?.textContent.includes(addedProductName)) {
+          d.cartFeedback.textContent = "";
+        }
+      }, 3000);
+    }
+  }
+
+  function message(text, type = "") {
+    if (!d.addressStatus) {
+      return;
+    }
+
+    d.addressStatus.textContent = text;
+
+    d.addressStatus.classList.remove("sucesso", "erro", "carregando");
+
+    if (type) {
+      d.addressStatus.classList.add(type);
+    }
+  }
+
+  function showOrderSuccess(code) {
+    const styleId = "azury-pedido-sucesso-estilos";
+
+    let order = null;
+
+    try {
+      const saved = sessionStorage.getItem(LAST_ORDER_KEY);
+
+      order = saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.warn(
+        "Não foi possível carregar o resumo do último pedido.",
+        error,
+      );
+    }
+
+    const safeOrder = order && typeof order === "object" ? order : {};
+
+    const customerName =
+      String(safeOrder.cliente?.nome || "Cliente").trim() || "Cliente";
+
+    const createdAt = safeOrder.criado_em
+      ? new Date(safeOrder.criado_em)
+      : new Date();
+
+    const validCreatedAt = Number.isNaN(createdAt.getTime())
+      ? new Date()
+      : createdAt;
+
+    const dateLabel = validCreatedAt.toLocaleDateString("pt-BR");
+
+    const timeLabelOrder = validCreatedAt.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+
+      minute: "2-digit",
+    });
+
+    const productValue = num(safeOrder.valor_produtos, 0);
+
+    const deliveryFee = num(safeOrder.taxa_entrega, 0);
+
+    const totalValue = num(safeOrder.valor_total, productValue + deliveryFee);
+
+    const paymentName =
+      safeOrder.pagamento?.forma_label ||
+      paymentLabel(safeOrder.pagamento?.forma || "") ||
+      "Não informado";
+
+    const pointsGenerated = num(safeOrder.pontos_gerados, 0);
+
+    const pointsText =
+      pointsGenerated > 0
+        ? `${pointsGenerated} ponto${
+            pointsGenerated === 1 ? "" : "s"
+          } neste pedido`
+        : "Seus pontos serão liberados após a entrega";
+
+    const estimatedDelivery = (() => {
+      const config = state.config || {};
+
+      const directValue =
+        config.estimativa_entrega ??
+        config.tempo_estimado_entrega ??
+        config.tempo_entrega ??
+        config.prazo_entrega ??
+        config.previsao_entrega ??
+        null;
+
+      if (
+        directValue !== null &&
+        directValue !== undefined &&
+        String(directValue).trim()
+      ) {
+        const raw = String(directValue).trim();
+
+        if (/^\d+$/.test(raw)) {
+          return `Até ${raw} minutos`;
         }
 
-        if (
-            cartUnits() >=
-            MAX_CART_UNITS
-        ) {
-            alert(
-                `A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`
-            );
+        return raw;
+      }
 
-            return;
-        }
+      const minimum = Number(
+        config.tempo_entrega_min ??
+          config.prazo_entrega_min ??
+          config.estimativa_minutos_min,
+      );
 
-        const complements =
-            currentComplementSelections();
+      const maximum = Number(
+        config.tempo_entrega_max ??
+          config.prazo_entrega_max ??
+          config.estimativa_minutos_max,
+      );
 
-        const item = {
-            id:
-                newId(),
+      if (
+        Number.isFinite(minimum) &&
+        minimum > 0 &&
+        Number.isFinite(maximum) &&
+        maximum >= minimum
+      ) {
+        return `${minimum} a ${maximum} minutos`;
+      }
 
-            tamanho_ml:
-                Number(
-                    d.size?.value
-                ),
+      if (Number.isFinite(maximum) && maximum > 0) {
+        return `Até ${maximum} minutos`;
+      }
 
-            quantidade:
-                1,
+      if (Number.isFinite(minimum) && minimum > 0) {
+        return `A partir de ${minimum} minutos`;
+      }
 
-            preco_unitario:
-                calculate(),
+      return "Acompanhe a atualização na Área do Cliente";
+    })();
 
-            complementos:
+    const items = Array.isArray(safeOrder.itens) ? safeOrder.itens : [];
+
+    const itemsHtml = items.length
+      ? items
+          .map((item, index) => {
+            const complements = Array.isArray(item.complementos)
+              ? item.complementos
+              : [];
+
+            const complementNames = Array.from(
+              new Set(
                 complements
-        };
-
-        const signature =
-            itemSignature(item);
-
-        const existing =
-            state.cart.find(
-                row =>
-                    itemSignature(row) ===
-                    signature
+                  .map((complement) => String(complement?.nome || "").trim())
+                  .filter(Boolean),
+              ),
             );
 
-        if (existing) {
-            existing.quantidade += 1;
-        } else {
-            state.cart.push(item);
-        }
+            const quantity = Math.max(1, Number(item.quantidade) || 1);
 
-        saveCart();
-        renderCart();
-        resetBuilder();
+            const unitValue = num(item.preco_unitario, 0);
 
-        if (d.cartFeedback) {
-            const addedProductName =
-                productDisplayName(
-                    item.tamanho_ml
-                );
+            const productName =
+              item.produto || productDisplayName(item.tamanho_ml);
 
-            d.cartFeedback.textContent =
-                `${addedProductName} adicionado à sacola.`;
-
-            window.setTimeout(
-                () => {
-                    if (
-                        d.cartFeedback
-                            ?.textContent
-                            .includes(
-                                addedProductName
-                            )
-                    ) {
-                        d.cartFeedback.textContent =
-                            "";
-                    }
-                },
-                3000
-            );
-        }
-    }
-
-    function message(
-        text,
-        type = ""
-    ) {
-        if (!d.addressStatus) {
-            return;
-        }
-
-        d.addressStatus.textContent =
-            text;
-
-        d.addressStatus
-            .classList
-            .remove(
-                "sucesso",
-                "erro",
-                "carregando"
-            );
-
-        if (type) {
-            d.addressStatus
-                .classList
-                .add(type);
-        }
-    }
-
-    function showOrderSuccess(code) {
-        const styleId =
-            "azury-pedido-sucesso-estilos";
-
-        let order = null;
-
-        try {
-            const saved =
-                sessionStorage.getItem(
-                    LAST_ORDER_KEY
-                );
-
-            order =
-                saved
-                    ? JSON.parse(saved)
-                    : null;
-        } catch (error) {
-            console.warn(
-                "Não foi possível carregar o resumo do último pedido.",
-                error
-            );
-        }
-
-        const safeOrder =
-            order &&
-            typeof order === "object"
-                ? order
-                : {};
-
-        const customerName =
-            String(
-                safeOrder.cliente?.nome ||
-                "Cliente"
-            ).trim() ||
-            "Cliente";
-
-        const createdAt =
-            safeOrder.criado_em
-                ? new Date(
-                    safeOrder.criado_em
-                )
-                : new Date();
-
-        const validCreatedAt =
-            Number.isNaN(
-                createdAt.getTime()
-            )
-                ? new Date()
-                : createdAt;
-
-        const dateLabel =
-            validCreatedAt
-                .toLocaleDateString(
-                    "pt-BR"
-                );
-
-        const timeLabelOrder =
-            validCreatedAt
-                .toLocaleTimeString(
-                    "pt-BR",
-                    {
-                        hour:
-                            "2-digit",
-
-                        minute:
-                            "2-digit"
-                    }
-                );
-
-        const productValue =
-            num(
-                safeOrder.valor_produtos,
-                0
-            );
-
-        const deliveryFee =
-            num(
-                safeOrder.taxa_entrega,
-                0
-            );
-
-        const totalValue =
-            num(
-                safeOrder.valor_total,
-                productValue +
-                    deliveryFee
-            );
-
-        const paymentName =
-            safeOrder
-                .pagamento
-                ?.forma_label ||
-            paymentLabel(
-                safeOrder
-                    .pagamento
-                    ?.forma ||
-                ""
-            ) ||
-            "Não informado";
-
-        const pointsGenerated =
-            num(
-                safeOrder
-                    .pontos_gerados,
-                0
-            );
-
-        const pointsText =
-            pointsGenerated > 0
-                ? (
-                    `${pointsGenerated} ponto${
-                        pointsGenerated === 1
-                            ? ""
-                            : "s"
-                    } neste pedido`
-                )
-                : (
-                    "Seus pontos serão liberados após a entrega"
-                );
-
-        const estimatedDelivery =
-            (() => {
-                const config =
-                    state.config || {};
-
-                const directValue =
-                    config.estimativa_entrega ??
-                    config.tempo_estimado_entrega ??
-                    config.tempo_entrega ??
-                    config.prazo_entrega ??
-                    config.previsao_entrega ??
-                    null;
-
-                if (
-                    directValue !== null &&
-                    directValue !== undefined &&
-                    String(
-                        directValue
-                    ).trim()
-                ) {
-                    const raw =
-                        String(
-                            directValue
-                        ).trim();
-
-                    if (
-                        /^\d+$/.test(
-                            raw
-                        )
-                    ) {
-                        return (
-                            `Até ${raw} minutos`
-                        );
-                    }
-
-                    return raw;
-                }
-
-                const minimum =
-                    Number(
-                        config.tempo_entrega_min ??
-                        config.prazo_entrega_min ??
-                        config.estimativa_minutos_min
-                    );
-
-                const maximum =
-                    Number(
-                        config.tempo_entrega_max ??
-                        config.prazo_entrega_max ??
-                        config.estimativa_minutos_max
-                    );
-
-                if (
-                    Number.isFinite(
-                        minimum
-                    ) &&
-                    minimum > 0 &&
-                    Number.isFinite(
-                        maximum
-                    ) &&
-                    maximum >= minimum
-                ) {
-                    return (
-                        `${minimum} a ${maximum} minutos`
-                    );
-                }
-
-                if (
-                    Number.isFinite(
-                        maximum
-                    ) &&
-                    maximum > 0
-                ) {
-                    return (
-                        `Até ${maximum} minutos`
-                    );
-                }
-
-                if (
-                    Number.isFinite(
-                        minimum
-                    ) &&
-                    minimum > 0
-                ) {
-                    return (
-                        `A partir de ${minimum} minutos`
-                    );
-                }
-
-                return (
-                    "Acompanhe a atualização na Área do Cliente"
-                );
-            })();
-
-        const items =
-            Array.isArray(
-                safeOrder.itens
-            )
-                ? safeOrder.itens
-                : [];
-
-        const itemsHtml =
-            items.length
-                ? items
-                    .map(
-                        (
-                            item,
-                            index
-                        ) => {
-                            const complements =
-                                Array.isArray(
-                                    item.complementos
-                                )
-                                    ? item.complementos
-                                    : [];
-
-                            const complementNames =
-                                Array.from(
-                                    new Set(
-                                        complements
-                                            .map(
-                                                complement =>
-                                                    String(
-                                                        complement?.nome ||
-                                                        ""
-                                                    ).trim()
-                                            )
-                                            .filter(Boolean)
-                                    )
-                                );
-
-                            const quantity =
-                                Math.max(
-                                    1,
-                                    Number(
-                                        item.quantidade
-                                    ) || 1
-                                );
-
-                            const unitValue =
-                                num(
-                                    item.preco_unitario,
-                                    0
-                                );
-
-                            const productName =
-                                item.produto ||
-                                productDisplayName(
-                                    item.tamanho_ml
-                                );
-
-                            return `
+            return `
                             <article class="azury-pos-item">
                                 <div class="azury-pos-item-topo">
                                     <div>
@@ -1447,18 +946,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     </div>
 
                                     <strong class="azury-pos-item-preco">
-                                        ${money(
-                                            unitValue *
-                                            quantity
-                                        )}
+                                        ${money(unitValue * quantity)}
                                     </strong>
                                 </div>
 
                                 <span class="azury-pos-item-meta">
                                     ${quantity}× item${
-                                        quantity === 1
-                                            ? ""
-                                            : "s"
+                                      quantity === 1 ? "" : "s"
                                     }
                                 </span>
 
@@ -1467,95 +961,46 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                                     <span>
                                         ${
-                                            complementNames.length
-                                                ? esc(
-                                                    complementNames.join(
-                                                        ", "
-                                                    )
-                                                )
-                                                : "Nenhum complemento"
+                                          complementNames.length
+                                            ? esc(complementNames.join(", "))
+                                            : "Nenhum complemento"
                                         }
                                     </span>
                                 </div>
                             </article>
                         `;
-                        }
-                    )
-                    .join("")
-                : `
+          })
+          .join("")
+      : `
                     <div class="azury-pos-vazio">
                         Resumo dos itens indisponível nesta sessão.
                     </div>
                 `;
 
-        const street =
-            String(
-                safeOrder.entrega?.rua ||
-                ""
-            ).trim();
+    const street = String(safeOrder.entrega?.rua || "").trim();
 
-        const number =
-            String(
-                safeOrder.entrega?.numero ||
-                ""
-            ).trim();
+    const number = String(safeOrder.entrega?.numero || "").trim();
 
-        const district =
-            String(
-                safeOrder.entrega?.bairro ||
-                ""
-            ).trim();
+    const district = String(safeOrder.entrega?.bairro || "").trim();
 
-        const zipCode =
-            String(
-                safeOrder.entrega?.cep ||
-                ""
-            ).trim();
+    const zipCode = String(safeOrder.entrega?.cep || "").trim();
 
-        const addressExtra =
-            String(
-                safeOrder
-                    .entrega
-                    ?.complemento ||
-                ""
-            ).trim();
+    const addressExtra = String(safeOrder.entrega?.complemento || "").trim();
 
-        const addressMain =
-            [
-                street,
+    const addressMain = [street, number ? `nº ${number}` : ""]
+      .filter(Boolean)
+      .join(", ");
 
-                number
-                    ? `nº ${number}`
-                    : ""
-            ]
-                .filter(Boolean)
-                .join(", ");
+    const addressSecond = [district, zipCode ? `CEP ${zipCode}` : ""]
+      .filter(Boolean)
+      .join(" • ");
 
-        const addressSecond =
-            [
-                district,
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
 
-                zipCode
-                    ? `CEP ${zipCode}`
-                    : ""
-            ]
-                .filter(Boolean)
-                .join(" • ");
+      style.id = styleId;
 
-        if (
-            !document.getElementById(
-                styleId
-            )
-        ) {
-            const style =
-                document.createElement(
-                    "style"
-                );
-
-            style.id =
-                styleId;
-
-            style.textContent = `
+      style.textContent = `
                 body.azury-pos-pedido-aberto {
                     overflow: hidden !important;
                 }
@@ -2929,45 +2374,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             `;
 
-            document.head.appendChild(
-                style
-            );
-        }
+      document.head.appendChild(style);
+    }
 
-        document
-            .getElementById(
-                "azuryPedidoSucesso"
-            )
-            ?.remove();
+    document.getElementById("azuryPedidoSucesso")?.remove();
 
-        document.body.classList.add(
-            "azury-pos-pedido-aberto"
-        );
+    document.body.classList.add("azury-pos-pedido-aberto");
 
-        const screen =
-            document.createElement(
-                "div"
-            );
+    const screen = document.createElement("div");
 
-        screen.id =
-            "azuryPedidoSucesso";
+    screen.id = "azuryPedidoSucesso";
 
-        screen.setAttribute(
-            "role",
-            "dialog"
-        );
+    screen.setAttribute("role", "dialog");
 
-        screen.setAttribute(
-            "aria-modal",
-            "true"
-        );
+    screen.setAttribute("aria-modal", "true");
 
-        screen.setAttribute(
-            "aria-label",
-            "Pedido realizado com sucesso"
-        );
+    screen.setAttribute("aria-label", "Pedido realizado com sucesso");
 
-        screen.innerHTML = `
+    screen.innerHTML = `
             <section class="azury-pos-pedido-painel">
 
                 <header class="azury-pos-topo">
@@ -3102,21 +2526,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 </span>
 
                                 <strong>
-                                    ${esc(
-                                        code ||
-                                        safeOrder.codigo ||
-                                        "—"
-                                    )}
+                                    ${esc(code || safeOrder.codigo || "—")}
                                 </strong>
 
                             </div>
 
 
                             <time
-                                datetime="${esc(
-                                    validCreatedAt
-                                        .toISOString()
-                                )}"
+                                datetime="${esc(validCreatedAt.toISOString())}"
                             >
                                 ${esc(dateLabel)}
                                 às
@@ -3240,32 +2657,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                             <p>
                                 ${esc(
-                                    addressMain ||
-                                    "Endereço informado no pedido"
+                                  addressMain || "Endereço informado no pedido",
                                 )}
                             </p>
 
 
                             ${
-                                addressSecond
-                                    ? `
+                              addressSecond
+                                ? `
                                         <p>
                                             ${esc(addressSecond)}
                                         </p>
                                     `
-                                    : ""
+                                : ""
                             }
 
 
                             ${
-                                addressExtra
-                                    ? `
+                              addressExtra
+                                ? `
                                         <p>
                                             Complemento:
                                             ${esc(addressExtra)}
                                         </p>
                                     `
-                                    : ""
+                                : ""
                             }
 
                         </div>
@@ -3310,66 +2726,38 @@ document.addEventListener("DOMContentLoaded", async () => {
             </section>
         `;
 
-        document.body.appendChild(
-            screen
-        );
+    document.body.appendChild(screen);
 
-        const closeScreen = () => {
-            if (!screen.isConnected) {
-                return;
-            }
+    const closeScreen = () => {
+      if (!screen.isConnected) {
+        return;
+      }
 
-            screen.classList.remove(
-                "visivel"
-            );
+      screen.classList.remove("visivel");
 
-            document.body.classList.remove(
-                "azury-pos-pedido-aberto"
-            );
+      document.body.classList.remove("azury-pos-pedido-aberto");
 
-            window.setTimeout(
-                () =>
-                    screen.remove(),
-                240
-            );
-        };
+      window.setTimeout(() => screen.remove(), 240);
+    };
 
-        screen
-            .querySelector(
-                ".azury-pos-fechar"
-            )
-            ?.addEventListener(
-                "click",
-                closeScreen
-            );
+    screen
+      .querySelector(".azury-pos-fechar")
+      ?.addEventListener("click", closeScreen);
 
-        window.requestAnimationFrame(
-            () => {
-                screen.classList.add(
-                    "visivel"
-                );
-            }
-        );
-    }
+    window.requestAnimationFrame(() => {
+      screen.classList.add("visivel");
+    });
+  }
 
-    function showOrderWarning(text) {
-        const styleId =
-            "azury-pedido-aviso-estilos";
+  function showOrderWarning(text) {
+    const styleId = "azury-pedido-aviso-estilos";
 
-        if (
-            !document.getElementById(
-                styleId
-            )
-        ) {
-            const style =
-                document.createElement(
-                    "style"
-                );
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
 
-            style.id =
-                styleId;
+      style.id = styleId;
 
-            style.textContent = `
+      style.textContent = `
                 #azuryPedidoAviso {
                     position: fixed;
                     top: max(16px, env(safe-area-inset-top));
@@ -3591,36 +2979,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             `;
 
-            document.head.appendChild(
-                style
-            );
-        }
+      document.head.appendChild(style);
+    }
 
-        document
-            .getElementById(
-                "azuryPedidoAviso"
-            )
-            ?.remove();
+    document.getElementById("azuryPedidoAviso")?.remove();
 
-        const notification =
-            document.createElement(
-                "div"
-            );
+    const notification = document.createElement("div");
 
-        notification.id =
-            "azuryPedidoAviso";
+    notification.id = "azuryPedidoAviso";
 
-        notification.setAttribute(
-            "role",
-            "alert"
-        );
+    notification.setAttribute("role", "alert");
 
-        notification.setAttribute(
-            "aria-live",
-            "assertive"
-        );
+    notification.setAttribute("aria-live", "assertive");
 
-        notification.innerHTML = `
+    notification.innerHTML = `
             <div
                 class="azury-aviso-icone"
                 aria-hidden="true"
@@ -3649,741 +3021,391 @@ document.addEventListener("DOMContentLoaded", async () => {
             </button>
         `;
 
-        document.body.appendChild(
-            notification
-        );
+    document.body.appendChild(notification);
 
-        const closeNotification =
-            () => {
-                if (
-                    !notification
-                        .isConnected
-                ) {
-                    return;
-                }
+    const closeNotification = () => {
+      if (!notification.isConnected) {
+        return;
+      }
 
-                notification
-                    .classList
-                    .remove(
-                        "visivel"
-                    );
+      notification.classList.remove("visivel");
 
-                window.setTimeout(
-                    () =>
-                        notification
-                            .remove(),
-                    240
-                );
-            };
+      window.setTimeout(() => notification.remove(), 240);
+    };
 
-        notification
-            .querySelector(
-                ".azury-aviso-fechar"
-            )
-            ?.addEventListener(
-                "click",
-                closeNotification
-            );
+    notification
+      .querySelector(".azury-aviso-fechar")
+      ?.addEventListener("click", closeNotification);
 
-        window.requestAnimationFrame(
-            () => {
-                notification
-                    .classList
-                    .add(
-                        "visivel"
-                    );
-            }
-        );
+    window.requestAnimationFrame(() => {
+      notification.classList.add("visivel");
+    });
 
-        window.setTimeout(
-            closeNotification,
-            6000
-        );
+    window.setTimeout(closeNotification, 6000);
+  }
+
+  async function table(name, configure) {
+    let query = sb.from(name).select("*");
+
+    query = configure ? configure(query) : query;
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
     }
 
-    async function table(
-        name,
-        configure
+    return data || [];
+  }
+
+  function saveOperationCache(data) {
+    try {
+      localStorage.setItem(
+        OPERATION_CACHE_KEY,
+        JSON.stringify({
+          savedAt: Date.now(),
+
+          data,
+        }),
+      );
+    } catch (error) {
+      console.warn("Não foi possível salvar o cardápio localmente.", error);
+    }
+  }
+
+  function readOperationCache() {
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem(OPERATION_CACHE_KEY) || "null",
+      );
+
+      if (!stored || !stored.data || !Number.isFinite(Number(stored.savedAt))) {
+        return null;
+      }
+
+      const age = Date.now() - Number(stored.savedAt);
+
+      if (age < 0 || age > OPERATION_CACHE_MAX_AGE) {
+        localStorage.removeItem(OPERATION_CACHE_KEY);
+
+        return null;
+      }
+
+      return stored.data;
+    } catch (error) {
+      console.warn("O cardápio salvo não pôde ser lido.", error);
+
+      return null;
+    }
+  }
+
+  function applyOperation(
+    data,
+    { saveCache = true, source = "supabase" } = {},
+  ) {
+    const sizes = data.tamanhos || data.sizes || [];
+
+    const complements = data.complementos || data.complements || [];
+
+    const districts =
+      data.bairros || data.bairros_entrega || data.districts || [];
+
+    const schedules =
+      data.horarios || data.horarios_funcionamento || data.schedules || [];
+
+    const config =
+      data.configuracao_loja || data.configuracao || data.config || null;
+
+    if (
+      !Array.isArray(sizes) ||
+      !sizes.length ||
+      !Array.isArray(districts) ||
+      !districts.length ||
+      !config
     ) {
-        let query =
-            sb
-                .from(name)
-                .select("*");
-
-        query =
-            configure
-                ? configure(query)
-                : query;
-
-        const {
-            data,
-            error
-        } =
-            await query;
-
-        if (error) {
-            throw error;
-        }
-
-        return data || [];
+      throw new Error("Configuração pública incompleta.");
     }
 
-    function saveOperationCache(data) {
-        try {
-            localStorage.setItem(
-                OPERATION_CACHE_KEY,
-                JSON.stringify({
-                    savedAt:
-                        Date.now(),
+    state.sizes = sizes;
 
-                    data
-                })
-            );
-        } catch (error) {
-            console.warn(
-                "Não foi possível salvar o cardápio localmente.",
-                error
-            );
-        }
+    state.complements = Array.isArray(complements)
+      ? complements.filter(
+          (item) => item.disponivel !== false && item.visivel !== false,
+        )
+      : [];
+
+    state.districts = districts.filter((item) => item.ativo !== false);
+
+    state.schedules = Array.isArray(schedules) ? schedules : [];
+
+    state.config = config;
+
+    state.operationReady = true;
+
+    state.operationSource = source;
+
+    state.districtMap.clear();
+
+    state.districts.forEach((item) => {
+      const aliases = Array.isArray(item.aliases) ? item.aliases : [];
+
+      [item.nome, ...aliases].filter(Boolean).forEach((alias) => {
+        state.districtMap.set(norm(alias), item);
+      });
+    });
+
+    state.aliases = Array.from(state.districtMap.keys()).sort(
+      (a, b) => b.length - a.length,
+    );
+
+    if (saveCache) {
+      saveOperationCache({
+        tamanhos: sizes,
+
+        complementos: complements,
+
+        bairros: districts,
+
+        horarios: schedules,
+
+        configuracao_loja: config,
+      });
+    }
+  }
+
+  function applyCachedOperation() {
+    const cached = readOperationCache();
+
+    if (!cached) {
+      return false;
     }
 
-    function readOperationCache() {
-        try {
-            const stored =
-                JSON.parse(
-                    localStorage.getItem(
-                        OPERATION_CACHE_KEY
-                    ) || "null"
-                );
+    try {
+      applyOperation(cached, {
+        saveCache: false,
 
-            if (
-                !stored ||
-                !stored.data ||
-                !Number.isFinite(
-                    Number(
-                        stored.savedAt
-                    )
-                )
-            ) {
-                return null;
-            }
+        source: "cache",
+      });
 
-            const age =
-                Date.now() -
-                Number(
-                    stored.savedAt
-                );
+      console.info("Cardápio carregado da última versão válida.");
 
-            if (
-                age < 0 ||
-                age >
-                    OPERATION_CACHE_MAX_AGE
-            ) {
-                localStorage.removeItem(
-                    OPERATION_CACHE_KEY
-                );
+      return true;
+    } catch (error) {
+      console.warn("A versão salva do cardápio não é válida.", error);
 
-                return null;
-            }
+      try {
+        localStorage.removeItem(OPERATION_CACHE_KEY);
+      } catch (_) {}
 
-            return stored.data;
-        } catch (error) {
-            console.warn(
-                "O cardápio salvo não pôde ser lido.",
-                error
-            );
+      return false;
+    }
+  }
 
-            return null;
-        }
+  async function loadOperationDirect() {
+    const [sizes, complements, districts, schedules, configRows] =
+      await Promise.all([
+        table("tamanhos_acai", (query) =>
+          query.order("ordem", {
+            ascending: true,
+          }),
+        ),
+
+        table("complementos", (query) =>
+          query.eq("disponivel", true).eq("visivel", true).order("ordem", {
+            ascending: true,
+          }),
+        ),
+
+        table("bairros_entrega", (query) =>
+          query.eq("ativo", true).order("ordem", {
+            ascending: true,
+          }),
+        ),
+
+        table("horarios_funcionamento", (query) =>
+          query.order("dia_semana", {
+            ascending: true,
+          }),
+        ),
+
+        table("configuracoes_loja", (query) => query.eq("id", 1).limit(1)),
+      ]);
+
+    applyOperation({
+      tamanhos: sizes,
+
+      complementos: complements,
+
+      bairros: districts,
+
+      horarios: schedules,
+
+      configuracao_loja: configRows[0] || null,
+    });
+  }
+
+  async function loadOperationFunction() {
+    const functionNames = [
+      "listar_operacao_publica",
+      "listar_operacao_site",
+      "obter_operacao_publica",
+    ];
+
+    let lastError = null;
+
+    for (const name of functionNames) {
+      const { data, error } = await sb.rpc(name);
+
+      if (!error && data) {
+        applyOperation(data);
+        return;
+      }
+
+      if (error) {
+        lastError = error;
+      }
+
+      const errorMessage = String(error?.message || "").toLowerCase();
+
+      const missing =
+        error?.code === "PGRST202" ||
+        errorMessage.includes("could not find the function") ||
+        errorMessage.includes("does not exist");
+
+      if (error && !missing) {
+        throw error;
+      }
     }
 
-    function applyOperation(
-        data,
-        {
-            saveCache = true,
-            source = "supabase"
-        } = {}
+    throw lastError || new Error("Nenhuma função pública disponível.");
+  }
+
+  async function loadOperationOnce() {
+    sb = window.azurySupabase || sb;
+
+    if (!sb) {
+      throw new Error("Supabase ainda não carregado.");
+    }
+
+    try {
+      await loadOperationDirect();
+    } catch (directError) {
+      console.warn(
+        "Leitura direta indisponível; tentando função pública.",
+        directError,
+      );
+
+      await loadOperationFunction();
+    }
+  }
+
+  async function loadOperation() {
+    let lastError = null;
+
+    for (
+      let attempt = 0;
+      attempt < OPERATION_RETRY_DELAYS.length;
+      attempt += 1
     ) {
-        const sizes =
-            data.tamanhos ||
-            data.sizes ||
-            [];
+      const delay = OPERATION_RETRY_DELAYS[attempt];
 
-        const complements =
-            data.complementos ||
-            data.complements ||
-            [];
+      if (delay > 0) {
+        await wait(delay);
+      }
 
-        const districts =
-            data.bairros ||
-            data.bairros_entrega ||
-            data.districts ||
-            [];
+      try {
+        await loadOperationOnce();
+        return;
+      } catch (error) {
+        lastError = error;
 
-        const schedules =
-            data.horarios ||
-            data.horarios_funcionamento ||
-            data.schedules ||
-            [];
-
-        const config =
-            data.configuracao_loja ||
-            data.configuracao ||
-            data.config ||
-            null;
-
-        if (
-            !Array.isArray(sizes) ||
-            !sizes.length ||
-            !Array.isArray(districts) ||
-            !districts.length ||
-            !config
-        ) {
-            throw new Error(
-                "Configuração pública incompleta."
-            );
-        }
-
-        state.sizes =
-            sizes;
-
-        state.complements =
-            Array.isArray(
-                complements
-            )
-                ? complements
-                    .filter(
-                        item =>
-                            item.disponivel !==
-                                false &&
-                            item.visivel !==
-                                false
-                    )
-                : [];
-
-        state.districts =
-            districts.filter(
-                item =>
-                    item.ativo !==
-                    false
-            );
-
-        state.schedules =
-            Array.isArray(
-                schedules
-            )
-                ? schedules
-                : [];
-
-        state.config =
-            config;
-
-        state.operationReady =
-            true;
-
-        state.operationSource =
-            source;
-
-        state.districtMap.clear();
-
-        state.districts.forEach(
-            item => {
-                const aliases =
-                    Array.isArray(
-                        item.aliases
-                    )
-                        ? item.aliases
-                        : [];
-
-                [
-                    item.nome,
-                    ...aliases
-                ]
-                    .filter(Boolean)
-                    .forEach(
-                        alias => {
-                            state.districtMap
-                                .set(
-                                    norm(alias),
-                                    item
-                                );
-                        }
-                    );
-            }
+        console.warn(
+          `Tentativa ${attempt + 1} de carregar o cardápio falhou.`,
+          error,
         );
-
-        state.aliases =
-            Array
-                .from(
-                    state.districtMap
-                        .keys()
-                )
-                .sort(
-                    (a, b) =>
-                        b.length -
-                        a.length
-                );
-
-        if (saveCache) {
-            saveOperationCache({
-                tamanhos:
-                    sizes,
-
-                complementos:
-                    complements,
-
-                bairros:
-                    districts,
-
-                horarios:
-                    schedules,
-
-                configuracao_loja:
-                    config
-            });
-        }
+      }
     }
 
-    function applyCachedOperation() {
-        const cached =
-            readOperationCache();
+    throw lastError || new Error("Não foi possível carregar a operação.");
+  }
 
-        if (!cached) {
-            return false;
-        }
+  function renderSizes() {
+    $$(".menu-grid > li").forEach((card) => {
+      const button = card.querySelector(".btn-montar");
 
-        try {
-            applyOperation(
-                cached,
-                {
-                    saveCache:
-                        false,
+      const current = Number(button?.dataset.tamanho);
 
-                    source:
-                        "cache"
-                }
-            );
+      const item = state.sizes.find(
+        (size) => Number(size.tamanho_ml) === current,
+      );
 
-            console.info(
-                "Cardápio carregado da última versão válida."
-            );
+      if (!button || !item) {
+        return;
+      }
 
-            return true;
-        } catch (error) {
-            console.warn(
-                "A versão salva do cardápio não é válida.",
-                error
-            );
+      const available = item.disponivel === true && item.visivel === true;
 
-            try {
-                localStorage.removeItem(
-                    OPERATION_CACHE_KEY
-                );
-            } catch (_) {
-            }
+      card.hidden = item.visivel === false;
 
-            return false;
-        }
+      card.classList.toggle("produto-em-breve", !available);
+
+      const badge = card.querySelector(".badge");
+
+      const title = card.querySelector("h3");
+
+      const description = card.querySelector("h3 + p");
+
+      const price = card.querySelector("h3 + p + strong");
+
+      if (badge) {
+        badge.textContent =
+          item.badge || (available ? "Disponível" : "Em breve");
+
+        badge.classList.toggle("badge-em-breve", !available);
+      }
+
+      if (title) {
+        title.textContent = productDisplayName(item);
+      }
+
+      if (description) {
+        const freeLimit = freeComplementLimit(item);
+
+        description.textContent =
+          available && freeLimit > 0
+            ? `${freeLimit} complementos grátis. Extras e ingredientes especiais são cobrados à parte.`
+            : item.descricao ||
+              "Escolha os complementos do meio e da cobertura.";
+      }
+
+      if (price) {
+        price.textContent = `${
+          available ? "A partir de" : "Preço previsto:"
+        } ${money(item.preco_base)}`;
+      }
+
+      button.dataset.precoBase = String(item.preco_base);
+
+      button.dataset.disponibilidade = available ? "disponivel" : "em-breve";
+
+      button.disabled = !available;
+    });
+
+    const container = $(".opcoes-tamanho-monte-seu");
+
+    if (!container) {
+      return;
     }
 
-    async function loadOperationDirect() {
-        const [
-            sizes,
-            complements,
-            districts,
-            schedules,
-            configRows
-        ] =
-            await Promise.all([
-                table(
-                    "tamanhos_acai",
-                    query =>
-                        query.order(
-                            "ordem",
-                            {
-                                ascending:
-                                    true
-                            }
-                        )
-                ),
+    container.innerHTML = state.sizes
+      .filter((item) => item.visivel !== false)
+      .map((item, index) => {
+        const available = item.disponivel === true;
 
-                table(
-                    "complementos",
-                    query =>
-                        query
-                            .eq(
-                                "disponivel",
-                                true
-                            )
-                            .eq(
-                                "visivel",
-                                true
-                            )
-                            .order(
-                                "ordem",
-                                {
-                                    ascending:
-                                        true
-                                }
-                            )
-                ),
-
-                table(
-                    "bairros_entrega",
-                    query =>
-                        query
-                            .eq(
-                                "ativo",
-                                true
-                            )
-                            .order(
-                                "ordem",
-                                {
-                                    ascending:
-                                        true
-                                }
-                            )
-                ),
-
-                table(
-                    "horarios_funcionamento",
-                    query =>
-                        query.order(
-                            "dia_semana",
-                            {
-                                ascending:
-                                    true
-                            }
-                        )
-                ),
-
-                table(
-                    "configuracoes_loja",
-                    query =>
-                        query
-                            .eq(
-                                "id",
-                                1
-                            )
-                            .limit(1)
-                )
-            ]);
-
-        applyOperation({
-            tamanhos:
-                sizes,
-
-            complementos:
-                complements,
-
-            bairros:
-                districts,
-
-            horarios:
-                schedules,
-
-            configuracao_loja:
-                configRows[0] ||
-                null
-        });
-    }
-
-    async function loadOperationFunction() {
-        const functionNames = [
-            "listar_operacao_publica",
-            "listar_operacao_site",
-            "obter_operacao_publica"
-        ];
-
-        let lastError = null;
-
-        for (
-            const name
-            of functionNames
-        ) {
-            const {
-                data,
-                error
-            } =
-                await sb.rpc(
-                    name
-                );
-
-            if (
-                !error &&
-                data
-            ) {
-                applyOperation(data);
-                return;
-            }
-
-            if (error) {
-                lastError =
-                    error;
-            }
-
-            const errorMessage =
-                String(
-                    error?.message ||
-                    ""
-                ).toLowerCase();
-
-            const missing =
-                error?.code ===
-                    "PGRST202" ||
-                errorMessage.includes(
-                    "could not find the function"
-                ) ||
-                errorMessage.includes(
-                    "does not exist"
-                );
-
-            if (
-                error &&
-                !missing
-            ) {
-                throw error;
-            }
-        }
-
-        throw (
-            lastError ||
-            new Error(
-                "Nenhuma função pública disponível."
-            )
-        );
-    }
-
-    async function loadOperationOnce() {
-        sb =
-            window.azurySupabase ||
-            sb;
-
-        if (!sb) {
-            throw new Error(
-                "Supabase ainda não carregado."
-            );
-        }
-
-        try {
-            await loadOperationDirect();
-        } catch (directError) {
-            console.warn(
-                "Leitura direta indisponível; tentando função pública.",
-                directError
-            );
-
-            await loadOperationFunction();
-        }
-    }
-
-    async function loadOperation() {
-        let lastError =
-            null;
-
-        for (
-            let attempt = 0;
-            attempt <
-                OPERATION_RETRY_DELAYS.length;
-            attempt += 1
-        ) {
-            const delay =
-                OPERATION_RETRY_DELAYS[
-                    attempt
-                ];
-
-            if (delay > 0) {
-                await wait(delay);
-            }
-
-            try {
-                await loadOperationOnce();
-                return;
-            } catch (error) {
-                lastError =
-                    error;
-
-                console.warn(
-                    `Tentativa ${attempt + 1} de carregar o cardápio falhou.`,
-                    error
-                );
-            }
-        }
-
-        throw (
-            lastError ||
-            new Error(
-                "Não foi possível carregar a operação."
-            )
-        );
-    }
-
-    function renderSizes() {
-        $$(".menu-grid > li")
-            .forEach(
-                card => {
-                    const button =
-                        card.querySelector(
-                            ".btn-montar"
-                        );
-
-                    const current =
-                        Number(
-                            button
-                                ?.dataset
-                                .tamanho
-                        );
-
-                    const item =
-                        state.sizes.find(
-                            size =>
-                                Number(
-                                    size.tamanho_ml
-                                ) ===
-                                current
-                        );
-
-                    if (
-                        !button ||
-                        !item
-                    ) {
-                        return;
-                    }
-
-                    const available =
-                        item.disponivel ===
-                            true &&
-                        item.visivel ===
-                            true;
-
-                    card.hidden =
-                        item.visivel ===
-                        false;
-
-                    card.classList.toggle(
-                        "produto-em-breve",
-                        !available
-                    );
-
-                    const badge =
-                        card.querySelector(
-                            ".badge"
-                        );
-
-                    const title =
-                        card.querySelector(
-                            "h3"
-                        );
-
-                    const description =
-                        card.querySelector(
-                            "h3 + p"
-                        );
-
-                    const price =
-                        card.querySelector(
-                            "h3 + p + strong"
-                        );
-
-                    if (badge) {
-                        badge.textContent =
-                            item.badge ||
-                            (
-                                available
-                                    ? "Disponível"
-                                    : "Em breve"
-                            );
-
-                        badge.classList.toggle(
-                            "badge-em-breve",
-                            !available
-                        );
-                    }
-
-                    if (title) {
-                        title.textContent =
-                            productDisplayName(
-                                item
-                            );
-                    }
-
-                    if (description) {
-                        const freeLimit =
-                            freeComplementLimit(
-                                item
-                            );
-
-                        description.textContent =
-                            available &&
-                            freeLimit > 0
-                                ? (
-                                    `${freeLimit} complementos grátis. Extras e ingredientes especiais são cobrados à parte.`
-                                )
-                                : (
-                                    item.descricao ||
-                                    "Escolha os complementos do meio e da cobertura."
-                                );
-                    }
-
-                    if (price) {
-                        price.textContent =
-                            `${
-                                available
-                                    ? "A partir de"
-                                    : "Preço previsto:"
-                            } ${money(
-                                item.preco_base
-                            )}`;
-                    }
-
-                    button.dataset.precoBase =
-                        String(
-                            item.preco_base
-                        );
-
-                    button.dataset.disponibilidade =
-                        available
-                            ? "disponivel"
-                            : "em-breve";
-
-                    button.disabled =
-                        !available;
-                }
-            );
-
-        const container =
-            $(
-                ".opcoes-tamanho-monte-seu"
-            );
-
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML =
-            state.sizes
-                .filter(
-                    item =>
-                        item.visivel !==
-                        false
-                )
-                .map(
-                    (
-                        item,
-                        index
-                    ) => {
-                        const available =
-                            item.disponivel ===
-                            true;
-
-                        return `
+        return `
                     <label
                         class="opcao-tamanho-produto
-                        ${
-                            available
-                                ? ""
-                                : "opcao-tamanho-indisponivel"
-                        }"
+                        ${available ? "" : "opcao-tamanho-indisponivel"}"
                     >
 
                         <input
@@ -4392,31 +3414,22 @@ document.addEventListener("DOMContentLoaded", async () => {
                             value="${esc(item.tamanho_ml)}"
                             data-preco-base="${esc(item.preco_base)}"
                             ${available ? "" : "disabled"}
-                            ${
-                                index === 0 &&
-                                available
-                                    ? "checked"
-                                    : ""
-                            }
+                            ${index === 0 && available ? "checked" : ""}
                         >
 
 
                         <span>
 
                             <strong>
-                                ${esc(
-                                    productDisplayName(
-                                        item
-                                    )
-                                )}
+                                ${esc(productDisplayName(item))}
                             </strong>
 
 
                             <small>
                                 ${
-                                    available
-                                        ? `${money(item.preco_base)} • ${freeComplementLimit(item)} grátis`
-                                        : "Em breve"
+                                  available
+                                    ? `${money(item.preco_base)} • ${freeComplementLimit(item)} grátis`
+                                    : "Em breve"
                                 }
                             </small>
 
@@ -4425,135 +3438,82 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     </label>
                 `;
-                    }
-                )
-                .join("");
+      })
+      .join("");
 
-        $$(
-            "input[name='tamanhoMonteSeuOpcao']"
-        ).forEach(
-            input => {
-                input.addEventListener(
-                    "change",
-                    () => {
-                        if (
-                            input.checked
-                        ) {
-                            selectSize(
-                                input.value,
-                                input.dataset
-                                    .precoBase
-                            );
-                        }
-                    }
-                );
-            }
-        );
+    $$("input[name='tamanhoMonteSeuOpcao']").forEach((input) => {
+      input.addEventListener("change", () => {
+        if (input.checked) {
+          selectSize(input.value, input.dataset.precoBase);
+        }
+      });
+    });
+  }
+
+  function complementImagePath(name) {
+    const key = norm(name);
+
+    const images = {
+      granola: "Imagens/granola.png",
+
+      "leite condensado": "Imagens/leite-condensado.png",
+
+      pacoca: "Imagens/pacoca.png",
+
+      banana: "Imagens/banana.png",
+
+      "coco ralado": "Imagens/coco-ralado.png",
+
+      "leite em po": "Imagens/leite-em-po.png",
+
+      "bombom oreo": "Imagens/bombom-oreo.png",
+
+      oreo: "Imagens/bombom-oreo.png",
+
+      ovomaltine: "Imagens/ovomaltine.png",
+
+      morango: "Imagens/morango.png",
+
+      "uva verde": "Imagens/uva-verde.png",
+
+      uva: "Imagens/uva-verde.png",
+
+      nutella: "Imagens/nutella.png",
+
+      granulado: "Imagens/granulado.png",
+
+      manga: "Imagens/manga.png",
+
+      gomets: "Imagens/gomets.png",
+
+      confete: "Imagens/confete.png",
+
+      "power ball": "Imagens/power-ball.png",
+    };
+
+    if (images[key]) {
+      return images[key];
     }
 
-    function complementImagePath(name) {
-        const key =
-            norm(name);
+    const partial = Object.keys(images).find(
+      (imageKey) => key.includes(imageKey) || imageKey.includes(key),
+    );
 
-        const images = {
-            "granola":
-                "Imagens/granola.png",
+    return partial ? images[partial] : "";
+  }
 
-            "leite condensado":
-                "Imagens/leite-condensado.png",
+  function ensureComplementPickerStyles() {
+    const styleId = "azury-complementos-novo-estilo";
 
-            "pacoca":
-                "Imagens/pacoca.png",
-
-            "banana":
-                "Imagens/banana.png",
-
-            "coco ralado":
-                "Imagens/coco-ralado.png",
-
-            "leite em po":
-                "Imagens/leite-em-po.png",
-
-            "bombom oreo":
-                "Imagens/bombom-oreo.png",
-
-            "oreo":
-                "Imagens/bombom-oreo.png",
-
-            "ovomaltine":
-                "Imagens/ovomaltine.png",
-
-            "morango":
-                "Imagens/morango.png",
-
-            "uva verde":
-                "Imagens/uva-verde.png",
-
-            "uva":
-                "Imagens/uva-verde.png",
-
-            "nutella":
-                "Imagens/nutella.png",
-
-            "granulado":
-                "Imagens/granulado.png",
-
-            "manga":
-                "Imagens/manga.png",
-
-            "gomets":
-                "Imagens/gomets.png",
-
-            "confete":
-                "Imagens/confete.png",
-
-            "power ball":
-                "Imagens/power-ball.png"
-        };
-
-        if (images[key]) {
-            return images[key];
-        }
-
-        const partial =
-            Object
-                .keys(images)
-                .find(
-                    imageKey =>
-                        key.includes(
-                            imageKey
-                        ) ||
-                        imageKey.includes(
-                            key
-                        )
-                );
-
-        return partial
-            ? images[partial]
-            : "";
+    if (document.getElementById(styleId)) {
+      return;
     }
 
-    function ensureComplementPickerStyles() {
-        const styleId =
-            "azury-complementos-novo-estilo";
+    const style = document.createElement("style");
 
-        if (
-            document.getElementById(
-                styleId
-            )
-        ) {
-            return;
-        }
+    style.id = styleId;
 
-        const style =
-            document.createElement(
-                "style"
-            );
-
-        style.id =
-            styleId;
-
-        style.textContent = `
+    style.textContent = `
             .azury-complementos-ajuda {
                 margin: -4px 0 14px;
                 color: #64748b;
@@ -5198,66 +4158,40 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         `;
 
-        document.head.appendChild(
-            style
-        );
+    document.head.appendChild(style);
+  }
+
+  function ensureAssemblyStickyBar() {
+    if (!d.step1) {
+      return;
     }
 
-    function ensureAssemblyStickyBar() {
-        if (!d.step1) {
-            return;
-        }
+    let spacer = d.step1.querySelector(".azury-barra-montagem-espaco");
 
-        let spacer =
-            d.step1.querySelector(
-                ".azury-barra-montagem-espaco"
-            );
+    if (!spacer) {
+      spacer = document.createElement("div");
 
-        if (!spacer) {
-            spacer =
-                document.createElement(
-                    "div"
-                );
+      spacer.className = "azury-barra-montagem-espaco";
 
-            spacer.className =
-                "azury-barra-montagem-espaco";
+      spacer.setAttribute("aria-hidden", "true");
 
-            spacer.setAttribute(
-                "aria-hidden",
-                "true"
-            );
+      d.step1.appendChild(spacer);
+    }
 
-            d.step1.appendChild(
-                spacer
-            );
-        }
+    let bar = document.getElementById("barraFixaMontagem");
 
-        let bar =
-            document.getElementById(
-                "barraFixaMontagem"
-            );
+    if (!bar) {
+      bar = document.createElement("div");
 
-        if (!bar) {
-            bar =
-                document.createElement(
-                    "div"
-                );
+      bar.id = "barraFixaMontagem";
 
-            bar.id =
-                "barraFixaMontagem";
+      bar.className = "azury-barra-montagem";
 
-            bar.className =
-                "azury-barra-montagem";
+      bar.hidden = true;
 
-            bar.hidden =
-                true;
+      bar.setAttribute("aria-label", "Resumo da montagem atual");
 
-            bar.setAttribute(
-                "aria-label",
-                "Resumo da montagem atual"
-            );
-
-            bar.innerHTML = `
+      bar.innerHTML = `
                 <div
                     class="azury-barra-montagem-produto"
                 >
@@ -5317,245 +4251,146 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </button>
             `;
 
-            document.body.appendChild(
-                bar
-            );
-        }
-
-        if (d.add) {
-            d.add.classList.add(
-                "azury-adicionar-substituido"
-            );
-        }
-
-        d.stickyBar =
-            bar;
-
-        d.stickyProduct =
-            bar.querySelector(
-                "#barraFixaMontagemProduto"
-            );
-
-        d.stickySubtotal =
-            bar.querySelector(
-                "#barraFixaMontagemSubtotal"
-            );
-
-        d.stickyCart =
-            bar.querySelector(
-                "#barraFixaMontagemSacola"
-            );
-
-        d.stickyAdd =
-            bar.querySelector(
-                "#btnAdicionarSacolaFixo"
-            );
-
-        updateAssemblyStickyBar(
-            state.subtotal
-        );
-
-        syncAssemblyStickyBarVisibility();
+      document.body.appendChild(bar);
     }
 
-    function syncAssemblyStickyBarVisibility(
-        firstStep = null
-    ) {
-        if (!d.stickyBar) {
-            return;
-        }
-
-        const modalOpen =
-            d.modal?.style.display ===
-            "flex";
-
-        const builderOpen =
-            firstStep === null
-                ? Boolean(
-                    d.step1 &&
-                    !d.step1.hidden
-                )
-                : Boolean(firstStep);
-
-        d.stickyBar.hidden =
-            !(
-                modalOpen &&
-                builderOpen
-            );
+    if (d.add) {
+      d.add.classList.add("azury-adicionar-substituido");
     }
 
-    function updateAssemblyStickyBar(
-        value = state.subtotal,
-        status = null
-    ) {
-        if (!d.stickyBar) {
-            return;
-        }
+    d.stickyBar = bar;
 
-        const selectedProduct =
-            d.size?.value ||
-            "";
+    d.stickyProduct = bar.querySelector("#barraFixaMontagemProduto");
 
-        const currentSizeItem =
-            state.sizes.find(
-                item =>
-                    String(
-                        item.tamanho_ml
-                    ) ===
-                        String(
-                            selectedProduct
-                        ) ||
-                    Number(
-                        item.tamanho_ml
-                    ) ===
-                        Number(
-                            selectedProduct
-                        )
-            );
+    d.stickySubtotal = bar.querySelector("#barraFixaMontagemSubtotal");
 
-        if (d.stickyProduct) {
-            d.stickyProduct.textContent =
-                productDisplayName(
-                    currentSizeItem ||
-                    selectedProduct
-                );
-        }
+    d.stickyCart = bar.querySelector("#barraFixaMontagemSacola");
 
-        if (d.stickySubtotal) {
-            d.stickySubtotal.textContent =
-                money(value);
-        }
+    d.stickyAdd = bar.querySelector("#btnAdicionarSacolaFixo");
 
-        if (d.stickyCart) {
-            const units =
-                cartUnits();
+    updateAssemblyStickyBar(state.subtotal);
 
-            const subtotal =
-                cartSubtotal();
+    syncAssemblyStickyBarVisibility();
+  }
 
-            d.stickyCart.textContent =
-                `Sacola: ${units} ${
-                    units === 1
-                        ? "item"
-                        : "itens"
-                } • ${money(subtotal)}`;
-        }
-
-        const currentStatus =
-            status ||
-            storeState();
-
-        if (d.stickyAdd) {
-            d.stickyAdd.disabled =
-                !currentStatus.open;
-
-            d.stickyAdd.textContent =
-                currentStatus.open
-                    ? "Adicionar à sacola"
-                    : "Loja fechada";
-        }
+  function syncAssemblyStickyBarVisibility(firstStep = null) {
+    if (!d.stickyBar) {
+      return;
     }
 
-    function renderComplements() {
-        if (!d.middle) {
-            return;
+    const modalOpen = d.modal?.style.display === "flex";
+
+    const builderOpen =
+      firstStep === null
+        ? Boolean(d.step1 && !d.step1.hidden)
+        : Boolean(firstStep);
+
+    d.stickyBar.hidden = !(modalOpen && builderOpen);
+  }
+
+  function updateAssemblyStickyBar(value = state.subtotal, status = null) {
+    if (!d.stickyBar) {
+      return;
+    }
+
+    const selectedProduct = d.size?.value || "";
+
+    const currentSizeItem = state.sizes.find(
+      (item) =>
+        String(item.tamanho_ml) === String(selectedProduct) ||
+        Number(item.tamanho_ml) === Number(selectedProduct),
+    );
+
+    if (d.stickyProduct) {
+      d.stickyProduct.textContent = productDisplayName(
+        currentSizeItem || selectedProduct,
+      );
+    }
+
+    if (d.stickySubtotal) {
+      d.stickySubtotal.textContent = money(value);
+    }
+
+    if (d.stickyCart) {
+      const units = cartUnits();
+
+      const subtotal = cartSubtotal();
+
+      d.stickyCart.textContent = `Sacola: ${units} ${
+        units === 1 ? "item" : "itens"
+      } • ${money(subtotal)}`;
+    }
+
+    const currentStatus = status || storeState();
+
+    if (d.stickyAdd) {
+      d.stickyAdd.disabled = !currentStatus.open;
+
+      d.stickyAdd.textContent = currentStatus.open
+        ? "Adicionar à sacola"
+        : "Loja fechada";
+    }
+  }
+
+  function renderComplements() {
+    if (!d.middle) {
+      return;
+    }
+
+    ensureComplementPickerStyles();
+    ensureAssemblyStickyBar();
+
+    const middleGroup = d.middle.closest(".grupo-monte-seu");
+
+    const topGroup = d.top?.closest(".grupo-monte-seu");
+
+    if (topGroup && topGroup !== middleGroup) {
+      topGroup.hidden = true;
+    }
+
+    if (d.top) {
+      d.top.innerHTML = "";
+    }
+
+    if (middleGroup) {
+      const title = middleGroup.querySelector("h3");
+
+      if (title) {
+        title.textContent = "Escolha seus complementos";
+      }
+
+      let help = middleGroup.querySelector(".azury-complementos-ajuda");
+
+      if (!help) {
+        help = document.createElement("p");
+
+        help.className = "azury-complementos-ajuda";
+
+        if (title) {
+          title.insertAdjacentElement("afterend", help);
+        } else {
+          middleGroup.prepend(help);
         }
+      }
 
-        ensureComplementPickerStyles();
-        ensureAssemblyStickyBar();
+      help.innerHTML = `Escolha o complemento <strong>uma vez</strong> e defina onde ele vai: meio, cobertura ou nos dois. <strong>“Nos dois” continua contando como 1 complemento.</strong>`;
 
-        const middleGroup =
-            d.middle.closest(
-                ".grupo-monte-seu"
-            );
+      let freeCounter = middleGroup.querySelector(
+        ".azury-complementos-progresso",
+      );
 
-        const topGroup =
-            d.top?.closest(
-                ".grupo-monte-seu"
-            );
+      if (!freeCounter) {
+        freeCounter = document.createElement("div");
 
-        if (
-            topGroup &&
-            topGroup !==
-                middleGroup
-        ) {
-            topGroup.hidden =
-                true;
-        }
+        freeCounter.className = "azury-complementos-progresso";
 
-        if (d.top) {
-            d.top.innerHTML =
-                "";
-        }
+        freeCounter.id = "contadorComplementosGratis";
 
-        if (middleGroup) {
-            const title =
-                middleGroup.querySelector(
-                    "h3"
-                );
+        freeCounter.setAttribute("role", "status");
 
-            if (title) {
-                title.textContent =
-                    "Escolha seus complementos";
-            }
+        freeCounter.setAttribute("aria-live", "polite");
 
-            let help =
-                middleGroup.querySelector(
-                    ".azury-complementos-ajuda"
-                );
-
-            if (!help) {
-                help =
-                    document.createElement(
-                        "p"
-                    );
-
-                help.className =
-                    "azury-complementos-ajuda";
-
-                if (title) {
-                    title.insertAdjacentElement(
-                        "afterend",
-                        help
-                    );
-                } else {
-                    middleGroup.prepend(
-                        help
-                    );
-                }
-            }
-
-            help.innerHTML =
-                `Escolha o complemento <strong>uma vez</strong> e defina onde ele vai: meio, cobertura ou nos dois. <strong>“Nos dois” continua contando como 1 complemento.</strong>`;
-
-            let freeCounter =
-                middleGroup.querySelector(
-                    ".azury-complementos-progresso"
-                );
-
-            if (!freeCounter) {
-                freeCounter =
-                    document.createElement(
-                        "div"
-                    );
-
-                freeCounter.className =
-                    "azury-complementos-progresso";
-
-                freeCounter.id =
-                    "contadorComplementosGratis";
-
-                freeCounter.setAttribute(
-                    "role",
-                    "status"
-                );
-
-                freeCounter.setAttribute(
-                    "aria-live",
-                    "polite"
-                );
-
-                freeCounter.innerHTML = `
+        freeCounter.innerHTML = `
                     <div
                         class="azury-complementos-progresso-cabecalho"
                     >
@@ -5603,68 +4438,37 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </small>
                 `;
 
-                help.insertAdjacentElement(
-                    "afterend",
-                    freeCounter
-                );
-            }
-        }
+        help.insertAdjacentElement("afterend", freeCounter);
+      }
+    }
 
-        d.middle.classList.add(
-            "azury-complementos-grid"
-        );
+    d.middle.classList.add("azury-complementos-grid");
 
-        const indexedComplements =
-            state.complements.map(
-                (
-                    item,
-                    index
-                ) => ({
-                    item,
-                    index
-                })
-            );
+    const indexedComplements = state.complements.map((item, index) => ({
+      item,
+      index,
+    }));
 
-        const regularComplements =
-            indexedComplements.filter(
-                ({ item }) =>
-                    !isAlwaysPaidComplement(
-                        item.nome
-                    )
-            );
+    const regularComplements = indexedComplements.filter(
+      ({ item }) => !isAlwaysPaidComplement(item.nome),
+    );
 
-        const specialComplements =
-            indexedComplements.filter(
-                ({ item }) =>
-                    isAlwaysPaidComplement(
-                        item.nome
-                    )
-            );
+    const specialComplements = indexedComplements.filter(({ item }) =>
+      isAlwaysPaidComplement(item.nome),
+    );
 
-        const renderComplementCard =
-            ({
-                item,
-                index
-            }) => {
-                const alwaysPaid =
-                    isAlwaysPaidComplement(
-                        item.nome
-                    );
+    const renderComplementCard = ({ item, index }) => {
+      const alwaysPaid = isAlwaysPaidComplement(item.nome);
 
-                const priceText =
-                    alwaysPaid
-                        ? `Adicional pago • ${money(item.preco)}`
-                        : `Grátis dentro do limite • Extra ${money(item.preco)}`;
+      const priceText = alwaysPaid
+        ? `Adicional pago • ${money(item.preco)}`
+        : `Grátis dentro do limite • Extra ${money(item.preco)}`;
 
-                const image =
-                    complementImagePath(
-                        item.nome
-                    );
+      const image = complementImagePath(item.nome);
 
-                const groupName =
-                    `camada-complemento-${index}`;
+      const groupName = `camada-complemento-${index}`;
 
-                return `
+      return `
                     <div
                         class="complemento-card ${alwaysPaid ? "especial-pago" : ""}"
                         data-complement-card
@@ -5680,15 +4484,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                             >
 
                                 ${
-                                    image
-                                        ? `
+                                  image
+                                    ? `
                                             <img
                                                 src="${esc(image)}"
                                                 alt="${esc(item.nome)}"
                                                 loading="lazy"
                                             >
                                         `
-                                        : ""
+                                    : ""
                                 }
 
                             </span>
@@ -5779,11 +4583,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     </div>
                 `;
-            };
+    };
 
-        const regularSection =
-            regularComplements.length
-                ? `
+    const regularSection = regularComplements.length
+      ? `
                     <div
                         class="azury-complementos-secao"
                         aria-label="Complementos grátis e extras"
@@ -5813,18 +4616,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     </div>
 
-                    ${regularComplements
-                        .map(
-                            renderComplementCard
-                        )
-                        .join("")
-                    }
+                    ${regularComplements.map(renderComplementCard).join("")}
                 `
-                : "";
+      : "";
 
-        const specialSection =
-            specialComplements.length
-                ? `
+    const specialSection = specialComplements.length
+      ? `
                     <div
                         class="azury-complementos-secao especiais"
                         aria-label="Complementos especiais pagos"
@@ -5854,2294 +4651,1147 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     </div>
 
-                    ${specialComplements
-                        .map(
-                            renderComplementCard
-                        )
-                        .join("")
-                    }
+                    ${specialComplements.map(renderComplementCard).join("")}
                 `
-                : "";
+      : "";
 
-        d.middle.innerHTML =
-            regularSection +
-            specialSection;
+    d.middle.innerHTML = regularSection + specialSection;
 
-        d.middle
-            .querySelectorAll(
-                ".complemento-card-imagem img"
-            )
-            .forEach(
-                image => {
-                    image.addEventListener(
-                        "error",
-                        () => {
-                            image
-                                .closest(
-                                    ".complemento-card-imagem"
-                                )
-                                ?.classList
-                                .add(
-                                    "sem-imagem"
-                                );
+    d.middle
+      .querySelectorAll(".complemento-card-imagem img")
+      .forEach((image) => {
+        image.addEventListener(
+          "error",
+          () => {
+            image
+              .closest(".complemento-card-imagem")
+              ?.classList.add("sem-imagem");
 
-                            image.remove();
-                        },
-                        {
-                            once:
-                                true
-                        }
-                    );
-                }
-            );
-
-        allComplements()
-            .forEach(
-                input => {
-                    input.addEventListener(
-                        "change",
-                        () => {
-                            const card =
-                                input.closest(
-                                    ".complemento-card"
-                                );
-
-                            const layerInputs =
-                                card
-                                    ? Array.from(
-                                        card.querySelectorAll(
-                                            ".complemento-camada"
-                                        )
-                                    )
-                                    : [];
-
-                            if (
-                                input.checked
-                            ) {
-                                complementSelectionCounter +=
-                                    1;
-
-                                input.dataset.ordemSelecao =
-                                    String(
-                                        complementSelectionCounter
-                                    );
-
-                                layerInputs
-                                    .forEach(
-                                        layerInput => {
-                                            layerInput.disabled =
-                                                false;
-                                        }
-                                    );
-
-                                if (
-                                    !layerInputs.some(
-                                        layerInput =>
-                                            layerInput.checked
-                                    )
-                                ) {
-                                    const both =
-                                        layerInputs.find(
-                                            layerInput =>
-                                                layerInput.value ===
-                                                "ambos"
-                                        );
-
-                                    if (both) {
-                                        both.checked =
-                                            true;
-                                    }
-                                }
-                            } else {
-                                delete input
-                                    .dataset
-                                    .ordemSelecao;
-
-                                layerInputs
-                                    .forEach(
-                                        layerInput => {
-                                            layerInput.disabled =
-                                                true;
-                                        }
-                                    );
-                            }
-
-                            card?.classList.toggle(
-                                "selecionado",
-                                input.checked
-                            );
-
-                            calculate();
-                        }
-                    );
-                }
-            );
-
-        d.middle
-            .querySelectorAll(
-                ".complemento-camada"
-            )
-            .forEach(
-                input => {
-                    input.addEventListener(
-                        "change",
-                        () => {
-                            calculate();
-                        }
-                    );
-                }
-            );
-    }
-
-    function nowLocal() {
-        const parts =
-            new Intl.DateTimeFormat(
-                "en-CA",
-                {
-                    timeZone:
-                        state.config
-                            ?.fuso_horario ||
-                        "America/Sao_Paulo",
-
-                    year:
-                        "numeric",
-
-                    month:
-                        "2-digit",
-
-                    day:
-                        "2-digit",
-
-                    hour:
-                        "2-digit",
-
-                    minute:
-                        "2-digit",
-
-                    hourCycle:
-                        "h23"
-                }
-            ).formatToParts(
-                new Date()
-            );
-
-        const values =
-            Object.fromEntries(
-                parts
-                    .filter(
-                        part =>
-                            part.type !==
-                            "literal"
-                    )
-                    .map(
-                        part => [
-                            part.type,
-                            Number(
-                                part.value
-                            )
-                        ]
-                    )
-            );
-
-        return {
-            day:
-                new Date(
-                    Date.UTC(
-                        values.year,
-                        values.month - 1,
-                        values.day
-                    )
-                ).getUTCDay(),
-
-            minutes:
-                (
-                    values.hour *
-                    60
-                ) +
-                values.minute
-        };
-    }
-
-    function schedule(day) {
-        return state.schedules.find(
-            item =>
-                Number(
-                    item.dia_semana
-                ) ===
-                Number(day)
+            image.remove();
+          },
+          {
+            once: true,
+          },
         );
-    }
+      });
 
-    function storeState() {
-        if (
-            !state.operationReady
-        ) {
-            return {
-                open:
-                    false,
+    allComplements().forEach((input) => {
+      input.addEventListener("change", () => {
+        const card = input.closest(".complemento-card");
 
-                title:
-                    "CARREGANDO CARDÁPIO",
+        const layerInputs = card
+          ? Array.from(card.querySelectorAll(".complemento-camada"))
+          : [];
 
-                text:
-                    "Aguarde alguns segundos.",
+        if (input.checked) {
+          complementSelectionCounter += 1;
 
-                alert:
-                    "O cardápio ainda está carregando."
-            };
-        }
+          input.dataset.ordemSelecao = String(complementSelectionCounter);
 
-        if (
-            state.config
-                .pedidos_ativos !==
-            true
-        ) {
-            const text =
-                state.config
-                    .mensagem_pausa ||
-                "Os pedidos estão temporariamente pausados.";
+          layerInputs.forEach((layerInput) => {
+            layerInput.disabled = false;
+          });
 
-            return {
-                open:
-                    false,
-
-                title:
-                    "PEDIDOS PAUSADOS",
-
-                text,
-
-                alert:
-                    text
-            };
-        }
-
-        const now =
-            nowLocal();
-
-        const today =
-            schedule(
-                now.day
+          if (!layerInputs.some((layerInput) => layerInput.checked)) {
+            const both = layerInputs.find(
+              (layerInput) => layerInput.value === "ambos",
             );
 
-        let open =
-            false;
-
-        if (today?.ativo) {
-            const start =
-                timeMinutes(
-                    today.abre_as
-                );
-
-            const end =
-                timeMinutes(
-                    today.fecha_as
-                );
-
-            if (
-                start !== null &&
-                end !== null
-            ) {
-                open =
-                    end > start
-                        ? (
-                            now.minutes >=
-                                start &&
-                            now.minutes <
-                                end
-                        )
-                        : (
-                            now.minutes >=
-                            start
-                        );
+            if (both) {
+              both.checked = true;
             }
+          }
+        } else {
+          delete input.dataset.ordemSelecao;
+
+          layerInputs.forEach((layerInput) => {
+            layerInput.disabled = true;
+          });
         }
 
-        if (!open) {
-            const previous =
-                schedule(
-                    (
-                        now.day +
-                        6
-                    ) % 7
-                );
-
-            if (
-                previous?.ativo
-            ) {
-                const start =
-                    timeMinutes(
-                        previous.abre_as
-                    );
-
-                const end =
-                    timeMinutes(
-                        previous.fecha_as
-                    );
-
-                if (
-                    start !== null &&
-                    end !== null &&
-                    end < start &&
-                    now.minutes < end
-                ) {
-                    open =
-                        true;
-                }
-            }
-        }
-
-        if (open) {
-            return {
-                open:
-                    true,
-
-                title:
-                    "ABERTO AGORA",
-
-                text:
-                    `Faça seu pedido — atendimento até ${
-                        timeLabel(
-                            today
-                                ?.fecha_as
-                        ) ||
-                        "00:00"
-                    }.`,
-
-                alert:
-                    ""
-            };
-        }
-
-        const names = [
-            "domingo",
-            "segunda-feira",
-            "terça-feira",
-            "quarta-feira",
-            "quinta-feira",
-            "sexta-feira",
-            "sábado"
-        ];
-
-        for (
-            let offset = 0;
-            offset < 8;
-            offset += 1
-        ) {
-            const day =
-                (
-                    now.day +
-                    offset
-                ) % 7;
-
-            const item =
-                schedule(day);
-
-            const start =
-                timeMinutes(
-                    item?.abre_as
-                );
-
-            if (
-                !item?.ativo ||
-                start === null ||
-                (
-                    offset === 0 &&
-                    now.minutes >=
-                        start
-                )
-            ) {
-                continue;
-            }
-
-            const when =
-                offset === 0
-                    ? "hoje"
-                    : offset === 1
-                        ? "amanhã"
-                        : names[day];
-
-            const text =
-                `Abrimos ${when} às ${timeLabel(item.abre_as)}.`;
-
-            return {
-                open:
-                    false,
-
-                title:
-                    "FECHADO NO MOMENTO",
-
-                text,
-
-                alert:
-                    `A Azury está fechada no momento. ${text}`
-            };
-        }
-
-        return {
-            open:
-                false,
-
-            title:
-                "FECHADO NO MOMENTO",
-
-            text:
-                "Consulte novamente em breve.",
-
-            alert:
-                "A Azury está fechada no momento."
-        };
-    }
-
-    function syncOrderButtons(
-        status
-    ) {
-        const hasItems =
-            state.cart.length >
-            0;
-
-        if (d.add) {
-            d.add.disabled =
-                !status.open;
-
-            d.add.textContent =
-                status.open
-                    ? "Adicionar à sacola"
-                    : "Loja fechada";
-        }
-
-        if (d.next) {
-            d.next.disabled =
-                !status.open ||
-                !hasItems;
-
-            d.next.textContent =
-                !status.open
-                    ? "Loja fechada"
-                    : hasItems
-                        ? "Continuar para entrega"
-                        : "Adicione um item à sacola";
-        }
-
-        if (
-            d.send &&
-            !state.sending
-        ) {
-            d.send.disabled =
-                !status.open ||
-                !hasItems;
-
-            d.send.textContent =
-                !status.open
-                    ? "Loja fechada"
-                    : hasItems
-                        ? "Finalizar pedido"
-                        : "Sacola vazia";
-        }
-
-        updateAssemblyStickyBar(
-            state.subtotal,
-            status
-        );
-    }
-
-    function updateStore() {
-        const status =
-            storeState();
-
-        d.store?.classList.toggle(
-            "aberta",
-            status.open
-        );
-
-        d.store?.classList.toggle(
-            "fechada",
-            !status.open
-        );
-
-        if (d.storeTitle) {
-            d.storeTitle.textContent =
-                status.title;
-        }
-
-        if (d.storeMsg) {
-            d.storeMsg.textContent =
-                status.text;
-        }
-
-        $$(".btn-montar")
-            .forEach(
-                button => {
-                    const available =
-                        button.dataset
-                            .disponibilidade !==
-                        "em-breve";
-
-                    button.disabled =
-                        !available ||
-                        !status.open;
-
-                    button.classList.toggle(
-                        "btn-loja-fechada",
-                        available &&
-                        !status.open
-                    );
-
-                    button.textContent =
-                        !available
-                            ? "Disponível em breve"
-                            : status.open
-                                ? "Montar meu açaí"
-                                : "Loja fechada";
-                }
-            );
-
-        syncOrderButtons(
-            status
-        );
-
-        return status;
-    }
-
-    function requireOpen() {
-        const status =
-            updateStore();
-
-        if (status.open) {
-            return true;
-        }
-
-        alert(
-            status.alert
-        );
-
-        return false;
-    }
-
-    function updateWhatsapp() {
-        const number =
-            String(
-                state.config
-                    ?.whatsapp ||
-                "5511960220402"
-            ).replace(
-                /\D/g,
-                ""
-            );
-
-        $$(".js-pedido-horario")
-            .forEach(
-                link => {
-                    link.href =
-                        `https://wa.me/${number}`;
-                }
-            );
-    }
-
-    function selectSize(
-        size,
-        base
-    ) {
-        const item =
-            state.sizes.find(
-                row =>
-                    Number(
-                        row.tamanho_ml
-                    ) ===
-                        Number(size) &&
-                    row.disponivel ===
-                        true &&
-                    row.visivel ===
-                        true
-            );
-
-        if (!item) {
-            return;
-        }
-
-        if (d.size) {
-            d.size.value =
-                String(
-                    item.tamanho_ml
-                );
-        }
-
-        if (d.base) {
-            d.base.value =
-                String(
-                    item.preco_base ??
-                    base
-                );
-        }
-
-        $$(
-            "input[name='tamanhoMonteSeuOpcao']"
-        ).forEach(
-            input => {
-                input.checked =
-                    Number(
-                        input.value
-                    ) ===
-                    Number(
-                        item.tamanho_ml
-                    );
-            }
-        );
+        card?.classList.toggle("selecionado", input.checked);
 
         calculate();
-    }
-
-    function allComplements() {
-        return $$(
-            ".complemento-monte-seu"
-        );
-    }
-
-    function currentComplementSelections() {
-        return allComplements()
-            .filter(
-                input =>
-                    input.checked
-            )
-            .map(
-                (
-                    input,
-                    index
-                ) => {
-                    const card =
-                        input.closest(
-                            ".complemento-card"
-                        );
-
-                    const layerInput =
-                        card?.querySelector(
-                            ".complemento-camada:checked"
-                        );
-
-                    return {
-                        id:
-                            input.dataset
-                                .id ||
-                            null,
-
-                        nome:
-                            input.value,
-
-                        camada:
-                            layerInput
-                                ?.value ||
-                            "ambos",
-
-                        preco:
-                            num(
-                                input.dataset
-                                    .preco,
-                                0
-                            ),
-
-                        ordem_selecao:
-                            Math.max(
-                                1,
-                                Math.floor(
-                                    num(
-                                        input.dataset
-                                            .ordemSelecao,
-                                        index + 1
-                                    )
-                                )
-                            )
-                    };
-                }
-            );
-    }
-
-    function selected(layer) {
-        return (
-            currentComplementSelections()
-                .filter(
-                    complement =>
-                        complement.camada ===
-                            layer ||
-                        complement.camada ===
-                            "ambos"
-                )
-        );
-    }
-
-    function updateFreeComplementCounter(
-        complements =
-            currentComplementSelections()
-    ) {
-        const counter =
-            document.getElementById(
-                "contadorComplementosGratis"
-            );
-
-        const countText =
-            document.getElementById(
-                "contadorComplementosGratisTexto"
-            );
-
-        const progressTrack =
-            document.getElementById(
-                "barraComplementosGratis"
-            );
-
-        const progressFill =
-            document.getElementById(
-                "barraComplementosGratisPreenchimento"
-            );
-
-        const messageText =
-            document.getElementById(
-                "mensagemComplementosGratis"
-            );
-
-        if (
-            !counter ||
-            !countText ||
-            !progressTrack ||
-            !progressFill ||
-            !messageText
-        ) {
-            return;
-        }
-
-        const selectedProduct =
-            d.size?.value ||
-            "";
-
-        const currentSizeItem =
-            state.sizes.find(
-                item =>
-                    String(
-                        item.tamanho_ml
-                    ) ===
-                        String(
-                            selectedProduct
-                        ) ||
-                    Number(
-                        item.tamanho_ml
-                    ) ===
-                        Number(
-                            selectedProduct
-                        )
-            );
-
-        const limit =
-            freeComplementLimit(
-                currentSizeItem ||
-                selectedProduct
-            );
-
-        if (limit <= 0) {
-            counter.hidden =
-                true;
-
-            return;
-        }
-
-        counter.hidden =
-            false;
-
-        const eligibleKeys =
-            new Set(
-                (
-                    complements ||
-                    []
-                )
-                    .filter(
-                        complement =>
-                            !isAlwaysPaidComplement(
-                                complement.nome
-                            )
-                    )
-                    .map(
-                        complement =>
-                            norm(
-                                complement.nome
-                            )
-                    )
-                    .filter(Boolean)
-            );
-
-        const selectedCount =
-            eligibleKeys.size;
-
-        const usedFree =
-            Math.min(
-                selectedCount,
-                limit
-            );
-
-        const extras =
-            Math.max(
-                selectedCount -
-                    limit,
-                0
-            );
-
-        const percentage =
-            Math.min(
-                (
-                    usedFree /
-                    limit
-                ) * 100,
-                100
-            );
-
-        progressFill.style.width =
-            `${percentage}%`;
-
-        progressTrack.setAttribute(
-            "aria-valuemax",
-            String(limit)
-        );
-
-        progressTrack.setAttribute(
-            "aria-valuenow",
-            String(usedFree)
-        );
-
-        countText.textContent =
-            `${usedFree} de ${limit}`;
-
-        counter.classList.toggle(
-            "limite-atingido",
-            usedFree >= limit &&
-            extras === 0
-        );
-
-        counter.classList.toggle(
-            "com-extras",
-            extras > 0
-        );
-
-        if (extras > 0) {
-            messageText.textContent =
-                `${usedFree} de ${limit} grátis • ` +
-                `${extras} ${
-                    extras === 1
-                        ? "extra"
-                        : "extras"
-                } ` +
-                `${
-                    extras === 1
-                        ? "será cobrado"
-                        : "serão cobrados"
-                }.`;
-
-            return;
-        }
-
-        if (
-            usedFree >= limit
-        ) {
-            messageText.textContent =
-                "Limite grátis atingido.";
-
-            return;
-        }
-
-        const remaining =
-            limit -
-            usedFree;
-
-        messageText.textContent =
-            remaining === 1
-                ? "Você ainda pode escolher 1 complemento grátis."
-                : `Você ainda pode escolher ${remaining} complementos grátis.`;
-    }
-
-    function calculate() {
-        const size =
-            Number(
-                d.size?.value
-            );
-
-        const base =
-            num(
-                d.base?.value,
-                0
-            );
-
-        const complements =
-            currentComplementSelections();
-
-        updateFreeComplementCounter(
-            complements
-        );
-
-        const value =
-            itemUnitPrice(
-                size,
-                base,
-                complements
-            );
-
-        state.subtotal =
-            value;
-
-        if (d.subtotal) {
-            d.subtotal.textContent =
-                money(value);
-        }
-
-        updateAssemblyStickyBar(
-            value
-        );
-
-        return value;
-    }
-
-    function updateTotal() {
-        const subtotal =
-            cartSubtotal();
-
-        const fee =
-            subtotal > 0
-                ? num(
-                    d.fee?.value,
-                    0
-                )
-                : 0;
-
-        const total =
-            subtotal +
-            fee;
-
-        if (d.total) {
-            d.total.textContent =
-                money(total);
-        }
-
-        return total;
-    }
-
-    function showStep(step) {
-        const first =
-            step === 1;
-
-        if (d.step1) {
-            d.step1.hidden =
-                !first;
-
-            d.step1.classList.toggle(
-                "ativo",
-                first
-            );
-        }
-
-        if (d.step2) {
-            d.step2.hidden =
-                first;
-
-            d.step2.classList.toggle(
-                "ativo",
-                !first
-            );
-        }
-
-        d.indicators.forEach(
-            item => {
-                const value =
-                    Number(
-                        item.dataset
-                            .indicadorEtapa
-                    );
-
-                item.classList.toggle(
-                    "ativa",
-                    value === step
-                );
-
-                item.classList.toggle(
-                    "concluida",
-                    value < step
-                );
-            }
-        );
-
-        if (d.content) {
-            d.content.scrollTop =
-                0;
-        }
-
-        syncAssemblyStickyBarVisibility(
-            first
-        );
-    }
-
-    function openModal() {
-        if (!d.modal) {
-            return;
-        }
-
-        d.modal.style.display =
-            "flex";
-
-        document.body.style.overflow =
-            "hidden";
-
-        syncAssemblyStickyBarVisibility();
-    }
-
-    function closeModal() {
-        if (!d.modal) {
-            return;
-        }
-
-        d.modal.style.display =
-            "none";
-
-        document.body.style.overflow =
-            "";
-
-        syncAssemblyStickyBarVisibility(
-            false
-        );
-    }
-
-    function resetAddress(
-        text =
-            "Informe um CEP válido para calcular a entrega.",
-        type = ""
-    ) {
-        state.zipRequest +=
-            1;
-
-        state.consultingZip =
-            false;
-
-        if (d.addressOk) {
-            d.addressOk.value =
-                "false";
-        }
-
-        if (d.fee) {
-            d.fee.value =
-                "0";
-        }
-
-        if (d.districtId) {
-            d.districtId.value =
-                "";
-        }
-
-        if (d.street) {
-            d.street.value =
-                "";
-        }
-
-        if (d.district) {
-            d.district.value =
-                "";
-        }
-
-        if (d.feeText) {
-            d.feeText.textContent =
-                "A calcular";
-        }
-
-        message(
-            text,
-            type
-        );
-
-        updateTotal();
-    }
-
-    function findDistrict(name) {
-        const key =
-            norm(name);
-
-        if (!key) {
-            return null;
-        }
-
-        if (
-            state.districtMap
-                .has(key)
-        ) {
-            return (
-                state.districtMap
-                    .get(key)
-            );
-        }
-
-        const alias =
-            state.aliases.find(
-                item =>
-                    key.includes(
-                        item
-                    ) ||
-                    item.includes(
-                        key
-                    )
-            );
-
-        return alias
-            ? state.districtMap
-                .get(alias)
-            : null;
-    }
-
-    async function consultZip(zip) {
-        const requestId =
-            ++state.zipRequest;
-
-        state.consultingZip =
-            true;
-
-        message(
-            "Consultando o CEP...",
-            "carregando"
-        );
-
-        try {
-            const response =
-                await fetch(
-                    `https://viacep.com.br/ws/${zip}/json/`
-                );
-
-            if (!response.ok) {
-                throw new Error(
-                    "Falha ao consultar CEP."
-                );
-            }
-
-            const data =
-                await response.json();
-
-            if (
-                requestId !==
-                state.zipRequest
-            ) {
-                return;
-            }
-
-            if (
-                data.erro ||
-                !data.bairro ||
-                !data.logradouro
-            ) {
-                resetAddress(
-                    "CEP inexistente ou sem endereço completo.",
-                    "erro"
-                );
-
-                return;
-            }
-
-            const district =
-                findDistrict(
-                    data.bairro
-                );
-
-            if (!district) {
-                resetAddress(
-                    `Ainda não entregamos no bairro ${data.bairro}.`,
-                    "erro"
-                );
-
-                return;
-            }
-
-            if (d.street) {
-                d.street.value =
-                    data.logradouro;
-            }
-
-            if (d.district) {
-                d.district.value =
-                    district.nome;
-            }
-
-            if (d.districtId) {
-                d.districtId.value =
-                    String(
-                        district.id
-                    );
-            }
-
-            if (d.addressOk) {
-                d.addressOk.value =
-                    "true";
-            }
-
-            if (d.fee) {
-                d.fee.value =
-                    String(
-                        district.taxa
-                    );
-            }
-
-            if (d.feeText) {
-                d.feeText.textContent =
-                    money(
-                        district.taxa
-                    );
-            }
-
-            message(
-                `Endereço validado. Entrega para ${district.nome}: ${money(district.taxa)}.`,
-                "sucesso"
-            );
-
-            updateTotal();
-        } catch (error) {
-            if (
-                requestId ===
-                state.zipRequest
-            ) {
-                resetAddress(
-                    "Não foi possível validar o CEP agora. Tente novamente.",
-                    "erro"
-                );
-            }
-        } finally {
-            if (
-                requestId ===
-                state.zipRequest
-            ) {
-                state.consultingZip =
-                    false;
-            }
-        }
-    }
-
-    function setupZip() {
-        d.zip?.addEventListener(
-            "input",
-            () => {
-                const digits =
-                    d.zip.value
-                        .replace(
-                            /\D/g,
-                            ""
-                        )
-                        .slice(
-                            0,
-                            8
-                        );
-
-                d.zip.value =
-                    digits.length > 5
-                        ? `${digits.slice(0, 5)}-${digits.slice(5)}`
-                        : digits;
-
-                resetAddress();
-
-                if (
-                    digits.length ===
-                    8
-                ) {
-                    consultZip(
-                        digits
-                    );
-                }
-            }
-        );
-    }
-
-    async function fillCustomer() {
-        try {
-            const {
-                data
-            } =
-                await sb.auth
-                    .getSession();
-
-            const user =
-                data.session
-                    ?.user;
-
-            if (!user) {
-                return;
-            }
-
-            let profile = {};
-
-            const result =
-                await sb
-                    .from(
-                        "perfis"
-                    )
-                    .select("*")
-                    .eq(
-                        "id",
-                        user.id
-                    )
-                    .maybeSingle();
-
-            if (
-                !result.error
-            ) {
-                profile =
-                    result.data ||
-                    {};
-            }
-
-            if (
-                d.name &&
-                !d.name.value.trim()
-            ) {
-                d.name.value =
-                    profile.nome ||
-                    profile.nome_completo ||
-                    user.user_metadata
-                        ?.nome ||
-                    user.email
-                        ?.split("@")[0] ||
-                    "";
-            }
-
-            if (
-                d.phone &&
-                !d.phone.value.trim()
-            ) {
-                d.phone.value =
-                    profile.telefone ||
-                    "";
-            }
-        } catch (_) {
-        }
-    }
-
-    function resetBuilder() {
-        complementSelectionCounter =
-            0;
-
-        allComplements()
-            .forEach(
-                input => {
-                    input.checked =
-                        false;
-
-                    delete input
-                        .dataset
-                        .ordemSelecao;
-
-                    const card =
-                        input.closest(
-                            ".complemento-card"
-                        );
-
-                    card?.classList.remove(
-                        "selecionado"
-                    );
-
-                    const layerInputs =
-                        card
-                            ? Array.from(
-                                card.querySelectorAll(
-                                    ".complemento-camada"
-                                )
-                            )
-                            : [];
-
-                    layerInputs.forEach(
-                        layerInput => {
-                            layerInput.disabled =
-                                true;
-
-                            layerInput.checked =
-                                layerInput.value ===
-                                "ambos";
-                        }
-                    );
-                }
-            );
-
+      });
+    });
+
+    d.middle.querySelectorAll(".complemento-camada").forEach((input) => {
+      input.addEventListener("change", () => {
         calculate();
+      });
+    });
+  }
+
+  function nowLocal() {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: state.config?.fuso_horario || "America/Sao_Paulo",
+
+      year: "numeric",
+
+      month: "2-digit",
+
+      day: "2-digit",
+
+      hour: "2-digit",
+
+      minute: "2-digit",
+
+      hourCycle: "h23",
+    }).formatToParts(new Date());
+
+    const values = Object.fromEntries(
+      parts
+        .filter((part) => part.type !== "literal")
+        .map((part) => [part.type, Number(part.value)]),
+    );
+
+    return {
+      day: new Date(
+        Date.UTC(values.year, values.month - 1, values.day),
+      ).getUTCDay(),
+
+      minutes: values.hour * 60 + values.minute,
+    };
+  }
+
+  function schedule(day) {
+    return state.schedules.find(
+      (item) => Number(item.dia_semana) === Number(day),
+    );
+  }
+
+  function storeState() {
+    if (!state.operationReady) {
+      return {
+        open: false,
+
+        title: "CARREGANDO CARDÁPIO",
+
+        text: "Aguarde alguns segundos.",
+
+        alert: "O cardápio ainda está carregando.",
+      };
     }
 
-    function resetOrder() {
-        resetBuilder();
+    if (state.config.pedidos_ativos !== true) {
+      const text =
+        state.config.mensagem_pausa ||
+        "Os pedidos estão temporariamente pausados.";
 
-        $$(
-            "input[name='formaPagamentoMonteSeu']"
-        ).forEach(
-            item => {
-                item.checked =
-                    false;
-            }
-        );
+      return {
+        open: false,
 
-        if (d.zip) {
-            d.zip.value =
-                "";
-        }
+        title: "PEDIDOS PAUSADOS",
 
-        if (d.number) {
-            d.number.value =
-                "";
-        }
+        text,
 
-        if (d.addressExtra) {
-            d.addressExtra.value =
-                "";
-        }
-
-        if (d.change) {
-            d.change.value =
-                "";
-        }
-
-        resetAddress();
+        alert: text,
+      };
     }
 
-    function payment() {
-        const value =
-            $(
-                "input[name='formaPagamentoMonteSeu']:checked"
-            )?.value ||
-            "";
+    const now = nowLocal();
+
+    const today = schedule(now.day);
+
+    let open = false;
+
+    if (today?.ativo) {
+      const start = timeMinutes(today.abre_as);
+
+      const end = timeMinutes(today.fecha_as);
+
+      if (start !== null && end !== null) {
+        open =
+          end > start
+            ? now.minutes >= start && now.minutes < end
+            : now.minutes >= start;
+      }
+    }
+
+    if (!open) {
+      const previous = schedule((now.day + 6) % 7);
+
+      if (previous?.ativo) {
+        const start = timeMinutes(previous.abre_as);
+
+        const end = timeMinutes(previous.fecha_as);
+
+        if (
+          start !== null &&
+          end !== null &&
+          end < start &&
+          now.minutes < end
+        ) {
+          open = true;
+        }
+      }
+    }
+
+    if (open) {
+      return {
+        open: true,
+
+        title: "ABERTO AGORA",
+
+        text: `Faça seu pedido — atendimento até ${
+          timeLabel(today?.fecha_as) || "00:00"
+        }.`,
+
+        alert: "",
+      };
+    }
+
+    const names = [
+      "domingo",
+      "segunda-feira",
+      "terça-feira",
+      "quarta-feira",
+      "quinta-feira",
+      "sexta-feira",
+      "sábado",
+    ];
+
+    for (let offset = 0; offset < 8; offset += 1) {
+      const day = (now.day + offset) % 7;
+
+      const item = schedule(day);
+
+      const start = timeMinutes(item?.abre_as);
+
+      if (
+        !item?.ativo ||
+        start === null ||
+        (offset === 0 && now.minutes >= start)
+      ) {
+        continue;
+      }
+
+      const when = offset === 0 ? "hoje" : offset === 1 ? "amanhã" : names[day];
+
+      const text = `Abrimos ${when} às ${timeLabel(item.abre_as)}.`;
+
+      return {
+        open: false,
+
+        title: "FECHADO NO MOMENTO",
+
+        text,
+
+        alert: `A Azury está fechada no momento. ${text}`,
+      };
+    }
+
+    return {
+      open: false,
+
+      title: "FECHADO NO MOMENTO",
+
+      text: "Consulte novamente em breve.",
+
+      alert: "A Azury está fechada no momento.",
+    };
+  }
+
+  function syncOrderButtons(status) {
+    const hasItems = state.cart.length > 0;
+
+    if (d.add) {
+      d.add.disabled = !status.open;
+
+      d.add.textContent = status.open ? "Adicionar à sacola" : "Loja fechada";
+    }
+
+    if (d.next) {
+      d.next.disabled = !status.open || !hasItems;
+
+      d.next.textContent = !status.open
+        ? "Loja fechada"
+        : hasItems
+          ? "Continuar para entrega"
+          : "Adicione um item à sacola";
+    }
+
+    if (d.send && !state.sending) {
+      d.send.disabled = !status.open || !hasItems;
+
+      d.send.textContent = !status.open
+        ? "Loja fechada"
+        : hasItems
+          ? "Finalizar pedido"
+          : "Sacola vazia";
+    }
+
+    updateAssemblyStickyBar(state.subtotal, status);
+  }
+
+  function updateStore() {
+    const status = storeState();
+
+    d.store?.classList.toggle("aberta", status.open);
+
+    d.store?.classList.toggle("fechada", !status.open);
+
+    if (d.storeTitle) {
+      d.storeTitle.textContent = status.title;
+    }
+
+    if (d.storeMsg) {
+      d.storeMsg.textContent = status.text;
+    }
+
+    $$(".btn-montar").forEach((button) => {
+      const available = button.dataset.disponibilidade !== "em-breve";
+
+      button.disabled = !available || !status.open;
+
+      button.classList.toggle("btn-loja-fechada", available && !status.open);
+
+      button.textContent = !available
+        ? "Disponível em breve"
+        : status.open
+          ? "Montar meu açaí"
+          : "Loja fechada";
+    });
+
+    syncOrderButtons(status);
+
+    return status;
+  }
+
+  function requireOpen() {
+    const status = updateStore();
+
+    if (status.open) {
+      return true;
+    }
+
+    alert(status.alert);
+
+    return false;
+  }
+
+  function updateWhatsapp() {
+    const number = String(state.config?.whatsapp || "5511960220402").replace(
+      /\D/g,
+      "",
+    );
+
+    $$(".js-pedido-horario").forEach((link) => {
+      link.href = `https://wa.me/${number}`;
+    });
+  }
+
+  function selectSize(size, base) {
+    const item = state.sizes.find(
+      (row) =>
+        Number(row.tamanho_ml) === Number(size) &&
+        row.disponivel === true &&
+        row.visivel === true,
+    );
+
+    if (!item) {
+      return;
+    }
+
+    if (d.size) {
+      d.size.value = String(item.tamanho_ml);
+    }
+
+    if (d.base) {
+      d.base.value = String(item.preco_base ?? base);
+    }
+
+    $$("input[name='tamanhoMonteSeuOpcao']").forEach((input) => {
+      input.checked = Number(input.value) === Number(item.tamanho_ml);
+    });
+
+    calculate();
+  }
+
+  function allComplements() {
+    return $$(".complemento-monte-seu");
+  }
+
+  function currentComplementSelections() {
+    return allComplements()
+      .filter((input) => input.checked)
+      .map((input, index) => {
+        const card = input.closest(".complemento-card");
+
+        const layerInput = card?.querySelector(".complemento-camada:checked");
 
         return {
-            "Cartão de crédito":
-                "cartao_credito",
+          id: input.dataset.id || null,
 
-            "Cartão de débito":
-                "cartao_debito",
+          nome: input.value,
 
-            "Pix":
-                "pix",
+          camada: layerInput?.value || "ambos",
 
-            "Dinheiro":
-                "dinheiro"
-        }[value] || value;
-    }
+          preco: num(input.dataset.preco, 0),
 
-    function paymentLabel(value) {
-        return {
-            cartao_credito:
-                "Cartão de crédito",
-
-            cartao_debito:
-                "Cartão de débito",
-
-            pix:
-                "Pix",
-
-            dinheiro:
-                "Dinheiro"
-        }[value] || value;
-    }
-
-    function addressValid() {
-        return (
-            d.addressOk?.value ===
-                "true" &&
-
-            d.districtId?.value &&
-
-            d.name?.value.trim() &&
-
-            d.zip?.value
-                .replace(
-                    /\D/g,
-                    ""
-                ).length ===
-                8 &&
-
-            d.street?.value.trim() &&
-
-            d.number?.value.trim()
-        );
-    }
-
-    async function createOrder() {
-        if (
-            state.sending ||
-            !requireOpen()
-        ) {
-            return;
-        }
-
-        if (
-            !state.cart.length
-        ) {
-            alert(
-                "Adicione pelo menos um açaí à sacola."
-            );
-
-            showStep(1);
-
-            return;
-        }
-
-        if (
-            state.consultingZip
-        ) {
-            alert(
-                "Aguarde a validação do CEP."
-            );
-
-            return;
-        }
-
-        if (
-            !addressValid()
-        ) {
-            showOrderWarning(
-                "Informe um endereço válido de um bairro atendido."
-            );
-
-            return;
-        }
-
-        const pay =
-            payment();
-
-        if (!pay) {
-            alert(
-                "Escolha a forma de pagamento."
-            );
-
-            return;
-        }
-
-        const {
-            data:
-                sessionData
-        } =
-            await sb.auth
-                .getSession();
-
-        if (
-            !sessionData.session
-        ) {
-            saveCart();
-
-            sessionStorage.setItem(
-                "azuryRetornoLogin",
-                "index.html#Cardapio"
-            );
-
-            alert(
-                "Entre na sua conta Azury para registrar o pedido. Sua sacola ficará salva."
-            );
-
-            window.location.href =
-                "login.html";
-
-            return;
-        }
-
-        state.sending =
-            true;
-
-        d.send.disabled =
-            true;
-
-        d.send.textContent =
-            "Registrando pedido...";
-
-        const whatsappWindow =
-            window.open(
-                "about:blank",
-                "_blank"
-            );
-
-        const payload = {
-            cliente: {
-                nome:
-                    d.name.value
-                        .trim(),
-
-                telefone:
-                    d.phone?.value
-                        .trim() ||
-                    null
-            },
-
-            entrega: {
-                bairro_entrega_id:
-                    Number(
-                        d.districtId
-                            .value
-                    ),
-
-                cep:
-                    d.zip.value
-                        .trim(),
-
-                rua:
-                    d.street.value
-                        .trim(),
-
-                numero:
-                    d.number.value
-                        .trim(),
-
-                complemento:
-                    d.addressExtra
-                        ?.value
-                        .trim() ||
-                    null
-            },
-
-            pagamento: {
-                forma:
-                    pay,
-
-                troco_para:
-                    (
-                        pay ===
-                            "dinheiro" &&
-                        d.change?.value
-                    )
-                        ? Number(
-                            String(
-                                d.change.value
-                            ).replace(
-                                ",",
-                                "."
-                            )
-                        )
-                        : null
-            },
-
-            itens:
-                state.cart.map(
-                    item => ({
-                        tamanho_ml:
-                            Number(
-                                item.tamanho_ml
-                            ),
-
-                        quantidade:
-                            Number(
-                                item.quantidade
-                            ),
-
-                        complementos:
-                            (
-                                item.complementos ||
-                                []
-                            ).map(
-                                complement => ({
-                                    nome:
-                                        complement.nome,
-
-                                    camada:
-                                        complement.camada
-                                })
-                            )
-                    })
-                ),
-
-            observacoes:
-                null
+          ordem_selecao: Math.max(
+            1,
+            Math.floor(num(input.dataset.ordemSelecao, index + 1)),
+          ),
         };
-
-        try {
-            const {
-                data,
-                error
-            } =
-                await sb.rpc(
-                    "criar_pedido_completo",
-                    {
-                        p_dados:
-                            payload
-                    }
-                );
-
-            if (error) {
-                throw error;
-            }
-
-            const code =
-                data?.codigo ||
-                "";
-
-            const productValue =
-                num(
-                    data?.valor_produtos,
-                    cartSubtotal()
-                );
-
-            const fee =
-                num(
-                    data?.taxa_entrega,
-                    d.fee.value
-                );
-
-            const total =
-                num(
-                    data?.valor_total,
-                    productValue +
-                    fee
-                );
-
-            const list =
-                items =>
-                    items.length
-                        ? items
-                            .map(
-                                item =>
-                                    `• ${item.nome}`
-                            )
-                            .join("\n")
-                        : "• Nenhum complemento";
-
-            const itemsText =
-                state.cart
-                    .map(
-                        (
-                            item,
-                            index
-                        ) => {
-                            const middle =
-                                (
-                                    item.complementos ||
-                                    []
-                                ).filter(
-                                    complement =>
-                                        complement.camada ===
-                                            "meio" ||
-                                        complement.camada ===
-                                            "ambos"
-                                );
-
-                            const top =
-                                (
-                                    item.complementos ||
-                                    []
-                                ).filter(
-                                    complement =>
-                                        complement.camada ===
-                                            "cobertura" ||
-                                        complement.camada ===
-                                            "ambos"
-                                );
-
-                            return (
-                                `*${index + 1}. ${item.quantidade}× ${productDisplayName(item.tamanho_ml)}*\n` +
-
-                                `Subtotal do item: ${money(
-                                    item.preco_unitario *
-                                    item.quantidade
-                                )}\n\n` +
-
-                                `*Complementos no meio:*\n${list(middle)}\n\n` +
-
-                                `*Complementos na cobertura:*\n${list(top)}`
-                            );
-                        }
-                    )
-                    .join(
-                        "\n\n————————————\n\n"
-                    );
-
-            const text =
-                `Olá! Quero confirmar este pedido na AZURY:\n\n` +
-
-                `AZURY_EMOJI_RECIBO *Pedido:* ${code}\n` +
-
-                `AZURY_EMOJI_CLIENTE *Cliente:* ${d.name.value.trim()}\n\n` +
-
-                `AZURY_EMOJI_LOCAL *Endereço de entrega:*\n` +
-
-                `${d.street.value.trim()}, nº ${d.number.value.trim()}\n` +
-
-                `Bairro: ${d.district.value.trim()}\n` +
-
-                `CEP: ${d.zip.value.trim()}\n` +
-
-                `Complemento: ${
-                    d.addressExtra
-                        ?.value
-                        .trim() ||
-                    "Não informado"
-                }\n\n` +
-
-                `AZURY_EMOJI_PAGAMENTO *Forma de pagamento:*\n` +
-
-                `${paymentLabel(pay)}\n\n` +
-
-                `AZURY_EMOJI_COPO *Itens da sacola:*\n\n` +
-
-                `${itemsText}\n\n` +
-
-                `AZURY_EMOJI_RECIBO *Resumo:*\n` +
-
-                `Produtos: ${money(productValue)}\n` +
-
-                `Entrega: ${money(fee)}\n` +
-
-                `AZURY_EMOJI_DINHEIRO *Total: ${money(total)}*`;
-
-            const number =
-                String(
-                    state.config
-                        .whatsapp ||
-                    "5511960220402"
-                ).replace(
-                    /\D/g,
-                    ""
-                );
-
-            const whatsappEmojiUtf8 = {
-                AZURY_EMOJI_RECIBO:
-                    "%F0%9F%A7%BE",
-
-                AZURY_EMOJI_CLIENTE:
-                    "%F0%9F%91%A4",
-
-                AZURY_EMOJI_LOCAL:
-                    "%F0%9F%93%8D",
-
-                AZURY_EMOJI_PAGAMENTO:
-                    "%F0%9F%92%B3",
-
-                AZURY_EMOJI_COPO:
-                    "%F0%9F%A5%A4",
-
-                AZURY_EMOJI_DINHEIRO:
-                    "%F0%9F%92%B0"
-            };
-
-            let encodedWhatsappText =
-                encodeURIComponent(text);
-
-            Object.entries(
-                whatsappEmojiUtf8
-            ).forEach(
-                ([token, encodedEmoji]) => {
-                    encodedWhatsappText =
-                        encodedWhatsappText
-                            .split(token)
-                            .join(encodedEmoji);
-                }
-            );
-
-            const url =
-                `https://wa.me/${number}?text=${encodedWhatsappText}`;
-
-            saveLastOrderSnapshot({
-                codigo:
-                    code,
-
-                pedido_id:
-                    data?.pedido_id ??
-                    data?.id ??
-                    null,
-
-                criado_em:
-                    data?.criado_em ??
-                    data?.created_at ??
-                    new Date()
-                        .toISOString(),
-
-                valor_produtos:
-                    productValue,
-
-                taxa_entrega:
-                    fee,
-
-                valor_total:
-                    total,
-
-                pontos_gerados:
-                    num(
-                        data?.pontos_gerados,
-                        0
-                    ),
-
-                cliente: {
-                    ...payload.cliente
-                },
-
-                entrega: {
-                    ...payload.entrega,
-
-                    bairro:
-                        d.district.value
-                            .trim()
-                },
-
-                pagamento: {
-                    ...payload.pagamento,
-
-                    forma_label:
-                        paymentLabel(
-                            pay
-                        )
-                },
-
-                itens:
-                    state.cart.map(
-                        item => ({
-                            tamanho_ml:
-                                Number(
-                                    item.tamanho_ml
-                                ),
-
-                            produto:
-                                productDisplayName(
-                                    item.tamanho_ml
-                                ),
-
-                            quantidade:
-                                Number(
-                                    item.quantidade
-                                ),
-
-                            preco_unitario:
-                                num(
-                                    item.preco_unitario
-                                ),
-
-                            complementos:
-                                (
-                                    item.complementos ||
-                                    []
-                                ).map(
-                                    complement => ({
-                                        nome:
-                                            complement.nome,
-
-                                        camada:
-                                            complement.camada
-                                    })
-                                )
-                        })
-                    )
-            });
-
-            closeModal();
-
-            showOrderSuccess(
-                code
-            );
-
-            clearCart();
-
-            resetOrder();
-
-            if (whatsappWindow) {
-                whatsappWindow.location.href =
-                    url;
-            } else {
-                window.open(
-                    url,
-                    "_blank",
-                    "noopener,noreferrer"
-                );
-            }
-        } catch (error) {
-            whatsappWindow
-                ?.close();
-
-            console.error(
-                "Erro ao registrar pedido:",
-                error
-            );
-
-            alert(
-                error.message ||
-                "Não foi possível registrar o pedido."
-            );
-        } finally {
-            state.sending =
-                false;
-
-            updateStore();
-        }
+      });
+  }
+
+  function selected(layer) {
+    return currentComplementSelections().filter(
+      (complement) =>
+        complement.camada === layer || complement.camada === "ambos",
+    );
+  }
+
+  function updateFreeComplementCounter(
+    complements = currentComplementSelections(),
+  ) {
+    const counter = document.getElementById("contadorComplementosGratis");
+
+    const countText = document.getElementById(
+      "contadorComplementosGratisTexto",
+    );
+
+    const progressTrack = document.getElementById("barraComplementosGratis");
+
+    const progressFill = document.getElementById(
+      "barraComplementosGratisPreenchimento",
+    );
+
+    const messageText = document.getElementById("mensagemComplementosGratis");
+
+    if (
+      !counter ||
+      !countText ||
+      !progressTrack ||
+      !progressFill ||
+      !messageText
+    ) {
+      return;
     }
 
-    function bind() {
-        $$(".btn-montar")
-            .forEach(
-                button => {
-                    button.addEventListener(
-                        "click",
-                        async () => {
-                            if (
-                                button.dataset
-                                    .disponibilidade ===
-                                    "em-breve" ||
-                                !requireOpen()
-                            ) {
-                                return;
-                            }
+    const selectedProduct = d.size?.value || "";
 
-                            resetBuilder();
+    const currentSizeItem = state.sizes.find(
+      (item) =>
+        String(item.tamanho_ml) === String(selectedProduct) ||
+        Number(item.tamanho_ml) === Number(selectedProduct),
+    );
 
-                            selectSize(
-                                button.dataset
-                                    .tamanho,
+    const limit = freeComplementLimit(currentSizeItem || selectedProduct);
 
-                                button.dataset
-                                    .precoBase
-                            );
+    if (limit <= 0) {
+      counter.hidden = true;
 
-                            await fillCustomer();
-
-                            renderCart();
-
-                            showStep(1);
-
-                            openModal();
-                        }
-                    );
-                }
-            );
-
-        d.add?.addEventListener(
-            "click",
-            addCurrentToCart
-        );
-
-        d.stickyAdd?.addEventListener(
-            "click",
-            addCurrentToCart
-        );
-
-        d.cartList?.addEventListener(
-            "click",
-            event => {
-                const button =
-                    event.target.closest(
-                        "button[data-cart-action]"
-                    );
-
-                if (!button) {
-                    return;
-                }
-
-                const id =
-                    button.dataset
-                        .id ||
-                    "";
-
-                const action =
-                    button.dataset
-                        .cartAction;
-
-                if (
-                    action ===
-                    "increase"
-                ) {
-                    changeCartItem(
-                        id,
-                        1
-                    );
-                } else if (
-                    action ===
-                    "decrease"
-                ) {
-                    changeCartItem(
-                        id,
-                        -1
-                    );
-                } else if (
-                    action ===
-                    "remove"
-                ) {
-                    removeCartItem(
-                        id
-                    );
-                }
-            }
-        );
-
-        d.next?.addEventListener(
-            "click",
-            () => {
-                if (
-                    !requireOpen()
-                ) {
-                    return;
-                }
-
-                if (
-                    !state.cart.length
-                ) {
-                    alert(
-                        "Adicione pelo menos um açaí à sacola."
-                    );
-
-                    return;
-                }
-
-                renderCart();
-
-                showStep(2);
-            }
-        );
-
-        d.back?.addEventListener(
-            "click",
-            () =>
-                showStep(1)
-        );
-
-        d.close?.addEventListener(
-            "click",
-            closeModal
-        );
-
-        d.modal?.addEventListener(
-            "click",
-            event => {
-                if (
-                    event.target ===
-                    d.modal
-                ) {
-                    closeModal();
-                }
-            }
-        );
-
-        d.send?.addEventListener(
-            "click",
-            createOrder
-        );
-
-        document.addEventListener(
-            "keydown",
-            event => {
-                if (
-                    event.key ===
-                    "Escape"
-                ) {
-                    closeModal();
-                }
-            }
-        );
+      return;
     }
 
-    function ensureDistrictField() {
-        if (
-            d.districtId ||
-            !d.addressOk
-        ) {
-            return;
-        }
+    counter.hidden = false;
 
-        const hidden =
-            document.createElement(
-                "input"
-            );
+    const eligibleKeys = new Set(
+      (complements || [])
+        .filter((complement) => !isAlwaysPaidComplement(complement.nome))
+        .map((complement) => norm(complement.nome))
+        .filter(Boolean),
+    );
 
-        hidden.type =
-            "hidden";
+    const selectedCount = eligibleKeys.size;
 
-        hidden.id =
-            "bairroEntregaId";
+    const usedFree = Math.min(selectedCount, limit);
 
-        hidden.value =
-            "";
+    const extras = Math.max(selectedCount - limit, 0);
 
-        d.addressOk.insertAdjacentElement(
-            "afterend",
-            hidden
+    const percentage = Math.min((usedFree / limit) * 100, 100);
+
+    progressFill.style.width = `${percentage}%`;
+
+    progressTrack.setAttribute("aria-valuemax", String(limit));
+
+    progressTrack.setAttribute("aria-valuenow", String(usedFree));
+
+    countText.textContent = `${usedFree} de ${limit}`;
+
+    counter.classList.toggle(
+      "limite-atingido",
+      usedFree >= limit && extras === 0,
+    );
+
+    counter.classList.toggle("com-extras", extras > 0);
+
+    if (extras > 0) {
+      messageText.textContent =
+        `${usedFree} de ${limit} grátis • ` +
+        `${extras} ${extras === 1 ? "extra" : "extras"} ` +
+        `${extras === 1 ? "será cobrado" : "serão cobrados"}.`;
+
+      return;
+    }
+
+    if (usedFree >= limit) {
+      messageText.textContent = "Limite grátis atingido.";
+
+      return;
+    }
+
+    const remaining = limit - usedFree;
+
+    messageText.textContent =
+      remaining === 1
+        ? "Você ainda pode escolher 1 complemento grátis."
+        : `Você ainda pode escolher ${remaining} complementos grátis.`;
+  }
+
+  function calculate() {
+    const size = Number(d.size?.value);
+
+    const base = num(d.base?.value, 0);
+
+    const complements = currentComplementSelections();
+
+    updateFreeComplementCounter(complements);
+
+    const value = itemUnitPrice(size, base, complements);
+
+    state.subtotal = value;
+
+    if (d.subtotal) {
+      d.subtotal.textContent = money(value);
+    }
+
+    updateAssemblyStickyBar(value);
+
+    return value;
+  }
+
+  function updateTotal() {
+    const subtotal = cartSubtotal();
+
+    const fee = subtotal > 0 ? num(d.fee?.value, 0) : 0;
+
+    const total = subtotal + fee;
+
+    if (d.total) {
+      d.total.textContent = money(total);
+    }
+
+    return total;
+  }
+
+  function showStep(step) {
+    const first = step === 1;
+
+    if (d.step1) {
+      d.step1.hidden = !first;
+
+      d.step1.classList.toggle("ativo", first);
+    }
+
+    if (d.step2) {
+      d.step2.hidden = first;
+
+      d.step2.classList.toggle("ativo", !first);
+    }
+
+    d.indicators.forEach((item) => {
+      const value = Number(item.dataset.indicadorEtapa);
+
+      item.classList.toggle("ativa", value === step);
+
+      item.classList.toggle("concluida", value < step);
+    });
+
+    if (d.content) {
+      d.content.scrollTop = 0;
+    }
+
+    syncAssemblyStickyBarVisibility(first);
+  }
+
+  function openModal() {
+    if (!d.modal) {
+      return;
+    }
+
+    d.modal.style.display = "flex";
+
+    document.body.style.overflow = "hidden";
+
+    syncAssemblyStickyBarVisibility();
+  }
+
+  function closeModal() {
+    if (!d.modal) {
+      return;
+    }
+
+    d.modal.style.display = "none";
+
+    document.body.style.overflow = "";
+
+    syncAssemblyStickyBarVisibility(false);
+  }
+
+  function resetAddress(
+    text = "Informe um CEP válido para calcular a entrega.",
+    type = "",
+  ) {
+    state.zipRequest += 1;
+
+    state.consultingZip = false;
+
+    if (d.addressOk) {
+      d.addressOk.value = "false";
+    }
+
+    if (d.fee) {
+      d.fee.value = "0";
+    }
+
+    if (d.districtId) {
+      d.districtId.value = "";
+    }
+
+    if (d.street) {
+      d.street.value = "";
+    }
+
+    if (d.district) {
+      d.district.value = "";
+    }
+
+    if (d.feeText) {
+      d.feeText.textContent = "A calcular";
+    }
+
+    message(text, type);
+
+    updateTotal();
+  }
+
+  function findDistrict(name) {
+    const key = norm(name);
+
+    if (!key) {
+      return null;
+    }
+
+    if (state.districtMap.has(key)) {
+      return state.districtMap.get(key);
+    }
+
+    const alias = state.aliases.find(
+      (item) => key.includes(item) || item.includes(key),
+    );
+
+    return alias ? state.districtMap.get(alias) : null;
+  }
+
+  async function consultZip(zip) {
+    const requestId = ++state.zipRequest;
+
+    state.consultingZip = true;
+
+    message("Consultando o CEP...", "carregando");
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${zip}/json/`);
+
+      if (!response.ok) {
+        throw new Error("Falha ao consultar CEP.");
+      }
+
+      const data = await response.json();
+
+      if (requestId !== state.zipRequest) {
+        return;
+      }
+
+      if (data.erro || !data.bairro || !data.logradouro) {
+        resetAddress("CEP inexistente ou sem endereço completo.", "erro");
+
+        return;
+      }
+
+      const district = findDistrict(data.bairro);
+
+      if (!district) {
+        resetAddress(`Ainda não entregamos no bairro ${data.bairro}.`, "erro");
+
+        return;
+      }
+
+      if (d.street) {
+        d.street.value = data.logradouro;
+      }
+
+      if (d.district) {
+        d.district.value = district.nome;
+      }
+
+      if (d.districtId) {
+        d.districtId.value = String(district.id);
+      }
+
+      if (d.addressOk) {
+        d.addressOk.value = "true";
+      }
+
+      if (d.fee) {
+        d.fee.value = String(district.taxa);
+      }
+
+      if (d.feeText) {
+        d.feeText.textContent = money(district.taxa);
+      }
+
+      message(
+        `Endereço validado. Entrega para ${district.nome}: ${money(district.taxa)}.`,
+        "sucesso",
+      );
+
+      updateTotal();
+    } catch (error) {
+      if (requestId === state.zipRequest) {
+        resetAddress(
+          "Não foi possível validar o CEP agora. Tente novamente.",
+          "erro",
         );
+      }
+    } finally {
+      if (requestId === state.zipRequest) {
+        state.consultingZip = false;
+      }
+    }
+  }
 
-        d.districtId =
-            hidden;
+  function setupZip() {
+    d.zip?.addEventListener("input", () => {
+      const digits = d.zip.value.replace(/\D/g, "").slice(0, 8);
+
+      d.zip.value =
+        digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+
+      resetAddress();
+
+      if (digits.length === 8) {
+        consultZip(digits);
+      }
+    });
+  }
+
+  async function fillCustomer() {
+    try {
+      const { data } = await sb.auth.getSession();
+
+      const user = data.session?.user;
+
+      if (!user) {
+        return;
+      }
+
+      let profile = {};
+
+      const result = await sb
+        .from("perfis")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!result.error) {
+        profile = result.data || {};
+      }
+
+      if (d.name && !d.name.value.trim()) {
+        d.name.value =
+          profile.nome ||
+          profile.nome_completo ||
+          user.user_metadata?.nome ||
+          user.email?.split("@")[0] ||
+          "";
+      }
+
+      if (d.phone && !d.phone.value.trim()) {
+        d.phone.value = profile.telefone || "";
+      }
+    } catch (_) {}
+  }
+
+  function resetBuilder() {
+    complementSelectionCounter = 0;
+
+    allComplements().forEach((input) => {
+      input.checked = false;
+
+      delete input.dataset.ordemSelecao;
+
+      const card = input.closest(".complemento-card");
+
+      card?.classList.remove("selecionado");
+
+      const layerInputs = card
+        ? Array.from(card.querySelectorAll(".complemento-camada"))
+        : [];
+
+      layerInputs.forEach((layerInput) => {
+        layerInput.disabled = true;
+
+        layerInput.checked = layerInput.value === "ambos";
+      });
+    });
+
+    calculate();
+  }
+
+  function resetOrder() {
+    resetBuilder();
+
+    $$("input[name='formaPagamentoMonteSeu']").forEach((item) => {
+      item.checked = false;
+    });
+
+    if (d.zip) {
+      d.zip.value = "";
     }
 
-    function selectFirstAvailableSize() {
-        const firstAvailable =
-            state.sizes.find(
-                item =>
-                    item.disponivel ===
-                        true &&
-                    item.visivel ===
-                        true
-            );
-
-        if (firstAvailable) {
-            selectSize(
-                firstAvailable
-                    .tamanho_ml,
-
-                firstAvailable
-                    .preco_base
-            );
-        }
+    if (d.number) {
+      d.number.value = "";
     }
 
-    async function openRepeatedOrderIfNeeded() {
-        let repeatedOrder =
-            null;
+    if (d.addressExtra) {
+      d.addressExtra.value = "";
+    }
 
-        try {
-            const stored =
-                sessionStorage.getItem(
-                    "azuryPedidoRepetido"
-                );
+    if (d.change) {
+      d.change.value = "";
+    }
 
-            repeatedOrder =
-                stored
-                    ? JSON.parse(
-                        stored
-                    )
-                    : null;
-        } catch (_) {
-            repeatedOrder =
-                null;
+    resetAddress();
+  }
+
+  function payment() {
+    const value =
+      $("input[name='formaPagamentoMonteSeu']:checked")?.value || "";
+
+    return (
+      {
+        "Cartão de crédito": "cartao_credito",
+
+        "Cartão de débito": "cartao_debito",
+
+        Pix: "pix",
+
+        Dinheiro: "dinheiro",
+      }[value] || value
+    );
+  }
+
+  function paymentLabel(value) {
+    return (
+      {
+        cartao_credito: "Cartão de crédito",
+
+        cartao_debito: "Cartão de débito",
+
+        pix: "Pix",
+
+        dinheiro: "Dinheiro",
+      }[value] || value
+    );
+  }
+
+  function addressValid() {
+    return (
+      d.addressOk?.value === "true" &&
+      d.districtId?.value &&
+      d.name?.value.trim() &&
+      d.zip?.value.replace(/\D/g, "").length === 8 &&
+      d.street?.value.trim() &&
+      d.number?.value.trim()
+    );
+  }
+
+  async function createOrder() {
+    if (state.sending || !requireOpen()) {
+      return;
+    }
+
+    if (!state.cart.length) {
+      alert("Adicione pelo menos um açaí à sacola.");
+
+      showStep(1);
+
+      return;
+    }
+
+    if (state.consultingZip) {
+      alert("Aguarde a validação do CEP.");
+
+      return;
+    }
+
+    if (!addressValid()) {
+      showOrderWarning("Informe um endereço válido de um bairro atendido.");
+
+      return;
+    }
+
+    const pay = payment();
+
+    if (!pay) {
+      alert("Escolha a forma de pagamento.");
+
+      return;
+    }
+
+    const { data: sessionData } = await sb.auth.getSession();
+
+    if (!sessionData.session) {
+      saveCart();
+
+      sessionStorage.setItem("azuryRetornoLogin", "index.html#Cardapio");
+
+      alert(
+        "Entre na sua conta Azury para registrar o pedido. Sua sacola ficará salva.",
+      );
+
+      window.location.href = "login.html";
+
+      return;
+    }
+
+    state.sending = true;
+
+    d.send.disabled = true;
+
+    d.send.textContent = "Registrando pedido...";
+
+    const whatsappWindow = window.open("about:blank", "_blank");
+
+    const payload = {
+      cliente: {
+        nome: d.name.value.trim(),
+
+        telefone: d.phone?.value.trim() || null,
+      },
+
+      entrega: {
+        bairro_entrega_id: Number(d.districtId.value),
+
+        cep: d.zip.value.trim(),
+
+        rua: d.street.value.trim(),
+
+        numero: d.number.value.trim(),
+
+        complemento: d.addressExtra?.value.trim() || null,
+      },
+
+      pagamento: {
+        forma: pay,
+
+        troco_para:
+          pay === "dinheiro" && d.change?.value
+            ? Number(String(d.change.value).replace(",", "."))
+            : null,
+      },
+
+      itens: state.cart.map((item) => ({
+        tamanho_ml: Number(item.tamanho_ml),
+
+        quantidade: Number(item.quantidade),
+
+        complementos: (item.complementos || []).map((complement) => ({
+          nome: complement.nome,
+
+          camada: complement.camada,
+        })),
+      })),
+
+      observacoes: null,
+    };
+
+    try {
+      const { data, error } = await sb.rpc("criar_pedido_completo", {
+        p_dados: payload,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const code = data?.codigo || "";
+
+      const productValue = num(data?.valor_produtos, cartSubtotal());
+
+      const fee = num(data?.taxa_entrega, d.fee.value);
+
+      const total = num(data?.valor_total, productValue + fee);
+
+      const list = (items) =>
+        items.length
+          ? items.map((item) => `• ${item.nome}`).join("\n")
+          : "• Nenhum complemento";
+
+      const itemsText = state.cart
+        .map((item, index) => {
+          const middle = (item.complementos || []).filter(
+            (complement) =>
+              complement.camada === "meio" || complement.camada === "ambos",
+          );
+
+          const top = (item.complementos || []).filter(
+            (complement) =>
+              complement.camada === "cobertura" ||
+              complement.camada === "ambos",
+          );
+
+          return (
+            `*${index + 1}. ${item.quantidade}× ${productDisplayName(item.tamanho_ml)}*\n` +
+            `Subtotal do item: ${money(
+              item.preco_unitario * item.quantidade,
+            )}\n\n` +
+            `*Complementos no meio:*\n${list(middle)}\n\n` +
+            `*Complementos na cobertura:*\n${list(top)}`
+          );
+        })
+        .join("\n\n————————————\n\n");
+
+      const text =
+        `Olá! Quero confirmar este pedido na AZURY:\n\n` +
+        `AZURY_EMOJI_RECIBO *Pedido:* ${code}\n` +
+        `AZURY_EMOJI_CLIENTE *Cliente:* ${d.name.value.trim()}\n\n` +
+        `AZURY_EMOJI_LOCAL *Endereço de entrega:*\n` +
+        `${d.street.value.trim()}, nº ${d.number.value.trim()}\n` +
+        `Bairro: ${d.district.value.trim()}\n` +
+        `CEP: ${d.zip.value.trim()}\n` +
+        `Complemento: ${d.addressExtra?.value.trim() || "Não informado"}\n\n` +
+        `AZURY_EMOJI_PAGAMENTO *Forma de pagamento:*\n` +
+        `${paymentLabel(pay)}\n\n` +
+        `AZURY_EMOJI_COPO *Itens da sacola:*\n\n` +
+        `${itemsText}\n\n` +
+        `AZURY_EMOJI_RECIBO *Resumo:*\n` +
+        `Produtos: ${money(productValue)}\n` +
+        `Entrega: ${money(fee)}\n` +
+        `AZURY_EMOJI_DINHEIRO *Total: ${money(total)}*`;
+
+      const number = String(state.config.whatsapp || "5511960220402").replace(
+        /\D/g,
+        "",
+      );
+
+      const whatsappEmojiUtf8 = {
+        AZURY_EMOJI_RECIBO: "%F0%9F%A7%BE",
+
+        AZURY_EMOJI_CLIENTE: "%F0%9F%91%A4",
+
+        AZURY_EMOJI_LOCAL: "%F0%9F%93%8D",
+
+        AZURY_EMOJI_PAGAMENTO: "%F0%9F%92%B3",
+
+        AZURY_EMOJI_COPO: "%F0%9F%A5%A4",
+
+        AZURY_EMOJI_DINHEIRO: "%F0%9F%92%B0",
+      };
+
+      let encodedWhatsappText = encodeURIComponent(text);
+
+      Object.entries(whatsappEmojiUtf8).forEach(([token, encodedEmoji]) => {
+        encodedWhatsappText = encodedWhatsappText
+          .split(token)
+          .join(encodedEmoji);
+      });
+
+      const url = `https://web.whatsapp.com/send?phone=${number}&text=${encodedWhatsappText}`;
+
+      saveLastOrderSnapshot({
+        codigo: code,
+
+        pedido_id: data?.pedido_id ?? data?.id ?? null,
+
+        criado_em:
+          data?.criado_em ?? data?.created_at ?? new Date().toISOString(),
+
+        valor_produtos: productValue,
+
+        taxa_entrega: fee,
+
+        valor_total: total,
+
+        pontos_gerados: num(data?.pontos_gerados, 0),
+
+        cliente: {
+          ...payload.cliente,
+        },
+
+        entrega: {
+          ...payload.entrega,
+
+          bairro: d.district.value.trim(),
+        },
+
+        pagamento: {
+          ...payload.pagamento,
+
+          forma_label: paymentLabel(pay),
+        },
+
+        itens: state.cart.map((item) => ({
+          tamanho_ml: Number(item.tamanho_ml),
+
+          produto: productDisplayName(item.tamanho_ml),
+
+          quantidade: Number(item.quantidade),
+
+          preco_unitario: num(item.preco_unitario),
+
+          complementos: (item.complementos || []).map((complement) => ({
+            nome: complement.nome,
+
+            camada: complement.camada,
+          })),
+        })),
+      });
+
+      closeModal();
+
+      showOrderSuccess(code);
+
+      clearCart();
+
+      resetOrder();
+
+      if (whatsappWindow) {
+        whatsappWindow.location.href = url;
+      } else {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    } catch (error) {
+      whatsappWindow?.close();
+
+      console.error("Erro ao registrar pedido:", error);
+
+      alert(error.message || "Não foi possível registrar o pedido.");
+    } finally {
+      state.sending = false;
+
+      updateStore();
+    }
+  }
+
+  function bind() {
+    $$(".btn-montar").forEach((button) => {
+      button.addEventListener("click", async () => {
+        if (button.dataset.disponibilidade === "em-breve" || !requireOpen()) {
+          return;
         }
-
-        if (!repeatedOrder) {
-            return;
-        }
-
-        const tamanho =
-            Number(
-                repeatedOrder
-                    .tamanho_ml
-            );
-
-        try {
-            sessionStorage.removeItem(
-                "azuryPedidoRepetido"
-            );
-        } catch (_) {
-        }
-
-        const size =
-            state.sizes.find(
-                item =>
-                    Number(
-                        item.tamanho_ml
-                    ) ===
-                        tamanho &&
-                    item.disponivel ===
-                        true &&
-                    item.visivel ===
-                        true
-            );
-
-        if (!size) {
-            alert(
-                "O tamanho deste pedido não está disponível no cardápio atual."
-            );
-
-            return;
-        }
-
-        state.cart =
-            [];
-
-        try {
-            sessionStorage.removeItem(
-                CART_KEY
-            );
-        } catch (_) {
-        }
-
-        renderCart();
 
         resetBuilder();
 
         selectSize(
-            size.tamanho_ml,
-            size.preco_base
+          button.dataset.tamanho,
+
+          button.dataset.precoBase,
         );
 
         await fillCustomer();
@@ -8151,220 +5801,313 @@ document.addEventListener("DOMContentLoaded", async () => {
         showStep(1);
 
         openModal();
+      });
+    });
 
-        if (d.cartFeedback) {
-            const message =
-                "Tamanho do pedido anterior selecionado. Escolha seus complementos novamente.";
+    d.add?.addEventListener("click", addCurrentToCart);
 
-            d.cartFeedback.textContent =
-                message;
+    d.stickyAdd?.addEventListener("click", addCurrentToCart);
 
-            window.setTimeout(
-                () => {
-                    if (
-                        d.cartFeedback &&
-                        d.cartFeedback
-                            .textContent ===
-                            message
-                    ) {
-                        d.cartFeedback
-                            .textContent =
-                            "";
-                    }
-                },
-                5000
-            );
-        }
+    d.cartList?.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-cart-action]");
+
+      if (!button) {
+        return;
+      }
+
+      const id = button.dataset.id || "";
+
+      const action = button.dataset.cartAction;
+
+      if (action === "increase") {
+        changeCartItem(id, 1);
+      } else if (action === "decrease") {
+        changeCartItem(id, -1);
+      } else if (action === "remove") {
+        removeCartItem(id);
+      }
+    });
+
+    d.next?.addEventListener("click", () => {
+      if (!requireOpen()) {
+        return;
+      }
+
+      if (!state.cart.length) {
+        alert("Adicione pelo menos um açaí à sacola.");
+
+        return;
+      }
+
+      renderCart();
+
+      showStep(2);
+    });
+
+    d.back?.addEventListener("click", () => showStep(1));
+
+    d.close?.addEventListener("click", closeModal);
+
+    d.modal?.addEventListener("click", (event) => {
+      if (event.target === d.modal) {
+        closeModal();
+      }
+    });
+
+    d.send?.addEventListener("click", createOrder);
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeModal();
+      }
+    });
+  }
+
+  function ensureDistrictField() {
+    if (d.districtId || !d.addressOk) {
+      return;
     }
 
-    function initializeInterface() {
-        if (
-            state.interfaceReady
-        ) {
-            renderSizes();
+    const hidden = document.createElement("input");
 
-            renderComplements();
+    hidden.type = "hidden";
 
-            updateWhatsapp();
+    hidden.id = "bairroEntregaId";
 
-            renderCart();
+    hidden.value = "";
 
-            updateStore();
+    d.addressOk.insertAdjacentElement("afterend", hidden);
 
-            selectFirstAvailableSize();
+    d.districtId = hidden;
+  }
 
-            return;
-        }
+  function selectFirstAvailableSize() {
+    const firstAvailable = state.sizes.find(
+      (item) => item.disponivel === true && item.visivel === true,
+    );
 
-        state.interfaceReady =
-            true;
+    if (firstAvailable) {
+      selectSize(
+        firstAvailable.tamanho_ml,
 
-        renderSizes();
-
-        renderComplements();
-
-        loadCart();
-
-        updateWhatsapp();
-
-        setupZip();
-
-        bind();
-
-        selectFirstAvailableSize();
-
-        renderCart();
-
-        showStep(1);
-
-        updateStore();
-
-        void openRepeatedOrderIfNeeded();
-
-        window.setInterval(
-            updateStore,
-            30000
-        );
+        firstAvailable.preco_base,
+      );
     }
+  }
 
-    function showOperationUnavailable() {
-        state.operationReady =
-            false;
-
-        if (d.storeTitle) {
-            d.storeTitle.textContent =
-                "CARDÁPIO TEMPORARIAMENTE INDISPONÍVEL";
-        }
-
-        if (d.storeMsg) {
-            d.storeMsg.textContent =
-                "Estamos tentando restabelecer o cardápio automaticamente.";
-        }
-
-        d.store?.classList.remove(
-            "aberta"
-        );
-
-        d.store?.classList.add(
-            "fechada"
-        );
-
-        $$(".btn-montar")
-            .forEach(
-                button => {
-                    button.disabled =
-                        true;
-
-                    button.textContent =
-                        "Carregando cardápio...";
-                }
-            );
-
-        if (d.add) {
-            d.add.disabled =
-                true;
-        }
-
-        if (d.stickyAdd) {
-            d.stickyAdd.disabled =
-                true;
-
-            d.stickyAdd.textContent =
-                "Carregando cardápio...";
-        }
-
-        if (d.next) {
-            d.next.disabled =
-                true;
-        }
-
-        if (d.send) {
-            d.send.disabled =
-                true;
-        }
-    }
-
-    function stopOperationRecovery() {
-        if (
-            !state.recoveryTimer
-        ) {
-            return;
-        }
-
-        window.clearInterval(
-            state.recoveryTimer
-        );
-
-        state.recoveryTimer =
-            null;
-    }
-
-    async function recoverOperation() {
-        if (
-            state.refreshingOperation
-        ) {
-            return;
-        }
-
-        state.refreshingOperation =
-            true;
-
-        try {
-            await loadOperation();
-
-            initializeInterface();
-
-            stopOperationRecovery();
-
-            console.info(
-                "Conexão com o cardápio restabelecida."
-            );
-        } catch (error) {
-            console.warn(
-                "O cardápio continua aguardando reconexão.",
-                error
-            );
-        } finally {
-            state.refreshingOperation =
-                false;
-        }
-    }
-
-    function startOperationRecovery() {
-        if (
-            state.recoveryTimer
-        ) {
-            return;
-        }
-
-        state.recoveryTimer =
-            window.setInterval(
-                recoverOperation,
-                OPERATION_RECOVERY_INTERVAL
-            );
-    }
-
-    ensureDistrictField();
+  async function openRepeatedOrderIfNeeded() {
+    let repeatedOrder = null;
 
     try {
-        await loadOperation();
+      const stored = sessionStorage.getItem("azuryPedidoRepetido");
 
-        initializeInterface();
-    } catch (error) {
-        console.error(
-            "Falha inicial ao carregar a operação Azury:",
-            error
-        );
-
-        const cacheLoaded =
-            applyCachedOperation();
-
-        if (cacheLoaded) {
-            initializeInterface();
-        } else {
-            showOperationUnavailable();
-        }
-
-        startOperationRecovery();
+      repeatedOrder = stored ? JSON.parse(stored) : null;
+    } catch (_) {
+      repeatedOrder = null;
     }
+
+    if (!repeatedOrder) {
+      return;
+    }
+
+    const tamanho = Number(repeatedOrder.tamanho_ml);
+
+    try {
+      sessionStorage.removeItem("azuryPedidoRepetido");
+    } catch (_) {}
+
+    const size = state.sizes.find(
+      (item) =>
+        Number(item.tamanho_ml) === tamanho &&
+        item.disponivel === true &&
+        item.visivel === true,
+    );
+
+    if (!size) {
+      alert("O tamanho deste pedido não está disponível no cardápio atual.");
+
+      return;
+    }
+
+    state.cart = [];
+
+    try {
+      sessionStorage.removeItem(CART_KEY);
+    } catch (_) {}
+
+    renderCart();
+
+    resetBuilder();
+
+    selectSize(size.tamanho_ml, size.preco_base);
+
+    await fillCustomer();
+
+    renderCart();
+
+    showStep(1);
+
+    openModal();
+
+    if (d.cartFeedback) {
+      const message =
+        "Tamanho do pedido anterior selecionado. Escolha seus complementos novamente.";
+
+      d.cartFeedback.textContent = message;
+
+      window.setTimeout(() => {
+        if (d.cartFeedback && d.cartFeedback.textContent === message) {
+          d.cartFeedback.textContent = "";
+        }
+      }, 5000);
+    }
+  }
+
+  function initializeInterface() {
+    if (state.interfaceReady) {
+      renderSizes();
+
+      renderComplements();
+
+      updateWhatsapp();
+
+      renderCart();
+
+      updateStore();
+
+      selectFirstAvailableSize();
+
+      return;
+    }
+
+    state.interfaceReady = true;
+
+    renderSizes();
+
+    renderComplements();
+
+    loadCart();
+
+    updateWhatsapp();
+
+    setupZip();
+
+    bind();
+
+    selectFirstAvailableSize();
+
+    renderCart();
+
+    showStep(1);
+
+    updateStore();
+
+    void openRepeatedOrderIfNeeded();
+
+    window.setInterval(updateStore, 30000);
+  }
+
+  function showOperationUnavailable() {
+    state.operationReady = false;
+
+    if (d.storeTitle) {
+      d.storeTitle.textContent = "CARDÁPIO TEMPORARIAMENTE INDISPONÍVEL";
+    }
+
+    if (d.storeMsg) {
+      d.storeMsg.textContent =
+        "Estamos tentando restabelecer o cardápio automaticamente.";
+    }
+
+    d.store?.classList.remove("aberta");
+
+    d.store?.classList.add("fechada");
+
+    $$(".btn-montar").forEach((button) => {
+      button.disabled = true;
+
+      button.textContent = "Carregando cardápio...";
+    });
+
+    if (d.add) {
+      d.add.disabled = true;
+    }
+
+    if (d.stickyAdd) {
+      d.stickyAdd.disabled = true;
+
+      d.stickyAdd.textContent = "Carregando cardápio...";
+    }
+
+    if (d.next) {
+      d.next.disabled = true;
+    }
+
+    if (d.send) {
+      d.send.disabled = true;
+    }
+  }
+
+  function stopOperationRecovery() {
+    if (!state.recoveryTimer) {
+      return;
+    }
+
+    window.clearInterval(state.recoveryTimer);
+
+    state.recoveryTimer = null;
+  }
+
+  async function recoverOperation() {
+    if (state.refreshingOperation) {
+      return;
+    }
+
+    state.refreshingOperation = true;
+
+    try {
+      await loadOperation();
+
+      initializeInterface();
+
+      stopOperationRecovery();
+
+      console.info("Conexão com o cardápio restabelecida.");
+    } catch (error) {
+      console.warn("O cardápio continua aguardando reconexão.", error);
+    } finally {
+      state.refreshingOperation = false;
+    }
+  }
+
+  function startOperationRecovery() {
+    if (state.recoveryTimer) {
+      return;
+    }
+
+    state.recoveryTimer = window.setInterval(
+      recoverOperation,
+      OPERATION_RECOVERY_INTERVAL,
+    );
+  }
+
+  ensureDistrictField();
+
+  try {
+    await loadOperation();
+
+    initializeInterface();
+  } catch (error) {
+    console.error("Falha inicial ao carregar a operação Azury:", error);
+
+    const cacheLoaded = applyCachedOperation();
+
+    if (cacheLoaded) {
+      initializeInterface();
+    } else {
+      showOperationUnavailable();
+    }
+
+    startOperationRecovery();
+  }
 });
