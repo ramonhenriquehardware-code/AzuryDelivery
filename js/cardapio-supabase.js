@@ -179,16 +179,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             return 0;
         }
 
-        const numeric = Number(product);
+        const numeric =
+            Number(product);
 
         if (
             Number.isFinite(numeric) &&
             FREE_COMPLEMENT_LIMITS.has(numeric)
         ) {
-            return FREE_COMPLEMENT_LIMITS.get(numeric) || 0;
+            return (
+                FREE_COMPLEMENT_LIMITS.get(numeric) ||
+                0
+            );
         }
 
-        const normalized = norm(product);
+        const normalized =
+            norm(product);
 
         const futureKey =
             normalized === "azury box p" ||
@@ -196,29 +201,35 @@ document.addEventListener("DOMContentLoaded", async () => {
             normalized === "azury-box-p"
                 ? "azury-box-p"
                 : normalized === "azury box m" ||
-                  normalized === "box m" ||
-                  normalized === "azury-box-m"
+                    normalized === "box m" ||
+                    normalized === "azury-box-m"
                     ? "azury-box-m"
                     : normalized === "azury box g" ||
-                      normalized === "box g" ||
-                      normalized === "azury-box-g"
+                        normalized === "box g" ||
+                        normalized === "azury-box-g"
                         ? "azury-box-g"
                         : "";
 
         return futureKey
-            ? FREE_COMPLEMENT_LIMITS.get(futureKey) || 0
+            ? (
+                FREE_COMPLEMENT_LIMITS.get(
+                    futureKey
+                ) || 0
+            )
             : 0;
     }
 
     function productDisplayName(product) {
-        const size = Number(
-            product &&
-            typeof product === "object"
-                ? product.tamanho_ml
-                : product
-        );
+        const size =
+            Number(
+                product &&
+                typeof product === "object"
+                    ? product.tamanho_ml
+                    : product
+            );
 
-        const cupName = CUP_PRODUCT_NAMES.get(size);
+        const cupName =
+            CUP_PRODUCT_NAMES.get(size);
 
         if (cupName) {
             return `${cupName} • ${size}ml`;
@@ -304,7 +315,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
 
-            const group = groups.get(key);
+            const group =
+                groups.get(key);
 
             group.ordem_selecao =
                 Math.min(
@@ -344,9 +356,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
 
         return rows.map(row => {
-            const key = norm(row.nome);
+            const key =
+                norm(row.nome);
 
-            const group = groups.get(key);
+            const group =
+                groups.get(key);
 
             const alwaysPaid =
                 isAlwaysPaidComplement(
@@ -410,14 +424,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const timeMinutes = value => {
         const parts =
-            String(value || "").split(":");
+            String(
+                value || ""
+            ).split(":");
 
         if (parts.length < 2) {
             return null;
         }
 
-        const hours = Number(parts[0]);
-        const minutes = Number(parts[1]);
+        const hours =
+            Number(parts[0]);
+
+        const minutes =
+            Number(parts[1]);
 
         return (
             Number.isFinite(hours) &&
@@ -428,14 +447,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const timeLabel = value => {
-        const minutes = timeMinutes(value);
+        const minutes =
+            timeMinutes(value);
 
         if (minutes === null) {
             return "";
         }
 
         const hours =
-            Math.floor(minutes / 60);
+            Math.floor(
+                minutes / 60
+            );
 
         const remainingMinutes =
             minutes % 60;
@@ -493,7 +515,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             sessionStorage.setItem(
                 CART_KEY,
-                JSON.stringify(state.cart)
+                JSON.stringify(
+                    state.cart
+                )
             );
         } catch (error) {
             console.warn(
@@ -547,7 +571,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                         state.complements.find(
                             item =>
                                 norm(item.nome) ===
-                                norm(complement?.nome)
+                                norm(
+                                    complement?.nome
+                                )
                         );
 
                     if (!current) {
@@ -556,7 +582,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     const rawLayer =
                         String(
-                            complement?.camada || ""
+                            complement?.camada ||
+                            ""
                         ).toLowerCase();
 
                     const layer =
@@ -577,20 +604,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                             1,
                             Math.floor(
                                 num(
-                                    complement?.ordem_selecao,
+                                    complement
+                                        ?.ordem_selecao,
                                     index + 1
                                 )
                             )
                         );
 
                     if (
-                        !complementMap.has(key)
+                        !complementMap.has(
+                            key
+                        )
                     ) {
                         complementMap.set(
                             key,
                             {
                                 id:
-                                    current.id || null,
+                                    current.id ||
+                                    null,
 
                                 nome:
                                     current.nome,
@@ -599,7 +630,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     layer,
 
                                 preco:
-                                    num(current.preco),
+                                    num(
+                                        current.preco
+                                    ),
 
                                 ordem_selecao:
                                     selectionOrder
@@ -610,10 +643,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
 
                     const existing =
-                        complementMap.get(key);
+                        complementMap.get(
+                            key
+                        );
 
                     if (
-                        existing.camada !== layer
+                        existing.camada !==
+                        layer
                     ) {
                         existing.camada =
                             "ambos";
@@ -621,7 +657,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     existing.ordem_selecao =
                         Math.min(
-                            existing.ordem_selecao,
+                            existing
+                                .ordem_selecao,
                             selectionOrder
                         );
                 }
@@ -648,7 +685,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ),
 
             tamanho_ml:
-                Number(size.tamanho_ml),
+                Number(
+                    size.tamanho_ml
+                ),
 
             quantidade:
                 Math.max(
@@ -688,7 +727,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         state.cart = [];
 
-        if (!Array.isArray(stored)) {
+        if (
+            !Array.isArray(stored)
+        ) {
             return;
         }
 
@@ -704,7 +745,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 MAX_CART_UNITS -
                 cartUnits();
 
-            if (available <= 0) {
+            if (
+                available <= 0
+            ) {
                 break;
             }
 
@@ -720,14 +763,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             const existing =
                 state.cart.find(
                     row =>
-                        itemSignature(row) === signature
+                        itemSignature(row) ===
+                        signature
                 );
 
             if (existing) {
                 existing.quantidade +=
                     item.quantidade;
             } else {
-                state.cart.push(item);
+                state.cart.push(
+                    item
+                );
             }
         }
 
@@ -742,12 +788,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             Array.from(
                 new Set(
                     (
-                        item.complementos || []
+                        item.complementos ||
+                        []
                     )
                         .filter(
                             complement =>
-                                complement.camada === layer ||
-                                complement.camada === "ambos"
+                                complement.camada ===
+                                    layer ||
+                                complement.camada ===
+                                    "ambos"
                         )
                         .map(
                             complement =>
@@ -930,7 +979,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         updateTotal();
-
         syncOrderButtons(
             storeState()
         );
@@ -1047,7 +1095,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const existing =
             state.cart.find(
                 row =>
-                    itemSignature(row) === signature
+                    itemSignature(row) ===
+                    signature
             );
 
         if (existing) {
@@ -1174,8 +1223,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 .toLocaleTimeString(
                     "pt-BR",
                     {
-                        hour: "2-digit",
-                        minute: "2-digit"
+                        hour:
+                            "2-digit",
+
+                        minute:
+                            "2-digit"
                     }
                 );
 
@@ -1195,7 +1247,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             num(
                 safeOrder.valor_total,
                 productValue +
-                deliveryFee
+                    deliveryFee
             );
 
         const paymentName =
@@ -1212,7 +1264,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const pointsGenerated =
             num(
-                safeOrder.pontos_gerados,
+                safeOrder
+                    .pontos_gerados,
                 0
             );
 
@@ -1245,7 +1298,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (
                     directValue !== null &&
                     directValue !== undefined &&
-                    String(directValue).trim()
+                    String(
+                        directValue
+                    ).trim()
                 ) {
                     const raw =
                         String(
@@ -1253,7 +1308,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ).trim();
 
                     if (
-                        /^\d+$/.test(raw)
+                        /^\d+$/.test(
+                            raw
+                        )
                     ) {
                         return (
                             `Até ${raw} minutos`
@@ -1278,9 +1335,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     );
 
                 if (
-                    Number.isFinite(minimum) &&
+                    Number.isFinite(
+                        minimum
+                    ) &&
                     minimum > 0 &&
-                    Number.isFinite(maximum) &&
+                    Number.isFinite(
+                        maximum
+                    ) &&
                     maximum >= minimum
                 ) {
                     return (
@@ -1289,7 +1350,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
 
                 if (
-                    Number.isFinite(maximum) &&
+                    Number.isFinite(
+                        maximum
+                    ) &&
                     maximum > 0
                 ) {
                     return (
@@ -1298,7 +1361,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
 
                 if (
-                    Number.isFinite(minimum) &&
+                    Number.isFinite(
+                        minimum
+                    ) &&
                     minimum > 0
                 ) {
                     return (
@@ -2864,7 +2929,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             `;
 
-            document.head.appendChild(style);
+            document.head.appendChild(
+                style
+            );
         }
 
         document
@@ -3243,7 +3310,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             </section>
         `;
 
-        document.body.appendChild(screen);
+        document.body.appendChild(
+            screen
+        );
 
         const closeScreen = () => {
             if (!screen.isConnected) {
@@ -3522,7 +3591,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             `;
 
-            document.head.appendChild(style);
+            document.head.appendChild(
+                style
+            );
         }
 
         document
@@ -3777,22 +3848,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             sizes;
 
         state.complements =
-            Array.isArray(complements)
-                ? complements.filter(
-                    item =>
-                        item.disponivel !== false &&
-                        item.visivel !== false
-                )
+            Array.isArray(
+                complements
+            )
+                ? complements
+                    .filter(
+                        item =>
+                            item.disponivel !==
+                                false &&
+                            item.visivel !==
+                                false
+                    )
                 : [];
 
         state.districts =
             districts.filter(
                 item =>
-                    item.ativo !== false
+                    item.ativo !==
+                    false
             );
 
         state.schedules =
-            Array.isArray(schedules)
+            Array.isArray(
+                schedules
+            )
                 ? schedules
                 : [];
 
@@ -3836,7 +3915,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         state.aliases =
             Array
                 .from(
-                    state.districtMap.keys()
+                    state.districtMap
+                        .keys()
                 )
                 .sort(
                     (a, b) =>
@@ -3876,8 +3956,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             applyOperation(
                 cached,
                 {
-                    saveCache: false,
-                    source: "cache"
+                    saveCache:
+                        false,
+
+                    source:
+                        "cache"
                 }
             );
 
@@ -4022,7 +4105,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 data,
                 error
             } =
-                await sb.rpc(name);
+                await sb.rpc(
+                    name
+                );
 
             if (
                 !error &&
@@ -4039,7 +4124,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const errorMessage =
                 String(
-                    error?.message || ""
+                    error?.message ||
+                    ""
                 ).toLowerCase();
 
             const missing =
@@ -4092,7 +4178,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function loadOperation() {
-        let lastError = null;
+        let lastError =
+            null;
 
         for (
             let attempt = 0;
@@ -4152,7 +4239,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                             size =>
                                 Number(
                                     size.tamanho_ml
-                                ) === current
+                                ) ===
+                                current
                         );
 
                     if (
@@ -4170,7 +4258,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     card.hidden =
                         item.visivel ===
-                            false;
+                        false;
 
                     card.classList.toggle(
                         "produto-em-breve",
@@ -4264,7 +4352,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
 
         const container =
-            $(".opcoes-tamanho-monte-seu");
+            $(
+                ".opcoes-tamanho-monte-seu"
+            );
 
         if (!container) {
             return;
@@ -4274,7 +4364,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             state.sizes
                 .filter(
                     item =>
-                        item.visivel !== false
+                        item.visivel !==
+                        false
                 )
                 .map(
                     (
@@ -4313,7 +4404,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span>
 
                             <strong>
-                                ${esc(productDisplayName(item))}
+                                ${esc(
+                                    productDisplayName(
+                                        item
+                                    )
+                                )}
                             </strong>
 
 
@@ -4341,7 +4436,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 input.addEventListener(
                     "change",
                     () => {
-                        if (input.checked) {
+                        if (
+                            input.checked
+                        ) {
                             selectSize(
                                 input.value,
                                 input.dataset
@@ -5101,7 +5198,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         `;
 
-        document.head.appendChild(style);
+        document.head.appendChild(
+            style
+        );
     }
 
     function ensureAssemblyStickyBar() {
@@ -5294,7 +5393,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const selectedProduct =
-            d.size?.value || "";
+            d.size?.value ||
+            "";
 
         const currentSizeItem =
             state.sizes.find(
@@ -5376,7 +5476,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (
             topGroup &&
-            topGroup !== middleGroup
+            topGroup !==
+                middleGroup
         ) {
             topGroup.hidden =
                 true;
@@ -5787,7 +5888,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                             image.remove();
                         },
                         {
-                            once: true
+                            once:
+                                true
                         }
                     );
                 }
@@ -5813,7 +5915,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     )
                                     : [];
 
-                            if (input.checked) {
+                            if (
+                                input.checked
+                            ) {
                                 complementSelectionCounter +=
                                     1;
 
@@ -5964,32 +6068,50 @@ document.addEventListener("DOMContentLoaded", async () => {
                 Number(
                     item.dia_semana
                 ) ===
-                    Number(day)
+                Number(day)
         );
     }
 
     function storeState() {
-        if (!state.operationReady) {
+        if (
+            !state.operationReady
+        ) {
             return {
-                open: false,
-                title: "CARREGANDO CARDÁPIO",
-                text: "Aguarde alguns segundos.",
-                alert: "O cardápio ainda está carregando."
+                open:
+                    false,
+
+                title:
+                    "CARREGANDO CARDÁPIO",
+
+                text:
+                    "Aguarde alguns segundos.",
+
+                alert:
+                    "O cardápio ainda está carregando."
             };
         }
 
         if (
-            state.config.pedidos_ativos !== true
+            state.config
+                .pedidos_ativos !==
+            true
         ) {
             const text =
-                state.config.mensagem_pausa ||
+                state.config
+                    .mensagem_pausa ||
                 "Os pedidos estão temporariamente pausados.";
 
             return {
-                open: false,
-                title: "PEDIDOS PAUSADOS",
+                open:
+                    false,
+
+                title:
+                    "PEDIDOS PAUSADOS",
+
                 text,
-                alert: text
+
+                alert:
+                    text
             };
         }
 
@@ -5997,7 +6119,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             nowLocal();
 
         const today =
-            schedule(now.day);
+            schedule(
+                now.day
+            );
 
         let open =
             false;
@@ -6020,11 +6144,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 open =
                     end > start
                         ? (
-                            now.minutes >= start &&
-                            now.minutes < end
+                            now.minutes >=
+                                start &&
+                            now.minutes <
+                                end
                         )
                         : (
-                            now.minutes >= start
+                            now.minutes >=
+                            start
                         );
             }
         }
@@ -6033,11 +6160,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             const previous =
                 schedule(
                     (
-                        now.day + 6
+                        now.day +
+                        6
                     ) % 7
                 );
 
-            if (previous?.ativo) {
+            if (
+                previous?.ativo
+            ) {
                 const start =
                     timeMinutes(
                         previous.abre_as
@@ -6062,7 +6192,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (open) {
             return {
-                open: true,
+                open:
+                    true,
 
                 title:
                     "ABERTO AGORA",
@@ -6070,7 +6201,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 text:
                     `Faça seu pedido — atendimento até ${
                         timeLabel(
-                            today?.fecha_as
+                            today
+                                ?.fecha_as
                         ) ||
                         "00:00"
                     }.`,
@@ -6114,7 +6246,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 start === null ||
                 (
                     offset === 0 &&
-                    now.minutes >= start
+                    now.minutes >=
+                        start
                 )
             ) {
                 continue;
@@ -6131,16 +6264,22 @@ document.addEventListener("DOMContentLoaded", async () => {
                 `Abrimos ${when} às ${timeLabel(item.abre_as)}.`;
 
             return {
-                open: false,
-                title: "FECHADO NO MOMENTO",
+                open:
+                    false,
+
+                title:
+                    "FECHADO NO MOMENTO",
+
                 text,
+
                 alert:
                     `A Azury está fechada no momento. ${text}`
             };
         }
 
         return {
-            open: false,
+            open:
+                false,
 
             title:
                 "FECHADO NO MOMENTO",
@@ -6153,9 +6292,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
     }
 
-    function syncOrderButtons(status) {
+    function syncOrderButtons(
+        status
+    ) {
         const hasItems =
-            state.cart.length > 0;
+            state.cart.length >
+            0;
 
         if (d.add) {
             d.add.disabled =
@@ -6232,7 +6374,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const available =
                         button.dataset
                             .disponibilidade !==
-                            "em-breve";
+                        "em-breve";
 
                     button.disabled =
                         !available ||
@@ -6253,7 +6395,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             );
 
-        syncOrderButtons(status);
+        syncOrderButtons(
+            status
+        );
 
         return status;
     }
@@ -6266,7 +6410,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             return true;
         }
 
-        alert(status.alert);
+        alert(
+            status.alert
+        );
 
         return false;
     }
@@ -6274,7 +6420,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     function updateWhatsapp() {
         const number =
             String(
-                state.config?.whatsapp ||
+                state.config
+                    ?.whatsapp ||
                 "5511960220402"
             ).replace(
                 /\D/g,
@@ -6301,8 +6448,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                         row.tamanho_ml
                     ) ===
                         Number(size) &&
-                    row.disponivel === true &&
-                    row.visivel === true
+                    row.disponivel ===
+                        true &&
+                    row.visivel ===
+                        true
             );
 
         if (!item) {
@@ -6332,9 +6481,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     Number(
                         input.value
                     ) ===
-                        Number(
-                            item.tamanho_ml
-                        );
+                    Number(
+                        item.tamanho_ml
+                    );
             }
         );
 
@@ -6342,7 +6491,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function allComplements() {
-        return $$(".complemento-monte-seu");
+        return $$(
+            ".complemento-monte-seu"
+        );
     }
 
     function currentComplementSelections() {
@@ -6368,19 +6519,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     return {
                         id:
-                            input.dataset.id ||
+                            input.dataset
+                                .id ||
                             null,
 
                         nome:
                             input.value,
 
                         camada:
-                            layerInput?.value ||
+                            layerInput
+                                ?.value ||
                             "ambos",
 
                         preco:
                             num(
-                                input.dataset.preco,
+                                input.dataset
+                                    .preco,
                                 0
                             ),
 
@@ -6389,7 +6543,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 1,
                                 Math.floor(
                                     num(
-                                        input.dataset.ordemSelecao,
+                                        input.dataset
+                                            .ordemSelecao,
                                         index + 1
                                     )
                                 )
@@ -6404,14 +6559,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             currentComplementSelections()
                 .filter(
                     complement =>
-                        complement.camada === layer ||
-                        complement.camada === "ambos"
+                        complement.camada ===
+                            layer ||
+                        complement.camada ===
+                            "ambos"
                 )
         );
     }
 
     function updateFreeComplementCounter(
-        complements = currentComplementSelections()
+        complements =
+            currentComplementSelections()
     ) {
         const counter =
             document.getElementById(
@@ -6449,15 +6607,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const selectedProduct =
-            d.size?.value || "";
+            d.size?.value ||
+            "";
 
         const currentSizeItem =
             state.sizes.find(
                 item =>
-                    String(item.tamanho_ml) ===
-                        String(selectedProduct) ||
-                    Number(item.tamanho_ml) ===
-                        Number(selectedProduct)
+                    String(
+                        item.tamanho_ml
+                    ) ===
+                        String(
+                            selectedProduct
+                        ) ||
+                    Number(
+                        item.tamanho_ml
+                    ) ===
+                        Number(
+                            selectedProduct
+                        )
             );
 
         const limit =
@@ -6478,7 +6645,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const eligibleKeys =
             new Set(
-                (complements || [])
+                (
+                    complements ||
+                    []
+                )
                     .filter(
                         complement =>
                             !isAlwaysPaidComplement(
@@ -6506,7 +6676,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const extras =
             Math.max(
                 selectedCount -
-                limit,
+                    limit,
                 0
             );
 
@@ -6563,7 +6733,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (usedFree >= limit) {
+        if (
+            usedFree >= limit
+        ) {
             messageText.textContent =
                 "Limite grátis atingido.";
 
@@ -6634,7 +6806,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 : 0;
 
         const total =
-            subtotal + fee;
+            subtotal +
+            fee;
 
         if (d.total) {
             d.total.textContent =
@@ -6733,7 +6906,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             "Informe um CEP válido para calcular a entrega.",
         type = ""
     ) {
-        state.zipRequest += 1;
+        state.zipRequest +=
+            1;
 
         state.consultingZip =
             false;
@@ -6785,22 +6959,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (
-            state.districtMap.has(key)
+            state.districtMap
+                .has(key)
         ) {
-            return state.districtMap.get(
-                key
+            return (
+                state.districtMap
+                    .get(key)
             );
         }
 
         const alias =
             state.aliases.find(
                 item =>
-                    key.includes(item) ||
-                    item.includes(key)
+                    key.includes(
+                        item
+                    ) ||
+                    item.includes(
+                        key
+                    )
             );
 
         return alias
-            ? state.districtMap.get(alias)
+            ? state.districtMap
+                .get(alias)
             : null;
     }
 
@@ -6907,7 +7088,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
 
             updateTotal();
-
         } catch (error) {
             if (
                 requestId ===
@@ -6952,7 +7132,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 resetAddress();
 
                 if (
-                    digits.length === 8
+                    digits.length ===
+                    8
                 ) {
                     consultZip(
                         digits
@@ -6971,7 +7152,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     .getSession();
 
             const user =
-                data.session?.user;
+                data.session
+                    ?.user;
 
             if (!user) {
                 return;
@@ -6981,7 +7163,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const result =
                 await sb
-                    .from("perfis")
+                    .from(
+                        "perfis"
+                    )
                     .select("*")
                     .eq(
                         "id",
@@ -6989,9 +7173,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     )
                     .maybeSingle();
 
-            if (!result.error) {
+            if (
+                !result.error
+            ) {
                 profile =
-                    result.data || {};
+                    result.data ||
+                    {};
             }
 
             if (
@@ -7001,8 +7188,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 d.name.value =
                     profile.nome ||
                     profile.nome_completo ||
-                    user.user_metadata?.nome ||
-                    user.email?.split("@")[0] ||
+                    user.user_metadata
+                        ?.nome ||
+                    user.email
+                        ?.split("@")[0] ||
                     "";
             }
 
@@ -7105,7 +7294,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const value =
             $(
                 "input[name='formaPagamentoMonteSeu']:checked"
-            )?.value || "";
+            )?.value ||
+            "";
 
         return {
             "Cartão de crédito":
@@ -7142,14 +7332,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         return (
             d.addressOk?.value ===
                 "true" &&
+
             d.districtId?.value &&
+
             d.name?.value.trim() &&
+
             d.zip?.value
                 .replace(
                     /\D/g,
                     ""
-                ).length === 8 &&
+                ).length ===
+                8 &&
+
             d.street?.value.trim() &&
+
             d.number?.value.trim()
         );
     }
@@ -7162,7 +7358,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (!state.cart.length) {
+        if (
+            !state.cart.length
+        ) {
             alert(
                 "Adicione pelo menos um açaí à sacola."
             );
@@ -7172,7 +7370,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (state.consultingZip) {
+        if (
+            state.consultingZip
+        ) {
             alert(
                 "Aguarde a validação do CEP."
             );
@@ -7180,7 +7380,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (!addressValid()) {
+        if (
+            !addressValid()
+        ) {
             showOrderWarning(
                 "Informe um endereço válido de um bairro atendido."
             );
@@ -7206,7 +7408,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             await sb.auth
                 .getSession();
 
-        if (!sessionData.session) {
+        if (
+            !sessionData.session
+        ) {
             saveCart();
 
             sessionStorage.setItem(
@@ -7242,30 +7446,38 @@ document.addEventListener("DOMContentLoaded", async () => {
         const payload = {
             cliente: {
                 nome:
-                    d.name.value.trim(),
+                    d.name.value
+                        .trim(),
 
                 telefone:
-                    d.phone?.value.trim() ||
+                    d.phone?.value
+                        .trim() ||
                     null
             },
 
             entrega: {
                 bairro_entrega_id:
                     Number(
-                        d.districtId.value
+                        d.districtId
+                            .value
                     ),
 
                 cep:
-                    d.zip.value.trim(),
+                    d.zip.value
+                        .trim(),
 
                 rua:
-                    d.street.value.trim(),
+                    d.street.value
+                        .trim(),
 
                 numero:
-                    d.number.value.trim(),
+                    d.number.value
+                        .trim(),
 
                 complemento:
-                    d.addressExtra?.value.trim() ||
+                    d.addressExtra
+                        ?.value
+                        .trim() ||
                     null
             },
 
@@ -7275,7 +7487,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 troco_para:
                     (
-                        pay === "dinheiro" &&
+                        pay ===
+                            "dinheiro" &&
                         d.change?.value
                     )
                         ? Number(
@@ -7304,7 +7517,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                         complementos:
                             (
-                                item.complementos || []
+                                item.complementos ||
+                                []
                             ).map(
                                 complement => ({
                                     nome:
@@ -7381,20 +7595,26 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ) => {
                             const middle =
                                 (
-                                    item.complementos || []
+                                    item.complementos ||
+                                    []
                                 ).filter(
                                     complement =>
-                                        complement.camada === "meio" ||
-                                        complement.camada === "ambos"
+                                        complement.camada ===
+                                            "meio" ||
+                                        complement.camada ===
+                                            "ambos"
                                 );
 
                             const top =
                                 (
-                                    item.complementos || []
+                                    item.complementos ||
+                                    []
                                 ).filter(
                                     complement =>
-                                        complement.camada === "cobertura" ||
-                                        complement.camada === "ambos"
+                                        complement.camada ===
+                                            "cobertura" ||
+                                        complement.camada ===
+                                            "ambos"
                                 );
 
                             return (
@@ -7418,11 +7638,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             const text =
                 `Olá! Quero confirmar este pedido na AZURY:\n\n` +
 
-                `\u{1F9FE} *Pedido:* ${code}\n` +
+                `AZURY_EMOJI_RECIBO *Pedido:* ${code}\n` +
 
-                `\u{1F464} *Cliente:* ${d.name.value.trim()}\n\n` +
+                `AZURY_EMOJI_CLIENTE *Cliente:* ${d.name.value.trim()}\n\n` +
 
-                `\u{1F4CD} *Endereço de entrega:*\n` +
+                `AZURY_EMOJI_LOCAL *Endereço de entrega:*\n` +
 
                 `${d.street.value.trim()}, nº ${d.number.value.trim()}\n` +
 
@@ -7431,37 +7651,74 @@ document.addEventListener("DOMContentLoaded", async () => {
                 `CEP: ${d.zip.value.trim()}\n` +
 
                 `Complemento: ${
-                    d.addressExtra?.value.trim() ||
+                    d.addressExtra
+                        ?.value
+                        .trim() ||
                     "Não informado"
                 }\n\n` +
 
-                `\u{1F4B3} *Forma de pagamento:*\n` +
+                `AZURY_EMOJI_PAGAMENTO *Forma de pagamento:*\n` +
 
                 `${paymentLabel(pay)}\n\n` +
 
-                `\u{1F964} *Itens da sacola:*\n\n` +
+                `AZURY_EMOJI_COPO *Itens da sacola:*\n\n` +
 
                 `${itemsText}\n\n` +
 
-                `\u{1F9FE} *Resumo:*\n` +
+                `AZURY_EMOJI_RECIBO *Resumo:*\n` +
 
                 `Produtos: ${money(productValue)}\n` +
 
                 `Entrega: ${money(fee)}\n` +
 
-                `\u{1F4B0} *Total: ${money(total)}*`;
+                `AZURY_EMOJI_DINHEIRO *Total: ${money(total)}*`;
 
             const number =
                 String(
-                    state.config.whatsapp ||
+                    state.config
+                        .whatsapp ||
                     "5511960220402"
                 ).replace(
                     /\D/g,
                     ""
                 );
 
+            const whatsappEmojiUtf8 = {
+                AZURY_EMOJI_RECIBO:
+                    "%F0%9F%A7%BE",
+
+                AZURY_EMOJI_CLIENTE:
+                    "%F0%9F%91%A4",
+
+                AZURY_EMOJI_LOCAL:
+                    "%F0%9F%93%8D",
+
+                AZURY_EMOJI_PAGAMENTO:
+                    "%F0%9F%92%B3",
+
+                AZURY_EMOJI_COPO:
+                    "%F0%9F%A5%A4",
+
+                AZURY_EMOJI_DINHEIRO:
+                    "%F0%9F%92%B0"
+            };
+
+            let encodedWhatsappText =
+                encodeURIComponent(text);
+
+            Object.entries(
+                whatsappEmojiUtf8
+            ).forEach(
+                ([token, encodedEmoji]) => {
+                    encodedWhatsappText =
+                        encodedWhatsappText
+                            .split(token)
+                            .join(encodedEmoji);
+                }
+            );
+
             const url =
-                `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+                `https://wa.me/${number}?text=${encodedWhatsappText}`;
 
             saveLastOrderSnapshot({
                 codigo:
@@ -7539,7 +7796,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                             complementos:
                                 (
-                                    item.complementos || []
+                                    item.complementos ||
+                                    []
                                 ).map(
                                     complement => ({
                                         nome:
@@ -7573,9 +7831,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     "noopener,noreferrer"
                 );
             }
-
         } catch (error) {
-            whatsappWindow?.close();
+            whatsappWindow
+                ?.close();
 
             console.error(
                 "Erro ao registrar pedido:",
@@ -7586,7 +7844,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 error.message ||
                 "Não foi possível registrar o pedido."
             );
-
         } finally {
             state.sending =
                 false;
@@ -7614,8 +7871,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                             resetBuilder();
 
                             selectSize(
-                                button.dataset.tamanho,
-                                button.dataset.precoBase
+                                button.dataset
+                                    .tamanho,
+
+                                button.dataset
+                                    .precoBase
                             );
 
                             await fillCustomer();
@@ -7653,30 +7913,33 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
 
                 const id =
-                    button.dataset.id ||
+                    button.dataset
+                        .id ||
                     "";
 
                 const action =
-                    button.dataset.cartAction;
+                    button.dataset
+                        .cartAction;
 
                 if (
-                    action === "increase"
+                    action ===
+                    "increase"
                 ) {
                     changeCartItem(
                         id,
                         1
                     );
-
                 } else if (
-                    action === "decrease"
+                    action ===
+                    "decrease"
                 ) {
                     changeCartItem(
                         id,
                         -1
                     );
-
                 } else if (
-                    action === "remove"
+                    action ===
+                    "remove"
                 ) {
                     removeCartItem(
                         id
@@ -7688,11 +7951,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         d.next?.addEventListener(
             "click",
             () => {
-                if (!requireOpen()) {
+                if (
+                    !requireOpen()
+                ) {
                     return;
                 }
 
-                if (!state.cart.length) {
+                if (
+                    !state.cart.length
+                ) {
                     alert(
                         "Adicione pelo menos um açaí à sacola."
                     );
@@ -7721,7 +7988,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             "click",
             event => {
                 if (
-                    event.target === d.modal
+                    event.target ===
+                    d.modal
                 ) {
                     closeModal();
                 }
@@ -7737,7 +8005,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             "keydown",
             event => {
                 if (
-                    event.key === "Escape"
+                    event.key ===
+                    "Escape"
                 ) {
                     closeModal();
                 }
@@ -7780,14 +8049,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         const firstAvailable =
             state.sizes.find(
                 item =>
-                    item.disponivel === true &&
-                    item.visivel === true
+                    item.disponivel ===
+                        true &&
+                    item.visivel ===
+                        true
             );
 
         if (firstAvailable) {
             selectSize(
-                firstAvailable.tamanho_ml,
-                firstAvailable.preco_base
+                firstAvailable
+                    .tamanho_ml,
+
+                firstAvailable
+                    .preco_base
             );
         }
     }
@@ -7804,9 +8078,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             repeatedOrder =
                 stored
-                    ? JSON.parse(stored)
+                    ? JSON.parse(
+                        stored
+                    )
                     : null;
-
         } catch (_) {
             repeatedOrder =
                 null;
@@ -7818,7 +8093,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const tamanho =
             Number(
-                repeatedOrder.tamanho_ml
+                repeatedOrder
+                    .tamanho_ml
             );
 
         try {
@@ -7833,9 +8109,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 item =>
                     Number(
                         item.tamanho_ml
-                    ) === tamanho &&
-                    item.disponivel === true &&
-                    item.visivel === true
+                    ) ===
+                        tamanho &&
+                    item.disponivel ===
+                        true &&
+                    item.visivel ===
+                        true
             );
 
         if (!size) {
@@ -7884,9 +8163,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 () => {
                     if (
                         d.cartFeedback &&
-                        d.cartFeedback.textContent === message
+                        d.cartFeedback
+                            .textContent ===
+                            message
                     ) {
-                        d.cartFeedback.textContent =
+                        d.cartFeedback
+                            .textContent =
                             "";
                     }
                 },
@@ -7896,7 +8178,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function initializeInterface() {
-        if (state.interfaceReady) {
+        if (
+            state.interfaceReady
+        ) {
             renderSizes();
 
             renderComplements();
@@ -8001,7 +8285,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function stopOperationRecovery() {
-        if (!state.recoveryTimer) {
+        if (
+            !state.recoveryTimer
+        ) {
             return;
         }
 
@@ -8014,7 +8300,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function recoverOperation() {
-        if (state.refreshingOperation) {
+        if (
+            state.refreshingOperation
+        ) {
             return;
         }
 
@@ -8031,13 +8319,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.info(
                 "Conexão com o cardápio restabelecida."
             );
-
         } catch (error) {
             console.warn(
                 "O cardápio continua aguardando reconexão.",
                 error
             );
-
         } finally {
             state.refreshingOperation =
                 false;
@@ -8045,7 +8331,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function startOperationRecovery() {
-        if (state.recoveryTimer) {
+        if (
+            state.recoveryTimer
+        ) {
             return;
         }
 
@@ -8062,7 +8350,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadOperation();
 
         initializeInterface();
-
     } catch (error) {
         console.error(
             "Falha inicial ao carregar a operação Azury:",
