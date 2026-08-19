@@ -1679,3 +1679,38 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+/* =========================================================
+   AJUSTE COMPACTO — MEIO / COBERTURA / NOS DOIS
+========================================================= */
+
+.manual-complement-layers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+}
+
+.manual-complement-layers label {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 72px;
+    min-height: 34px;
+    padding: 6px 9px;
+    white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+    .manual-complement-layers {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .manual-complement-layers label {
+        flex: 0 0 auto;
+        width: auto;
+        min-width: 0;
+        padding: 6px 8px;
+        white-space: nowrap;
+    }
+}
