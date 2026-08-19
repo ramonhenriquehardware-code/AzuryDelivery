@@ -1350,10 +1350,15 @@ textarea {
 
 #ordersSummary {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 18px;
+    width: 100%;
+    min-width: 0;
 }
 
 .orders-store-summary {
+    width: 100%;
+    min-width: 0;
     padding: 16px;
     border: 1px solid #dfe8f7;
     border-radius: 18px;
