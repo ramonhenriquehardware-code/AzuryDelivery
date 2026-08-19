@@ -3564,6 +3564,64 @@ document.addEventListener("DOMContentLoaded", async () => {
     throw lastError || new Error("Não foi possível carregar a operação.");
   }
 
+  function renderCupCard() {
+    const wrapper = document.querySelector("[data-azury-copos-card]");
+    const options = document.getElementById("azuryCoposOpcoes");
+    const price = document.getElementById("azuryCoposPrecoInicial");
+    const button = document.querySelector("[data-btn-azury-copos]");
+
+    if (!wrapper || !options || !price || !button) {
+      return;
+    }
+
+    const visibleSizes = state.sizes
+      .filter((item) => item.visivel !== false)
+      .sort((a, b) => num(a.ordem) - num(b.ordem));
+    const availableSizes = visibleSizes.filter(productIsAvailable);
+
+    wrapper.hidden = visibleSizes.length === 0;
+
+    options.innerHTML = visibleSizes
+      .map((item) => {
+        const available = productIsAvailable(item);
+        const size = Number(item.tamanho_ml);
+        const limit = freeComplementLimit(item);
+        const badge = String(
+          item.badge || (available ? "Disponível" : "Indisponível"),
+        ).trim();
+
+        return `
+                    <div class="azury-box-opcao azury-copos-opcao ${available ? "" : "indisponivel"}">
+                        <span class="azury-copos-tamanho">${esc(size)}ml</span>
+                        <strong>${money(item.preco_base)}</strong>
+                        <small>
+                            ${
+                              available
+                                ? `${limit} ${limit === 1 ? "complemento grátis" : "complementos grátis"}`
+                                : "Indisponível no momento"
+                            }
+                        </small>
+                        <span class="azury-copos-opcao-badge">
+                            ${esc(badge)}
+                        </span>
+                    </div>
+                `;
+      })
+      .join("");
+
+    const firstAvailable = availableSizes[0] || null;
+
+    if (firstAvailable) {
+      button.dataset.tamanho = String(firstAvailable.tamanho_ml);
+      button.dataset.precoBase = String(firstAvailable.preco_base);
+      button.dataset.disponibilidade = "disponivel";
+      price.textContent = `A partir de ${money(firstAvailable.preco_base)}`;
+    } else {
+      button.dataset.disponibilidade = "em-breve";
+      price.textContent = "Temporariamente indisponível";
+    }
+  }
+
   function renderBoxCard() {
     const wrapper = document.querySelector("[data-azury-box-card]");
     const options = document.getElementById("azuryBoxOpcoes");
@@ -3778,6 +3836,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       button.disabled = !available;
     });
 
+    renderCupCard();
     renderBoxCard();
     renderBuilderProductOptions(
       isBoxProduct(currentBuilderProduct()) ? "azury_box" : "acai_copo",
