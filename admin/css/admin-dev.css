@@ -1343,3 +1343,334 @@ textarea {
 .modal-confirmation.success .modal-confirmation-icon {
     background: #16834a;
 }
+
+/* =========================================
+   PAINEL CONSOLIDADO — PEDIDOS / WHATSAPP / PH
+========================================= */
+
+#ordersSummary {
+    display: grid;
+    gap: 18px;
+}
+
+.orders-store-summary {
+    padding: 16px;
+    border: 1px solid #dfe8f7;
+    border-radius: 18px;
+    background: #ffffff;
+}
+
+.orders-store-summary-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.orders-store-summary-title strong {
+    color: #12213f;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.orders-store-summary .metric-grid {
+    margin: 0;
+}
+
+.manual-order-item {
+    grid-column: 1 / -1;
+    padding: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.42);
+    border-radius: 18px;
+    background: #f8fbff;
+}
+
+.manual-order-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.manual-order-item-head > div {
+    min-width: 0;
+}
+
+.manual-order-item-head strong,
+.manual-order-item-head small {
+    display: block;
+}
+
+.manual-order-item-head strong {
+    color: #17233a;
+    font-size: 16px;
+}
+
+.manual-order-item-head small {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.manual-order-product-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.3fr) minmax(120px, .55fr) minmax(180px, .8fr);
+    gap: 12px;
+}
+
+.manual-order-price-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 14px 0 16px;
+    padding: 12px 14px;
+    border: 1px solid #bfd2ff;
+    border-radius: 14px;
+    background: #eef4ff;
+}
+
+.manual-order-price-summary strong,
+.manual-order-price-summary span {
+    display: block;
+}
+
+.manual-order-price-summary strong {
+    color: #0758f8;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.manual-order-price-summary span {
+    color: #526079;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: right;
+}
+
+.manual-order-complements-head {
+    margin-bottom: 12px;
+}
+
+.manual-order-complements-head strong,
+.manual-order-complements-head small {
+    display: block;
+}
+
+.manual-order-complements-head strong {
+    color: #17233a;
+    font-size: 15px;
+}
+
+.manual-order-complements-head small {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.manual-complements-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.manual-complement-card {
+    overflow: hidden;
+    border: 1px solid #dbe5f5;
+    border-radius: 16px;
+    background: #ffffff;
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease,
+        transform .18s ease;
+}
+
+.manual-complement-card.is-selected {
+    border-color: #0758f8;
+    box-shadow: 0 10px 24px rgba(7, 88, 248, .13);
+    transform: translateY(-1px);
+}
+
+.manual-complement-card.is-paid-extra {
+    border-color: #e8b463;
+    box-shadow: 0 10px 24px rgba(180, 83, 9, .10);
+}
+
+.manual-complement-main {
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 11px;
+    cursor: pointer;
+}
+
+.manual-complement-image {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f6f8fc;
+}
+
+.manual-complement-image.is-empty {
+    display: none;
+}
+
+.manual-complement-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.manual-complement-copy {
+    min-width: 0;
+}
+
+.manual-complement-copy strong,
+.manual-complement-copy small {
+    display: block;
+}
+
+.manual-complement-copy strong {
+    color: #17233a;
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+.manual-complement-copy small {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 10.5px;
+    line-height: 1.35;
+}
+
+.manual-complement-copy small.is-special {
+    color: #a95b00;
+    font-weight: 800;
+}
+
+.manual-complement-main > input[type="checkbox"] {
+    width: 21px;
+    height: 21px;
+    accent-color: #0758f8;
+}
+
+.manual-complement-layers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 0 11px 11px;
+}
+
+.manual-complement-layers[hidden] {
+    display: none !important;
+}
+
+.manual-complement-layers label {
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px;
+    border: 1px solid #dbe5f5;
+    border-radius: 9px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 10.5px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.manual-complement-layers input {
+    accent-color: #0758f8;
+}
+
+.manual-complement-empty {
+    grid-column: 1 / -1;
+    padding: 16px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    color: #64748b;
+    text-align: center;
+}
+
+.ph-store-panel,
+.ph-menu-panel {
+    border: 1px solid #dfe8f7;
+    border-radius: 20px;
+    background: #ffffff;
+}
+
+.ph-store-detail {
+    margin-top: 12px;
+    color: #526079;
+    line-height: 1.5;
+}
+
+.ph-store-detail + .ph-store-detail {
+    margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+    .manual-order-product-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .manual-order-product-grid .modal-field:first-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 700px) {
+    .manual-complements-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manual-order-price-summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .manual-order-price-summary span {
+        text-align: left;
+    }
+}
+
+@media (max-width: 520px) {
+    .manual-order-product-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manual-order-product-grid .modal-field:first-child {
+        grid-column: auto;
+    }
+
+    .manual-order-item {
+        padding: 13px;
+        border-radius: 15px;
+    }
+
+    .manual-order-item-head {
+        align-items: flex-start;
+    }
+
+    .manual-complement-main {
+        grid-template-columns: 50px minmax(0, 1fr) auto;
+    }
+
+    .manual-complement-image {
+        width: 50px;
+        height: 50px;
+    }
+
+    .manual-complement-layers {
+        grid-template-columns: 1fr;
+    }
+}
