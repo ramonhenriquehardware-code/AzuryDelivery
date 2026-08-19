@@ -2288,112 +2288,45 @@
   async function registerManualOrderAndSendConfirmation(
     formNode
   ) {
-    if (
-      !formNode.reportValidity()
-    ) {
+    if (!formNode.reportValidity()) {
       return false;
     }
-
 
     const payload =
       buildManualOrderPayload(
         formNode
       );
 
-
     const normalizedPhone =
       normalizeWhatsAppPhone(
-        payload
-          .cliente_telefone
+        payload.cliente_telefone
       );
 
-
-    if (
-      normalizedPhone.length <
-      12
-    ) {
+    if (normalizedPhone.length < 12) {
       throw new Error(
         "Informe um telefone/WhatsApp válido para enviar a confirmação do pedido."
       );
     }
 
-
-    let preparedWindow =
-      null;
-
-
-    try {
-      preparedWindow =
-        window.open(
-          "about:blank",
-          "_blank"
-        );
-
-
-      if (
-        preparedWindow
-      ) {
-        preparedWindow
-          .document
-          .title =
-          "Abrindo WhatsApp...";
-      }
-    }
-
-    catch (error) {
-      preparedWindow =
-        null;
-    }
-
-
-    let data;
-
-
-    try {
-      data =
-        await rpc(
-          "criar_pedido_manual_admin",
-          {
-            p_dados:
-              payload
-          }
-        );
-    }
-
-    catch (error) {
-      try {
-        preparedWindow
-          ?.close();
-      }
-
-      catch (closeError) {
-        console.warn(
-          "Não foi possível fechar a janela preparada.",
-          closeError
-        );
-      }
-
-      throw error;
-    }
-
+    const data =
+      await rpc(
+        "criar_pedido_manual_admin",
+        {
+          p_dados: payload
+        }
+      );
 
     try {
       await refreshOrders();
-    }
-
-    catch (refreshError) {
+    } catch (refreshError) {
       console.error(
         "O pedido foi registrado, mas a lista não atualizou imediatamente.",
         refreshError
       );
     }
 
-
     const code =
-      data
-        ?.codigo ||
-      "";
-
+      data?.codigo || "";
 
     const message =
       buildManualOrderConfirmationMessage(
@@ -2401,68 +2334,35 @@
         code
       );
 
-
     const url =
       `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(
         message
       )}`;
 
+    const opened =
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+      );
 
-    let whatsappOpened =
-      false;
+    if (!opened) {
+      /*
+       * Se o navegador bloquear nova aba,
+       * abre o WhatsApp na aba atual.
+       * Assim nunca registra e simplesmente some.
+       */
+      window.location.href = url;
 
-
-    if (
-      preparedWindow &&
-      !preparedWindow.closed
-    ) {
-      preparedWindow
-        .location
-        .href =
-        url;
-
-      whatsappOpened =
-        true;
+      return true;
     }
-
-
-    if (
-      !whatsappOpened
-    ) {
-      try {
-        await navigator
-          .clipboard
-          .writeText(
-            message
-          );
-      }
-
-      catch (
-        clipboardError
-      ) {
-        console.warn(
-          "Não foi possível copiar a confirmação para a área de transferência.",
-          clipboardError
-        );
-      }
-    }
-
 
     closeModal();
 
-
     showMessage(
-      whatsappOpened
-
-        ? `Pedido ${code} registrado como recebido e aberto no WhatsApp para confirmação.`
-
-        : `Pedido ${code} registrado. O navegador bloqueou o WhatsApp; a mensagem de confirmação foi copiada.`,
-
-      whatsappOpened
-        ? "success"
-        : "warning"
+      `Pedido ${code} registrado e aberto no WhatsApp para confirmação.`,
+      "success"
     );
-
 
     return true;
   }
