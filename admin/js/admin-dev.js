@@ -1974,6 +1974,14 @@
   }
 
 
+  function encodeWhatsAppConfirmationMessage(message) {
+    return encodeURIComponent(message)
+      .replace(/__AZURY_RECEIPT__/g, "%F0%9F%A7%BE")
+      .replace(/__AZURY_BLUE_HEART__/g, "%F0%9F%92%99")
+      .replace(/__AZURY_CHECK__/g, "%E2%9C%85");
+  }
+
+
   function buildManualOrderConfirmationMessage(
     payload,
     orderCode = ""
@@ -2039,11 +2047,11 @@
         .toLowerCase() === "pix";
 
     const finalMessage = isPix
-      ? "Assim que o comprovante for enviado, conseguimos confirmar o pedido e seguir com o preparo. \uD83D\uDC99"
-      : "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. \u2705";
+      ? "Assim que o comprovante for enviado, conseguimos confirmar o pedido e seguir com o preparo. __AZURY_BLUE_HEART__"
+      : "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. __AZURY_CHECK__";
 
     const lines = [
-      "\uD83E\uDDFE *CONFIRMAÇÃO DO PEDIDO*",
+      "__AZURY_RECEIPT__ *CONFIRMAÇÃO DO PEDIDO*",
       `*${storeName}*`,
       orderCode
         ? `Pedido *${orderCode}*`
@@ -2143,10 +2151,13 @@
         code
       );
 
-    const url =
-      `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(
+    const encodedMessage =
+      encodeWhatsAppConfirmationMessage(
         message
-      )}`;
+      );
+
+    const url =
+      `https://wa.me/${normalizedPhone}?text=${encodedMessage}`;
 
     const opened =
       window.open(
