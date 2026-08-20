@@ -1872,190 +1872,103 @@
     item,
     establishment
   ) {
-    const quantity =
-      Number(
-        item?.quantidade ||
-        1
-      );
+    const quantity = Number(item?.quantidade || 1);
+    const productName = String(item?.produto_nome || "Item").trim();
+    const sizeLabel = String(item?.tamanho_label || "").trim();
+    const sizeMl = Number(item?.tamanho_ml);
 
-    const unitPrice =
-      Number(
-        item?.preco_unitario ||
-        0
-      );
-
-    const totalItem =
-      unitPrice *
-      quantity;
-
-    const productName =
-      String(
-        item?.produto_nome ||
-        "Item"
-      ).trim();
-
-    const sizeLabel =
-      String(
-        item?.tamanho_label ||
-        ""
-      ).trim();
-
-    const sizeMl =
-      Number(
-        item?.tamanho_ml
-      );
-
-    let sizeText =
-      "";
-
+    let sizeText = "";
 
     if (
       sizeLabel &&
-      !productName
-        .toLowerCase()
-        .endsWith(
-          ` ${sizeLabel.toLowerCase()}`
-        )
+      !productName.toLowerCase().endsWith(` ${sizeLabel.toLowerCase()}`)
     ) {
-      sizeText =
-        ` — ${sizeLabel}`;
-    }
-
-    else if (
-      Number.isFinite(
-        sizeMl
-      ) &&
+      sizeText = ` — ${sizeLabel}`;
+    } else if (
+      Number.isFinite(sizeMl) &&
       sizeMl > 0 &&
-      !productName.includes(
-        String(
-          sizeMl
-        )
-      )
+      !productName.includes(String(sizeMl))
     ) {
-      sizeText =
-        ` — ${sizeMl} ml`;
+      sizeText = ` — ${sizeMl} ml`;
     }
-
 
     const lines = [
-      `• ${quantity}x ${productName}${sizeText} — ${formatMoney(totalItem)}`
+      `• ${quantity}x ${productName}${sizeText}`
     ];
 
+    const complements = Array.isArray(item?.complementos)
+      ? item.complementos
+      : [];
 
-    const complements =
-      Array.isArray(
-        item?.complementos
-      )
-        ? item.complementos
-        : [];
+    if (!complements.length) {
+      return lines;
+    }
 
+    if (establishment === "ph_sabor_cia") {
+      const salad = complements.find((complement) => {
+        const name = normalizeKey(complement?.nome || "");
 
-    if (
-      complements.length
-    ) {
-      if (
-        establishment ===
-        "ph_sabor_cia"
-      ) {
-        const salad =
-          complements.find(
-            complement => {
-              const name =
-                normalizeKey(
-                  complement
-                    ?.nome ||
-                  ""
-                );
+        return name === "com salada" || name === "sem salada";
+      });
 
-              return (
-                name ===
-                  "com salada" ||
-                name ===
-                  "sem salada"
-              );
-            }
-          );
-
-
-        if (salad) {
-          lines.push(
-            `  Salada: ${salad.nome}`
-          );
-        }
+      if (salad) {
+        lines.push(`  Salada: ${salad.nome}`);
       }
 
-      else {
-        const details =
-          complements.map(
-            complement => {
-              const name =
-                String(
-                  complement
-                    ?.nome ||
-                  "Complemento"
-                ).trim();
+      return lines;
+    }
 
+    const grouped = new Map();
 
-              const layer =
-                String(
-                  complement
-                    ?.camada ||
-                  ""
-                ).trim();
+    complements.forEach((complement) => {
+      const name = String(complement?.nome || "Complemento").trim();
+      const key = normalizeKey(name) || name.toLowerCase();
+      const layer = String(complement?.camada || "")
+        .trim()
+        .toLowerCase();
 
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          name,
+          layers: new Set(),
+        });
+      }
 
-              const layerText =
-                layer ===
-                "meio"
+      const current = grouped.get(key);
 
-                  ? " (meio)"
+      if (layer === "ambos") {
+        current.layers.add("meio");
+        current.layers.add("cobertura");
+      } else if (layer) {
+        current.layers.add(layer);
+      }
+    });
 
-                  : layer ===
-                    "cobertura"
+    const details = Array.from(grouped.values());
 
-                    ? " (cobertura)"
+    if (details.length) {
+      lines.push("  *Complementos*");
 
-                    : "";
+      details.forEach((complement) => {
+        const hasMiddle = complement.layers.has("meio");
+        const hasTop = complement.layers.has("cobertura");
+        const singleLayer = complement.layers.has("unica");
 
-
-              const charged =
-                Number(
-                  complement
-                    ?.preco_unitario ||
-                  0
-                );
-
-
-              const chargedText =
-                charged > 0
-
-                  ? ` +${formatMoney(charged)}`
-
-                  : "";
-
-
-              return (
-                `${name}${layerText}${chargedText}`
-              );
-            }
-          );
-
+        const layerText = singleLayer
+          ? ""
+          : hasMiddle && hasTop
+            ? "Nos dois"
+            : hasMiddle
+              ? "Meio"
+              : hasTop
+                ? "Cobertura"
+                : "";
 
         lines.push(
-          `  Complementos: ${details.join(", ")}`
+          `  • ${complement.name}${layerText ? ` — ${layerText}` : ""}`
         );
-      }
+      });
     }
-
-
-    if (
-      quantity > 1
-    ) {
-      lines.push(
-        `  Unitário: ${formatMoney(unitPrice)}`
-      );
-    }
-
 
     return lines;
   }
@@ -2065,223 +1978,119 @@
     payload,
     orderCode = ""
   ) {
-    const establishment =
-      String(
-        payload
-          ?.estabelecimento ||
-        "azury"
-      );
-
-
-    const storeName =
-      establishment ===
-      "ph_sabor_cia"
-
-        ? "PH Sabor & Cia"
-
-        : "Azury";
-
-
-    const customerName =
-      String(
-        payload
-          ?.cliente_nome ||
-        "cliente"
-      ).trim();
-
-
-    const items =
-      Array.isArray(
-        payload
-          ?.itens
-      )
-
-        ? payload.itens
-
-        : [];
-
-
-    const productsTotal =
-      items.reduce(
-        (
-          sum,
-          item
-        ) =>
-          sum +
-          Number(
-            item
-              ?.preco_unitario ||
-            0
-          ) *
-          Number(
-            item
-              ?.quantidade ||
-            0
-          ),
-
-        0
-      );
-
-
-    const deliveryFee =
-      Number(
-        payload
-          ?.taxa_entrega ||
-        0
-      );
-
-
-    const discount =
-      Number(
-        payload
-          ?.desconto ||
-        0
-      );
-
-
-    const total =
-      Math.max(
-        0,
-
-        productsTotal +
-        deliveryFee -
-        discount
-      );
-
-
-    const addressParts = [
-      String(
-        payload
-          ?.rua ||
-        ""
-      ).trim(),
-
-      String(
-        payload
-          ?.numero ||
-        ""
-      ).trim()
-
-        ? `nº ${String(payload.numero).trim()}`
-
-        : "",
-
-      String(
-        payload
-          ?.bairro ||
-        ""
-      ).trim(),
-
-      String(
-        payload
-          ?.cep ||
-        ""
-      ).trim()
-
-        ? `CEP ${String(payload.cep).trim()}`
-
-        : ""
-    ].filter(
-      Boolean
+    const establishment = String(
+      payload?.estabelecimento || "azury"
     );
 
+    const storeName =
+      establishment === "ph_sabor_cia"
+        ? "PH Sabor & Cia"
+        : "Azury";
 
-    const itemLines =
-      items.flatMap(
-        item =>
-          manualOrderItemConfirmationLines(
-            item,
-            establishment
-          )
-      );
+    const items = Array.isArray(payload?.itens)
+      ? payload.itens
+      : [];
 
+    const productsTotal = items.reduce(
+      (sum, item) =>
+        sum +
+        Number(item?.preco_unitario || 0) *
+          Number(item?.quantidade || 0),
+      0
+    );
+
+    const deliveryFee = Number(payload?.taxa_entrega || 0);
+    const discount = Number(payload?.desconto || 0);
+
+    const total = Math.max(
+      0,
+      productsTotal + deliveryFee - discount
+    );
+
+    const street = String(payload?.rua || "").trim();
+    const number = String(payload?.numero || "").trim();
+    const district = String(payload?.bairro || "").trim();
+    const zip = String(payload?.cep || "").trim();
+
+    const streetAndNumber = [
+      street,
+      number ? `nº ${number}` : ""
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    const deliveryAddress = [
+      streetAndNumber,
+      district
+    ]
+      .filter(Boolean)
+      .join(" — ");
+
+    const itemLines = items.flatMap((item) =>
+      manualOrderItemConfirmationLines(
+        item,
+        establishment
+      )
+    );
+
+    const isPix =
+      String(payload?.forma_pagamento || "")
+        .trim()
+        .toLowerCase() === "pix";
+
+    const finalMessage = isPix
+      ? "Assim que o comprovante for enviado, conseguimos confirmar o pedido e seguir com o preparo. \u{1F499}"
+      : "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. \u{2705}";
 
     const lines = [
-      "🧾 *CONFIRMAÇÃO DO PEDIDO*",
-
+      "\u{1F9FE} *CONFIRMAÇÃO DO PEDIDO*",
       `*${storeName}*`,
-
       orderCode
         ? `Pedido *${orderCode}*`
         : "",
-
       "",
-
-      `Olá, ${customerName}! Confira se o seu pedido está correto:`,
-
+      "Confira se o seu pedido está correto:",
       "",
-
       "*Itens*",
-
       ...itemLines,
-
       "",
-
+      "*Entrega*",
+      deliveryAddress || "Endereço não informado",
+      zip ? `CEP ${zip}` : null,
+      payload?.complemento_endereco
+        ? `Complemento: ${payload.complemento_endereco}`
+        : null,
+      payload?.observacoes
+        ? `Observações: ${payload.observacoes}`
+        : null,
+      "",
+      "*Pagamento*",
+      manualOrderPaymentLabel(
+        payload?.forma_pagamento
+      ),
+      payload?.forma_pagamento === "dinheiro" &&
+      Number(payload?.troco_para) > 0
+        ? `Troco para: ${formatMoney(payload.troco_para)}`
+        : null,
+      "",
+      "*Valores*",
       `Produtos: ${formatMoney(productsTotal)}`,
-
-      `Taxa de entrega: ${formatMoney(deliveryFee)}`,
-
+      `Entrega: ${formatMoney(deliveryFee)}`,
       discount > 0
         ? `Desconto: -${formatMoney(discount)}`
         : null,
-
       `*Total: ${formatMoney(total)}*`,
-
       "",
-
-      `Pagamento: ${manualOrderPaymentLabel(
-        payload?.forma_pagamento
-      )}`,
-
-      payload
-          ?.forma_pagamento ===
-          "dinheiro" &&
-        Number(
-          payload
-            ?.troco_para
-        ) > 0
-
-        ? `Troco para: ${formatMoney(
-            payload.troco_para
-          )}`
-
-        : null,
-
-      addressParts.length
-
-        ? `Entrega: ${addressParts.join(", ")}`
-
-        : null,
-
-      payload
-        ?.complemento_endereco
-
-        ? `Complemento: ${payload.complemento_endereco}`
-
-        : null,
-
-      payload
-        ?.observacoes
-
-        ? `Observações: ${payload.observacoes}`
-
-        : null,
-
-      "",
-
-      "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. ✅"
+      finalMessage
     ];
-
 
     return lines
       .filter(
-        line =>
+        (line) =>
           line !== null &&
           line !== undefined
       )
-      .join(
-        "\n"
-      );
+      .join("\n");
   }
 
 
