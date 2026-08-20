@@ -2039,11 +2039,11 @@
         .toLowerCase() === "pix";
 
     const finalMessage = isPix
-      ? "Assim que o comprovante for enviado, conseguimos confirmar o pedido e seguir com o preparo. \u{1F499}"
-      : "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. \u{1F499}";
+      ? "Assim que o comprovante for enviado, conseguimos confirmar o pedido e seguir com o preparo. \uD83D\uDC99"
+      : "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. \u2705";
 
     const lines = [
-      "\u{1F9FE} *CONFIRMAÇÃO DO PEDIDO*",
+      "\uD83E\uDDFE *CONFIRMAÇÃO DO PEDIDO*",
       `*${storeName}*`,
       orderCode
         ? `Pedido *${orderCode}*`
