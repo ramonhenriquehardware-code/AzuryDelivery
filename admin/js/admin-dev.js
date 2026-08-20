@@ -2040,7 +2040,7 @@
 
     const finalMessage = isPix
       ? "Assim que o comprovante for enviado, conseguimos confirmar o pedido e seguir com o preparo. \u{1F499}"
-      : "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. \u{2705}";
+      : "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. \u{1F499}";
 
     const lines = [
       "\u{1F9FE} *CONFIRMAÇÃO DO PEDIDO*",
