@@ -7272,6 +7272,135 @@ ${printableOrderAddressHtml(order)}
       row.querySelector("[data-close]").disabled = !active.checked;
     }
   });
+
+  function findManualOrderDistrictByName(name) {
+    const key = normalizeKey(name);
+
+    return (
+      (state.operacao?.bairros || []).find((item) => {
+        if (item.ativo === false) {
+          return false;
+        }
+
+        const aliases = Array.isArray(item.aliases) ? item.aliases : [];
+
+        return (
+          normalizeKey(item.nome) === key ||
+          aliases.some((alias) => normalizeKey(alias) === key)
+        );
+      }) || null
+    );
+  }
+
+  document.addEventListener("input", (event) => {
+    const cepInput = event.target;
+
+    if (cepInput?.name !== "cep") {
+      return;
+    }
+
+    const formNode = cepInput.closest("#dynamicModalForm");
+
+    if (!formNode?.querySelector("[data-manual-establishment]")) {
+      return;
+    }
+
+    const digits = String(cepInput.value || "")
+      .replace(/\D/g, "")
+      .slice(0, 8);
+
+    cepInput.value =
+      digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+
+    if (digits.length !== 8) {
+      delete cepInput.dataset.cepConsultado;
+      return;
+    }
+
+    if (cepInput.dataset.cepConsultado === digits) {
+      return;
+    }
+
+    cepInput.dataset.cepConsultado = digits;
+    cepInput.setAttribute("aria-busy", "true");
+
+    fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Não foi possível consultar o CEP agora.");
+        }
+
+        return response.json();
+      })
+      .then((address) => {
+        if (address?.erro) {
+          throw new Error("CEP não encontrado. Confira os números informados.");
+        }
+
+        const streetInput = formNode.querySelector('[name="rua"]');
+
+        const districtInput = formNode.querySelector('[name="bairro"]');
+
+        const feeInput = formNode.querySelector('[name="taxa_entrega"]');
+
+        const numberInput = formNode.querySelector('[name="numero"]');
+
+        const establishment = String(
+          formNode.querySelector('[name="estabelecimento"]')?.value || "azury",
+        );
+
+        if (streetInput) {
+          streetInput.value = String(address?.logradouro || "").trim();
+        }
+
+        if (districtInput) {
+          districtInput.value = String(address?.bairro || "").trim();
+        }
+
+        if (establishment === "azury") {
+          const district = findManualOrderDistrictByName(address?.bairro || "");
+
+          if (district) {
+            districtInput.value = district.nome;
+
+            feeInput.value = Number(district.taxa || 0)
+              .toFixed(2)
+              .replace(".", ",");
+
+            showMessage(
+              `Endereço carregado • ${district.nome} • Entrega ${formatMoney(
+                district.taxa,
+              )}.`,
+              "success",
+            );
+          } else {
+            feeInput.value = "0,00";
+
+            showMessage(
+              `CEP encontrado, mas o bairro “${
+                address?.bairro || ""
+              }” não está cadastrado/ativo na Azury. Confira a taxa manualmente.`,
+              "warning",
+            );
+          }
+        } else {
+          showMessage("Rua e bairro carregados pelo CEP.", "success");
+        }
+
+        numberInput?.focus();
+      })
+      .catch((error) => {
+        delete cepInput.dataset.cepConsultado;
+
+        console.error(error);
+
+        showMessage(error.message, "error");
+      })
+      .finally(() => {
+        cepInput.removeAttribute("aria-busy");
+      });
+  });
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       setSidebarOpen(false);
