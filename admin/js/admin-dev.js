@@ -1810,68 +1810,38 @@
   }
 
   async function submitManualOrder(formNode) {
-    const payload =
-      buildManualOrderPayload(
-        formNode
-      );
+    const payload = buildManualOrderPayload(formNode);
 
-    const data =
-      await rpc(
-        "criar_pedido_manual_admin",
-        {
-          p_dados:
-            payload
-        }
-      );
+    const data = await rpc("criar_pedido_manual_admin", {
+      p_dados: payload,
+    });
 
     await refreshOrders();
 
     showMessage(
-      `Pedido ${data.codigo || ""} registrado com sucesso pelo WhatsApp.`
+      `Pedido ${data.codigo || ""} registrado com sucesso pelo WhatsApp.`,
     );
   }
-
 
   /* =======================================================
      CONFIRMAÇÃO PROFISSIONAL PELO WHATSAPP
   ======================================================= */
 
-  function manualOrderPaymentLabel(
-    value
-  ) {
+  function manualOrderPaymentLabel(value) {
     const labels = {
-      pix:
-        "Pix",
+      pix: "Pix",
 
-      dinheiro:
-        "Dinheiro",
+      dinheiro: "Dinheiro",
 
-      cartao_debito:
-        "Cartão de débito",
+      cartao_debito: "Cartão de débito",
 
-      cartao_credito:
-        "Cartão de crédito"
+      cartao_credito: "Cartão de crédito",
     };
 
-    return (
-      labels[
-        String(
-          value ||
-          ""
-        )
-      ] ||
-      String(
-        value ||
-        "Não informado"
-      )
-    );
+    return labels[String(value || "")] || String(value || "Não informado");
   }
 
-
-  function manualOrderItemConfirmationLines(
-    item,
-    establishment
-  ) {
+  function manualOrderItemConfirmationLines(item, establishment) {
     const quantity = Number(item?.quantidade || 1);
     const productName = String(item?.produto_nome || "Item").trim();
     const sizeLabel = String(item?.tamanho_label || "").trim();
@@ -1892,9 +1862,7 @@
       sizeText = ` — ${sizeMl} ml`;
     }
 
-    const lines = [
-      `• ${quantity}x ${productName}${sizeText}`
-    ];
+    const lines = [`• ${quantity}x ${productName}${sizeText}`];
 
     const complements = Array.isArray(item?.complementos)
       ? item.complementos
@@ -1965,14 +1933,13 @@
                 : "";
 
         lines.push(
-          `  • ${complement.name}${layerText ? ` — ${layerText}` : ""}`
+          `  • ${complement.name}${layerText ? ` — ${layerText}` : ""}`,
         );
       });
     }
 
     return lines;
   }
-
 
   function encodeWhatsAppConfirmationMessage(message) {
     return encodeURIComponent(message)
@@ -1981,64 +1948,40 @@
       .replace(/__AZURY_CHECK__/g, "%E2%9C%85");
   }
 
-
-  function buildManualOrderConfirmationMessage(
-    payload,
-    orderCode = ""
-  ) {
-    const establishment = String(
-      payload?.estabelecimento || "azury"
-    );
+  function buildManualOrderConfirmationMessage(payload, orderCode = "") {
+    const establishment = String(payload?.estabelecimento || "azury");
 
     const storeName =
-      establishment === "ph_sabor_cia"
-        ? "PH Sabor & Cia"
-        : "Azury";
+      establishment === "ph_sabor_cia" ? "PH Sabor & Cia" : "Azury";
 
-    const items = Array.isArray(payload?.itens)
-      ? payload.itens
-      : [];
+    const items = Array.isArray(payload?.itens) ? payload.itens : [];
 
     const productsTotal = items.reduce(
       (sum, item) =>
-        sum +
-        Number(item?.preco_unitario || 0) *
-          Number(item?.quantidade || 0),
-      0
+        sum + Number(item?.preco_unitario || 0) * Number(item?.quantidade || 0),
+      0,
     );
 
     const deliveryFee = Number(payload?.taxa_entrega || 0);
     const discount = Number(payload?.desconto || 0);
 
-    const total = Math.max(
-      0,
-      productsTotal + deliveryFee - discount
-    );
+    const total = Math.max(0, productsTotal + deliveryFee - discount);
 
     const street = String(payload?.rua || "").trim();
     const number = String(payload?.numero || "").trim();
     const district = String(payload?.bairro || "").trim();
     const zip = String(payload?.cep || "").trim();
 
-    const streetAndNumber = [
-      street,
-      number ? `nº ${number}` : ""
-    ]
+    const streetAndNumber = [street, number ? `nº ${number}` : ""]
       .filter(Boolean)
       .join(", ");
 
-    const deliveryAddress = [
-      streetAndNumber,
-      district
-    ]
+    const deliveryAddress = [streetAndNumber, district]
       .filter(Boolean)
       .join(" — ");
 
     const itemLines = items.flatMap((item) =>
-      manualOrderItemConfirmationLines(
-        item,
-        establishment
-      )
+      manualOrderItemConfirmationLines(item, establishment),
     );
 
     const isPix =
@@ -2053,9 +1996,7 @@
     const lines = [
       "__AZURY_RECEIPT__ *CONFIRMAÇÃO DO PEDIDO*",
       `*${storeName}*`,
-      orderCode
-        ? `Pedido *${orderCode}*`
-        : "",
+      orderCode ? `Pedido *${orderCode}*` : "",
       "",
       "Confira se o seu pedido está correto:",
       "",
@@ -2068,103 +2009,71 @@
       payload?.complemento_endereco
         ? `Complemento: ${payload.complemento_endereco}`
         : null,
-      payload?.observacoes
-        ? `Observações: ${payload.observacoes}`
-        : null,
+      payload?.observacoes ? `Observações: ${payload.observacoes}` : null,
       "",
       "*Pagamento*",
-      manualOrderPaymentLabel(
-        payload?.forma_pagamento
-      ),
-      payload?.forma_pagamento === "dinheiro" &&
-      Number(payload?.troco_para) > 0
+      manualOrderPaymentLabel(payload?.forma_pagamento),
+      payload?.forma_pagamento === "dinheiro" && Number(payload?.troco_para) > 0
         ? `Troco para: ${formatMoney(payload.troco_para)}`
         : null,
       "",
       "*Valores*",
       `Produtos: ${formatMoney(productsTotal)}`,
       `Entrega: ${formatMoney(deliveryFee)}`,
-      discount > 0
-        ? `Desconto: -${formatMoney(discount)}`
-        : null,
+      discount > 0 ? `Desconto: -${formatMoney(discount)}` : null,
       `*Total: ${formatMoney(total)}*`,
       "",
-      finalMessage
+      finalMessage,
     ];
 
     return lines
-      .filter(
-        (line) =>
-          line !== null &&
-          line !== undefined
-      )
+      .filter((line) => line !== null && line !== undefined)
       .join("\n");
   }
 
-
-  async function registerManualOrderAndSendConfirmation(
-    formNode
-  ) {
+  async function registerManualOrderAndSendConfirmation(formNode) {
     if (!formNode.reportValidity()) {
       return false;
     }
 
-    const payload =
-      buildManualOrderPayload(
-        formNode
-      );
+    const payload = buildManualOrderPayload(formNode);
 
-    const normalizedPhone =
-      normalizeWhatsAppPhone(
-        payload.cliente_telefone
-      );
+    const normalizedPhone = normalizeWhatsAppPhone(payload.cliente_telefone);
 
     if (normalizedPhone.length < 12) {
       throw new Error(
-        "Informe um telefone/WhatsApp válido para enviar a confirmação do pedido."
+        "Informe um telefone/WhatsApp válido para enviar a confirmação do pedido.",
       );
     }
 
-    const data =
-      await rpc(
-        "criar_pedido_manual_admin",
-        {
-          p_dados: payload
-        }
-      );
+    const data = await rpc("criar_pedido_manual_admin", {
+      p_dados: payload,
+    });
 
     try {
       await refreshOrders();
     } catch (refreshError) {
       console.error(
         "O pedido foi registrado, mas a lista não atualizou imediatamente.",
-        refreshError
+        refreshError,
       );
     }
 
-    const code =
-      data?.codigo || "";
+    const code = data?.codigo || "";
 
-    const message =
-      buildManualOrderConfirmationMessage(
-        payload,
-        code
-      );
+    const message = buildManualOrderConfirmationMessage(payload, code);
 
-    const encodedMessage =
-      encodeWhatsAppConfirmationMessage(
-        message
-      );
+    const encodedMessage = encodeWhatsAppConfirmationMessage(message);
 
-    const url =
-      `https://wa.me/${normalizedPhone}?text=${encodedMessage}`;
+    const isMobile =
+      navigator.userAgentData?.mobile === true ||
+      /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    const opened =
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-      );
+    const url = isMobile
+      ? `https://wa.me/${normalizedPhone}?text=${encodedMessage}`
+      : `https://web.whatsapp.com/send?phone=${normalizedPhone}&text=${encodedMessage}`;
+
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
 
     if (!opened) {
       /*
@@ -2181,12 +2090,11 @@
 
     showMessage(
       `Pedido ${code} registrado e aberto no WhatsApp para confirmação.`,
-      "success"
+      "success",
     );
 
     return true;
   }
-
 
   async function openManualOrderModal() {
     if (!state.operacao) {
@@ -5577,7 +5485,13 @@ ${printableOrderAddressHtml(order)}
       </div>
     `;
   }
-  function criarTamanhoPhAtualizacao(nome, capacidadeMl, descricao, preco, ativo) {
+  function criarTamanhoPhAtualizacao(
+    nome,
+    capacidadeMl,
+    descricao,
+    preco,
+    ativo,
+  ) {
     return { nome, capacidade_ml: capacidadeMl, descricao, preco, ativo };
   }
 
@@ -5673,8 +5587,7 @@ ${printableOrderAddressHtml(order)}
       nova.tamanhos.forEach((padrao) => {
         const atual = existente.tamanhos.find(
           (tamanho) =>
-            Number(tamanho?.capacidade_ml) ===
-            Number(padrao.capacidade_ml),
+            Number(tamanho?.capacidade_ml) === Number(padrao.capacidade_ml),
         );
 
         if (!atual) {
@@ -5757,8 +5670,9 @@ ${printableOrderAddressHtml(order)}
       state.phConfig = await rpc("obter_configuracao_ph_admin");
     }
 
-    const { next, changed } =
-      normalizarConfiguracaoPhAtualizacao20260819(state.phConfig);
+    const { next, changed } = normalizarConfiguracaoPhAtualizacao20260819(
+      state.phConfig,
+    );
 
     if (!changed) {
       showMessage("A atualização da PH já está aplicada.");
@@ -5771,10 +5685,7 @@ ${printableOrderAddressHtml(order)}
         JSON.stringify(state.phConfig),
       );
     } catch (error) {
-      console.warn(
-        "Não foi possível salvar o backup local da PH.",
-        error,
-      );
+      console.warn("Não foi possível salvar o backup local da PH.", error);
     }
 
     await savePhConfig(
@@ -7105,70 +7016,36 @@ ${printableOrderAddressHtml(order)}
       });
       return;
     }
-    const manualConfirmationButton =
-      event.target.closest(
-        "[data-manual-register-confirmation]"
-      );
+    const manualConfirmationButton = event.target.closest(
+      "[data-manual-register-confirmation]",
+    );
 
-    if (
-      manualConfirmationButton
-    ) {
-      const originalText =
-        manualConfirmationButton
-          .textContent;
+    if (manualConfirmationButton) {
+      const originalText = manualConfirmationButton.textContent;
 
-      manualConfirmationButton
-        .disabled =
-        true;
+      manualConfirmationButton.disabled = true;
 
-      manualConfirmationButton
-        .textContent =
-        "Registrando...";
+      manualConfirmationButton.textContent = "Registrando...";
 
+      registerManualOrderAndSendConfirmation(el.dynamicModalForm)
+        .catch((error) => {
+          console.error(error);
 
-      registerManualOrderAndSendConfirmation(
-        el.dynamicModalForm
-      )
-        .catch(
-          error => {
-            console.error(
-              error
-            );
+          showMessage(error.message, "error");
+        })
 
-            showMessage(
-              error.message,
-              "error"
-            );
+        .finally(() => {
+          if (document.body.contains(manualConfirmationButton)) {
+            manualConfirmationButton.disabled = false;
+
+            manualConfirmationButton.textContent = originalText;
           }
-        )
-
-        .finally(
-          () => {
-            if (
-              document.body.contains(
-                manualConfirmationButton
-              )
-            ) {
-              manualConfirmationButton
-                .disabled =
-                false;
-
-              manualConfirmationButton
-                .textContent =
-                originalText;
-            }
-          }
-        );
-
+        });
 
       return;
     }
 
-
-    const addManualItem =
-      event.target.closest(
-        "[data-manual-add-item]"
-      );
+    const addManualItem = event.target.closest("[data-manual-add-item]");
     if (addManualItem) {
       addManualItemRow();
       return;
