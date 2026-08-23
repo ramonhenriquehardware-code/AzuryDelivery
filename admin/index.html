@@ -41,6 +41,51 @@
             text-shadow:
                 0 0 10px rgba(246, 196, 83, 0.35);
         }
+
+
+        .admin-install-login {
+            display: grid;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .admin-install-login .admin-install-button {
+            width: 100%;
+        }
+
+        .admin-install-hint {
+            margin: 0;
+            color: #52637a;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .admin-install-button[hidden] {
+            display: none !important;
+        }
+
+        .admin-install-toast {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 9999;
+            width: min(390px, calc(100vw - 36px));
+            padding: 13px 15px;
+            border: 1px solid #bfd1ff;
+            border-radius: 14px;
+            background: #f7f9ff;
+            color: #10213b;
+            box-shadow: 0 18px 45px rgba(7, 20, 38, 0.18);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 720px) {
+            .topbar-actions .admin-install-button {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -109,6 +154,13 @@
                 <div id="authMessage" class="form-message" role="status" aria-live="polite"></div>
 
             </form>
+
+            <div class="admin-install-login">
+                <button class="btn btn-secondary admin-install-button" type="button" data-install-admin>
+                    📱 Instalar Azury Admin
+                </button>
+                <p id="adminInstallHint" class="admin-install-hint" hidden></p>
+            </div>
 
             <a href="../index.html" class="back-link">
                 ← Voltar ao site
@@ -262,6 +314,10 @@
                     <span id="connectionStatus" class="connection-pill">
                         Conectando...
                     </span>
+
+                    <button class="btn btn-secondary admin-install-button" type="button" data-install-admin>
+                        📱 Instalar app
+                    </button>
 
                     <button id="globalRefreshButton" class="btn btn-secondary" type="button">
                         ↻ Atualizar
@@ -1400,6 +1456,116 @@
                     });
             });
         }
+    </script>
+
+
+    <div id="adminInstallToast" class="admin-install-toast" role="status" aria-live="polite" hidden></div>
+
+    <script>
+        (() => {
+            let installPrompt = null;
+            let toastTimer = null;
+
+            const installButtons = Array.from(document.querySelectorAll("[data-install-admin]"));
+            const installHint = document.getElementById("adminInstallHint");
+            const installToast = document.getElementById("adminInstallToast");
+
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const isStandalone = () =>
+                window.matchMedia("(display-mode: standalone)").matches ||
+                window.navigator.standalone === true;
+
+            const hideInstallControls = () => {
+                installButtons.forEach(button => {
+                    button.hidden = true;
+                });
+                if (installHint) installHint.hidden = true;
+            };
+
+            const showInstallControls = () => {
+                if (isStandalone()) {
+                    hideInstallControls();
+                    return;
+                }
+                installButtons.forEach(button => {
+                    button.hidden = false;
+                    button.disabled = false;
+                });
+            };
+
+            const showInstallMessage = message => {
+                if (installHint && !document.getElementById("authView")?.hidden) {
+                    installHint.textContent = message;
+                    installHint.hidden = false;
+                }
+
+                if (installToast) {
+                    installToast.textContent = message;
+                    installToast.hidden = false;
+                    window.clearTimeout(toastTimer);
+                    toastTimer = window.setTimeout(() => {
+                        installToast.hidden = true;
+                    }, 6500);
+                }
+            };
+
+            window.addEventListener("beforeinstallprompt", event => {
+                event.preventDefault();
+                installPrompt = event;
+                showInstallControls();
+            });
+
+            installButtons.forEach(button => {
+                button.addEventListener("click", async () => {
+                    if (isStandalone()) {
+                        hideInstallControls();
+                        return;
+                    }
+
+                    if (installPrompt) {
+                        const prompt = installPrompt;
+                        installPrompt = null;
+
+                        installButtons.forEach(item => {
+                            item.disabled = true;
+                        });
+
+                        try {
+                            await prompt.prompt();
+                            const choice = await prompt.userChoice;
+
+                            if (choice?.outcome === "accepted") {
+                                hideInstallControls();
+                                return;
+                            }
+                        } catch (error) {
+                            console.warn("Azury Admin: instalação não pôde ser aberta.", error);
+                        }
+
+                        showInstallControls();
+                        return;
+                    }
+
+                    if (isIOS) {
+                        showInstallMessage(
+                            "No iPhone/iPad: abra no Safari → Compartilhar → Adicionar à Tela de Início."
+                        );
+                        return;
+                    }
+
+                    showInstallMessage(
+                        "Se a instalação não abriu automaticamente, use o menu do Chrome/Edge (⋮) e escolha ‘Instalar aplicativo’ ou ‘Adicionar à tela inicial’."
+                    );
+                });
+            });
+
+            window.addEventListener("appinstalled", () => {
+                installPrompt = null;
+                hideInstallControls();
+            });
+
+            window.addEventListener("DOMContentLoaded", showInstallControls);
+        })();
     </script>
 
 
