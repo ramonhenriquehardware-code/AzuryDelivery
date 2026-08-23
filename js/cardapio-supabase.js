@@ -4402,10 +4402,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                             }"
                         >
                             <span class="azury-box-tamanho azury-copo-tamanho">
-                                ${esc(item.tamanho_ml)}
+                                ${esc(item.tamanho_ml)} ml
                             </span>
 
-                            <strong>
+                            <strong class="azury-copo-nome">
+                                ${esc(`${AZURY_CUP_NAMES.get(Number(item.tamanho_ml)) || item.nome || "Azury"} • ${item.tamanho_ml}ml`)}
+                            </strong>
+
+                            <strong class="azury-copo-preco">
                                 ${money(item.preco_base)}
                             </strong>
 
