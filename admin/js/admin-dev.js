@@ -3538,7 +3538,7 @@
             data-manual-delivery-status
             style="display:block; margin-top:6px; font-size:11px; line-height:1.35; opacity:.72;"
           >
-            Na PH, informe o CEP e o número para calcular a taxa automaticamente.
+            Na PH, informe o CEP para calcular a taxa automaticamente. O número refina a distância.
           </small>
 
         </label>
@@ -14011,6 +14011,8 @@ ${printableOrderAddressHtml(order)}
     },
   );
 
+  const manualPhCepLookupCache = new Map();
+
   function getManualPhDeliveryConfig() {
     const store = state.phConfig?.loja || {};
     const address = store.endereco || state.phConfig?.endereco || {};
@@ -14044,6 +14046,15 @@ ${printableOrderAddressHtml(order)}
       )
       .sort((a, b) => a.ateKm - b.ateKm);
 
+    const storeCep = String(
+      address.cep ||
+        store.cep ||
+        state.phConfig?.cep ||
+        "04433050",
+    )
+      .replace(/\D/g, "")
+      .slice(0, 8);
+
     return {
       address: {
         rua: String(address.rua || "Rua Oscar de Barros").trim(),
@@ -14052,6 +14063,7 @@ ${printableOrderAddressHtml(order)}
         cidade: String(address.cidade || "São Paulo").trim(),
         estado: String(address.estado || "SP").trim(),
         pais: String(address.pais || "Brasil").trim(),
+        cep: storeCep,
       },
       limit: Number.isFinite(limit) && limit > 0 ? limit : 8,
       bands: bands.length
@@ -14102,6 +14114,12 @@ ${printableOrderAddressHtml(order)}
     }
   }
 
+  function manualPhCepDigits(formNode) {
+    return String(formNode?.querySelector('[name="cep"]')?.value || "")
+      .replace(/\D/g, "")
+      .slice(0, 8);
+  }
+
   function manualPhAddressReady(formNode) {
     if (!formNode) {
       return false;
@@ -14115,17 +14133,7 @@ ${printableOrderAddressHtml(order)}
       return false;
     }
 
-    const cep = String(formNode.querySelector('[name="cep"]')?.value || "").replace(
-      /\D/g,
-      "",
-    );
-
-    return Boolean(
-      cep.length === 8 &&
-        formNode.querySelector('[name="rua"]')?.value.trim() &&
-        formNode.querySelector('[name="numero"]')?.value.trim() &&
-        formNode.querySelector('[name="bairro"]')?.value.trim(),
-    );
+    return manualPhCepDigits(formNode).length === 8;
   }
 
   function buildManualPhStoreAddress() {
@@ -14154,9 +14162,115 @@ ${printableOrderAddressHtml(order)}
     return [
       [street, number, district, city, stateCode, "Brasil"].filter(Boolean).join(", "),
       [street, number, city, stateCode, "Brasil"].filter(Boolean).join(", "),
+      [street, district, city, stateCode, "Brasil"].filter(Boolean).join(", "),
       [cep, number, city, stateCode, "Brasil"].filter(Boolean).join(", "),
       [cep, city, stateCode, "Brasil"].filter(Boolean).join(", "),
     ].filter((value, index, list) => value && list.indexOf(value) === index);
+  }
+
+  async function fetchManualJson(url, options = {}, timeoutMs = 7000) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Falha HTTP ${response.status}.`);
+      }
+
+      return await response.json();
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
+
+  function manualCoordinatesFromValue(value) {
+    const latitude = Number(value?.latitude ?? value?.lat);
+    const longitude = Number(value?.longitude ?? value?.lng ?? value?.lon);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return null;
+    }
+
+    return { latitude, longitude };
+  }
+
+  async function getManualCepData(rawCep) {
+    const digits = String(rawCep || "")
+      .replace(/\D/g, "")
+      .slice(0, 8);
+
+    if (digits.length !== 8) {
+      throw new Error("CEP inválido.");
+    }
+
+    if (manualPhCepLookupCache.has(digits)) {
+      return await manualPhCepLookupCache.get(digits);
+    }
+
+    const lookupPromise = (async () => {
+      let brasilApiError = null;
+
+      try {
+        const data = await fetchManualJson(
+          `https://brasilapi.com.br/api/cep/v2/${digits}`,
+          { headers: { Accept: "application/json" } },
+        );
+
+        const coordinates = manualCoordinatesFromValue(
+          data?.location?.coordinates || {},
+        );
+
+        return {
+          cep: digits,
+          logradouro: String(data?.street || "").trim(),
+          bairro: String(data?.neighborhood || "").trim(),
+          localidade: String(data?.city || "").trim(),
+          uf: String(data?.state || "").trim(),
+          coordinates,
+          source: "brasilapi",
+        };
+      } catch (error) {
+        brasilApiError = error;
+      }
+
+      try {
+        const data = await fetchManualJson(
+          `https://viacep.com.br/ws/${digits}/json/`,
+          { headers: { Accept: "application/json" } },
+        );
+
+        if (data?.erro) {
+          throw new Error("CEP não encontrado.");
+        }
+
+        return {
+          cep: digits,
+          logradouro: String(data?.logradouro || "").trim(),
+          bairro: String(data?.bairro || "").trim(),
+          localidade: String(data?.localidade || "").trim(),
+          uf: String(data?.uf || "").trim(),
+          coordinates: null,
+          source: "viacep",
+        };
+      } catch (viaCepError) {
+        console.warn("Falha BrasilAPI para CEP:", brasilApiError);
+        throw viaCepError;
+      }
+    })();
+
+    manualPhCepLookupCache.set(digits, lookupPromise);
+
+    try {
+      return await lookupPromise;
+    } catch (error) {
+      manualPhCepLookupCache.delete(digits);
+      throw error;
+    }
   }
 
   async function geocodeManualAddress(address) {
@@ -14168,29 +14282,23 @@ ${printableOrderAddressHtml(order)}
       q: address,
     });
 
-    const response = await fetch(
+    const results = await fetchManualJson(
       `https://nominatim.openstreetmap.org/search?${params.toString()}`,
       { headers: { Accept: "application/json" } },
+      6500,
     );
-
-    if (!response.ok) {
-      throw new Error("Não foi possível localizar o endereço no mapa.");
-    }
-
-    const results = await response.json();
 
     if (!Array.isArray(results) || !results.length) {
       throw new Error("Endereço não localizado no mapa.");
     }
 
-    const latitude = Number(results[0].lat);
-    const longitude = Number(results[0].lon);
+    const coordinates = manualCoordinatesFromValue(results[0]);
 
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    if (!coordinates) {
       throw new Error("As coordenadas encontradas são inválidas.");
     }
 
-    return { latitude, longitude };
+    return coordinates;
   }
 
   async function geocodeManualWithAttempts(addresses) {
@@ -14207,29 +14315,103 @@ ${printableOrderAddressHtml(order)}
     throw lastError || new Error("Não foi possível localizar o endereço.");
   }
 
-  async function getManualPhStoreCoordinates() {
-    const address = buildManualPhStoreAddress();
+  async function geocodeManualCep(rawCep) {
+    const data = await getManualCepData(rawCep);
 
-    if (manualPhStoreCoordinatesCache.has(address)) {
-      return manualPhStoreCoordinatesCache.get(address);
+    if (data.coordinates) {
+      return {
+        ...data.coordinates,
+        aproximadaPorCep: true,
+      };
     }
 
+    const candidates = [
+      [data.logradouro, data.bairro, data.localidade, data.uf, "Brasil"]
+        .filter(Boolean)
+        .join(", "),
+      [data.cep, data.localidade, data.uf, "Brasil"].filter(Boolean).join(", "),
+    ].filter(Boolean);
+
+    const coordinates = await geocodeManualWithAttempts(candidates);
+
+    return {
+      ...coordinates,
+      aproximadaPorCep: true,
+    };
+  }
+
+  async function getManualPhStoreCoordinates() {
     const config = getManualPhDeliveryConfig();
     const store = config.address;
+    const address = buildManualPhStoreAddress();
+    const cacheKey = `${store.cep || ""}|${address}`;
 
-    const coordinates = await geocodeManualWithAttempts([
-      address,
-      [store.rua, store.numero, store.cidade, store.estado, "Brasil"]
-        .filter(Boolean)
-        .join(", "),
-      [store.rua, store.bairro, store.cidade, "Brasil"]
-        .filter(Boolean)
-        .join(", "),
-    ]);
+    if (manualPhStoreCoordinatesCache.has(cacheKey)) {
+      return manualPhStoreCoordinatesCache.get(cacheKey);
+    }
 
-    manualPhStoreCoordinatesCache.set(address, coordinates);
+    let coordinates = null;
+
+    if (String(store.cep || "").replace(/\D/g, "").length === 8) {
+      try {
+        coordinates = await geocodeManualCep(store.cep);
+      } catch (error) {
+        console.warn("CEP da PH não pôde ser geolocalizado; usando endereço.", error);
+      }
+    }
+
+    if (!coordinates) {
+      coordinates = await geocodeManualWithAttempts([
+        address,
+        [store.rua, store.numero, store.cidade, store.estado, "Brasil"]
+          .filter(Boolean)
+          .join(", "),
+        [store.rua, store.bairro, store.cidade, "Brasil"]
+          .filter(Boolean)
+          .join(", "),
+      ]);
+    }
+
+    manualPhStoreCoordinatesCache.set(cacheKey, coordinates);
 
     return coordinates;
+  }
+
+  async function getManualPhClientCoordinates(formNode) {
+    const cep = manualPhCepDigits(formNode);
+    const street = String(formNode.querySelector('[name="rua"]')?.value || "").trim();
+    const number = String(formNode.querySelector('[name="numero"]')?.value || "").trim();
+
+    if (street && number) {
+      try {
+        const coordinates = await geocodeManualWithAttempts(
+          buildManualPhClientAddressCandidates(formNode),
+        );
+
+        return {
+          ...coordinates,
+          aproximadaPorCep: false,
+        };
+      } catch (error) {
+        console.warn(
+          "Endereço completo da PH não foi localizado; usando coordenadas do CEP.",
+          error,
+        );
+      }
+    }
+
+    try {
+      return await geocodeManualCep(cep);
+    } catch (cepError) {
+      const coordinates = await geocodeManualWithAttempts(
+        buildManualPhClientAddressCandidates(formNode),
+      );
+
+      return {
+        ...coordinates,
+        aproximadaPorCep: !number,
+      };
+    }
   }
 
   async function routeManualDistanceByRoad(origin, destination) {
@@ -14237,15 +14419,11 @@ ${printableOrderAddressHtml(order)}
       `${origin.longitude},${origin.latitude};` +
       `${destination.longitude},${destination.latitude}`;
 
-    const response = await fetch(
+    const data = await fetchManualJson(
       `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=false&alternatives=false&steps=false`,
+      { headers: { Accept: "application/json" } },
+      6500,
     );
-
-    if (!response.ok) {
-      throw new Error("Não foi possível calcular a rota pelas ruas.");
-    }
-
-    const data = await response.json();
 
     if (data?.code !== "Ok" || !data?.routes?.[0]) {
       throw new Error("Rota não encontrada.");
@@ -14298,7 +14476,7 @@ ${printableOrderAddressHtml(order)}
     if (!manualPhAddressReady(formNode)) {
       setManualDeliveryStatus(
         formNode,
-        "Na PH, informe o CEP e o número para calcular a taxa automaticamente.",
+        "Na PH, informe um CEP válido para calcular a taxa automaticamente.",
       );
 
       return;
@@ -14306,15 +14484,21 @@ ${printableOrderAddressHtml(order)}
 
     const calculationVersion = ++manualPhDeliveryVersion;
     const feeInput = formNode.querySelector('[name="taxa_entrega"]');
+    const number = String(formNode.querySelector('[name="numero"]')?.value || "").trim();
 
     formNode.dataset.phDeliveryCalculating = "true";
     feeInput?.setAttribute("aria-busy", "true");
-    setManualDeliveryStatus(formNode, "Calculando distância e taxa da PH...");
+    setManualDeliveryStatus(
+      formNode,
+      number
+        ? "Calculando distância e taxa da PH..."
+        : "Calculando a taxa da PH pelo CEP...",
+    );
 
     try {
       const [storeCoordinates, clientCoordinates] = await Promise.all([
         getManualPhStoreCoordinates(),
-        geocodeManualWithAttempts(buildManualPhClientAddressCandidates(formNode)),
+        getManualPhClientCoordinates(formNode),
       ]);
 
       const result = await calculateManualDistance(
@@ -14347,13 +14531,19 @@ ${printableOrderAddressHtml(order)}
 
       if (feeInput) {
         feeInput.value = Number(fee).toFixed(2).replace(".", ",");
+        feeInput.dispatchEvent(new Event("change", { bubbles: true }));
       }
+
+      const approximate = result.aproximada || clientCoordinates.aproximadaPorCep;
+      const detail = !number
+        ? " • estimada pelo CEP; informe o número para refinar"
+        : approximate
+          ? " • distância aproximada"
+          : "";
 
       setManualDeliveryStatus(
         formNode,
-        `${distanceKm.toFixed(1)} km • taxa automática ${formatMoney(fee)}${
-          result.aproximada ? " • distância aproximada" : ""
-        }.`,
+        `${distanceKm.toFixed(1)} km • taxa automática ${formatMoney(fee)}${detail}.`,
         "success",
       );
     } catch (error) {
@@ -14365,7 +14555,7 @@ ${printableOrderAddressHtml(order)}
 
       setManualDeliveryStatus(
         formNode,
-        "Não foi possível calcular automaticamente. Confira o endereço ou informe a taxa manualmente.",
+        "Não foi possível calcular automaticamente. Confira o CEP/endereço ou informe a taxa manualmente.",
         "error",
       );
     } finally {
@@ -14382,7 +14572,7 @@ ${printableOrderAddressHtml(order)}
     if (!formNode || !manualPhAddressReady(formNode)) {
       setManualDeliveryStatus(
         formNode,
-        "Na PH, informe o CEP e o número para calcular a taxa automaticamente.",
+        "Na PH, informe um CEP válido para calcular a taxa automaticamente.",
       );
 
       return;
@@ -14390,7 +14580,7 @@ ${printableOrderAddressHtml(order)}
 
     manualPhDeliveryTimer = window.setTimeout(
       () => calculateManualPhDelivery(formNode),
-      800,
+      500,
     );
   }
 
@@ -14413,7 +14603,7 @@ ${printableOrderAddressHtml(order)}
       } else {
         setManualDeliveryStatus(
           formNode,
-          "Na PH, informe o CEP e o número para calcular a taxa automaticamente.",
+          "Na PH, informe o CEP para calcular a taxa automaticamente.",
         );
       }
 
@@ -14461,7 +14651,6 @@ ${printableOrderAddressHtml(order)}
 
     (event) => {
       const cepInput = event.target;
-
       const candidateForm = cepInput?.closest?.("#dynamicModalForm");
 
       if (
@@ -14504,7 +14693,7 @@ ${printableOrderAddressHtml(order)}
         ) {
           invalidateManualPhDelivery(
             formNode,
-            "Na PH, informe o CEP e o número para calcular a taxa automaticamente.",
+            "Na PH, informe o CEP para calcular a taxa automaticamente.",
           );
         }
 
@@ -14512,65 +14701,56 @@ ${printableOrderAddressHtml(order)}
       }
 
       if (cepInput.dataset.cepConsultado === digits) {
+        if (
+          String(formNode.querySelector('[name="estabelecimento"]')?.value || "") ===
+          "ph_sabor_cia"
+        ) {
+          scheduleManualPhDelivery(formNode);
+        }
+
         return;
       }
 
       cepInput.dataset.cepConsultado = digits;
-
       cepInput.setAttribute("aria-busy", "true");
 
-      fetch(`https://viacep.com.br/ws/${digits}/json/`)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Não foi possível consultar o CEP agora.");
-          }
-
-          return response.json();
-        })
+      getManualCepData(digits)
         .then((address) => {
-          if (address?.erro) {
-            throw new Error(
-              "CEP não encontrado. Confira os números informados.",
-            );
-          }
-
           const streetInput = formNode.querySelector('[name="rua"]');
-
           const districtInput = formNode.querySelector('[name="bairro"]');
-
           const feeInput = formNode.querySelector('[name="taxa_entrega"]');
-
           const numberInput = formNode.querySelector('[name="numero"]');
-
           const establishment = String(
             formNode.querySelector('[name="estabelecimento"]')?.value ||
               "azury",
           );
 
-          if (streetInput) {
-            streetInput.value = String(address?.logradouro || "").trim();
+          if (streetInput && address.logradouro) {
+            streetInput.value = address.logradouro;
           }
 
-          if (districtInput) {
-            districtInput.value = String(address?.bairro || "").trim();
+          if (districtInput && address.bairro) {
+            districtInput.value = address.bairro;
           }
 
           formNode.dataset.manualCepCity = String(
-            address?.localidade || "São Paulo",
+            address.localidade || "São Paulo",
           ).trim();
-          formNode.dataset.manualCepState = String(address?.uf || "SP").trim();
+          formNode.dataset.manualCepState = String(address.uf || "SP").trim();
 
           if (establishment === "azury") {
-            const district = findManualOrderDistrictByName(
-              address?.bairro || "",
-            );
+            const district = findManualOrderDistrictByName(address.bairro || "");
 
             if (district) {
-              districtInput.value = district.nome;
+              if (districtInput) {
+                districtInput.value = district.nome;
+              }
 
-              feeInput.value = Number(district.taxa || 0)
-                .toFixed(2)
-                .replace(".", ",");
+              if (feeInput) {
+                feeInput.value = Number(district.taxa || 0)
+                  .toFixed(2)
+                  .replace(".", ",");
+              }
 
               showMessage(
                 `Endereço carregado • ${district.nome} • Entrega ${formatMoney(
@@ -14579,36 +14759,27 @@ ${printableOrderAddressHtml(order)}
                 "success",
               );
             } else {
-              feeInput.value = "0,00";
+              if (feeInput) {
+                feeInput.value = "0,00";
+              }
 
               showMessage(
                 `CEP encontrado, mas o bairro “${
-                  address?.bairro || ""
+                  address.bairro || ""
                 }” não está cadastrado/ativo na Azury. Confira a taxa manualmente.`,
                 "warning",
               );
             }
           } else {
             invalidateManualPhDelivery(formNode);
+            scheduleManualPhDelivery(formNode);
 
-            if (numberInput?.value.trim()) {
-              scheduleManualPhDelivery(formNode);
-
-              showMessage(
-                "Endereço carregado. Calculando a taxa de entrega da PH...",
-                "success",
-              );
-            } else {
-              setManualDeliveryStatus(
-                formNode,
-                "CEP encontrado. Informe o número para calcular a taxa da PH.",
-              );
-
-              showMessage(
-                "Rua e bairro carregados. Informe o número para calcular a entrega da PH.",
-                "success",
-              );
-            }
+            showMessage(
+              numberInput?.value.trim()
+                ? "Endereço carregado. Calculando a taxa de entrega da PH..."
+                : "Endereço carregado. Calculando a taxa da PH pelo CEP...",
+              "success",
+            );
           }
 
           numberInput?.focus();
@@ -14618,7 +14789,20 @@ ${printableOrderAddressHtml(order)}
 
           console.error(error);
 
-          showMessage(error.message, "error");
+          if (
+            String(formNode.querySelector('[name="estabelecimento"]')?.value || "") ===
+            "ph_sabor_cia"
+          ) {
+            invalidateManualPhDelivery(
+              formNode,
+              "Não foi possível consultar esse CEP agora. Tente novamente ou informe a taxa manualmente.",
+            );
+          }
+
+          showMessage(
+            error?.message || "Não foi possível consultar o CEP agora.",
+            "error",
+          );
         })
         .finally(() => {
           cepInput.removeAttribute("aria-busy");

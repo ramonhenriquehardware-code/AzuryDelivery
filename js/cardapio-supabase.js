@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         store: $("#statusLoja"),
         storeTitle: $("#statusLojaTitulo"),
         storeMsg: $("#statusLojaMensagem"),
+        footerSchedule: $("#footerHorarioLoja"),
         size: $("#tamanhoMonteSeu"),
         base: $("#precoBaseMonteSeu"),
         middle: $("#complementosMeio"),
@@ -6465,7 +6466,97 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
     }
 
+    function footerScheduleText() {
+        const active = state.schedules
+            .filter(item => item && item.ativo !== false)
+            .map(item => ({
+                day: Number(item.dia_semana),
+                open: timeLabel(item.abre_as),
+                close: timeLabel(item.fecha_as)
+            }))
+            .filter(item =>
+                Number.isInteger(item.day) &&
+                item.day >= 0 &&
+                item.day <= 6 &&
+                item.open &&
+                item.close
+            );
+
+        if (!active.length) {
+            return "Horário indisponível";
+        }
+
+        const sameHours = active.every(
+            item =>
+                item.open === active[0].open &&
+                item.close === active[0].close
+        );
+
+        const days = new Set(active.map(item => item.day));
+        const hours = `das ${active[0].open} às ${active[0].close}`;
+
+        if (sameHours) {
+            if (days.size === 7) {
+                return `Todos os dias, ${hours}`;
+            }
+
+            if (
+                days.size === 6 &&
+                !days.has(1) &&
+                [0, 2, 3, 4, 5, 6].every(day => days.has(day))
+            ) {
+                return `Terça a domingo, ${hours}`;
+            }
+
+            if (
+                days.size === 6 &&
+                !days.has(0) &&
+                [1, 2, 3, 4, 5, 6].every(day => days.has(day))
+            ) {
+                return `Segunda a sábado, ${hours}`;
+            }
+
+            if (
+                days.size === 5 &&
+                [1, 2, 3, 4, 5].every(day => days.has(day))
+            ) {
+                return `Segunda a sexta, ${hours}`;
+            }
+        }
+
+        const dayNames = [
+            "Dom",
+            "Seg",
+            "Ter",
+            "Qua",
+            "Qui",
+            "Sex",
+            "Sáb"
+        ];
+
+        return active
+            .sort((a, b) => {
+                const order = day => day === 0 ? 7 : day;
+                return order(a.day) - order(b.day);
+            })
+            .map(item =>
+                `${dayNames[item.day]} ${item.open}–${item.close}`
+            )
+            .join(" • ");
+    }
+
+    function updateFooterSchedule() {
+        if (!d.footerSchedule) {
+            return;
+        }
+
+        d.footerSchedule.textContent =
+            footerScheduleText();
+    }
+
     function updateStore() {
+        updateFooterSchedule();
+
         const status =
             storeState();
 
