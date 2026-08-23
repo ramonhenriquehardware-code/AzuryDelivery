@@ -111,6 +111,9 @@
     auditoria: "Auditoria",
   });
 
+  const EMPLOYEE_ACCESS_LEVEL = "atendente";
+  const EMPLOYEE_ALLOWED_SECTIONS = new Set(["pedidos"]);
+
   const state = {
     session: null,
 
@@ -213,6 +216,10 @@
     email: document.getElementById("adminEmail"),
 
     password: document.getElementById("adminPassword"),
+
+    passwordToggle: document.getElementById("toggleAdminPassword"),
+
+    sidebarWelcomeRole: document.getElementById("sidebarWelcomeRole"),
 
     logoutButton: document.getElementById("logoutButton"),
 
@@ -552,6 +559,58 @@
     el.adminApp.hidden = false;
   }
 
+  function currentAccessLevel() {
+    return String(state.admin?.nivel_acesso || "").trim().toLowerCase();
+  }
+
+  function isEmployeeAccess() {
+    return currentAccessLevel() === EMPLOYEE_ACCESS_LEVEL;
+  }
+
+  function isSectionAllowed(section) {
+    return !isEmployeeAccess() || EMPLOYEE_ALLOWED_SECTIONS.has(section);
+  }
+
+  function applyAccessProfile() {
+    const level = currentAccessLevel() || "administrador";
+    const employee = isEmployeeAccess();
+
+    document.body.dataset.adminAccess = level;
+
+    document.querySelectorAll(".nav-item[data-section]").forEach((button) => {
+      const allowed = isSectionAllowed(button.dataset.section);
+      button.hidden = !allowed;
+      button.disabled = !allowed;
+    });
+
+    document.querySelectorAll("[data-go-section]").forEach((button) => {
+      button.hidden = !isSectionAllowed(button.dataset.goSection);
+    });
+
+    if (el.sidebarAdminLevel) {
+      el.sidebarAdminLevel.textContent = employee ? "Funcionário" : level;
+    }
+
+    if (el.sidebarWelcomeRole) {
+      el.sidebarWelcomeRole.textContent = employee ? "Funcionário" : "Chefe $";
+    }
+  }
+
+  function togglePasswordVisibility() {
+    if (!el.password || !el.passwordToggle) {
+      return;
+    }
+
+    const showPassword = el.password.type === "password";
+    el.password.type = showPassword ? "text" : "password";
+
+    const label = showPassword ? "Ocultar senha" : "Mostrar senha";
+    el.passwordToggle.setAttribute("aria-label", label);
+    el.passwordToggle.setAttribute("title", label);
+    el.passwordToggle.setAttribute("aria-pressed", String(showPassword));
+    el.password.focus({ preventScroll: true });
+  }
+
   async function validateAdminSession() {
     const admin = await rpc("obter_sessao_admin");
 
@@ -560,9 +619,24 @@
     el.sidebarAdminName.textContent =
       admin.nome || admin.email || "Administrador";
 
-    el.sidebarAdminLevel.textContent = admin.nivel_acesso || "administrador";
+    applyAccessProfile();
 
     return admin;
+  }
+
+  async function enterPanelForCurrentUser() {
+    applyAccessProfile();
+    showAdmin();
+    setConnection(true, "Conectado ao Supabase");
+
+    await navigate(isEmployeeAccess() ? "pedidos" : "visao-geral");
+
+    startAutoRefresh();
+    startRealtimeOrders();
+
+    syncExistingPushSubscription().catch((error) => {
+      console.warn("Não foi possível verificar a inscrição push.", error);
+    });
   }
 
   async function bootstrap() {
@@ -582,19 +656,7 @@
 
       await validateAdminSession();
 
-      showAdmin();
-
-      setConnection(true, "Conectado ao Supabase");
-
-      await loadOverview();
-
-      startAutoRefresh();
-
-      startRealtimeOrders();
-
-      syncExistingPushSubscription().catch((error) => {
-        console.warn("Não foi possível verificar a inscrição push.", error);
-      });
+      await enterPanelForCurrentUser();
     } catch (error) {
       console.error(error);
 
@@ -634,21 +696,13 @@
 
       await validateAdminSession();
 
-      showAdmin();
-
-      setConnection(true, "Conectado ao Supabase");
-
       el.password.value = "";
+      el.password.type = "password";
+      el.passwordToggle?.setAttribute("aria-label", "Mostrar senha");
+      el.passwordToggle?.setAttribute("title", "Mostrar senha");
+      el.passwordToggle?.setAttribute("aria-pressed", "false");
 
-      await loadOverview();
-
-      startAutoRefresh();
-
-      startRealtimeOrders();
-
-      syncExistingPushSubscription().catch((error) => {
-        console.warn("Não foi possível verificar a inscrição push.", error);
-      });
+      await enterPanelForCurrentUser();
     } catch (error) {
       console.error(error);
 
@@ -678,6 +732,16 @@
     state.admin = null;
 
     state.rastreamentos = [];
+
+    delete document.body.dataset.adminAccess;
+
+    if (el.password) {
+      el.password.type = "password";
+    }
+
+    el.passwordToggle?.setAttribute("aria-label", "Mostrar senha");
+    el.passwordToggle?.setAttribute("title", "Mostrar senha");
+    el.passwordToggle?.setAttribute("aria-pressed", "false");
 
     showAuth("Sessão encerrada.", "success");
   }
@@ -13084,6 +13148,14 @@ ${printableOrderAddressHtml(order)}
   }
 
   async function navigate(section) {
+    const requestedSection = String(section || "").trim();
+    const safeSection = isSectionAllowed(requestedSection)
+      ? requestedSection
+      : isEmployeeAccess()
+        ? "pedidos"
+        : requestedSection;
+
+    section = safeSection;
     state.currentSection = section;
 
     document
@@ -13229,6 +13301,8 @@ ${printableOrderAddressHtml(order)}
   document.addEventListener("keydown", restorePersistentDevicePreferences);
 
   el.loginForm.addEventListener("submit", handleLogin);
+
+  el.passwordToggle?.addEventListener("click", togglePasswordVisibility);
 
   el.logoutButton.addEventListener("click", handleLogout);
 

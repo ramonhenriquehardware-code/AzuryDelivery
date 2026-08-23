@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Painel administrativo de desenvolvimento da Azury">
+    <meta name="description" content="Painel administrativo da Azury">
     <meta name="robots" content="noindex, nofollow">
 
-    <title>Azury Admin — Desenvolvimento</title>
+    <title>Azury Admin</title>
 
     <link rel="stylesheet" href="css/admin-dev.css">
     <link rel="manifest" href="manifest.json">
@@ -68,13 +68,13 @@
             </div>
 
             <span class="dev-badge">
-                Ambiente de desenvolvimento
+                Painel administrativo
             </span>
 
             <h1>Entrar no painel</h1>
 
             <p>
-                Use a conta cadastrada no Supabase que possui acesso administrativo.
+                Entre com sua conta autorizada para acessar o painel.
             </p>
 
             <form id="adminLoginForm" class="auth-form">
@@ -85,11 +85,21 @@
                     <input id="adminEmail" type="email" autocomplete="email" required placeholder="seu@email.com">
                 </label>
 
-                <label>
+                <label class="auth-password-label">
                     <span>Senha</span>
 
-                    <input id="adminPassword" type="password" autocomplete="current-password" required
-                        placeholder="Sua senha">
+                    <div class="auth-password-field">
+                        <input id="adminPassword" type="password" autocomplete="current-password" required
+                            placeholder="Sua senha">
+
+                        <button id="toggleAdminPassword" class="password-toggle" type="button"
+                            aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+                                <circle cx="12" cy="12" r="2.8"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </label>
 
                 <button id="adminLoginButton" class="btn btn-primary" type="submit">
@@ -125,7 +135,7 @@
 
                     <small class="admin-welcome">
                         Seja Bem Vindo
-                        <span class="admin-chief">
+                        <span id="sidebarWelcomeRole" class="admin-chief">
                             Chefe $
                         </span>
                     </small>
