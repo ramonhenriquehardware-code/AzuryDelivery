@@ -1714,3 +1714,1362 @@ textarea {
         white-space: nowrap;
     }
 }
+
+/* =========================================================
+   FINANCEIRO — CARDS MAIS LARGOS E ORGANIZADOS
+   Mantém os mesmos 8 indicadores em duas linhas de 4.
+   ========================================================= */
+
+#financeiroSummary {
+    grid-template-columns: repeat(4, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+#financeiroSummary .metric-card {
+    min-width: 0;
+    min-height: 146px;
+    padding: 22px;
+}
+
+#financeiroSummary .metric-card strong {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: clamp(22px, 1.7vw, 29px);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+#financeiroSummary .metric-card span:last-child {
+    display: block;
+    margin-top: 8px;
+}
+
+@media (max-width: 1180px) {
+    #financeiroSummary {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    #financeiroSummary {
+        grid-template-columns: 1fr;
+    }
+
+    #financeiroSummary .metric-card {
+        min-height: 132px;
+    }
+
+    #financeiroSummary .metric-card strong {
+        font-size: 25px;
+    }
+}
+
+/* =========================================================
+   ESTOQUE — VISUAL COMPACTO E PROFISSIONAL
+   ========================================================= */
+
+#estoqueSummary {
+    grid-template-columns: repeat(4, minmax(190px, 1fr));
+    gap: 16px;
+}
+
+#estoqueSummary .metric-card {
+    min-width: 0;
+    min-height: 128px;
+}
+
+.estoque-grid {
+    margin-top: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr));
+}
+
+.estoque-card {
+    position: relative;
+    overflow: hidden;
+    gap: 14px;
+}
+
+.estoque-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: #cfd8e8;
+}
+
+.estoque-card.stock-card-ok::before {
+    background: var(--sucesso);
+}
+
+.estoque-card.stock-card-low::before {
+    background: #f0a500;
+}
+
+.estoque-card.stock-card-out::before,
+.estoque-card.stock-card-check::before {
+    background: var(--erro);
+}
+
+.stock-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+    flex: 0 0 auto;
+    min-height: 28px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.stock-status-badge.stock-ok {
+    color: var(--sucesso);
+    background: var(--sucesso-fundo);
+}
+
+.stock-status-badge.stock-low {
+    color: var(--aviso);
+    background: var(--aviso-fundo);
+}
+
+.stock-status-badge.stock-out,
+.stock-status-badge.stock-check {
+    color: var(--erro);
+    background: var(--erro-fundo);
+}
+
+.estoque-saldo-block {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 13px 14px;
+    border: 1px solid #e7edf7;
+    border-radius: 13px;
+    background: #f8faff;
+}
+
+.estoque-saldo-block span {
+    color: var(--texto-suave);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.estoque-saldo-block strong {
+    font-size: 21px;
+    line-height: 1;
+    text-align: right;
+}
+
+.stock-card-low .estoque-saldo-block {
+    border-color: #f2d590;
+    background: #fffaf0;
+}
+
+.stock-card-out .estoque-saldo-block,
+.stock-card-check .estoque-saldo-block {
+    border-color: #f1c1bb;
+    background: #fff6f5;
+}
+
+.stock-card-out .estoque-saldo-block strong,
+.stock-card-check .estoque-saldo-block strong {
+    color: var(--erro);
+}
+
+@media (max-width: 980px) {
+    #estoqueSummary {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    #estoqueSummary {
+        grid-template-columns: 1fr;
+    }
+
+    #estoqueSummary .metric-card {
+        min-height: 118px;
+    }
+
+    .estoque-saldo-block strong {
+        font-size: 19px;
+    }
+}
+
+/* =========================================================
+   FINANCEIRO — SEPARAÇÃO ENTRE GANHOS E LANÇAMENTOS
+   ========================================================= */
+
+#financeiroList {
+    display: block;
+}
+
+.financeiro-group + .financeiro-group {
+    margin-top: 30px;
+    padding-top: 28px;
+    border-top: 1px solid var(--borda);
+}
+
+.financeiro-group-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+
+.financeiro-group-heading h3 {
+    margin: 4px 0 5px;
+    font-size: 20px;
+}
+
+.financeiro-group-heading p {
+    margin: 0;
+    color: var(--texto-suave);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.financeiro-group-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 7px 11px;
+    border: 1px solid var(--borda);
+    border-radius: 999px;
+    background: #f8faff;
+    color: var(--texto-suave);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.financeiro-group-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.financeiro-group-gains .data-card {
+    border-left: 4px solid var(--sucesso);
+}
+
+.financeiro-group-launches .data-card {
+    border-left: 4px solid var(--azul);
+}
+
+@media (max-width: 1180px) {
+    .financeiro-group-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    .financeiro-group-heading {
+        flex-direction: column;
+    }
+
+    .financeiro-group-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .financeiro-group-count {
+        align-self: flex-start;
+    }
+}
+
+/* =========================================================
+   IDENTIDADE POR EMPRESA — AZURY / PH SABOR & CIA
+   Azury = azul | PH = laranja
+   ========================================================= */
+
+:root {
+    --azury-brand: #0051ff;
+    --azury-brand-soft: #eef4ff;
+    --azury-brand-border: rgba(0, 81, 255, .24);
+    --ph-brand: #ff7a00;
+    --ph-brand-dark: #c85d00;
+    --ph-brand-soft: #fff4e8;
+    --ph-brand-border: rgba(255, 122, 0, .28);
+}
+
+.company-switch-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px;
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+    background: #fff;
+}
+
+.company-switch {
+    min-height: 38px;
+    padding: 8px 14px;
+    box-shadow: none;
+}
+
+.company-switch-azury.btn-primary,
+#financeiroAzuryButton.btn-primary,
+#estoqueAzuryButton.btn-primary,
+#ordersAzuryButton.btn-primary {
+    border-color: var(--azury-brand);
+    background: var(--azury-brand);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(0, 81, 255, .18);
+}
+
+.company-switch-azury.btn-secondary,
+#financeiroAzuryButton.btn-secondary,
+#estoqueAzuryButton.btn-secondary,
+#ordersAzuryButton.btn-secondary {
+    border-color: var(--azury-brand-border);
+    background: var(--azury-brand-soft);
+    color: var(--azury-brand);
+}
+
+.company-switch-ph.btn-primary,
+#financeiroPhButton.btn-primary,
+#estoquePhButton.btn-primary,
+#ordersPhButton.btn-primary {
+    border-color: var(--ph-brand);
+    background: var(--ph-brand);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(255, 122, 0, .20);
+}
+
+.company-switch-ph.btn-secondary,
+#financeiroPhButton.btn-secondary,
+#estoquePhButton.btn-secondary,
+#ordersPhButton.btn-secondary {
+    border-color: var(--ph-brand-border);
+    background: var(--ph-brand-soft);
+    color: var(--ph-brand-dark);
+}
+
+/* Visão geral: identificação sem pesar o painel */
+#overviewCards .metric-card,
+#section-visao-geral > .two-column-grid:first-of-type .panel-card {
+    border-top: 3px solid var(--azury-brand);
+}
+
+#phOverviewCards .metric-card,
+#section-visao-geral > .two-column-grid:last-of-type .panel-card {
+    border-top: 3px solid var(--ph-brand);
+}
+
+#section-visao-geral > .section-toolbar .eyebrow,
+#section-visao-geral > .section-toolbar h2 {
+    color: var(--ph-brand-dark);
+}
+
+#section-visao-geral > .section-toolbar {
+    padding: 15px 18px;
+    border: 1px solid var(--ph-brand-border);
+    border-left: 4px solid var(--ph-brand);
+    border-radius: 15px;
+    background: linear-gradient(90deg, var(--ph-brand-soft), #fff 62%);
+}
+
+/* Financeiro / Estoque usam a cor da empresa selecionada */
+#section-financeiro[data-company-theme="azury"] #financeiroSummary .metric-card,
+#section-estoque[data-company-theme="azury"] #estoqueSummary .metric-card {
+    border-top: 3px solid var(--azury-brand);
+}
+
+#section-financeiro[data-company-theme="ph_sabor_cia"] #financeiroSummary .metric-card,
+#section-estoque[data-company-theme="ph_sabor_cia"] #estoqueSummary .metric-card {
+    border-top: 3px solid var(--ph-brand);
+}
+
+#section-financeiro[data-company-theme="azury"] #financeiroCompanyTitle,
+#section-estoque[data-company-theme="azury"] #estoqueCompanyTitle {
+    color: var(--azury-brand);
+}
+
+#section-financeiro[data-company-theme="ph_sabor_cia"] #financeiroCompanyTitle,
+#section-estoque[data-company-theme="ph_sabor_cia"] #estoqueCompanyTitle {
+    color: var(--ph-brand-dark);
+}
+
+#section-financeiro[data-company-theme="ph_sabor_cia"] .financeiro-group-launches .data-card {
+    border-left-color: var(--ph-brand);
+}
+
+/* =========================================================
+   PEDIDOS — COMPACTO, SEPARADO POR EMPRESA
+   ========================================================= */
+
+.orders-toolbar-controls {
+    align-items: end;
+}
+
+#ordersSummary {
+    margin-bottom: 18px;
+}
+
+.orders-store-summary {
+    position: relative;
+    overflow: hidden;
+    padding: 18px;
+    border-radius: 18px;
+}
+
+.orders-store-summary::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+}
+
+.orders-store-summary.company-summary-azury {
+    border-color: var(--azury-brand-border);
+    background: linear-gradient(100deg, rgba(0, 81, 255, .045), #fff 48%);
+}
+
+.orders-store-summary.company-summary-azury::before {
+    background: var(--azury-brand);
+}
+
+.orders-store-summary.company-summary-ph_sabor_cia {
+    border-color: var(--ph-brand-border);
+    background: linear-gradient(100deg, rgba(255, 122, 0, .055), #fff 48%);
+}
+
+.orders-store-summary.company-summary-ph_sabor_cia::before {
+    background: var(--ph-brand);
+}
+
+.orders-store-summary-title > div {
+    min-width: 0;
+}
+
+.company-summary-kicker {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.company-summary-azury .company-summary-kicker {
+    color: var(--azury-brand);
+}
+
+.company-summary-ph_sabor_cia .company-summary-kicker {
+    color: var(--ph-brand-dark);
+}
+
+.company-summary-badge,
+.order-company-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.company-summary-azury .company-summary-badge,
+.order-company-azury .order-company-badge {
+    border: 1px solid var(--azury-brand-border);
+    background: var(--azury-brand-soft);
+    color: var(--azury-brand);
+}
+
+.company-summary-ph_sabor_cia .company-summary-badge,
+.order-company-ph_sabor_cia .order-company-badge {
+    border: 1px solid var(--ph-brand-border);
+    background: var(--ph-brand-soft);
+    color: var(--ph-brand-dark);
+}
+
+.orders-company-metrics {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.orders-company-metrics .metric-card {
+    min-height: 104px;
+    padding: 14px;
+    box-shadow: none;
+}
+
+.orders-company-metrics .metric-card strong {
+    margin-top: 8px;
+    font-size: 22px;
+}
+
+#section-pedidos[data-company-theme="azury"] .orders-company-metrics .metric-card {
+    border-top: 2px solid var(--azury-brand);
+}
+
+#section-pedidos[data-company-theme="ph_sabor_cia"] .orders-company-metrics .metric-card {
+    border-top: 2px solid var(--ph-brand);
+}
+
+.order-card {
+    position: relative;
+    border-radius: 16px;
+}
+
+.order-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    z-index: 2;
+}
+
+.order-company-azury::before {
+    background: var(--azury-brand);
+}
+
+.order-company-ph_sabor_cia::before {
+    background: var(--ph-brand);
+}
+
+.order-head {
+    padding: 16px 18px 14px 22px;
+}
+
+.order-head-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.order-head-main > div {
+    min-width: 0;
+}
+
+.order-head-main h3 {
+    margin: 0 0 3px;
+}
+
+.order-metrics {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    padding: 13px 18px 13px 22px;
+}
+
+.order-metric {
+    min-width: 0;
+    padding: 10px 11px;
+}
+
+.order-metric-total strong {
+    font-size: 18px;
+}
+
+.order-body {
+    padding: 16px 18px 16px 22px;
+}
+
+.order-actions {
+    padding: 13px 18px 17px 22px;
+}
+
+#section-pedidos[data-company-theme="ph_sabor_cia"] #newManualOrderButton {
+    border-color: var(--ph-brand);
+    background: var(--ph-brand);
+    box-shadow: 0 8px 18px rgba(255, 122, 0, .18);
+}
+
+@media (max-width: 1180px) {
+    .orders-company-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .order-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .company-switch-group {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .company-switch {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .orders-company-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .order-head-main {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .order-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .orders-store-summary-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .orders-company-metrics,
+    .order-metrics {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* =========================================================
+   CARDÁPIO + LOJA E HORÁRIOS — IDENTIDADE POR EMPRESA
+   Mantém o layout atual; apenas deixa Azury azul e PH laranja.
+   ========================================================= */
+
+#section-cardapio .company-block-azury,
+#section-horarios .company-block-azury {
+    border-color: var(--azury-brand-border);
+}
+
+#section-cardapio > .section-toolbar.company-block-azury,
+#section-horarios > .section-toolbar.company-block-azury {
+    padding: 15px 18px;
+    border: 1px solid var(--azury-brand-border);
+    border-left: 4px solid var(--azury-brand);
+    border-radius: 15px;
+    background: linear-gradient(90deg, var(--azury-brand-soft), #fff 62%);
+}
+
+#section-cardapio > .section-toolbar.company-block-azury .eyebrow,
+#section-cardapio > .section-toolbar.company-block-azury h2,
+#section-horarios > .section-toolbar.company-block-azury .eyebrow,
+#section-horarios > .section-toolbar.company-block-azury h2 {
+    color: var(--azury-brand);
+}
+
+#section-cardapio > article.company-block-azury,
+#section-horarios > article.company-block-azury {
+    border-top: 3px solid var(--azury-brand);
+}
+
+#section-cardapio > article.company-block-azury .panel-heading h3,
+#section-horarios > article.company-block-azury .panel-heading h3 {
+    color: var(--azury-brand);
+}
+
+#phConfigPanel.company-block-ph,
+#phStorePanel.company-block-ph {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--ph-brand-border);
+    border-left: 4px solid var(--ph-brand);
+    background: linear-gradient(100deg, rgba(255, 122, 0, .045), #fff 34%);
+}
+
+#phConfigPanel.company-block-ph > .panel-heading .eyebrow,
+#phConfigPanel.company-block-ph > .panel-heading h2,
+#phStorePanel.company-block-ph > .panel-heading .eyebrow,
+#phStorePanel.company-block-ph > .panel-heading h2 {
+    color: var(--ph-brand-dark);
+}
+
+#phConfigPanel.company-block-ph .data-card,
+#phStorePanel.company-block-ph .data-card {
+    border-top: 2px solid var(--ph-brand);
+}
+
+#phConfigPanel.company-block-ph .btn-primary,
+#phStorePanel.company-block-ph .btn-primary {
+    border-color: var(--ph-brand);
+    background: var(--ph-brand);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(255, 122, 0, .16);
+}
+
+#phConfigPanel.company-block-ph .btn-secondary,
+#phStorePanel.company-block-ph .btn-secondary {
+    border-color: var(--ph-brand-border);
+    background: var(--ph-brand-soft);
+    color: var(--ph-brand-dark);
+}
+
+#phConfigPanel.company-block-ph .small-badge.active,
+#phStorePanel.company-block-ph .small-badge.active {
+    border-color: var(--ph-brand-border);
+    background: var(--ph-brand-soft);
+    color: var(--ph-brand-dark);
+}
+
+
+
+/* =========================================================
+   CARDÁPIO — SEPARAÇÃO AZURY / PH + FILTRO COMPACTO
+   ========================================================= */
+
+#section-cardapio > #cardapioToolbar {
+    margin-bottom: 18px;
+    padding: 15px 18px;
+    border: 1px solid var(--borda);
+    border-left-width: 4px;
+    border-radius: 15px;
+    transition: border-color .18s ease, background .18s ease;
+}
+
+#section-cardapio > #cardapioToolbar.company-block-azury {
+    border-color: var(--azury-brand-border);
+    border-left-color: var(--azury-brand);
+    background: linear-gradient(90deg, var(--azury-brand-soft), #fff 62%);
+}
+
+#section-cardapio > #cardapioToolbar.company-block-ph {
+    border-color: var(--ph-brand-border);
+    border-left-color: var(--ph-brand);
+    background: linear-gradient(90deg, var(--ph-brand-soft), #fff 62%);
+}
+
+#section-cardapio > #cardapioToolbar.company-block-azury .eyebrow,
+#section-cardapio > #cardapioToolbar.company-block-azury h2 {
+    color: var(--azury-brand);
+}
+
+#section-cardapio > #cardapioToolbar.company-block-ph .eyebrow,
+#section-cardapio > #cardapioToolbar.company-block-ph h2 {
+    color: var(--ph-brand-dark);
+}
+
+.cardapio-toolbar-controls {
+    align-items: center;
+}
+
+.cardapio-status-filter {
+    min-width: 150px;
+    width: auto;
+}
+
+.cardapio-company-content[hidden] {
+    display: none !important;
+}
+
+#cardapioAzuryContent > article.company-block-azury {
+    border-top: 3px solid var(--azury-brand);
+}
+
+#cardapioAzuryContent > article.company-block-azury .panel-heading h3 {
+    color: var(--azury-brand);
+}
+
+#azuryBoxesList .azury-box-card {
+    border-top: 2px solid var(--azury-brand);
+}
+
+#cardapioPhContent #phConfigPanel {
+    margin-top: 0;
+}
+
+@media (max-width: 900px) {
+    .cardapio-toolbar-controls {
+        width: 100%;
+    }
+
+    .cardapio-status-filter {
+        flex: 1 1 160px;
+    }
+}
+
+@media (max-width: 620px) {
+    .cardapio-toolbar-controls,
+    .cardapio-toolbar-controls .company-switch-group {
+        width: 100%;
+    }
+
+    .cardapio-status-filter,
+    #newComplementButton {
+        width: 100%;
+    }
+}
+
+
+/* =========================================================
+   LOJA E HORÁRIOS — ABAS AZURY / PH SABOR & CIA
+   ========================================================= */
+
+.horarios-company-content[hidden] {
+    display: none !important;
+}
+
+#horariosToolbar {
+    align-items: center;
+}
+
+#horariosToolbar.company-block-ph {
+    border-color: var(--ph-brand-border);
+    border-left-color: var(--ph-brand);
+    background: linear-gradient(90deg, var(--ph-brand-soft), #fff 38%);
+}
+
+#horariosToolbar.company-block-ph .eyebrow,
+#horariosToolbar.company-block-ph h2 {
+    color: var(--ph-brand-dark);
+}
+
+#horariosAzuryContent > article.company-block-azury {
+    border-top: 2px solid var(--azury-brand);
+}
+
+#horariosAzuryContent > article.company-block-azury .panel-heading h3 {
+    color: var(--azury-brand);
+}
+
+#horariosPhContent > article.company-block-ph {
+    border-top: 2px solid var(--ph-brand);
+}
+
+#horariosPhContent > article.company-block-ph .panel-heading h3,
+#horariosPhContent .ph-form-section-title {
+    color: var(--ph-brand-dark);
+}
+
+#horariosPhContent .btn-primary {
+    border-color: var(--ph-brand);
+    background: var(--ph-brand);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(255, 122, 0, .18);
+}
+
+#horariosPhContent .btn-secondary {
+    border-color: var(--ph-brand-border);
+    background: var(--ph-brand-soft);
+    color: var(--ph-brand-dark);
+}
+
+#horariosPhContent .switch-field input {
+    accent-color: var(--ph-brand);
+}
+
+#phSchedulesList .schedule-row {
+    border-color: var(--ph-brand-border);
+}
+
+#phSchedulesList .schedule-row:focus-within {
+    border-color: var(--ph-brand);
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, .08);
+}
+
+.ph-form-section-title {
+    padding-top: 4px;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .02em;
+}
+
+.ph-store-form-actions {
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+    #horariosToolbar .toolbar-controls,
+    #horariosToolbar .company-switch-group {
+        width: 100%;
+    }
+
+    #horariosToolbar .company-switch {
+        flex: 1 1 0;
+    }
+
+    .ph-store-form-actions .btn {
+        width: 100%;
+    }
+}
+
+
+/* =========================================================
+   CONTEÚDO — GERADOR DE POSTS
+   ========================================================= */
+
+#section-conteudo .section-toolbar {
+    margin-bottom: 22px;
+}
+
+.conteudo-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, .86fr) minmax(420px, 1.14fr);
+    gap: 22px;
+    align-items: start;
+}
+
+.conteudo-creator-card,
+.conteudo-preview-card,
+.conteudo-history-card {
+    min-width: 0;
+}
+
+.conteudo-control-section + .conteudo-control-section {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--borda);
+}
+
+.conteudo-control-label,
+.conteudo-field-label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+}
+
+.conteudo-type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.conteudo-type-card {
+    appearance: none;
+    width: 100%;
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+    background: #fff;
+    padding: 16px;
+    display: grid;
+    gap: 5px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.conteudo-type-card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(0, 81, 255, .30);
+}
+
+.company-block-ph .conteudo-type-card:hover {
+    border-color: var(--ph-brand-border);
+}
+
+.conteudo-type-card.active {
+    border-color: var(--azury-brand);
+    box-shadow: 0 0 0 3px rgba(0, 81, 255, .09);
+    background: var(--azury-brand-soft);
+}
+
+.company-block-ph .conteudo-type-card.active {
+    border-color: var(--ph-brand);
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, .10);
+    background: var(--ph-brand-soft);
+}
+
+.conteudo-type-card strong {
+    font-size: 14px;
+    color: var(--texto);
+}
+
+.conteudo-type-card small {
+    line-height: 1.35;
+    color: var(--texto-suave);
+}
+
+.conteudo-type-icon {
+    font-size: 22px;
+}
+
+.conteudo-items-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.conteudo-items-heading .conteudo-control-label {
+    margin-bottom: 3px;
+}
+
+.conteudo-items-heading small {
+    display: block;
+    color: var(--texto-suave);
+    line-height: 1.35;
+}
+
+.conteudo-items-list {
+    max-height: 390px;
+    overflow: auto;
+    display: grid;
+    gap: 12px;
+    padding-right: 3px;
+}
+
+.conteudo-item-group {
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.conteudo-item-category {
+    display: block;
+    padding: 9px 12px;
+    background: #f7f9fc;
+    border-bottom: 1px solid var(--borda);
+    font-size: 11px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+}
+
+.conteudo-item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+}
+
+.conteudo-item-row + .conteudo-item-row {
+    border-top: 1px solid #eef1f5;
+}
+
+.conteudo-item-row input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--azury-brand);
+    flex: 0 0 auto;
+}
+
+.company-block-ph .conteudo-item-row input,
+#section-conteudo.company-block-ph .conteudo-item-row input {
+    accent-color: var(--ph-brand);
+}
+
+.conteudo-item-copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.conteudo-item-copy strong {
+    font-size: 13px;
+    color: var(--texto);
+}
+
+.conteudo-item-copy small {
+    color: var(--texto-suave);
+    line-height: 1.3;
+}
+
+.conteudo-generate-box {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--borda);
+}
+
+.conteudo-variation-hint {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #f7f9fc;
+    color: var(--texto-suave);
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+.conteudo-generate-button {
+    width: 100%;
+    min-height: 46px;
+}
+
+.conteudo-canvas-shell {
+    width: 100%;
+    min-height: 470px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    border-radius: 18px;
+    background: #080b11;
+    overflow: hidden;
+}
+
+#conteudoCanvas {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 650px;
+    border-radius: 12px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .28);
+}
+
+.conteudo-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.conteudo-save-note {
+    margin: 13px 0 0;
+    color: var(--texto-suave);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.conteudo-history-card {
+    margin-top: 22px;
+}
+
+.conteudo-history-list {
+    display: grid;
+    gap: 9px;
+}
+
+.conteudo-history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+    background: #fff;
+}
+
+.conteudo-history-main {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 3px 9px;
+}
+
+.conteudo-history-main strong {
+    font-size: 13px;
+}
+
+.conteudo-history-main small {
+    grid-column: 2;
+    color: var(--texto-suave);
+}
+
+.conteudo-used-badge {
+    grid-row: 1 / span 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 54px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: #eaf8ef;
+    color: #13803d;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.conteudo-history-actions {
+    display: flex;
+    gap: 7px;
+    flex: 0 0 auto;
+}
+
+#conteudoToolbar.company-block-ph + .conteudo-layout .conteudo-type-card.active {
+    border-color: var(--ph-brand);
+    background: var(--ph-brand-soft);
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, .10);
+}
+
+#conteudoToolbar.company-block-ph + .conteudo-layout .conteudo-item-row input {
+    accent-color: var(--ph-brand);
+}
+
+#conteudoToolbar.company-block-ph + .conteudo-layout .conteudo-generate-button {
+    border-color: var(--ph-brand);
+    background: var(--ph-brand);
+    box-shadow: 0 8px 18px rgba(255, 122, 0, .20);
+}
+
+@media (max-width: 980px) {
+    .conteudo-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .conteudo-canvas-shell {
+        min-height: 420px;
+    }
+}
+
+@media (max-width: 620px) {
+    .conteudo-type-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .conteudo-items-heading,
+    .conteudo-history-item {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .conteudo-history-actions {
+        width: 100%;
+    }
+
+    .conteudo-history-actions .btn {
+        flex: 1;
+    }
+
+    .conteudo-canvas-shell {
+        min-height: 320px;
+        padding: 10px;
+    }
+
+    #conteudoCanvas {
+        max-height: 540px;
+    }
+}
+
+
+/* =========================================================
+   CONTEÚDO — CENTRAL COMPLETA / VISUAL COMERCIAL
+   ========================================================= */
+
+#section-conteudo .conteudo-type-grid-completo {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: 470px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+#section-conteudo .conteudo-type-card {
+    min-height: 112px;
+    text-align: left;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 5px;
+}
+
+#section-conteudo .conteudo-type-card strong {
+    line-height: 1.2;
+}
+
+#section-conteudo .conteudo-control-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 14px;
+    margin-top: 16px;
+}
+
+#section-conteudo .conteudo-control-section-compact {
+    margin: 0;
+}
+
+#section-conteudo .conteudo-variation-hint-inline {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+#section-conteudo .conteudo-custom-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+#section-conteudo .conteudo-custom-field {
+    display: grid;
+    gap: 6px;
+}
+
+#section-conteudo .conteudo-custom-field span {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--texto-suave);
+}
+
+#section-conteudo .conteudo-custom-field input,
+#section-conteudo .conteudo-custom-field textarea {
+    width: 100%;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    background: var(--branco);
+    color: var(--texto);
+    padding: 11px 12px;
+    font: inherit;
+    outline: none;
+    resize: vertical;
+}
+
+#section-conteudo .conteudo-custom-field textarea {
+    min-height: 88px;
+}
+
+#section-conteudo .conteudo-custom-field input:focus,
+#section-conteudo .conteudo-custom-field textarea:focus {
+    border-color: #0051ff;
+    box-shadow: 0 0 0 3px rgba(0, 81, 255, .10);
+}
+
+#section-conteudo.company-block-ph .conteudo-custom-field input:focus,
+#section-conteudo.company-block-ph .conteudo-custom-field textarea:focus {
+    border-color: #ff7a00;
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, .10);
+}
+
+#section-conteudo .conteudo-canvas-shell {
+    background:
+        radial-gradient(circle at top, rgba(0,81,255,.08), transparent 38%),
+        #060a12;
+}
+
+#section-conteudo.company-block-ph .conteudo-canvas-shell {
+    background:
+        radial-gradient(circle at top, rgba(255,122,0,.10), transparent 38%),
+        #120904;
+}
+
+#section-conteudo #conteudoCanvas {
+    box-shadow: 0 22px 60px rgba(0,0,0,.28);
+}
+
+#section-conteudo .conteudo-generate-button:disabled {
+    opacity: .7;
+    cursor: wait;
+}
+
+@media (max-width: 1050px) {
+    #section-conteudo .conteudo-type-grid-completo {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    #section-conteudo .conteudo-type-grid-completo,
+    #section-conteudo .conteudo-control-grid,
+    #section-conteudo .conteudo-custom-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #section-conteudo .conteudo-type-grid-completo {
+        max-height: 520px;
+    }
+}

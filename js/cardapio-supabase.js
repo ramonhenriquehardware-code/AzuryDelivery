@@ -1,860 +1,873 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  "use strict";
-  let sb = window.azurySupabase;
-  const $ = (selector) => document.querySelector(selector);
-  const $$ = (selector) => Array.from(document.querySelectorAll(selector));
-  const d = {
-    modal: $("#modalMonteSeu"),
-    content: $("#modalMonteSeu .conteudo-monte-seu"),
-    close: $("#btnFecharMonteSeu"),
-    step1: $("#painelPedido"),
-    step2: $("#painelEntrega"),
-    indicators: $$(".etapa-indicador"),
-    add: $("#btnAdicionarSacola"),
-    next: $("#btnContinuarPedido"),
-    back: $("#btnVoltarPedido"),
-    send: $("#btnEnviarMonteSeu"),
-    cartList: $("#listaSacolaPedido"),
-    cartEmpty: $("#sacolaVazia"),
-    cartCount: $("#quantidadeSacola"),
-    cartSubtotal: $("#subtotalSacolaPedido"),
-    cartFeedback: $("#sacolaFeedback"),
-    cartReview: $("#listaResumoSacola"),
-    store: $("#statusLoja"),
-    storeTitle: $("#statusLojaTitulo"),
-    storeMsg: $("#statusLojaMensagem"),
-    size: $("#tamanhoMonteSeu"),
-    base: $("#precoBaseMonteSeu"),
-    middle: $("#complementosMeio"),
-    top: $("#complementosTopo"),
-    subtotal: $("#subtotalMonteSeu"),
-    subtotal2: $("#resumoSubtotalPedido"),
-    feeText: $("#resumoTaxaEntrega"),
-    total: $("#totalMonteSeu"),
-    stickyBar: null,
-    stickyProduct: null,
-    stickySubtotal: null,
-    stickyCart: null,
-    stickyAdd: null,
-    name: $("#nomeCliente"),
-    phone: $("#telefoneCliente"),
-    zip: $("#cepCliente"),
-    street: $("#ruaCliente"),
-    number: $("#numeroCliente"),
-    district: $("#bairroCliente"),
-    addressExtra: $("#complementoCliente"),
-    addressStatus: $("#statusEndereco"),
-    addressOk: $("#enderecoValidado"),
-    fee: $("#taxaEntrega"),
-    districtId: $("#bairroEntregaId"),
-    change: $("#trocoParaCliente"),
-  };
+    "use strict";
+    let sb = window.azurySupabase;
+    const $ = selector => document.querySelector(selector);
+    const $$ = selector => Array.from(document.querySelectorAll(selector));
+    const d = {
+        modal: $("#modalMonteSeu"),
+        content: $("#modalMonteSeu .conteudo-monte-seu"),
+        close: $("#btnFecharMonteSeu"),
+        step1: $("#painelPedido"),
+        step2: $("#painelEntrega"),
+        indicators: $$(".etapa-indicador"),
+        add: $("#btnAdicionarSacola"),
+        next: $("#btnContinuarPedido"),
+        back: $("#btnVoltarPedido"),
+        send: $("#btnEnviarMonteSeu"),
+        cartList: $("#listaSacolaPedido"),
+        cartEmpty: $("#sacolaVazia"),
+        cartCount: $("#quantidadeSacola"),
+        cartSubtotal: $("#subtotalSacolaPedido"),
+        cartFeedback: $("#sacolaFeedback"),
+        cartReview: $("#listaResumoSacola"),
+        store: $("#statusLoja"),
+        storeTitle: $("#statusLojaTitulo"),
+        storeMsg: $("#statusLojaMensagem"),
+        size: $("#tamanhoMonteSeu"),
+        base: $("#precoBaseMonteSeu"),
+        middle: $("#complementosMeio"),
+        top: $("#complementosTopo"),
+        subtotal: $("#subtotalMonteSeu"),
+        subtotal2: $("#resumoSubtotalPedido"),
+        feeText: $("#resumoTaxaEntrega"),
+        total: $("#totalMonteSeu"),
+        stickyBar: null,
+        stickyProduct: null,
+        stickySubtotal: null,
+        stickyCart: null,
+        stickyAdd: null,
+        name: $("#nomeCliente"),
+        phone: $("#telefoneCliente"),
+        zip: $("#cepCliente"),
+        street: $("#ruaCliente"),
+        number: $("#numeroCliente"),
+        district: $("#bairroCliente"),
+        addressExtra: $("#complementoCliente"),
+        addressStatus: $("#statusEndereco"),
+        addressOk: $("#enderecoValidado"),
+        fee: $("#taxaEntrega"),
+        districtId: $("#bairroEntregaId"),
+        change: $("#trocoParaCliente")
+    };
 
-  const state = {
-    config: null,
-    schedules: [],
-    sizes: [],
-    boxes: [],
-    currentProduct: null,
-    complements: [],
-    districts: [],
-    districtMap: new Map(),
-    aliases: [],
-    cart: [],
-    subtotal: 0,
-    sending: false,
-    consultingZip: false,
-    zipRequest: 0,
-    operationReady: false,
-    interfaceReady: false,
-    refreshingOperation: false,
-    recoveryTimer: null,
-    operationSource: null,
-  };
+    const state = {
+        config: null,
+        schedules: [],
+        sizes: [],
+        complements: [],
+        districts: [],
+        districtMap: new Map(),
+        aliases: [],
+        cart: [],
+        subtotal: 0,
+        sending: false,
+        consultingZip: false,
+        zipRequest: 0,
+        operationReady: false,
+        interfaceReady: false,
+        refreshingOperation: false,
+        recoveryTimer: null,
+        operationSource: null,
+        currentProduct: null
+    };
 
-  const CART_KEY = "azurySacola";
-  const LAST_ORDER_KEY = "azuryUltimoPedido";
-  const MAX_CART_UNITS = 20;
-  const OPERATION_CACHE_KEY = "azuryOperacaoPublica";
-  const OPERATION_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
-  const OPERATION_RETRY_DELAYS = [0, 1500, 3500];
-  const OPERATION_RECOVERY_INTERVAL = 30000;
+    const CART_KEY = "azurySacola";
+    const LAST_ORDER_KEY = "azuryUltimoPedido";
+    const MAX_CART_UNITS = 20;
+    const OPERATION_CACHE_KEY = "azuryOperacaoPublica";
+    const OPERATION_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+    const OPERATION_RETRY_DELAYS = [0, 1500, 3500];
+    const OPERATION_RECOVERY_INTERVAL = 30000;
 
-  const FREE_COMPLEMENT_LIMITS = new Map([
-    [300, 2],
-    [400, 3],
-    [500, 3],
-    [700, 4],
-    ["azury-box-p", 4],
-    ["azury-box-m", 5],
-    ["azury-box-g", 6],
-  ]);
+    const FREE_COMPLEMENT_LIMITS = new Map([
+        [300, 2],
+        [400, 3],
+        [500, 3],
+        [700, 4],
+        ["azury-box-p", 4],
+        ["azury-box-m", 5],
+        ["azury-box-g", 6]
+    ]);
 
-  const CUP_PRODUCT_NAMES = new Map([
-    [300, "Azury Mini"],
-    [400, "Azury Clássico"],
-    [500, "Azury Max"],
-    [700, "Azury Extra"],
-  ]);
+    const CUP_PRODUCT_NAMES = new Map([
+        [300, "Azury Mini"],
+        [400, "Azury Clássico"],
+        [500, "Azury Max"],
+        [700, "Azury Extra"]
+    ]);
 
-  const BOX_FALLBACKS = [
-    {
-      produto_tipo: "azury_box",
-      produto_chave: "azury-box-p",
-      nome: "Azury Box P",
-      tamanho_label: "P",
-      preco_base: 15,
-      complementos_gratis: 4,
-      disponivel: true,
-      visivel: true,
-      ordem: 1,
-    },
-    {
-      produto_tipo: "azury_box",
-      produto_chave: "azury-box-m",
-      nome: "Azury Box M",
-      tamanho_label: "M",
-      preco_base: 25,
-      complementos_gratis: 5,
-      disponivel: true,
-      visivel: true,
-      ordem: 2,
-    },
-    {
-      produto_tipo: "azury_box",
-      produto_chave: "azury-box-g",
-      nome: "Azury Box G",
-      tamanho_label: "G",
-      preco_base: 35,
-      complementos_gratis: 6,
-      disponivel: true,
-      visivel: true,
-      ordem: 3,
-    },
-  ];
-
-  const ALWAYS_PAID_COMPLEMENT_TERMS = [
-    "nutella",
-    "oreo",
-    "morango",
-    "uva",
-    "confete",
-    "power ball",
-  ];
-
-  let complementSelectionCounter = 0;
-
-  const wait = (milliseconds) =>
-    new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-
-  const money = (value) =>
-    Number(value || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-
-  const esc = (value) =>
-    String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
-  const norm = (value) =>
-    String(value || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const num = (value, fallback = 0) =>
-    Number.isFinite(Number(value)) ? Number(value) : fallback;
-
-  function canonicalBoxKey(value) {
-    const normalized = norm(value).replace(/\s+/g, " ");
-
-    if (
-      normalized === "azury box p" ||
-      normalized === "box p" ||
-      normalized === "p"
-    ) {
-      return "azury-box-p";
-    }
-
-    if (
-      normalized === "azury box m" ||
-      normalized === "box m" ||
-      normalized === "m"
-    ) {
-      return "azury-box-m";
-    }
-
-    if (
-      normalized === "azury box g" ||
-      normalized === "box g" ||
-      normalized === "g"
-    ) {
-      return "azury-box-g";
-    }
-
-    return "";
-  }
-
-  function resolveBoxKey(product) {
-    if (!product) {
-      return "";
-    }
-
-    if (typeof product !== "object") {
-      return canonicalBoxKey(product);
-    }
-
-    const candidates = [
-      product.produto_chave,
-      product.chave,
-      product.slug,
-      product.codigo,
-      product.tamanho_label,
-      product.tamanho,
-      product.nome,
+    const ALWAYS_PAID_COMPLEMENT_TERMS = [
+        "nutella",
+        "oreo",
+        "morango",
+        "uva",
+        "confete",
+        "power ball"
     ];
 
-    for (const candidate of candidates) {
-      const key = canonicalBoxKey(candidate);
+    const AZURY_BOX_DEFAULTS = [
+        { key: "azury-box-p", label: "P", nome: "Azury Box P", preco: 15, limite: 4, disponivel: true, visivel: true, ordem: 1 },
+        { key: "azury-box-m", label: "M", nome: "Azury Box M", preco: 25, limite: 5, disponivel: true, visivel: true, ordem: 2 },
+        { key: "azury-box-g", label: "G", nome: "Azury Box G", preco: 35, limite: 6, disponivel: true, visivel: true, ordem: 3 }
+    ];
 
-      if (key) {
-        return key;
-      }
+    function isAzuryBoxKey(value) {
+        return /^azury-box-[pmg]$/.test(
+            String(value || "").trim().toLowerCase()
+        );
     }
 
-    return "";
-  }
+    function getAzuryBoxes() {
+        const configured =
+            state.config?.azury_boxes;
 
-  function isBoxProduct(product) {
-    if (!product) {
-      return false;
+        const byKey = new Map(
+            (Array.isArray(configured) ? configured : [])
+                .filter(item => item && isAzuryBoxKey(item.key))
+                .map(item => [String(item.key).toLowerCase(), item])
+        );
+
+        return AZURY_BOX_DEFAULTS
+            .map(fallback => {
+                const saved = byKey.get(fallback.key) || {};
+                const price = Number(saved.preco);
+                const limit = Number(saved.limite);
+                const order = Number(saved.ordem);
+
+                return {
+                    ...fallback,
+                    ...saved,
+                    key: fallback.key,
+                    label: fallback.label,
+                    nome: String(saved.nome || fallback.nome).trim() || fallback.nome,
+                    preco: Number.isFinite(price) && price >= 0 ? price : fallback.preco,
+                    limite: Number.isFinite(limit) && limit >= 0 ? Math.floor(limit) : fallback.limite,
+                    disponivel: saved.disponivel === undefined ? fallback.disponivel : saved.disponivel !== false,
+                    visivel: saved.visivel === undefined ? fallback.visivel : saved.visivel !== false,
+                    ordem: Number.isFinite(order) && order >= 0 ? Math.floor(order) : fallback.ordem
+                };
+            })
+            .sort((a, b) => a.ordem - b.ordem || a.label.localeCompare(b.label));
     }
 
-    const type =
-      typeof product === "object"
-        ? String(product.produto_tipo || product.tipo_produto || "")
-            .trim()
-            .toLowerCase()
-        : "";
-
-    return type === "azury_box" || Boolean(resolveBoxKey(product));
-  }
-
-  function normalizeBoxes(rows) {
-    const source = Array.isArray(rows) ? rows : [];
-    const byKey = new Map();
-
-    source.forEach((row) => {
-      const key = resolveBoxKey(row);
-
-      if (key) {
-        byKey.set(key, row);
-      }
-    });
-
-    return BOX_FALLBACKS.map((fallback) => {
-      const row = byKey.get(fallback.produto_chave) || {};
-      const price = num(
-        row.preco_base ?? row.preco ?? row.valor,
-        fallback.preco_base,
-      );
-      const limit = freeComplementLimit({
-        ...fallback,
-        ...row,
-        produto_chave: fallback.produto_chave,
-      });
-
-      return {
-        ...fallback,
-        ...row,
-        produto_tipo: "azury_box",
-        produto_chave: fallback.produto_chave,
-        nome: String(row.nome || fallback.nome).trim(),
-        tamanho_label: String(
-          row.tamanho_label || row.tamanho || fallback.tamanho_label,
-        )
-          .trim()
-          .toUpperCase(),
-        preco_base: price,
-        complementos_gratis: limit || fallback.complementos_gratis,
-        disponivel:
-          row.disponivel !== undefined
-            ? row.disponivel === true
-            : row.ativo !== undefined
-              ? row.ativo === true
-              : fallback.disponivel,
-        visivel:
-          row.visivel !== undefined ? row.visivel !== false : fallback.visivel,
-        ordem: num(row.ordem, fallback.ordem),
-      };
-    }).sort((a, b) => num(a.ordem) - num(b.ordem));
-  }
-
-  function boxByKey(key) {
-    const canonical = resolveBoxKey(key);
-
-    return (
-      state.boxes.find(
-        (box) => resolveBoxKey(box) === canonical,
-      ) || null
-    );
-  }
-
-  function productKey(product) {
-    return isBoxProduct(product) ? resolveBoxKey(product) : "";
-  }
-
-  function productBasePrice(product) {
-    if (product && typeof product === "object") {
-      return num(product.preco_base ?? product.preco, 0);
+    function getAzuryBox(key) {
+        const normalized = String(key || "").trim().toLowerCase();
+        return getAzuryBoxes().find(box => box.key === normalized) || null;
     }
 
-    return 0;
-  }
+    function isAzuryBoxProduct(product) {
+        if (!product || typeof product !== "object") {
+            return isAzuryBoxKey(product);
+        }
 
-  function productIsAvailable(product) {
-    return Boolean(
-      product &&
-        product.disponivel !== false &&
-        product.visivel !== false &&
-        product.ativo !== false,
-    );
-  }
+        return (
+            String(product.produto_tipo || product.tipo || "").toLowerCase() === "azury_box" ||
+            isAzuryBoxKey(product.produto_chave || product.chave)
+        );
+    }
 
-  function currentBuilderProduct() {
-    if (state.currentProduct) {
-      if (isBoxProduct(state.currentProduct)) {
-        return boxByKey(state.currentProduct) || state.currentProduct;
-      }
+    function cupDescriptor(sizeValue = d.size?.value) {
+        const size = state.sizes.find(item =>
+            Number(item.tamanho_ml) === Number(sizeValue) &&
+            item.disponivel === true &&
+            item.visivel === true
+        );
 
-      const currentSize = Number(state.currentProduct.tamanho_ml);
-      const size = state.sizes.find(
-        (item) => Number(item.tamanho_ml) === currentSize,
-      );
+        if (!size) {
+            return null;
+        }
 
-      if (size) {
         return {
-          ...size,
-          produto_tipo: "acai_copo",
-          produto_chave: null,
+            produto_tipo: "acai_copo",
+            produto_chave: null,
+            produto_nome: productDisplayName(size),
+            tamanho_ml: Number(size.tamanho_ml),
+            tamanho_label: `${Number(size.tamanho_ml)}ml`,
+            preco_base: Number(size.preco_base || 0),
+            limite_complementos_gratis: freeComplementLimit(size),
+            disponivel: true,
+            visivel: true
         };
-      }
     }
 
-    const currentSize = Number(d.size?.value);
-    const size = state.sizes.find(
-      (item) => Number(item.tamanho_ml) === currentSize,
-    );
+    function boxDescriptor(key) {
+        const box = getAzuryBox(key);
 
-    return size
-      ? {
-          ...size,
-          produto_tipo: "acai_copo",
-          produto_chave: null,
+        if (!box || box.visivel === false || box.disponivel === false) {
+            return null;
         }
-      : null;
-  }
 
-  function freeComplementLimit(product) {
-    if (product && typeof product === "object") {
-      const explicitLimit = Number(
-        product.complementos_gratis ??
-          product.limite_complementos_gratis ??
-          product.limite_gratis,
-      );
+        return {
+            produto_tipo: "azury_box",
+            produto_chave: box.key,
+            produto_nome: box.nome,
+            tamanho_ml: null,
+            tamanho_label: box.label,
+            preco_base: Number(box.preco || 0),
+            limite_complementos_gratis: Number(box.limite || 0),
+            disponivel: box.disponivel !== false,
+            visivel: box.visivel !== false
+        };
+    }
 
-      if (Number.isFinite(explicitLimit) && explicitLimit >= 0) {
-        return Math.floor(explicitLimit);
-      }
-
-      const candidates = [
-        product.produto_chave,
-        product.chave,
-        product.slug,
-        product.codigo,
-        product.nome,
-        product.tamanho,
-        product.tamanho_ml,
-      ];
-
-      for (const candidate of candidates) {
-        const resolved = freeComplementLimit(candidate);
-
-        if (resolved > 0) {
-          return resolved;
+    function currentProductDescriptor() {
+        if (isAzuryBoxProduct(state.currentProduct)) {
+            return boxDescriptor(state.currentProduct.produto_chave);
         }
-      }
 
-      return 0;
+        return cupDescriptor(d.size?.value);
     }
 
-    const numeric = Number(product);
+    let complementSelectionCounter = 0;
 
-    if (Number.isFinite(numeric) && FREE_COMPLEMENT_LIMITS.has(numeric)) {
-      return FREE_COMPLEMENT_LIMITS.get(numeric) || 0;
-    }
+    const wait = milliseconds =>
+        new Promise(resolve =>
+            window.setTimeout(resolve, milliseconds)
+        );
 
-    const normalized = norm(product);
-
-    const futureKey =
-      normalized === "azury box p" ||
-      normalized === "box p" ||
-      normalized === "azury-box-p"
-        ? "azury-box-p"
-        : normalized === "azury box m" ||
-            normalized === "box m" ||
-            normalized === "azury-box-m"
-          ? "azury-box-m"
-          : normalized === "azury box g" ||
-              normalized === "box g" ||
-              normalized === "azury-box-g"
-            ? "azury-box-g"
-            : "";
-
-    return futureKey ? FREE_COMPLEMENT_LIMITS.get(futureKey) || 0 : 0;
-  }
-
-  function productDisplayName(product) {
-    if (isBoxProduct(product)) {
-      const key = resolveBoxKey(product);
-      const box = boxByKey(key);
-      const source = box || (product && typeof product === "object" ? product : {});
-      const label = String(
-        source.tamanho_label ||
-          source.tamanho ||
-          key.replace("azury-box-", ""),
-      )
-        .trim()
-        .toUpperCase();
-      const rawName = String(source.nome || "").trim();
-
-      if (rawName) {
-        return rawName;
-      }
-
-      return label ? `Azury Box ${label}` : "Azury Box";
-    }
-
-    const size = Number(
-      product && typeof product === "object" ? product.tamanho_ml : product,
-    );
-
-    const cupName = CUP_PRODUCT_NAMES.get(size);
-
-    if (cupName) {
-      return `${cupName} • ${size}ml`;
-    }
-
-    if (product && typeof product === "object") {
-      const rawName = String(product.produto_nome || product.nome || "").trim();
-
-      if (rawName) {
-        return rawName;
-      }
-    }
-
-    return Number.isFinite(size) && size > 0 ? `Açaí • ${size}ml` : "Açaí";
-  }
-
-  const isAlwaysPaidComplement = (name) => {
-    const normalizedName = norm(name);
-
-    return ALWAYS_PAID_COMPLEMENT_TERMS.some((term) =>
-      normalizedName.includes(term),
-    );
-  };
-
-  function priceComplements(complements, product) {
-    const limit = freeComplementLimit(product);
-    const boxMode = isBoxProduct(product);
-
-    const rows = (complements || []).map((complement, index) => ({
-      ...complement,
-      nome: String(complement?.nome ?? complement?.value ?? ""),
-      preco: num(complement?.preco ?? complement?.dataset?.preco, 0),
-      ordem_selecao: Math.max(
-        1,
-        Math.floor(
-          num(
-            complement?.ordem_selecao ?? complement?.dataset?.ordemSelecao,
-            index + 1,
-          ),
-        ),
-      ),
-      _index: index,
-    }));
-
-    const groups = new Map();
-
-    rows.forEach((row) => {
-      const key = norm(row.nome);
-
-      if (!key) {
-        return;
-      }
-
-      if (!groups.has(key)) {
-        groups.set(key, {
-          key,
-          nome: row.nome,
-          ordem_selecao: row.ordem_selecao,
-          primeiro_indice: row._index,
+    const money = value =>
+        Number(value || 0).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
         });
-        return;
-      }
 
-      const group = groups.get(key);
-      group.ordem_selecao = Math.min(group.ordem_selecao, row.ordem_selecao);
-      group.primeiro_indice = Math.min(group.primeiro_indice, row._index);
-    });
+    const esc = value =>
+        String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
 
-    const uniqueComplements = Array.from(groups.values()).sort(
-      (a, b) =>
-        a.ordem_selecao - b.ordem_selecao ||
-        a.primeiro_indice - b.primeiro_indice,
-    );
+    const norm = value =>
+        String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
 
-    const eligible = boxMode
-      ? uniqueComplements
-      : uniqueComplements.filter(
-          (complement) => !isAlwaysPaidComplement(complement.nome),
-        );
+    const num = (value, fallback = 0) =>
+        Number.isFinite(Number(value))
+            ? Number(value)
+            : fallback;
 
-    const freeKeys = new Set(
-      eligible.slice(0, limit).map((complement) => complement.key),
-    );
+    function freeComplementLimit(product) {
+        if (
+            product &&
+            typeof product === "object"
+        ) {
+            const explicitLimit = Number(
+                product.complementos_gratis ??
+                product.limite_complementos_gratis ??
+                product.limite_gratis ??
+                product.limite
+            );
 
-    return rows.map((row) => {
-      const key = norm(row.nome);
-      const group = groups.get(key);
-      const alwaysPaid = boxMode ? false : isAlwaysPaidComplement(row.nome);
-      const free = !alwaysPaid && freeKeys.has(key);
-      const firstOccurrence = !group || row._index === group.primeiro_indice;
-      const { _index, ...clean } = row;
+            if (
+                Number.isFinite(explicitLimit) &&
+                explicitLimit >= 0
+            ) {
+                return Math.floor(explicitLimit);
+            }
 
-      return {
-        ...clean,
-        especial_pago: alwaysPaid,
-        gratuito: free,
-        preco_cobrado: free || !firstOccurrence ? 0 : row.preco,
-      };
-    });
-  }
+            const candidates = [
+                product.produto_chave,
+                product.chave,
+                product.slug,
+                product.codigo,
+                product.nome,
+                product.tamanho,
+                product.tamanho_ml
+            ];
 
-  function itemUnitPrice(product, base, complements) {
-    return (
-      num(base, 0) +
-      priceComplements(complements, product).reduce(
-        (total, complement) => total + num(complement.preco_cobrado),
-        0,
-      )
-    );
-  }
+            for (const candidate of candidates) {
+                const resolved =
+                    freeComplementLimit(candidate);
 
-  const timeMinutes = (value) => {
-    const parts = String(value || "").split(":");
+                if (resolved > 0) {
+                    return resolved;
+                }
+            }
 
-    if (parts.length < 2) {
-      return null;
-    }
-
-    const hours = Number(parts[0]);
-
-    const minutes = Number(parts[1]);
-
-    return Number.isFinite(hours) && Number.isFinite(minutes)
-      ? hours * 60 + minutes
-      : null;
-  };
-
-  const timeLabel = (value) => {
-    const minutes = timeMinutes(value);
-
-    if (minutes === null) {
-      return "";
-    }
-
-    const hours = Math.floor(minutes / 60);
-
-    const remainingMinutes = minutes % 60;
-
-    return (
-      `${String(hours).padStart(2, "0")}:` +
-      `${String(remainingMinutes).padStart(2, "0")}`
-    );
-  };
-
-  const newId = () =>
-    window.crypto?.randomUUID?.() ||
-    `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-  const cartUnits = () =>
-    state.cart.reduce(
-      (total, item) => total + Math.max(1, Number(item.quantidade) || 1),
-      0,
-    );
-
-  const cartSubtotal = () =>
-    state.cart.reduce(
-      (total, item) =>
-        total +
-        num(item.preco_unitario) * Math.max(1, Number(item.quantidade) || 1),
-      0,
-    );
-
-  const itemSignature = (item) => {
-    const complements = (item.complementos || [])
-      .map((complement) => `${complement.camada}:${norm(complement.nome)}`)
-      .sort()
-      .join("|");
-
-    const identity = isBoxProduct(item)
-      ? `box:${productKey(item)}`
-      : `copo:${Number(item.tamanho_ml)}`;
-
-    return `${identity}::${complements}`;
-  };
-
-  function saveCart() {
-    try {
-      sessionStorage.setItem(CART_KEY, JSON.stringify(state.cart));
-    } catch (error) {
-      console.warn("Não foi possível salvar a sacola nesta sessão.", error);
-    }
-  }
-
-  function saveLastOrderSnapshot(order) {
-    try {
-      sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
-    } catch (error) {
-      console.warn(
-        "Não foi possível salvar os dados do último pedido nesta sessão.",
-        error,
-      );
-    }
-  }
-
-  function normalizeCartItem(raw) {
-    const boxMode = isBoxProduct(raw);
-    const product = boxMode
-      ? boxByKey(raw?.produto_chave || raw?.tamanho_label || raw?.produto_nome)
-      : state.sizes.find(
-          (item) =>
-            Number(item.tamanho_ml) === Number(raw?.tamanho_ml) &&
-            productIsAvailable(item),
-        );
-
-    if (!product || !productIsAvailable(product)) {
-      return null;
-    }
-
-    const complementMap = new Map();
-
-    if (Array.isArray(raw?.complementos)) {
-      raw.complementos.forEach((complement, index) => {
-        const current = state.complements.find(
-          (item) => norm(item.nome) === norm(complement?.nome),
-        );
-
-        if (!current) {
-          return;
+            return 0;
         }
 
-        const rawLayer = String(complement?.camada || "").toLowerCase();
-        const layer = boxMode
-          ? "unica"
-          : rawLayer === "cobertura"
-            ? "cobertura"
-            : rawLayer === "ambos" || rawLayer === "unica"
-              ? "ambos"
-              : "meio";
-        const key = norm(current.nome);
-        const selectionOrder = Math.max(
-          1,
-          Math.floor(num(complement?.ordem_selecao, index + 1)),
-        );
+        const numeric =
+            Number(product);
 
-        if (!complementMap.has(key)) {
-          complementMap.set(key, {
-            id: current.id || null,
-            nome: current.nome,
-            camada: layer,
-            preco: num(current.preco),
-            ordem_selecao: selectionOrder,
-          });
-          return;
+        if (
+            Number.isFinite(numeric) &&
+            FREE_COMPLEMENT_LIMITS.has(numeric)
+        ) {
+            return (
+                FREE_COMPLEMENT_LIMITS.get(numeric) ||
+                0
+            );
         }
 
-        const existing = complementMap.get(key);
+        const normalized =
+            norm(product);
 
-        if (!boxMode && existing.camada !== layer) {
-          existing.camada = "ambos";
-        }
+        const futureKey =
+            normalized === "azury box p" ||
+            normalized === "box p" ||
+            normalized === "azury-box-p"
+                ? "azury-box-p"
+                : normalized === "azury box m" ||
+                    normalized === "box m" ||
+                    normalized === "azury-box-m"
+                    ? "azury-box-m"
+                    : normalized === "azury box g" ||
+                        normalized === "box g" ||
+                        normalized === "azury-box-g"
+                        ? "azury-box-g"
+                        : "";
 
-        existing.ordem_selecao = Math.min(
-          existing.ordem_selecao,
-          selectionOrder,
-        );
-      });
+        return futureKey
+            ? (
+                FREE_COMPLEMENT_LIMITS.get(
+                    futureKey
+                ) || 0
+            )
+            : 0;
     }
 
-    const complements = Array.from(complementMap.values());
-    const base = productBasePrice(product);
-    const unitPrice = itemUnitPrice(product, base, complements);
+    function productDisplayName(product) {
+        if (product && typeof product === "object" && isAzuryBoxProduct(product)) {
+            const configured = getAzuryBox(product.produto_chave || product.chave);
+            return String(
+                product.produto_nome ||
+                product.nome ||
+                configured?.nome ||
+                "Azury Box"
+            ).trim();
+        }
 
-    return {
-      id: String(raw?.id || newId()),
-      produto_tipo: boxMode ? "azury_box" : "acai_copo",
-      produto_chave: boxMode ? productKey(product) : null,
-      tamanho_ml: boxMode ? null : Number(product.tamanho_ml),
-      tamanho_label: boxMode ? String(product.tamanho_label || "") : null,
-      produto_nome: productDisplayName(product),
-      preco_base: base,
-      quantidade: Math.max(
-        1,
-        Math.min(MAX_CART_UNITS, Math.floor(num(raw?.quantidade, 1))),
-      ),
-      preco_unitario: unitPrice,
-      complementos: complements,
+        const size = Number(
+            product && typeof product === "object"
+                ? product.tamanho_ml
+                : product
+        );
+
+        const cupName = CUP_PRODUCT_NAMES.get(size);
+
+        if (cupName) {
+            return `${cupName} • ${size}ml`;
+        }
+
+        if (product && typeof product === "object") {
+            const rawName = String(
+                product.produto_nome || product.nome || ""
+            ).trim();
+
+            if (rawName) {
+                return rawName;
+            }
+        }
+
+        return Number.isFinite(size) && size > 0
+            ? `Açaí • ${size}ml`
+            : "Açaí";
+    }
+
+    const isAlwaysPaidComplement = name => {
+        const normalizedName = norm(name);
+
+        return ALWAYS_PAID_COMPLEMENT_TERMS.some(term =>
+            normalizedName.includes(term)
+        );
     };
-  }
 
-  function loadCart() {
-    let stored = [];
+    function priceComplements(complements, product) {
+        const limit = freeComplementLimit(product);
+        const boxMode = isAzuryBoxProduct(product);
 
-    try {
-      stored = JSON.parse(sessionStorage.getItem(CART_KEY) || "[]");
-    } catch (_) {
-      stored = [];
+        const rows = (complements || []).map((complement, index) => ({
+            ...complement,
+            nome: String(complement?.nome ?? complement?.value ?? ""),
+            preco: num(complement?.preco ?? complement?.dataset?.preco, 0),
+            ordem_selecao: Math.max(
+                1,
+                Math.floor(
+                    num(
+                        complement?.ordem_selecao ?? complement?.dataset?.ordemSelecao,
+                        index + 1
+                    )
+                )
+            ),
+            _index: index
+        }));
+
+        const groups = new Map();
+
+        rows.forEach(row => {
+            const key = norm(row.nome);
+            if (!key) return;
+
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    key,
+                    nome: row.nome,
+                    ordem_selecao: row.ordem_selecao,
+                    primeiro_indice: row._index
+                });
+                return;
+            }
+
+            const group = groups.get(key);
+            group.ordem_selecao = Math.min(group.ordem_selecao, row.ordem_selecao);
+            group.primeiro_indice = Math.min(group.primeiro_indice, row._index);
+        });
+
+        const uniqueComplements = Array.from(groups.values())
+            .sort((a, b) =>
+                a.ordem_selecao - b.ordem_selecao ||
+                a.primeiro_indice - b.primeiro_indice
+            );
+
+        const eligible = boxMode
+            ? uniqueComplements
+            : uniqueComplements.filter(complement =>
+                !isAlwaysPaidComplement(complement.nome)
+            );
+
+        const freeKeys = new Set(
+            eligible.slice(0, limit).map(complement => complement.key)
+        );
+
+        return rows.map(row => {
+            const key = norm(row.nome);
+            const group = groups.get(key);
+            const alwaysPaid =
+                !boxMode && isAlwaysPaidComplement(row.nome);
+            const free = !alwaysPaid && freeKeys.has(key);
+            const firstOccurrence =
+                !group || row._index === group.primeiro_indice;
+            const { _index, ...clean } = row;
+
+            return {
+                ...clean,
+                especial_pago: alwaysPaid,
+                gratuito: free,
+                preco_cobrado: free || !firstOccurrence ? 0 : row.preco
+            };
+        });
     }
 
-    state.cart = [];
-
-    if (!Array.isArray(stored)) {
-      return;
+    function itemUnitPrice(
+        size,
+        base,
+        complements
+    ) {
+        return (
+            num(base, 0) +
+            priceComplements(
+                complements,
+                size
+            ).reduce(
+                (
+                    total,
+                    complement
+                ) =>
+                    total +
+                    num(
+                        complement.preco_cobrado
+                    ),
+                0
+            )
+        );
     }
 
-    for (const raw of stored) {
-      const item = normalizeCartItem(raw);
+    const timeMinutes = value => {
+        const parts =
+            String(
+                value || ""
+            ).split(":");
 
-      if (!item) {
-        continue;
-      }
+        if (parts.length < 2) {
+            return null;
+        }
 
-      const available = MAX_CART_UNITS - cartUnits();
+        const hours =
+            Number(parts[0]);
 
-      if (available <= 0) {
-        break;
-      }
+        const minutes =
+            Number(parts[1]);
 
-      item.quantidade = Math.min(item.quantidade, available);
+        return (
+            Number.isFinite(hours) &&
+            Number.isFinite(minutes)
+        )
+            ? (hours * 60) + minutes
+            : null;
+    };
 
-      const signature = itemSignature(item);
+    const timeLabel = value => {
+        const minutes =
+            timeMinutes(value);
 
-      const existing = state.cart.find(
-        (row) => itemSignature(row) === signature,
-      );
+        if (minutes === null) {
+            return "";
+        }
 
-      if (existing) {
-        existing.quantidade += item.quantidade;
-      } else {
-        state.cart.push(item);
-      }
+        const hours =
+            Math.floor(
+                minutes / 60
+            );
+
+        const remainingMinutes =
+            minutes % 60;
+
+        return (
+            `${String(hours).padStart(2, "0")}:` +
+            `${String(remainingMinutes).padStart(2, "0")}`
+        );
+    };
+
+    const newId = () =>
+        window.crypto?.randomUUID?.() ||
+        `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    const cartUnits = () =>
+        state.cart.reduce(
+            (total, item) =>
+                total +
+                Math.max(
+                    1,
+                    Number(item.quantidade) || 1
+                ),
+            0
+        );
+
+    const cartSubtotal = () =>
+        state.cart.reduce(
+            (total, item) =>
+                total +
+                (
+                    num(item.preco_unitario) *
+                    Math.max(
+                        1,
+                        Number(item.quantidade) || 1
+                    )
+                ),
+            0
+        );
+
+    const itemSignature = item => {
+        const complements = (item.complementos || [])
+            .map(complement => `${complement.camada}:${norm(complement.nome)}`)
+            .sort()
+            .join("|");
+
+        const productKey = isAzuryBoxProduct(item)
+            ? String(item.produto_chave || "azury-box").toLowerCase()
+            : `copo-${Number(item.tamanho_ml)}`;
+
+        return `${productKey}::${complements}`;
+    };
+
+    function saveCart() {
+        try {
+            sessionStorage.setItem(
+                CART_KEY,
+                JSON.stringify(
+                    state.cart
+                )
+            );
+        } catch (error) {
+            console.warn(
+                "Não foi possível salvar a sacola nesta sessão.",
+                error
+            );
+        }
     }
 
-    saveCart();
-  }
-
-  function complementSummary(item, layer = null) {
-    const names = Array.from(
-      new Set(
-        (item.complementos || [])
-          .filter((complement) =>
-            layer
-              ? complement.camada === layer || complement.camada === "ambos"
-              : true,
-          )
-          .map((complement) => complement.nome),
-      ),
-    );
-
-    return names.length ? names.join(", ") : "Nenhum";
-  }
-
-  function renderCart() {
-    const units = cartUnits();
-    const subtotal = cartSubtotal();
-
-    if (d.cartCount) {
-      d.cartCount.textContent = `${units} ${units === 1 ? "item" : "itens"}`;
+    function saveLastOrderSnapshot(order) {
+        try {
+            sessionStorage.setItem(
+                LAST_ORDER_KEY,
+                JSON.stringify(order)
+            );
+        } catch (error) {
+            console.warn(
+                "Não foi possível salvar os dados do último pedido nesta sessão.",
+                error
+            );
+        }
     }
 
-    if (d.cartEmpty) {
-      d.cartEmpty.hidden = state.cart.length > 0;
+    function normalizeCartItem(raw) {
+        const boxMode =
+            String(raw?.produto_tipo || "").toLowerCase() === "azury_box" ||
+            isAzuryBoxKey(raw?.produto_chave);
+
+        const product = boxMode
+            ? boxDescriptor(raw?.produto_chave)
+            : cupDescriptor(raw?.tamanho_ml);
+
+        if (!product) {
+            return null;
+        }
+
+        const complementMap = new Map();
+
+        if (Array.isArray(raw?.complementos)) {
+            raw.complementos.forEach((complement, index) => {
+                const current = state.complements.find(item =>
+                    norm(item.nome) === norm(complement?.nome)
+                );
+
+                if (!current) return;
+
+                const rawLayer = String(complement?.camada || "").toLowerCase();
+                const layer = boxMode
+                    ? "unica"
+                    : rawLayer === "cobertura"
+                        ? "cobertura"
+                        : (rawLayer === "ambos" || rawLayer === "unica")
+                            ? "ambos"
+                            : "meio";
+
+                const key = norm(current.nome);
+                const selectionOrder = Math.max(
+                    1,
+                    Math.floor(num(complement?.ordem_selecao, index + 1))
+                );
+
+                if (!complementMap.has(key)) {
+                    complementMap.set(key, {
+                        id: current.id || null,
+                        nome: current.nome,
+                        camada: layer,
+                        preco: num(current.preco),
+                        ordem_selecao: selectionOrder
+                    });
+                    return;
+                }
+
+                const existing = complementMap.get(key);
+                if (!boxMode && existing.camada !== layer) {
+                    existing.camada = "ambos";
+                }
+                existing.ordem_selecao = Math.min(existing.ordem_selecao, selectionOrder);
+            });
+        }
+
+        const complements = Array.from(complementMap.values());
+        const unitPrice = itemUnitPrice(product, product.preco_base, complements);
+
+        return {
+            id: String(raw?.id || newId()),
+            produto_tipo: product.produto_tipo,
+            produto_chave: product.produto_chave,
+            produto_nome: product.produto_nome,
+            tamanho_ml: product.tamanho_ml,
+            tamanho_label: product.tamanho_label,
+            preco_base: product.preco_base,
+            limite_complementos_gratis: product.limite_complementos_gratis,
+            quantidade: Math.max(
+                1,
+                Math.min(MAX_CART_UNITS, Math.floor(num(raw?.quantidade, 1)))
+            ),
+            preco_unitario: unitPrice,
+            complementos: complements
+        };
     }
 
-    if (d.cartSubtotal) {
-      d.cartSubtotal.textContent = money(subtotal);
+    function loadCart() {
+        let stored = [];
+
+        try {
+            stored =
+                JSON.parse(
+                    sessionStorage.getItem(
+                        CART_KEY
+                    ) || "[]"
+                );
+        } catch (_) {
+            stored = [];
+        }
+
+        state.cart = [];
+
+        if (
+            !Array.isArray(stored)
+        ) {
+            return;
+        }
+
+        for (const raw of stored) {
+            const item =
+                normalizeCartItem(raw);
+
+            if (!item) {
+                continue;
+            }
+
+            const available =
+                MAX_CART_UNITS -
+                cartUnits();
+
+            if (
+                available <= 0
+            ) {
+                break;
+            }
+
+            item.quantidade =
+                Math.min(
+                    item.quantidade,
+                    available
+                );
+
+            const signature =
+                itemSignature(item);
+
+            const existing =
+                state.cart.find(
+                    row =>
+                        itemSignature(row) ===
+                        signature
+                );
+
+            if (existing) {
+                existing.quantidade +=
+                    item.quantidade;
+            } else {
+                state.cart.push(
+                    item
+                );
+            }
+        }
+
+        saveCart();
     }
 
-    if (d.subtotal2) {
-      d.subtotal2.textContent = money(subtotal);
+    function complementSummary(
+        item,
+        layer
+    ) {
+        const names =
+            Array.from(
+                new Set(
+                    (
+                        item.complementos ||
+                        []
+                    )
+                        .filter(
+                            complement =>
+                                complement.camada ===
+                                    layer ||
+                                complement.camada ===
+                                    "ambos" ||
+                                (layer === "unica" && complement.camada === "unica")
+                        )
+                        .map(
+                            complement =>
+                                complement.nome
+                        )
+                )
+            );
+
+        return names.length
+            ? names.join(", ")
+            : "Nenhum";
     }
 
-    if (d.cartList) {
-      d.cartList.innerHTML = state.cart
-        .map((item, index) => {
-          const complementDetails = isBoxProduct(item)
-            ? `
-                        <p>
-                            <b>Complementos:</b>
-                            ${esc(complementSummary(item))}
-                        </p>
-                    `
-            : `
-                        <p>
-                            <b>Meio:</b>
-                            ${esc(complementSummary(item, "meio"))}
-                        </p>
+    function renderCart() {
+        const units =
+            cartUnits();
 
-                        <p>
-                            <b>Cobertura:</b>
-                            ${esc(complementSummary(item, "cobertura"))}
-                        </p>
-                    `;
+        const subtotal =
+            cartSubtotal();
 
-          return `
+        if (d.cartCount) {
+            d.cartCount.textContent =
+                `${units} ${
+                    units === 1
+                        ? "item"
+                        : "itens"
+                }`;
+        }
+
+        if (d.cartEmpty) {
+            d.cartEmpty.hidden =
+                state.cart.length > 0;
+        }
+
+        if (d.cartSubtotal) {
+            d.cartSubtotal.textContent =
+                money(subtotal);
+        }
+
+        if (d.subtotal2) {
+            d.subtotal2.textContent =
+                money(subtotal);
+        }
+
+        if (d.cartList) {
+            d.cartList.innerHTML =
+                state.cart
+                    .map(
+                        (
+                            item,
+                            index
+                        ) => `
                     <article
                         class="item-sacola"
                         data-cart-id="${esc(item.id)}"
                     >
                         <div class="item-sacola-cabecalho">
+
                             <div>
                                 <strong>
                                     ${index + 1}.
-                                    ${esc(productDisplayName(item))}
+                                    ${esc(
+                                        productDisplayName(
+                                            item.tamanho_ml
+                                        )
+                                    )}
                                 </strong>
+
                                 <small>
                                     Valor unitário:
                                     ${money(item.preco_unitario)}
                                 </small>
                             </div>
+
                             <strong class="item-sacola-total">
-                                ${money(item.preco_unitario * item.quantidade)}
+                                ${money(
+                                    item.preco_unitario *
+                                    item.quantidade
+                                )}
                             </strong>
+
                         </div>
 
-                        ${complementDetails}
+                        ${
+                            isAzuryBoxProduct(item)
+                                ? `
+                                    <p>
+                                        <b>Complementos:</b>
+                                        ${esc(complementSummary(item, "unica"))}
+                                    </p>
+                                `
+                                : `
+                                    <p>
+                                        <b>Meio:</b>
+                                        ${esc(complementSummary(item, "meio"))}
+                                    </p>
+                                    <p>
+                                        <b>Cobertura:</b>
+                                        ${esc(complementSummary(item, "cobertura"))}
+                                    </p>
+                                `
+                        }
 
                         <div class="acoes-item-sacola">
+
                             <div
                                 class="controle-quantidade"
                                 aria-label="Quantidade do item ${index + 1}"
@@ -867,7 +880,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 >
                                     −
                                 </button>
-                                <span>${esc(item.quantidade)}</span>
+
+                                <span>
+                                    ${esc(item.quantidade)}
+                                </span>
+
                                 <button
                                     type="button"
                                     data-cart-action="increase"
@@ -886,288 +903,477 @@ document.addEventListener("DOMContentLoaded", async () => {
                             >
                                 Remover
                             </button>
+
                         </div>
                     </article>
-                `;
-        })
-        .join("");
-    }
+                `
+                    )
+                    .join("");
+        }
 
-    if (d.cartReview) {
-      d.cartReview.innerHTML = state.cart
-        .map(
-          (item, index) => `
+        if (d.cartReview) {
+            d.cartReview.innerHTML =
+                state.cart
+                    .map(
+                        (
+                            item,
+                            index
+                        ) => `
                     <div class="resumo-item-entrega">
+
                         <span>
                             ${index + 1}.
                             ${esc(item.quantidade)}×
-                            ${esc(productDisplayName(item))}
+                            ${esc(
+                                productDisplayName(
+                                    item.tamanho_ml
+                                )
+                            )}
                         </span>
+
                         <strong>
-                            ${money(item.preco_unitario * item.quantidade)}
+                            ${money(
+                                item.preco_unitario *
+                                item.quantidade
+                            )}
                         </strong>
+
                     </div>
-                `,
-        )
-        .join("");
-    }
-
-    updateTotal();
-    syncOrderButtons(storeState());
-  }
-
-  function changeCartItem(id, delta) {
-    const item = state.cart.find((row) => row.id === id);
-
-    if (!item) {
-      return;
-    }
-
-    if (delta > 0) {
-      if (cartUnits() >= MAX_CART_UNITS) {
-        alert(`A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`);
-
-        return;
-      }
-
-      item.quantidade += 1;
-    } else if (item.quantidade > 1) {
-      item.quantidade -= 1;
-    } else {
-      state.cart = state.cart.filter((row) => row.id !== id);
-    }
-
-    saveCart();
-    renderCart();
-  }
-
-  function removeCartItem(id) {
-    state.cart = state.cart.filter((item) => item.id !== id);
-
-    saveCart();
-    renderCart();
-  }
-
-  function clearCart() {
-    state.cart = [];
-
-    try {
-      sessionStorage.removeItem(CART_KEY);
-    } catch (_) {}
-
-    renderCart();
-  }
-
-  function addCurrentToCart() {
-    if (!requireOpen()) {
-      return;
-    }
-
-    if (cartUnits() >= MAX_CART_UNITS) {
-      alert(`A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`);
-      return;
-    }
-
-    const product = currentBuilderProduct();
-
-    if (!product || !productIsAvailable(product)) {
-      alert("Este produto não está disponível no momento.");
-      return;
-    }
-
-    const complements = currentComplementSelections();
-    const boxMode = isBoxProduct(product);
-    const item = {
-      id: newId(),
-      produto_tipo: boxMode ? "azury_box" : "acai_copo",
-      produto_chave: boxMode ? productKey(product) : null,
-      tamanho_ml: boxMode ? null : Number(product.tamanho_ml),
-      tamanho_label: boxMode ? String(product.tamanho_label || "") : null,
-      produto_nome: productDisplayName(product),
-      preco_base: productBasePrice(product),
-      quantidade: 1,
-      preco_unitario: calculate(),
-      complementos: complements,
-    };
-
-    const signature = itemSignature(item);
-    const existing = state.cart.find((row) => itemSignature(row) === signature);
-
-    if (existing) {
-      existing.quantidade += 1;
-    } else {
-      state.cart.push(item);
-    }
-
-    saveCart();
-    renderCart();
-    resetBuilder();
-
-    if (d.cartFeedback) {
-      const addedProductName = productDisplayName(item);
-      d.cartFeedback.textContent = `${addedProductName} adicionado à sacola.`;
-
-      window.setTimeout(() => {
-        if (d.cartFeedback?.textContent.includes(addedProductName)) {
-          d.cartFeedback.textContent = "";
-        }
-      }, 3000);
-    }
-  }
-
-  function message(text, type = "") {
-    if (!d.addressStatus) {
-      return;
-    }
-
-    d.addressStatus.textContent = text;
-
-    d.addressStatus.classList.remove("sucesso", "erro", "carregando");
-
-    if (type) {
-      d.addressStatus.classList.add(type);
-    }
-  }
-
-  function showOrderSuccess(code) {
-    const styleId = "azury-pedido-sucesso-estilos";
-
-    let order = null;
-
-    try {
-      const saved = sessionStorage.getItem(LAST_ORDER_KEY);
-
-      order = saved ? JSON.parse(saved) : null;
-    } catch (error) {
-      console.warn(
-        "Não foi possível carregar o resumo do último pedido.",
-        error,
-      );
-    }
-
-    const safeOrder = order && typeof order === "object" ? order : {};
-
-    const customerName =
-      String(safeOrder.cliente?.nome || "Cliente").trim() || "Cliente";
-
-    const createdAt = safeOrder.criado_em
-      ? new Date(safeOrder.criado_em)
-      : new Date();
-
-    const validCreatedAt = Number.isNaN(createdAt.getTime())
-      ? new Date()
-      : createdAt;
-
-    const dateLabel = validCreatedAt.toLocaleDateString("pt-BR");
-
-    const timeLabelOrder = validCreatedAt.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-
-      minute: "2-digit",
-    });
-
-    const productValue = num(safeOrder.valor_produtos, 0);
-
-    const deliveryFee = num(safeOrder.taxa_entrega, 0);
-
-    const totalValue = num(safeOrder.valor_total, productValue + deliveryFee);
-
-    const paymentName =
-      safeOrder.pagamento?.forma_label ||
-      paymentLabel(safeOrder.pagamento?.forma || "") ||
-      "Não informado";
-
-    const pointsGenerated = num(safeOrder.pontos_gerados, 0);
-
-    const pointsText =
-      pointsGenerated > 0
-        ? `${pointsGenerated} ponto${
-            pointsGenerated === 1 ? "" : "s"
-          } neste pedido`
-        : "Seus pontos serão liberados após a entrega";
-
-    const estimatedDelivery = (() => {
-      const config = state.config || {};
-
-      const directValue =
-        config.estimativa_entrega ??
-        config.tempo_estimado_entrega ??
-        config.tempo_entrega ??
-        config.prazo_entrega ??
-        config.previsao_entrega ??
-        null;
-
-      if (
-        directValue !== null &&
-        directValue !== undefined &&
-        String(directValue).trim()
-      ) {
-        const raw = String(directValue).trim();
-
-        if (/^\d+$/.test(raw)) {
-          return `Até ${raw} minutos`;
+                `
+                    )
+                    .join("");
         }
 
-        return raw;
-      }
+        updateTotal();
+        syncOrderButtons(
+            storeState()
+        );
+    }
 
-      const minimum = Number(
-        config.tempo_entrega_min ??
-          config.prazo_entrega_min ??
-          config.estimativa_minutos_min,
-      );
-
-      const maximum = Number(
-        config.tempo_entrega_max ??
-          config.prazo_entrega_max ??
-          config.estimativa_minutos_max,
-      );
-
-      if (
-        Number.isFinite(minimum) &&
-        minimum > 0 &&
-        Number.isFinite(maximum) &&
-        maximum >= minimum
-      ) {
-        return `${minimum} a ${maximum} minutos`;
-      }
-
-      if (Number.isFinite(maximum) && maximum > 0) {
-        return `Até ${maximum} minutos`;
-      }
-
-      if (Number.isFinite(minimum) && minimum > 0) {
-        return `A partir de ${minimum} minutos`;
-      }
-
-      return "Acompanhe a atualização na Área do Cliente";
-    })();
-
-    const items = Array.isArray(safeOrder.itens) ? safeOrder.itens : [];
-
-    const itemsHtml = items.length
-      ? items
-          .map((item, index) => {
-            const complements = Array.isArray(item.complementos)
-              ? item.complementos
-              : [];
-
-            const complementNames = Array.from(
-              new Set(
-                complements
-                  .map((complement) => String(complement?.nome || "").trim())
-                  .filter(Boolean),
-              ),
+    function changeCartItem(
+        id,
+        delta
+    ) {
+        const item =
+            state.cart.find(
+                row =>
+                    row.id === id
             );
 
-            const quantity = Math.max(1, Number(item.quantidade) || 1);
+        if (!item) {
+            return;
+        }
 
-            const unitValue = num(item.preco_unitario, 0);
+        if (delta > 0) {
+            if (
+                cartUnits() >=
+                MAX_CART_UNITS
+            ) {
+                alert(
+                    `A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`
+                );
 
-            const productName =
-              item.produto || productDisplayName(item.tamanho_ml);
+                return;
+            }
 
-            return `
+            item.quantidade += 1;
+        } else if (
+            item.quantidade > 1
+        ) {
+            item.quantidade -= 1;
+        } else {
+            state.cart =
+                state.cart.filter(
+                    row =>
+                        row.id !== id
+                );
+        }
+
+        saveCart();
+        renderCart();
+    }
+
+    function removeCartItem(id) {
+        state.cart =
+            state.cart.filter(
+                item =>
+                    item.id !== id
+            );
+
+        saveCart();
+        renderCart();
+    }
+
+    function clearCart() {
+        state.cart = [];
+
+        try {
+            sessionStorage.removeItem(
+                CART_KEY
+            );
+        } catch (_) {
+        }
+
+        renderCart();
+    }
+
+    function addCurrentToCart() {
+        if (!requireOpen()) return;
+
+        if (cartUnits() >= MAX_CART_UNITS) {
+            alert(`A sacola aceita até ${MAX_CART_UNITS} itens por pedido.`);
+            return;
+        }
+
+        const product = currentProductDescriptor();
+        if (!product) {
+            alert("Escolha um produto disponível.");
+            return;
+        }
+
+        const boxMode = isAzuryBoxProduct(product);
+        const complements = currentComplementSelections().map(item => ({
+            ...item,
+            camada: boxMode ? "unica" : item.camada
+        }));
+
+        const item = {
+            id: newId(),
+            produto_tipo: product.produto_tipo,
+            produto_chave: product.produto_chave,
+            produto_nome: product.produto_nome,
+            tamanho_ml: product.tamanho_ml,
+            tamanho_label: product.tamanho_label,
+            preco_base: product.preco_base,
+            limite_complementos_gratis: product.limite_complementos_gratis,
+            quantidade: 1,
+            preco_unitario: calculate(),
+            complementos: complements
+        };
+
+        const signature = itemSignature(item);
+        const existing = state.cart.find(row => itemSignature(row) === signature);
+
+        if (existing) {
+            existing.quantidade += 1;
+        } else {
+            state.cart.push(item);
+        }
+
+        saveCart();
+        renderCart();
+        resetBuilder();
+
+        if (d.cartFeedback) {
+            const addedProductName = productDisplayName(item);
+            d.cartFeedback.textContent = `${addedProductName} adicionado à sacola.`;
+
+            window.setTimeout(() => {
+                if (d.cartFeedback?.textContent.includes(addedProductName)) {
+                    d.cartFeedback.textContent = "";
+                }
+            }, 3000);
+        }
+    }
+
+    function message(
+        text,
+        type = ""
+    ) {
+        if (!d.addressStatus) {
+            return;
+        }
+
+        d.addressStatus.textContent =
+            text;
+
+        d.addressStatus
+            .classList
+            .remove(
+                "sucesso",
+                "erro",
+                "carregando"
+            );
+
+        if (type) {
+            d.addressStatus
+                .classList
+                .add(type);
+        }
+    }
+
+    function showOrderSuccess(code) {
+        const styleId =
+            "azury-pedido-sucesso-estilos";
+
+        let order = null;
+
+        try {
+            const saved =
+                sessionStorage.getItem(
+                    LAST_ORDER_KEY
+                );
+
+            order =
+                saved
+                    ? JSON.parse(saved)
+                    : null;
+        } catch (error) {
+            console.warn(
+                "Não foi possível carregar o resumo do último pedido.",
+                error
+            );
+        }
+
+        const safeOrder =
+            order &&
+            typeof order === "object"
+                ? order
+                : {};
+
+        const customerName =
+            String(
+                safeOrder.cliente?.nome ||
+                "Cliente"
+            ).trim() ||
+            "Cliente";
+
+        const createdAt =
+            safeOrder.criado_em
+                ? new Date(
+                    safeOrder.criado_em
+                )
+                : new Date();
+
+        const validCreatedAt =
+            Number.isNaN(
+                createdAt.getTime()
+            )
+                ? new Date()
+                : createdAt;
+
+        const dateLabel =
+            validCreatedAt
+                .toLocaleDateString(
+                    "pt-BR"
+                );
+
+        const timeLabelOrder =
+            validCreatedAt
+                .toLocaleTimeString(
+                    "pt-BR",
+                    {
+                        hour:
+                            "2-digit",
+
+                        minute:
+                            "2-digit"
+                    }
+                );
+
+        const productValue =
+            num(
+                safeOrder.valor_produtos,
+                0
+            );
+
+        const deliveryFee =
+            num(
+                safeOrder.taxa_entrega,
+                0
+            );
+
+        const totalValue =
+            num(
+                safeOrder.valor_total,
+                productValue +
+                    deliveryFee
+            );
+
+        const paymentName =
+            safeOrder
+                .pagamento
+                ?.forma_label ||
+            paymentLabel(
+                safeOrder
+                    .pagamento
+                    ?.forma ||
+                ""
+            ) ||
+            "Não informado";
+
+        const pointsGenerated =
+            num(
+                safeOrder
+                    .pontos_gerados,
+                0
+            );
+
+        const pointsText =
+            pointsGenerated > 0
+                ? (
+                    `${pointsGenerated} ponto${
+                        pointsGenerated === 1
+                            ? ""
+                            : "s"
+                    } neste pedido`
+                )
+                : (
+                    "Seus pontos serão liberados após a entrega"
+                );
+
+        const estimatedDelivery =
+            (() => {
+                const config =
+                    state.config || {};
+
+                const directValue =
+                    config.estimativa_entrega ??
+                    config.tempo_estimado_entrega ??
+                    config.tempo_entrega ??
+                    config.prazo_entrega ??
+                    config.previsao_entrega ??
+                    null;
+
+                if (
+                    directValue !== null &&
+                    directValue !== undefined &&
+                    String(
+                        directValue
+                    ).trim()
+                ) {
+                    const raw =
+                        String(
+                            directValue
+                        ).trim();
+
+                    if (
+                        /^\d+$/.test(
+                            raw
+                        )
+                    ) {
+                        return (
+                            `Até ${raw} minutos`
+                        );
+                    }
+
+                    return raw;
+                }
+
+                const minimum =
+                    Number(
+                        config.tempo_entrega_min ??
+                        config.prazo_entrega_min ??
+                        config.estimativa_minutos_min
+                    );
+
+                const maximum =
+                    Number(
+                        config.tempo_entrega_max ??
+                        config.prazo_entrega_max ??
+                        config.estimativa_minutos_max
+                    );
+
+                if (
+                    Number.isFinite(
+                        minimum
+                    ) &&
+                    minimum > 0 &&
+                    Number.isFinite(
+                        maximum
+                    ) &&
+                    maximum >= minimum
+                ) {
+                    return (
+                        `${minimum} a ${maximum} minutos`
+                    );
+                }
+
+                if (
+                    Number.isFinite(
+                        maximum
+                    ) &&
+                    maximum > 0
+                ) {
+                    return (
+                        `Até ${maximum} minutos`
+                    );
+                }
+
+                if (
+                    Number.isFinite(
+                        minimum
+                    ) &&
+                    minimum > 0
+                ) {
+                    return (
+                        `A partir de ${minimum} minutos`
+                    );
+                }
+
+                return (
+                    "Acompanhe a atualização na Área do Cliente"
+                );
+            })();
+
+        const items =
+            Array.isArray(
+                safeOrder.itens
+            )
+                ? safeOrder.itens
+                : [];
+
+        const itemsHtml =
+            items.length
+                ? items
+                    .map(
+                        (
+                            item,
+                            index
+                        ) => {
+                            const complements =
+                                Array.isArray(
+                                    item.complementos
+                                )
+                                    ? item.complementos
+                                    : [];
+
+                            const complementNames =
+                                Array.from(
+                                    new Set(
+                                        complements
+                                            .map(
+                                                complement =>
+                                                    String(
+                                                        complement?.nome ||
+                                                        ""
+                                                    ).trim()
+                                            )
+                                            .filter(Boolean)
+                                    )
+                                );
+
+                            const quantity =
+                                Math.max(
+                                    1,
+                                    Number(
+                                        item.quantidade
+                                    ) || 1
+                                );
+
+                            const unitValue =
+                                num(
+                                    item.preco_unitario,
+                                    0
+                                );
+
+                            const productName =
+                                item.produto ||
+                                productDisplayName(
+                                    item.tamanho_ml
+                                );
+
+                            return `
                             <article class="azury-pos-item">
                                 <div class="azury-pos-item-topo">
                                     <div>
@@ -1181,13 +1387,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     </div>
 
                                     <strong class="azury-pos-item-preco">
-                                        ${money(unitValue * quantity)}
+                                        ${money(
+                                            unitValue *
+                                            quantity
+                                        )}
                                     </strong>
                                 </div>
 
                                 <span class="azury-pos-item-meta">
                                     ${quantity}× item${
-                                      quantity === 1 ? "" : "s"
+                                        quantity === 1
+                                            ? ""
+                                            : "s"
                                     }
                                 </span>
 
@@ -1196,46 +1407,95 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                                     <span>
                                         ${
-                                          complementNames.length
-                                            ? esc(complementNames.join(", "))
-                                            : "Nenhum complemento"
+                                            complementNames.length
+                                                ? esc(
+                                                    complementNames.join(
+                                                        ", "
+                                                    )
+                                                )
+                                                : "Nenhum complemento"
                                         }
                                     </span>
                                 </div>
                             </article>
                         `;
-          })
-          .join("")
-      : `
+                        }
+                    )
+                    .join("")
+                : `
                     <div class="azury-pos-vazio">
                         Resumo dos itens indisponível nesta sessão.
                     </div>
                 `;
 
-    const street = String(safeOrder.entrega?.rua || "").trim();
+        const street =
+            String(
+                safeOrder.entrega?.rua ||
+                ""
+            ).trim();
 
-    const number = String(safeOrder.entrega?.numero || "").trim();
+        const number =
+            String(
+                safeOrder.entrega?.numero ||
+                ""
+            ).trim();
 
-    const district = String(safeOrder.entrega?.bairro || "").trim();
+        const district =
+            String(
+                safeOrder.entrega?.bairro ||
+                ""
+            ).trim();
 
-    const zipCode = String(safeOrder.entrega?.cep || "").trim();
+        const zipCode =
+            String(
+                safeOrder.entrega?.cep ||
+                ""
+            ).trim();
 
-    const addressExtra = String(safeOrder.entrega?.complemento || "").trim();
+        const addressExtra =
+            String(
+                safeOrder
+                    .entrega
+                    ?.complemento ||
+                ""
+            ).trim();
 
-    const addressMain = [street, number ? `nº ${number}` : ""]
-      .filter(Boolean)
-      .join(", ");
+        const addressMain =
+            [
+                street,
 
-    const addressSecond = [district, zipCode ? `CEP ${zipCode}` : ""]
-      .filter(Boolean)
-      .join(" • ");
+                number
+                    ? `nº ${number}`
+                    : ""
+            ]
+                .filter(Boolean)
+                .join(", ");
 
-    if (!document.getElementById(styleId)) {
-      const style = document.createElement("style");
+        const addressSecond =
+            [
+                district,
 
-      style.id = styleId;
+                zipCode
+                    ? `CEP ${zipCode}`
+                    : ""
+            ]
+                .filter(Boolean)
+                .join(" • ");
 
-      style.textContent = `
+        if (
+            !document.getElementById(
+                styleId
+            )
+        ) {
+            const style =
+                document.createElement(
+                    "style"
+                );
+
+            style.id =
+                styleId;
+
+            style.textContent = `
                 body.azury-pos-pedido-aberto {
                     overflow: hidden !important;
                 }
@@ -2609,24 +2869,45 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             `;
 
-      document.head.appendChild(style);
-    }
+            document.head.appendChild(
+                style
+            );
+        }
 
-    document.getElementById("azuryPedidoSucesso")?.remove();
+        document
+            .getElementById(
+                "azuryPedidoSucesso"
+            )
+            ?.remove();
 
-    document.body.classList.add("azury-pos-pedido-aberto");
+        document.body.classList.add(
+            "azury-pos-pedido-aberto"
+        );
 
-    const screen = document.createElement("div");
+        const screen =
+            document.createElement(
+                "div"
+            );
 
-    screen.id = "azuryPedidoSucesso";
+        screen.id =
+            "azuryPedidoSucesso";
 
-    screen.setAttribute("role", "dialog");
+        screen.setAttribute(
+            "role",
+            "dialog"
+        );
 
-    screen.setAttribute("aria-modal", "true");
+        screen.setAttribute(
+            "aria-modal",
+            "true"
+        );
 
-    screen.setAttribute("aria-label", "Pedido realizado com sucesso");
+        screen.setAttribute(
+            "aria-label",
+            "Pedido realizado com sucesso"
+        );
 
-    screen.innerHTML = `
+        screen.innerHTML = `
             <section class="azury-pos-pedido-painel">
 
                 <header class="azury-pos-topo">
@@ -2761,14 +3042,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 </span>
 
                                 <strong>
-                                    ${esc(code || safeOrder.codigo || "—")}
+                                    ${esc(
+                                        code ||
+                                        safeOrder.codigo ||
+                                        "—"
+                                    )}
                                 </strong>
 
                             </div>
 
 
                             <time
-                                datetime="${esc(validCreatedAt.toISOString())}"
+                                datetime="${esc(
+                                    validCreatedAt
+                                        .toISOString()
+                                )}"
                             >
                                 ${esc(dateLabel)}
                                 às
@@ -2892,31 +3180,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                             <p>
                                 ${esc(
-                                  addressMain || "Endereço informado no pedido",
+                                    addressMain ||
+                                    "Endereço informado no pedido"
                                 )}
                             </p>
 
 
                             ${
-                              addressSecond
-                                ? `
+                                addressSecond
+                                    ? `
                                         <p>
                                             ${esc(addressSecond)}
                                         </p>
                                     `
-                                : ""
+                                    : ""
                             }
 
 
                             ${
-                              addressExtra
-                                ? `
+                                addressExtra
+                                    ? `
                                         <p>
                                             Complemento:
                                             ${esc(addressExtra)}
                                         </p>
                                     `
-                                : ""
+                                    : ""
                             }
 
                         </div>
@@ -2961,38 +3250,66 @@ document.addEventListener("DOMContentLoaded", async () => {
             </section>
         `;
 
-    document.body.appendChild(screen);
+        document.body.appendChild(
+            screen
+        );
 
-    const closeScreen = () => {
-      if (!screen.isConnected) {
-        return;
-      }
+        const closeScreen = () => {
+            if (!screen.isConnected) {
+                return;
+            }
 
-      screen.classList.remove("visivel");
+            screen.classList.remove(
+                "visivel"
+            );
 
-      document.body.classList.remove("azury-pos-pedido-aberto");
+            document.body.classList.remove(
+                "azury-pos-pedido-aberto"
+            );
 
-      window.setTimeout(() => screen.remove(), 240);
-    };
+            window.setTimeout(
+                () =>
+                    screen.remove(),
+                240
+            );
+        };
 
-    screen
-      .querySelector(".azury-pos-fechar")
-      ?.addEventListener("click", closeScreen);
+        screen
+            .querySelector(
+                ".azury-pos-fechar"
+            )
+            ?.addEventListener(
+                "click",
+                closeScreen
+            );
 
-    window.requestAnimationFrame(() => {
-      screen.classList.add("visivel");
-    });
-  }
+        window.requestAnimationFrame(
+            () => {
+                screen.classList.add(
+                    "visivel"
+                );
+            }
+        );
+    }
 
-  function showOrderWarning(text) {
-    const styleId = "azury-pedido-aviso-estilos";
+    function showOrderWarning(text) {
+        const styleId =
+            "azury-pedido-aviso-estilos";
 
-    if (!document.getElementById(styleId)) {
-      const style = document.createElement("style");
+        if (
+            !document.getElementById(
+                styleId
+            )
+        ) {
+            const style =
+                document.createElement(
+                    "style"
+                );
 
-      style.id = styleId;
+            style.id =
+                styleId;
 
-      style.textContent = `
+            style.textContent = `
                 #azuryPedidoAviso {
                     position: fixed;
                     top: max(16px, env(safe-area-inset-top));
@@ -3214,20 +3531,36 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             `;
 
-      document.head.appendChild(style);
-    }
+            document.head.appendChild(
+                style
+            );
+        }
 
-    document.getElementById("azuryPedidoAviso")?.remove();
+        document
+            .getElementById(
+                "azuryPedidoAviso"
+            )
+            ?.remove();
 
-    const notification = document.createElement("div");
+        const notification =
+            document.createElement(
+                "div"
+            );
 
-    notification.id = "azuryPedidoAviso";
+        notification.id =
+            "azuryPedidoAviso";
 
-    notification.setAttribute("role", "alert");
+        notification.setAttribute(
+            "role",
+            "alert"
+        );
 
-    notification.setAttribute("aria-live", "assertive");
+        notification.setAttribute(
+            "aria-live",
+            "assertive"
+        );
 
-    notification.innerHTML = `
+        notification.innerHTML = `
             <div
                 class="azury-aviso-icone"
                 aria-hidden="true"
@@ -3256,657 +3589,1090 @@ document.addEventListener("DOMContentLoaded", async () => {
             </button>
         `;
 
-    document.body.appendChild(notification);
-
-    const closeNotification = () => {
-      if (!notification.isConnected) {
-        return;
-      }
-
-      notification.classList.remove("visivel");
-
-      window.setTimeout(() => notification.remove(), 240);
-    };
-
-    notification
-      .querySelector(".azury-aviso-fechar")
-      ?.addEventListener("click", closeNotification);
-
-    window.requestAnimationFrame(() => {
-      notification.classList.add("visivel");
-    });
-
-    window.setTimeout(closeNotification, 6000);
-  }
-
-  async function table(name, configure) {
-    let query = sb.from(name).select("*");
-
-    query = configure ? configure(query) : query;
-
-    const { data, error } = await query;
-
-    if (error) {
-      throw error;
-    }
-
-    return data || [];
-  }
-
-  function saveOperationCache(data) {
-    try {
-      localStorage.setItem(
-        OPERATION_CACHE_KEY,
-        JSON.stringify({
-          savedAt: Date.now(),
-
-          data,
-        }),
-      );
-    } catch (error) {
-      console.warn("Não foi possível salvar o cardápio localmente.", error);
-    }
-  }
-
-  function readOperationCache() {
-    try {
-      const stored = JSON.parse(
-        localStorage.getItem(OPERATION_CACHE_KEY) || "null",
-      );
-
-      if (!stored || !stored.data || !Number.isFinite(Number(stored.savedAt))) {
-        return null;
-      }
-
-      const age = Date.now() - Number(stored.savedAt);
-
-      if (age < 0 || age > OPERATION_CACHE_MAX_AGE) {
-        localStorage.removeItem(OPERATION_CACHE_KEY);
-
-        return null;
-      }
-
-      return stored.data;
-    } catch (error) {
-      console.warn("O cardápio salvo não pôde ser lido.", error);
-
-      return null;
-    }
-  }
-
-  function applyOperation(
-    data,
-    { saveCache = true, source = "supabase" } = {},
-  ) {
-    const sizes = data.tamanhos || data.sizes || [];
-    const rawBoxes =
-      data.azury_boxes || data.boxes || data.boxes_acai || data.hamburgueiras || [];
-    const complements = data.complementos || data.complements || [];
-    const districts =
-      data.bairros || data.bairros_entrega || data.districts || [];
-    const schedules =
-      data.horarios || data.horarios_funcionamento || data.schedules || [];
-    const config =
-      data.configuracao_loja || data.configuracao || data.config || null;
-
-    if (
-      !Array.isArray(sizes) ||
-      !sizes.length ||
-      !Array.isArray(districts) ||
-      !districts.length ||
-      !config
-    ) {
-      throw new Error("Configuração pública incompleta.");
-    }
-
-    state.sizes = sizes;
-    state.boxes = normalizeBoxes(rawBoxes);
-    state.complements = Array.isArray(complements)
-      ? complements.filter(
-          (item) => item.disponivel !== false && item.visivel !== false,
-        )
-      : [];
-    state.districts = districts.filter((item) => item.ativo !== false);
-    state.schedules = Array.isArray(schedules) ? schedules : [];
-    state.config = config;
-    state.operationReady = true;
-    state.operationSource = source;
-
-    state.districtMap.clear();
-
-    state.districts.forEach((item) => {
-      const aliases = Array.isArray(item.aliases) ? item.aliases : [];
-
-      [item.nome, ...aliases].filter(Boolean).forEach((alias) => {
-        state.districtMap.set(norm(alias), item);
-      });
-    });
-
-    state.aliases = Array.from(state.districtMap.keys()).sort(
-      (a, b) => b.length - a.length,
-    );
-
-    if (saveCache) {
-      saveOperationCache({
-        tamanhos: sizes,
-        azury_boxes: rawBoxes,
-        complementos: complements,
-        bairros: districts,
-        horarios: schedules,
-        configuracao_loja: config,
-      });
-    }
-  }
-
-  function applyCachedOperation() {
-    const cached = readOperationCache();
-
-    if (!cached) {
-      return false;
-    }
-
-    try {
-      applyOperation(cached, {
-        saveCache: false,
-
-        source: "cache",
-      });
-
-      console.info("Cardápio carregado da última versão válida.");
-
-      return true;
-    } catch (error) {
-      console.warn("A versão salva do cardápio não é válida.", error);
-
-      try {
-        localStorage.removeItem(OPERATION_CACHE_KEY);
-      } catch (_) {}
-
-      return false;
-    }
-  }
-
-  async function loadBoxesDirect() {
-    try {
-      return await table("azury_boxes", (query) =>
-        query.order("ordem", {
-          ascending: true,
-        }),
-      );
-    } catch (error) {
-      console.warn(
-        "A tabela pública de Azury Box não pôde ser lida diretamente; usando a configuração segura do site.",
-        error,
-      );
-      return [];
-    }
-  }
-
-  async function loadOperationDirect() {
-    const [sizes, boxes, complements, districts, schedules, configRows] =
-      await Promise.all([
-        table("tamanhos_acai", (query) =>
-          query.order("ordem", {
-            ascending: true,
-          }),
-        ),
-        loadBoxesDirect(),
-        table("complementos", (query) =>
-          query.eq("disponivel", true).eq("visivel", true).order("ordem", {
-            ascending: true,
-          }),
-        ),
-        table("bairros_entrega", (query) =>
-          query.eq("ativo", true).order("ordem", {
-            ascending: true,
-          }),
-        ),
-        table("horarios_funcionamento", (query) =>
-          query.order("dia_semana", {
-            ascending: true,
-          }),
-        ),
-        table("configuracoes_loja", (query) => query.eq("id", 1).limit(1)),
-      ]);
-
-    applyOperation({
-      tamanhos: sizes,
-      azury_boxes: boxes,
-      complementos: complements,
-      bairros: districts,
-      horarios: schedules,
-      configuracao_loja: configRows[0] || null,
-    });
-  }
-
-  async function loadOperationFunction() {
-    const functionNames = [
-      "listar_operacao_publica",
-      "listar_operacao_site",
-      "obter_operacao_publica",
-    ];
-
-    let lastError = null;
-
-    for (const name of functionNames) {
-      const { data, error } = await sb.rpc(name);
-
-      if (!error && data) {
-        applyOperation(data);
-        return;
-      }
-
-      if (error) {
-        lastError = error;
-      }
-
-      const errorMessage = String(error?.message || "").toLowerCase();
-
-      const missing =
-        error?.code === "PGRST202" ||
-        errorMessage.includes("could not find the function") ||
-        errorMessage.includes("does not exist");
-
-      if (error && !missing) {
-        throw error;
-      }
-    }
-
-    throw lastError || new Error("Nenhuma função pública disponível.");
-  }
-
-  async function loadOperationOnce() {
-    sb = window.azurySupabase || sb;
-
-    if (!sb) {
-      throw new Error("Supabase ainda não carregado.");
-    }
-
-    try {
-      await loadOperationDirect();
-    } catch (directError) {
-      console.warn(
-        "Leitura direta indisponível; tentando função pública.",
-        directError,
-      );
-
-      await loadOperationFunction();
-    }
-  }
-
-  async function loadOperation() {
-    let lastError = null;
-
-    for (
-      let attempt = 0;
-      attempt < OPERATION_RETRY_DELAYS.length;
-      attempt += 1
-    ) {
-      const delay = OPERATION_RETRY_DELAYS[attempt];
-
-      if (delay > 0) {
-        await wait(delay);
-      }
-
-      try {
-        await loadOperationOnce();
-        return;
-      } catch (error) {
-        lastError = error;
-
-        console.warn(
-          `Tentativa ${attempt + 1} de carregar o cardápio falhou.`,
-          error,
+        document.body.appendChild(
+            notification
         );
-      }
+
+        const closeNotification =
+            () => {
+                if (
+                    !notification
+                        .isConnected
+                ) {
+                    return;
+                }
+
+                notification
+                    .classList
+                    .remove(
+                        "visivel"
+                    );
+
+                window.setTimeout(
+                    () =>
+                        notification
+                            .remove(),
+                    240
+                );
+            };
+
+        notification
+            .querySelector(
+                ".azury-aviso-fechar"
+            )
+            ?.addEventListener(
+                "click",
+                closeNotification
+            );
+
+        window.requestAnimationFrame(
+            () => {
+                notification
+                    .classList
+                    .add(
+                        "visivel"
+                    );
+            }
+        );
+
+        window.setTimeout(
+            closeNotification,
+            6000
+        );
     }
 
-    throw lastError || new Error("Não foi possível carregar a operação.");
-  }
+    async function table(
+        name,
+        configure
+    ) {
+        let query =
+            sb
+                .from(name)
+                .select("*");
 
-  function renderCupCard() {
-    const wrapper = document.querySelector("[data-azury-copos-card]");
-    const options = document.getElementById("azuryCoposOpcoes");
-    const price = document.getElementById("azuryCoposPrecoInicial");
-    const button = document.querySelector("[data-btn-azury-copos]");
+        query =
+            configure
+                ? configure(query)
+                : query;
 
-    if (!wrapper || !options || !price || !button) {
-      return;
+        const {
+            data,
+            error
+        } =
+            await query;
+
+        if (error) {
+            throw error;
+        }
+
+        return data || [];
     }
 
-    const visibleSizes = state.sizes
-      .filter((item) => item.visivel !== false)
-      .sort((a, b) => num(a.ordem) - num(b.ordem));
-    const availableSizes = visibleSizes.filter(productIsAvailable);
+    function saveOperationCache(data) {
+        try {
+            localStorage.setItem(
+                OPERATION_CACHE_KEY,
+                JSON.stringify({
+                    savedAt:
+                        Date.now(),
 
-    wrapper.hidden = visibleSizes.length === 0;
+                    data
+                })
+            );
+        } catch (error) {
+            console.warn(
+                "Não foi possível salvar o cardápio localmente.",
+                error
+            );
+        }
+    }
 
-    options.innerHTML = visibleSizes
-      .map((item) => {
-        const available = productIsAvailable(item);
-        const size = Number(item.tamanho_ml);
-        const limit = freeComplementLimit(item);
-        const badge = String(
-          item.badge || (available ? "Disponível" : "Indisponível"),
-        ).trim();
+    function readOperationCache() {
+        try {
+            const stored =
+                JSON.parse(
+                    localStorage.getItem(
+                        OPERATION_CACHE_KEY
+                    ) || "null"
+                );
 
-        return `
-                    <div class="azury-box-opcao azury-copos-opcao ${available ? "" : "indisponivel"}">
-                        <span class="azury-copos-tamanho">${esc(size)}ml</span>
-                        <strong>${money(item.preco_base)}</strong>
-                        <small>
-                            ${
-                              available
-                                ? `${limit} ${limit === 1 ? "complemento grátis" : "complementos grátis"}`
-                                : "Indisponível no momento"
+            if (
+                !stored ||
+                !stored.data ||
+                !Number.isFinite(
+                    Number(
+                        stored.savedAt
+                    )
+                )
+            ) {
+                return null;
+            }
+
+            const age =
+                Date.now() -
+                Number(
+                    stored.savedAt
+                );
+
+            if (
+                age < 0 ||
+                age >
+                    OPERATION_CACHE_MAX_AGE
+            ) {
+                localStorage.removeItem(
+                    OPERATION_CACHE_KEY
+                );
+
+                return null;
+            }
+
+            return stored.data;
+        } catch (error) {
+            console.warn(
+                "O cardápio salvo não pôde ser lido.",
+                error
+            );
+
+            return null;
+        }
+    }
+
+    function applyOperation(
+        data,
+        {
+            saveCache = true,
+            source = "supabase"
+        } = {}
+    ) {
+        const sizes =
+            data.tamanhos ||
+            data.sizes ||
+            [];
+
+        const complements =
+            data.complementos ||
+            data.complements ||
+            [];
+
+        const districts =
+            data.bairros ||
+            data.bairros_entrega ||
+            data.districts ||
+            [];
+
+        const schedules =
+            data.horarios ||
+            data.horarios_funcionamento ||
+            data.schedules ||
+            [];
+
+        const config =
+            data.configuracao_loja ||
+            data.configuracao ||
+            data.config ||
+            null;
+
+        if (
+            !Array.isArray(sizes) ||
+            !sizes.length ||
+            !Array.isArray(districts) ||
+            !districts.length ||
+            !config
+        ) {
+            throw new Error(
+                "Configuração pública incompleta."
+            );
+        }
+
+        state.sizes =
+            sizes;
+
+        state.complements =
+            Array.isArray(
+                complements
+            )
+                ? complements
+                    .filter(
+                        item =>
+                            item.disponivel !==
+                                false &&
+                            item.visivel !==
+                                false
+                    )
+                : [];
+
+        state.districts =
+            districts.filter(
+                item =>
+                    item.ativo !==
+                    false
+            );
+
+        state.schedules =
+            Array.isArray(
+                schedules
+            )
+                ? schedules
+                : [];
+
+        state.config =
+            config;
+
+        state.operationReady =
+            true;
+
+        state.operationSource =
+            source;
+
+        state.districtMap.clear();
+
+        state.districts.forEach(
+            item => {
+                const aliases =
+                    Array.isArray(
+                        item.aliases
+                    )
+                        ? item.aliases
+                        : [];
+
+                [
+                    item.nome,
+                    ...aliases
+                ]
+                    .filter(Boolean)
+                    .forEach(
+                        alias => {
+                            state.districtMap
+                                .set(
+                                    norm(alias),
+                                    item
+                                );
+                        }
+                    );
+            }
+        );
+
+        state.aliases =
+            Array
+                .from(
+                    state.districtMap
+                        .keys()
+                )
+                .sort(
+                    (a, b) =>
+                        b.length -
+                        a.length
+                );
+
+        if (saveCache) {
+            saveOperationCache({
+                tamanhos:
+                    sizes,
+
+                complementos:
+                    complements,
+
+                bairros:
+                    districts,
+
+                horarios:
+                    schedules,
+
+                configuracao_loja:
+                    config
+            });
+        }
+    }
+
+    function applyCachedOperation() {
+        const cached =
+            readOperationCache();
+
+        if (!cached) {
+            return false;
+        }
+
+        try {
+            applyOperation(
+                cached,
+                {
+                    saveCache:
+                        false,
+
+                    source:
+                        "cache"
+                }
+            );
+
+            console.info(
+                "Cardápio carregado da última versão válida."
+            );
+
+            return true;
+        } catch (error) {
+            console.warn(
+                "A versão salva do cardápio não é válida.",
+                error
+            );
+
+            try {
+                localStorage.removeItem(
+                    OPERATION_CACHE_KEY
+                );
+            } catch (_) {
+            }
+
+            return false;
+        }
+    }
+
+    async function loadOperationDirect() {
+        const [
+            sizes,
+            complements,
+            districts,
+            schedules,
+            configRows
+        ] =
+            await Promise.all([
+                table(
+                    "tamanhos_acai",
+                    query =>
+                        query.order(
+                            "ordem",
+                            {
+                                ascending:
+                                    true
                             }
-                        </small>
-                        <span class="azury-copos-opcao-badge">
-                            ${esc(badge)}
-                        </span>
-                    </div>
-                `;
-      })
-      .join("");
+                        )
+                ),
 
-    const firstAvailable = availableSizes[0] || null;
-
-    if (firstAvailable) {
-      button.dataset.tamanho = String(firstAvailable.tamanho_ml);
-      button.dataset.precoBase = String(firstAvailable.preco_base);
-      button.dataset.disponibilidade = "disponivel";
-      price.textContent = `A partir de ${money(firstAvailable.preco_base)}`;
-    } else {
-      button.dataset.disponibilidade = "em-breve";
-      price.textContent = "Temporariamente indisponível";
-    }
-  }
-
-  function renderBoxCard() {
-    const wrapper = document.querySelector("[data-azury-box-card]");
-    const options = document.getElementById("azuryBoxOpcoes");
-    const price = document.getElementById("azuryBoxPrecoInicial");
-    const button = document.querySelector("[data-btn-azury-box]");
-
-    if (!wrapper || !options || !price || !button) {
-      return;
-    }
-
-    const visibleBoxes = state.boxes.filter((box) => box.visivel !== false);
-    const availableBoxes = visibleBoxes.filter(productIsAvailable);
-
-    wrapper.hidden = visibleBoxes.length === 0;
-
-    options.innerHTML = visibleBoxes
-      .map((box) => {
-        const available = productIsAvailable(box);
-        const label = String(box.tamanho_label || "").toUpperCase();
-        const limit = freeComplementLimit(box);
-
-        return `
-                    <div class="azury-box-opcao ${available ? "" : "indisponivel"}">
-                        <span class="azury-box-tamanho">${esc(label)}</span>
-                        <strong>${money(box.preco_base)}</strong>
-                        <small>
-                            ${
-                              available
-                                ? `Até ${limit} complementos incluídos`
-                                : "Indisponível no momento"
-                            }
-                        </small>
-                    </div>
-                `;
-      })
-      .join("");
-
-    const firstAvailable = availableBoxes[0] || null;
-
-    if (firstAvailable) {
-      button.dataset.produtoChave = productKey(firstAvailable);
-      button.dataset.precoBase = String(firstAvailable.preco_base);
-      button.dataset.disponibilidade = "disponivel";
-      price.textContent = `A partir de ${money(firstAvailable.preco_base)}`;
-    } else {
-      button.dataset.disponibilidade = "em-breve";
-      price.textContent = "Temporariamente indisponível";
-    }
-  }
-
-  function renderBuilderProductOptions(type = null) {
-    const container = $(".opcoes-tamanho-monte-seu");
-
-    if (!container) {
-      return;
-    }
-
-    const boxMode =
-      type === "azury_box" ||
-      (type === null && isBoxProduct(currentBuilderProduct()));
-
-    if (boxMode) {
-      container.innerHTML = state.boxes
-        .filter((item) => item.visivel !== false)
-        .map((item) => {
-          const available = productIsAvailable(item);
-          const key = productKey(item);
-
-          return `
-                    <label
-                        class="opcao-tamanho-produto
-                        ${available ? "" : "opcao-tamanho-indisponivel"}"
-                    >
-                        <input
-                            type="radio"
-                            name="tamanhoMonteSeuOpcao"
-                            value="${esc(key)}"
-                            data-produto-tipo="azury_box"
-                            data-produto-chave="${esc(key)}"
-                            data-preco-base="${esc(item.preco_base)}"
-                            ${available ? "" : "disabled"}
-                            ${
-                              isBoxProduct(currentBuilderProduct()) &&
-                              productKey(currentBuilderProduct()) === key
-                                ? "checked"
-                                : ""
-                            }
-                        >
-                        <span>
-                            <strong>
-                                ${esc(productDisplayName(item))}
-                            </strong>
-                            <small>
-                                ${
-                                  available
-                                    ? `${money(item.preco_base)} • até ${freeComplementLimit(item)} incluídos`
-                                    : "Indisponível"
+                table(
+                    "complementos",
+                    query =>
+                        query
+                            .eq(
+                                "disponivel",
+                                true
+                            )
+                            .eq(
+                                "visivel",
+                                true
+                            )
+                            .order(
+                                "ordem",
+                                {
+                                    ascending:
+                                        true
                                 }
-                            </small>
-                        </span>
-                    </label>
-                `;
-        })
-        .join("");
-    } else {
-      container.innerHTML = state.sizes
-        .filter((item) => item.visivel !== false)
-        .map((item) => {
-          const available = item.disponivel === true;
+                            )
+                ),
 
-          return `
+                table(
+                    "bairros_entrega",
+                    query =>
+                        query
+                            .eq(
+                                "ativo",
+                                true
+                            )
+                            .order(
+                                "ordem",
+                                {
+                                    ascending:
+                                        true
+                                }
+                            )
+                ),
+
+                table(
+                    "horarios_funcionamento",
+                    query =>
+                        query.order(
+                            "dia_semana",
+                            {
+                                ascending:
+                                    true
+                            }
+                        )
+                ),
+
+                table(
+                    "configuracoes_loja",
+                    query =>
+                        query
+                            .eq(
+                                "id",
+                                1
+                            )
+                            .limit(1)
+                )
+            ]);
+
+        applyOperation({
+            tamanhos:
+                sizes,
+
+            complementos:
+                complements,
+
+            bairros:
+                districts,
+
+            horarios:
+                schedules,
+
+            configuracao_loja:
+                configRows[0] ||
+                null
+        });
+    }
+
+    async function loadOperationFunction() {
+        const functionNames = [
+            "listar_operacao_publica",
+            "listar_operacao_site",
+            "obter_operacao_publica"
+        ];
+
+        let lastError = null;
+
+        for (
+            const name
+            of functionNames
+        ) {
+            const {
+                data,
+                error
+            } =
+                await sb.rpc(
+                    name
+                );
+
+            if (
+                !error &&
+                data
+            ) {
+                applyOperation(data);
+                return;
+            }
+
+            if (error) {
+                lastError =
+                    error;
+            }
+
+            const errorMessage =
+                String(
+                    error?.message ||
+                    ""
+                ).toLowerCase();
+
+            const missing =
+                error?.code ===
+                    "PGRST202" ||
+                errorMessage.includes(
+                    "could not find the function"
+                ) ||
+                errorMessage.includes(
+                    "does not exist"
+                );
+
+            if (
+                error &&
+                !missing
+            ) {
+                throw error;
+            }
+        }
+
+        throw (
+            lastError ||
+            new Error(
+                "Nenhuma função pública disponível."
+            )
+        );
+    }
+
+    async function loadOperationOnce() {
+        sb =
+            window.azurySupabase ||
+            sb;
+
+        if (!sb) {
+            throw new Error(
+                "Supabase ainda não carregado."
+            );
+        }
+
+        try {
+            await loadOperationDirect();
+        } catch (directError) {
+            console.warn(
+                "Leitura direta indisponível; tentando função pública.",
+                directError
+            );
+
+            await loadOperationFunction();
+        }
+    }
+
+    async function loadOperation() {
+        let lastError =
+            null;
+
+        for (
+            let attempt = 0;
+            attempt <
+                OPERATION_RETRY_DELAYS.length;
+            attempt += 1
+        ) {
+            const delay =
+                OPERATION_RETRY_DELAYS[
+                    attempt
+                ];
+
+            if (delay > 0) {
+                await wait(delay);
+            }
+
+            try {
+                await loadOperationOnce();
+                return;
+            } catch (error) {
+                lastError =
+                    error;
+
+                console.warn(
+                    `Tentativa ${attempt + 1} de carregar o cardápio falhou.`,
+                    error
+                );
+            }
+        }
+
+        throw (
+            lastError ||
+            new Error(
+                "Não foi possível carregar a operação."
+            )
+        );
+    }
+
+    function renderAzuryBoxCard() {
+        const card = document.querySelector("[data-azury-box-card]");
+        const options = document.getElementById("azuryBoxOpcoes");
+        const initialPrice = document.getElementById("azuryBoxPrecoInicial");
+        const button = document.querySelector("[data-btn-azury-box]");
+        const boxes = getAzuryBoxes().filter(box => box.visivel !== false);
+        const availableBoxes = boxes.filter(box => box.disponivel !== false);
+
+        if (card) {
+            card.hidden = boxes.length === 0;
+        }
+
+        if (options) {
+            options.innerHTML = boxes.map(box => `
+                <div class="azury-box-opcao ${box.disponivel === false ? "produto-em-breve" : ""}">
+                    <span class="azury-box-tamanho">${esc(box.label)}</span>
+                    <strong>${money(box.preco)}</strong>
+                    <small>
+                        ${
+                            box.disponivel === false
+                                ? "Indisponível no momento"
+                                : `Até ${esc(box.limite)} complementos incluídos`
+                        }
+                    </small>
+                </div>
+            `).join("");
+        }
+
+        const first = availableBoxes[0] || null;
+
+        if (initialPrice) {
+            initialPrice.textContent = first
+                ? `A partir de ${money(first.preco)}`
+                : "Indisponível no momento";
+        }
+
+        if (button) {
+            button.dataset.produtoTipo = "azury_box";
+            button.dataset.produtoChave = first?.key || "";
+            button.dataset.precoBase = first ? String(first.preco) : "0";
+            button.dataset.disponibilidade = first ? "disponivel" : "em-breve";
+            button.dataset.textoAberto = "Montar minha Box";
+            button.disabled = !first;
+        }
+    }
+
+    function renderBoxBuilderSizes(selectedKey = "") {
+        const container = $(".opcoes-tamanho-monte-seu");
+        if (!container) return;
+
+        const boxes = getAzuryBoxes().filter(box => box.visivel !== false);
+
+        container.innerHTML = boxes.map((box, index) => {
+            const available = box.disponivel !== false;
+            const checked = selectedKey
+                ? box.key === selectedKey
+                : index === boxes.findIndex(item => item.disponivel !== false);
+
+            return `
+                <label class="opcao-tamanho-produto ${available ? "" : "opcao-tamanho-indisponivel"}">
+                    <input
+                        type="radio"
+                        name="tamanhoMonteSeuOpcao"
+                        value="${esc(box.key)}"
+                        data-preco-base="${esc(box.preco)}"
+                        ${available ? "" : "disabled"}
+                        ${checked && available ? "checked" : ""}
+                    >
+                    <span>
+                        <strong>${esc(box.nome)}</strong>
+                        <small>
+                            ${available ? `${money(box.preco)} • ${esc(box.limite)} incluídos` : "Indisponível"}
+                        </small>
+                    </span>
+                </label>
+            `;
+        }).join("");
+
+        container.querySelectorAll("input[name='tamanhoMonteSeuOpcao']").forEach(input => {
+            input.addEventListener("change", () => {
+                if (input.checked) selectAzuryBox(input.value);
+            });
+        });
+    }
+
+    function applyBuilderProductMode() {
+        const product = currentProductDescriptor();
+        const boxMode = isAzuryBoxProduct(product);
+        const title = document.getElementById("tituloMontagemProduto");
+        const description = document.getElementById("descricaoMontagemProduto");
+        const sizeTitle = document.getElementById("tituloEscolhaTamanho");
+        const structureTitle = document.getElementById("tituloEstruturaProduto");
+        const structureText = document.getElementById("textoEstruturaProduto");
+        const structureDetail = document.getElementById("detalheEstruturaProduto");
+        const subtotalLabel = document.getElementById("rotuloSubtotalProduto");
+        const middleGroup = d.middle?.closest(".grupo-monte-seu");
+        const help = middleGroup?.querySelector(".azury-complementos-ajuda");
+        const counterTitle = document.querySelector(".azury-complementos-progresso-titulo");
+        const regularHeader = d.middle?.querySelector(".azury-complementos-secao:not(.especiais)");
+        const specialHeader = d.middle?.querySelector(".azury-complementos-secao.especiais");
+
+        if (title) title.textContent = boxMode ? "Monte sua Azury Box" : "Monte seu açaí";
+        if (description) {
+            description.textContent = boxMode
+                ? "Escolha o tamanho da Box e seus complementos. Dentro do limite, todos os complementos disponíveis podem ser escolhidos sem custo adicional."
+                : "Escolha o tamanho, os complementos e monte do seu jeito.";
+        }
+        if (sizeTitle) sizeTitle.textContent = boxMode ? "Escolha o tamanho da Box" : "Escolha o tamanho";
+        if (structureTitle) structureTitle.textContent = boxMode ? "Complementos da Box" : "Estrutura do seu açaí";
+        if (structureText) {
+            structureText.textContent = boxMode
+                ? "Na Azury Box não existe divisão entre meio e cobertura."
+                : "Defina onde cada complemento será colocado.";
+        }
+        if (structureDetail) {
+            structureDetail.textContent = boxMode
+                ? "Cada tipo de complemento conta uma vez. Somente os que passarem do limite da Box são cobrados como extras."
+                : "Escolher “Nos dois” continua contando como um único complemento.";
+        }
+        if (subtotalLabel) subtotalLabel.textContent = boxMode ? "Subtotal desta Box" : "Subtotal deste açaí";
+        if (help) {
+            help.innerHTML = boxMode
+                ? `Escolha seus complementos. <strong>Todos entram no limite da Box</strong>, inclusive os especiais. Somente os adicionais acima do limite são cobrados.`
+                : `Escolha o complemento <strong>uma vez</strong> e defina onde ele vai: meio, cobertura ou nos dois. <strong>“Nos dois” continua contando como 1 complemento.</strong>`;
+        }
+        if (counterTitle) counterTitle.textContent = boxMode ? "Complementos incluídos" : "Complementos grátis";
+        if (regularHeader) {
+            regularHeader.querySelector("strong")?.replaceChildren(
+                document.createTextNode(boxMode ? "Complementos incluídos / extras" : "Complementos grátis / extras")
+            );
+        }
+        if (specialHeader) specialHeader.hidden = boxMode;
+
+        d.middle?.querySelectorAll(".complemento-card").forEach(card => {
+            const input = card.querySelector(".complemento-monte-seu");
+            const name = input?.value || "";
+            const current = state.complements.find(item => norm(item.nome) === norm(name));
+            const info = card.querySelector(".complemento-card-info small");
+            const layers = card.querySelector(".complemento-camadas");
+
+            if (layers) layers.hidden = boxMode;
+            card.classList.toggle("especial-pago", !boxMode && isAlwaysPaidComplement(name));
+
+            if (info && current) {
+                const special = isAlwaysPaidComplement(name);
+                info.textContent = boxMode
+                    ? `Incluído dentro do limite • Extra ${money(current.preco)}`
+                    : special
+                        ? `Adicional pago • ${money(current.preco)}`
+                        : `Grátis dentro do limite • Extra ${money(current.preco)}`;
+                info.classList.toggle("especial", !boxMode && special);
+            }
+
+            card.querySelectorAll(".complemento-camada").forEach(layerInput => {
+                if (boxMode) {
+                    layerInput.disabled = true;
+                    layerInput.checked = layerInput.value === "ambos";
+                }
+            });
+        });
+
+        calculate();
+    }
+
+    function selectAzuryBox(key) {
+        const product = boxDescriptor(key);
+        if (!product) return;
+
+        state.currentProduct = product;
+        if (d.size) d.size.value = product.produto_chave;
+        if (d.base) d.base.value = String(product.preco_base);
+
+        document.querySelectorAll("input[name='tamanhoMonteSeuOpcao']").forEach(input => {
+            input.checked = input.value === product.produto_chave;
+        });
+
+        applyBuilderProductMode();
+    }
+
+    function renderSizes() {
+        $$(".menu-grid > li")
+            .forEach(
+                card => {
+                    const button =
+                        card.querySelector(
+                            ".btn-montar"
+                        );
+
+                    const current =
+                        Number(
+                            button
+                                ?.dataset
+                                .tamanho
+                        );
+
+                    const item =
+                        state.sizes.find(
+                            size =>
+                                Number(
+                                    size.tamanho_ml
+                                ) ===
+                                current
+                        );
+
+                    if (
+                        !button ||
+                        !item
+                    ) {
+                        return;
+                    }
+
+                    const available =
+                        item.disponivel ===
+                            true &&
+                        item.visivel ===
+                            true;
+
+                    card.hidden =
+                        item.visivel ===
+                        false;
+
+                    card.classList.toggle(
+                        "produto-em-breve",
+                        !available
+                    );
+
+                    const badge =
+                        card.querySelector(
+                            ".badge"
+                        );
+
+                    const title =
+                        card.querySelector(
+                            "h3"
+                        );
+
+                    const description =
+                        card.querySelector(
+                            "h3 + p"
+                        );
+
+                    const price =
+                        card.querySelector(
+                            "h3 + p + strong"
+                        );
+
+                    if (badge) {
+                        badge.textContent =
+                            item.badge ||
+                            (
+                                available
+                                    ? "Disponível"
+                                    : "Em breve"
+                            );
+
+                        badge.classList.toggle(
+                            "badge-em-breve",
+                            !available
+                        );
+                    }
+
+                    if (title) {
+                        title.textContent =
+                            productDisplayName(
+                                item
+                            );
+                    }
+
+                    if (description) {
+                        const freeLimit =
+                            freeComplementLimit(
+                                item
+                            );
+
+                        description.textContent =
+                            available &&
+                            freeLimit > 0
+                                ? (
+                                    `${freeLimit} complementos grátis. Extras e ingredientes especiais são cobrados à parte.`
+                                )
+                                : (
+                                    item.descricao ||
+                                    "Escolha os complementos do meio e da cobertura."
+                                );
+                    }
+
+                    if (price) {
+                        price.textContent =
+                            `${
+                                available
+                                    ? "A partir de"
+                                    : "Preço previsto:"
+                            } ${money(
+                                item.preco_base
+                            )}`;
+                    }
+
+                    button.dataset.precoBase =
+                        String(
+                            item.preco_base
+                        );
+
+                    button.dataset.disponibilidade =
+                        available
+                            ? "disponivel"
+                            : "em-breve";
+
+                    button.disabled =
+                        !available;
+                }
+            );
+
+        const container =
+            $(
+                ".opcoes-tamanho-monte-seu"
+            );
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML =
+            state.sizes
+                .filter(
+                    item =>
+                        item.visivel !==
+                        false
+                )
+                .map(
+                    (
+                        item,
+                        index
+                    ) => {
+                        const available =
+                            item.disponivel ===
+                            true;
+
+                        return `
                     <label
                         class="opcao-tamanho-produto
-                        ${available ? "" : "opcao-tamanho-indisponivel"}"
+                        ${
+                            available
+                                ? ""
+                                : "opcao-tamanho-indisponivel"
+                        }"
                     >
+
                         <input
                             type="radio"
                             name="tamanhoMonteSeuOpcao"
                             value="${esc(item.tamanho_ml)}"
-                            data-produto-tipo="acai_copo"
                             data-preco-base="${esc(item.preco_base)}"
                             ${available ? "" : "disabled"}
                             ${
-                              !isBoxProduct(currentBuilderProduct()) &&
-                              Number(currentBuilderProduct()?.tamanho_ml) ===
-                                Number(item.tamanho_ml)
-                                ? "checked"
-                                : ""
+                                index === 0 &&
+                                available
+                                    ? "checked"
+                                    : ""
                             }
                         >
+
+
                         <span>
+
                             <strong>
-                                ${esc(productDisplayName(item))}
+                                ${esc(
+                                    productDisplayName(
+                                        item
+                                    )
+                                )}
                             </strong>
+
+
                             <small>
                                 ${
-                                  available
-                                    ? `${money(item.preco_base)} • ${freeComplementLimit(item)} grátis`
-                                    : "Em breve"
+                                    available
+                                        ? `${money(item.preco_base)} • ${freeComplementLimit(item)} grátis`
+                                        : "Em breve"
                                 }
                             </small>
+
                         </span>
+
+
                     </label>
                 `;
-        })
-        .join("");
+                    }
+                )
+                .join("");
+
+        $$(
+            "input[name='tamanhoMonteSeuOpcao']"
+        ).forEach(
+            input => {
+                input.addEventListener(
+                    "change",
+                    () => {
+                        if (
+                            input.checked
+                        ) {
+                            selectSize(
+                                input.value,
+                                input.dataset
+                                    .precoBase
+                            );
+                        }
+                    }
+                );
+            }
+        );
     }
 
-    $$("input[name='tamanhoMonteSeuOpcao']").forEach((input) => {
-      input.addEventListener("change", () => {
-        if (!input.checked) {
-          return;
+    function complementImagePath(name) {
+        const key =
+            norm(name);
+
+        const images = {
+            "granola":
+                "Imagens/granola.png",
+
+            "leite condensado":
+                "Imagens/leite-condensado.png",
+
+            "pacoca":
+                "Imagens/pacoca.png",
+
+            "banana":
+                "Imagens/banana.png",
+
+            "coco ralado":
+                "Imagens/coco-ralado.png",
+
+            "leite em po":
+                "Imagens/leite-em-po.png",
+
+            "bombom oreo":
+                "Imagens/bombom-oreo.png",
+
+            "oreo":
+                "Imagens/bombom-oreo.png",
+
+            "ovomaltine":
+                "Imagens/ovomaltine.png",
+
+            "morango":
+                "Imagens/morango.png",
+
+            "uva verde":
+                "Imagens/uva-verde.png",
+
+            "uva":
+                "Imagens/uva-verde.png",
+
+            "nutella":
+                "Imagens/nutella.png",
+
+            "granulado":
+                "Imagens/granulado.png",
+
+            "manga":
+                "Imagens/manga.png",
+
+            "gomets":
+                "Imagens/gomets.png",
+
+            "confete":
+                "Imagens/confete.png",
+
+            "power ball":
+                "Imagens/power-ball.png"
+        };
+
+        if (images[key]) {
+            return images[key];
         }
 
-        if (input.dataset.produtoTipo === "azury_box") {
-          selectBox(input.dataset.produtoChave || input.value);
-        } else {
-          selectSize(input.value, input.dataset.precoBase);
+        const partial =
+            Object
+                .keys(images)
+                .find(
+                    imageKey =>
+                        key.includes(
+                            imageKey
+                        ) ||
+                        imageKey.includes(
+                            key
+                        )
+                );
+
+        return partial
+            ? images[partial]
+            : "";
+    }
+
+    function ensureComplementPickerStyles() {
+        const styleId =
+            "azury-complementos-novo-estilo";
+
+        if (
+            document.getElementById(
+                styleId
+            )
+        ) {
+            return;
         }
-      });
-    });
-  }
 
-  function renderSizes() {
-    $$(".menu-grid > li").forEach((card) => {
-      const button = card.querySelector(".btn-montar");
-      const current = Number(button?.dataset.tamanho);
-      const item = state.sizes.find(
-        (size) => Number(size.tamanho_ml) === current,
-      );
+        const style =
+            document.createElement(
+                "style"
+            );
 
-      if (!button || !item) {
-        return;
-      }
+        style.id =
+            styleId;
 
-      const available = item.disponivel === true && item.visivel === true;
-      card.hidden = item.visivel === false;
-      card.classList.toggle("produto-em-breve", !available);
-
-      const badge = card.querySelector(".badge");
-      const title = card.querySelector("h3");
-      const description = card.querySelector("h3 + p");
-      const price = card.querySelector("h3 + p + strong");
-
-      if (badge) {
-        badge.textContent = item.badge || (available ? "Disponível" : "Em breve");
-        badge.classList.toggle("badge-em-breve", !available);
-      }
-
-      if (title) {
-        title.textContent = productDisplayName(item);
-      }
-
-      if (description) {
-        const freeLimit = freeComplementLimit(item);
-        description.textContent =
-          available && freeLimit > 0
-            ? `${freeLimit} complementos grátis. Extras e ingredientes especiais são cobrados à parte.`
-            : item.descricao ||
-              "Escolha os complementos do meio e da cobertura.";
-      }
-
-      if (price) {
-        price.textContent = `${
-          available ? "A partir de" : "Preço previsto:"
-        } ${money(item.preco_base)}`;
-      }
-
-      button.dataset.produtoTipo = "acai_copo";
-      button.dataset.precoBase = String(item.preco_base);
-      button.dataset.disponibilidade = available ? "disponivel" : "em-breve";
-      button.disabled = !available;
-    });
-
-    renderCupCard();
-    renderBoxCard();
-    renderBuilderProductOptions(
-      isBoxProduct(currentBuilderProduct()) ? "azury_box" : "acai_copo",
-    );
-  }
-
-  function complementImagePath(name) {
-    const key = norm(name);
-
-    const images = {
-      granola: "Imagens/granola.png",
-
-      "leite condensado": "Imagens/leite-condensado.png",
-
-      pacoca: "Imagens/pacoca.png",
-
-      banana: "Imagens/banana.png",
-
-      "coco ralado": "Imagens/coco-ralado.png",
-
-      "leite em po": "Imagens/leite-em-po.png",
-
-      "bombom oreo": "Imagens/bombom-oreo.png",
-
-      oreo: "Imagens/bombom-oreo.png",
-
-      ovomaltine: "Imagens/ovomaltine.png",
-
-      morango: "Imagens/morango.png",
-
-      "uva verde": "Imagens/uva-verde.png",
-
-      uva: "Imagens/uva-verde.png",
-
-      nutella: "Imagens/nutella.png",
-
-      granulado: "Imagens/granulado.png",
-
-      manga: "Imagens/manga.png",
-
-      gomets: "Imagens/gomets.png",
-
-      confete: "Imagens/confete.png",
-
-      "power ball": "Imagens/power-ball.png",
-    };
-
-    if (images[key]) {
-      return images[key];
-    }
-
-    const partial = Object.keys(images).find(
-      (imageKey) => key.includes(imageKey) || imageKey.includes(key),
-    );
-
-    return partial ? images[partial] : "";
-  }
-
-  function ensureComplementPickerStyles() {
-    const styleId = "azury-complementos-novo-estilo";
-
-    if (document.getElementById(styleId)) {
-      return;
-    }
-
-    const style = document.createElement("style");
-
-    style.id = styleId;
-
-    style.textContent = `
+        style.textContent = `
             .azury-complementos-ajuda {
                 margin: -4px 0 14px;
                 color: #64748b;
@@ -4551,40 +5317,66 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         `;
 
-    document.head.appendChild(style);
-  }
-
-  function ensureAssemblyStickyBar() {
-    if (!d.step1) {
-      return;
+        document.head.appendChild(
+            style
+        );
     }
 
-    let spacer = d.step1.querySelector(".azury-barra-montagem-espaco");
+    function ensureAssemblyStickyBar() {
+        if (!d.step1) {
+            return;
+        }
 
-    if (!spacer) {
-      spacer = document.createElement("div");
+        let spacer =
+            d.step1.querySelector(
+                ".azury-barra-montagem-espaco"
+            );
 
-      spacer.className = "azury-barra-montagem-espaco";
+        if (!spacer) {
+            spacer =
+                document.createElement(
+                    "div"
+                );
 
-      spacer.setAttribute("aria-hidden", "true");
+            spacer.className =
+                "azury-barra-montagem-espaco";
 
-      d.step1.appendChild(spacer);
-    }
+            spacer.setAttribute(
+                "aria-hidden",
+                "true"
+            );
 
-    let bar = document.getElementById("barraFixaMontagem");
+            d.step1.appendChild(
+                spacer
+            );
+        }
 
-    if (!bar) {
-      bar = document.createElement("div");
+        let bar =
+            document.getElementById(
+                "barraFixaMontagem"
+            );
 
-      bar.id = "barraFixaMontagem";
+        if (!bar) {
+            bar =
+                document.createElement(
+                    "div"
+                );
 
-      bar.className = "azury-barra-montagem";
+            bar.id =
+                "barraFixaMontagem";
 
-      bar.hidden = true;
+            bar.className =
+                "azury-barra-montagem";
 
-      bar.setAttribute("aria-label", "Resumo da montagem atual");
+            bar.hidden =
+                true;
 
-      bar.innerHTML = `
+            bar.setAttribute(
+                "aria-label",
+                "Resumo da montagem atual"
+            );
+
+            bar.innerHTML = `
                 <div
                     class="azury-barra-montagem-produto"
                 >
@@ -4644,272 +5436,401 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </button>
             `;
 
-      document.body.appendChild(bar);
-    }
-
-    if (d.add) {
-      d.add.classList.add("azury-adicionar-substituido");
-    }
-
-    d.stickyBar = bar;
-
-    d.stickyProduct = bar.querySelector("#barraFixaMontagemProduto");
-
-    d.stickySubtotal = bar.querySelector("#barraFixaMontagemSubtotal");
-
-    d.stickyCart = bar.querySelector("#barraFixaMontagemSacola");
-
-    d.stickyAdd = bar.querySelector("#btnAdicionarSacolaFixo");
-
-    updateAssemblyStickyBar(state.subtotal);
-
-    syncAssemblyStickyBarVisibility();
-  }
-
-  function syncAssemblyStickyBarVisibility(firstStep = null) {
-    if (!d.stickyBar) {
-      return;
-    }
-
-    const modalOpen = d.modal?.style.display === "flex";
-
-    const builderOpen =
-      firstStep === null
-        ? Boolean(d.step1 && !d.step1.hidden)
-        : Boolean(firstStep);
-
-    d.stickyBar.hidden = !(modalOpen && builderOpen);
-  }
-
-  function updateAssemblyStickyBar(value = state.subtotal, status = null) {
-    if (!d.stickyBar) {
-      return;
-    }
-
-    const product = currentBuilderProduct();
-
-    if (d.stickyProduct) {
-      d.stickyProduct.textContent = productDisplayName(product);
-    }
-
-    if (d.stickySubtotal) {
-      d.stickySubtotal.textContent = money(value);
-    }
-
-    if (d.stickyCart) {
-      const units = cartUnits();
-      const subtotal = cartSubtotal();
-      d.stickyCart.textContent = `Sacola: ${units} ${
-        units === 1 ? "item" : "itens"
-      } • ${money(subtotal)}`;
-    }
-
-    const currentStatus = status || storeState();
-
-    if (d.stickyAdd) {
-      d.stickyAdd.disabled = !currentStatus.open;
-      d.stickyAdd.textContent = currentStatus.open
-        ? "Adicionar à sacola"
-        : "Loja fechada";
-    }
-  }
-
-  function renderComplements() {
-    if (!d.middle) {
-      return;
-    }
-
-    ensureComplementPickerStyles();
-    ensureAssemblyStickyBar();
-
-    const product = currentBuilderProduct();
-    const boxMode = isBoxProduct(product);
-    const middleGroup = d.middle.closest(".grupo-monte-seu");
-    const topGroup = d.top?.closest(".grupo-monte-seu");
-
-    if (topGroup && topGroup !== middleGroup) {
-      topGroup.hidden = true;
-    }
-
-    if (d.top) {
-      d.top.innerHTML = "";
-    }
-
-    if (middleGroup) {
-      const title = middleGroup.querySelector("h3");
-
-      if (title) {
-        title.textContent = "Escolha seus complementos";
-      }
-
-      let help = middleGroup.querySelector(".azury-complementos-ajuda");
-
-      if (!help) {
-        help = document.createElement("p");
-        help.className = "azury-complementos-ajuda";
-
-        if (title) {
-          title.insertAdjacentElement("afterend", help);
-        } else {
-          middleGroup.prepend(help);
+            document.body.appendChild(
+                bar
+            );
         }
-      }
 
-      help.innerHTML = boxMode
-        ? `Escolha <strong>qualquer complemento disponível</strong>. Todos ficam incluídos sem custo até o limite da sua Azury Box. <strong>Somente o que passar do limite entra como adicional.</strong>`
-        : `Escolha o complemento <strong>uma vez</strong> e defina onde ele vai: meio, cobertura ou nos dois. <strong>“Nos dois” continua contando como 1 complemento.</strong>`;
+        if (d.add) {
+            d.add.classList.add(
+                "azury-adicionar-substituido"
+            );
+        }
 
-      let freeCounter = middleGroup.querySelector(
-        ".azury-complementos-progresso",
-      );
+        d.stickyBar =
+            bar;
 
-      if (!freeCounter) {
-        freeCounter = document.createElement("div");
-        freeCounter.className = "azury-complementos-progresso";
-        freeCounter.id = "contadorComplementosGratis";
-        freeCounter.setAttribute("role", "status");
-        freeCounter.setAttribute("aria-live", "polite");
-        freeCounter.innerHTML = `
-                    <div class="azury-complementos-progresso-cabecalho">
-                        <strong class="azury-complementos-progresso-titulo">
+        d.stickyProduct =
+            bar.querySelector(
+                "#barraFixaMontagemProduto"
+            );
+
+        d.stickySubtotal =
+            bar.querySelector(
+                "#barraFixaMontagemSubtotal"
+            );
+
+        d.stickyCart =
+            bar.querySelector(
+                "#barraFixaMontagemSacola"
+            );
+
+        d.stickyAdd =
+            bar.querySelector(
+                "#btnAdicionarSacolaFixo"
+            );
+
+        updateAssemblyStickyBar(
+            state.subtotal
+        );
+
+        syncAssemblyStickyBarVisibility();
+    }
+
+    function syncAssemblyStickyBarVisibility(
+        firstStep = null
+    ) {
+        if (!d.stickyBar) {
+            return;
+        }
+
+        const modalOpen =
+            d.modal?.style.display ===
+            "flex";
+
+        const builderOpen =
+            firstStep === null
+                ? Boolean(
+                    d.step1 &&
+                    !d.step1.hidden
+                )
+                : Boolean(firstStep);
+
+        d.stickyBar.hidden =
+            !(
+                modalOpen &&
+                builderOpen
+            );
+    }
+
+    function updateAssemblyStickyBar(
+        value = state.subtotal,
+        status = null
+    ) {
+        if (!d.stickyBar) {
+            return;
+        }
+
+        const selectedProduct =
+            d.size?.value ||
+            "";
+
+        const currentSizeItem =
+            state.sizes.find(
+                item =>
+                    String(
+                        item.tamanho_ml
+                    ) ===
+                        String(
+                            selectedProduct
+                        ) ||
+                    Number(
+                        item.tamanho_ml
+                    ) ===
+                        Number(
+                            selectedProduct
+                        )
+            );
+
+        if (d.stickyProduct) {
+            d.stickyProduct.textContent =
+                productDisplayName(
+                    currentSizeItem ||
+                    selectedProduct
+                );
+        }
+
+        if (d.stickySubtotal) {
+            d.stickySubtotal.textContent =
+                money(value);
+        }
+
+        if (d.stickyCart) {
+            const units =
+                cartUnits();
+
+            const subtotal =
+                cartSubtotal();
+
+            d.stickyCart.textContent =
+                `Sacola: ${units} ${
+                    units === 1
+                        ? "item"
+                        : "itens"
+                } • ${money(subtotal)}`;
+        }
+
+        const currentStatus =
+            status ||
+            storeState();
+
+        if (d.stickyAdd) {
+            d.stickyAdd.disabled =
+                !currentStatus.open;
+
+            d.stickyAdd.textContent =
+                currentStatus.open
+                    ? "Adicionar à sacola"
+                    : "Loja fechada";
+        }
+    }
+
+    function renderComplements() {
+        if (!d.middle) {
+            return;
+        }
+
+        ensureComplementPickerStyles();
+        ensureAssemblyStickyBar();
+
+        const middleGroup =
+            d.middle.closest(
+                ".grupo-monte-seu"
+            );
+
+        const topGroup =
+            d.top?.closest(
+                ".grupo-monte-seu"
+            );
+
+        if (
+            topGroup &&
+            topGroup !==
+                middleGroup
+        ) {
+            topGroup.hidden =
+                true;
+        }
+
+        if (d.top) {
+            d.top.innerHTML =
+                "";
+        }
+
+        if (middleGroup) {
+            const title =
+                middleGroup.querySelector(
+                    "h3"
+                );
+
+            if (title) {
+                title.textContent =
+                    "Escolha seus complementos";
+            }
+
+            let help =
+                middleGroup.querySelector(
+                    ".azury-complementos-ajuda"
+                );
+
+            if (!help) {
+                help =
+                    document.createElement(
+                        "p"
+                    );
+
+                help.className =
+                    "azury-complementos-ajuda";
+
+                if (title) {
+                    title.insertAdjacentElement(
+                        "afterend",
+                        help
+                    );
+                } else {
+                    middleGroup.prepend(
+                        help
+                    );
+                }
+            }
+
+            help.innerHTML =
+                `Escolha o complemento <strong>uma vez</strong> e defina onde ele vai: meio, cobertura ou nos dois. <strong>“Nos dois” continua contando como 1 complemento.</strong>`;
+
+            let freeCounter =
+                middleGroup.querySelector(
+                    ".azury-complementos-progresso"
+                );
+
+            if (!freeCounter) {
+                freeCounter =
+                    document.createElement(
+                        "div"
+                    );
+
+                freeCounter.className =
+                    "azury-complementos-progresso";
+
+                freeCounter.id =
+                    "contadorComplementosGratis";
+
+                freeCounter.setAttribute(
+                    "role",
+                    "status"
+                );
+
+                freeCounter.setAttribute(
+                    "aria-live",
+                    "polite"
+                );
+
+                freeCounter.innerHTML = `
+                    <div
+                        class="azury-complementos-progresso-cabecalho"
+                    >
+
+                        <strong
+                            class="azury-complementos-progresso-titulo"
+                        >
                             Complementos grátis
                         </strong>
+
+
                         <span
                             class="azury-complementos-progresso-contagem"
                             id="contadorComplementosGratisTexto"
                         >
                             0 de 0
                         </span>
+
                     </div>
+
+
                     <div
                         class="azury-complementos-progresso-trilho"
                         id="barraComplementosGratis"
                         role="progressbar"
-                        aria-label="Uso dos complementos incluídos"
+                        aria-label="Uso dos complementos grátis"
                         aria-valuemin="0"
                         aria-valuemax="0"
                         aria-valuenow="0"
                     >
+
                         <span
                             class="azury-complementos-progresso-barra"
                             id="barraComplementosGratisPreenchimento"
                         ></span>
+
                     </div>
+
+
                     <small
                         class="azury-complementos-progresso-mensagem"
                         id="mensagemComplementosGratis"
                     >
-                        Escolha seus complementos.
+                        Escolha seus complementos grátis.
                     </small>
                 `;
-        help.insertAdjacentElement("afterend", freeCounter);
-      }
 
-      const counterTitle = freeCounter.querySelector(
-        ".azury-complementos-progresso-titulo",
-      );
+                help.insertAdjacentElement(
+                    "afterend",
+                    freeCounter
+                );
+            }
+        }
 
-      if (counterTitle) {
-        counterTitle.textContent = boxMode
-          ? "Complementos incluídos"
-          : "Complementos grátis";
-      }
-    }
+        d.middle.classList.add(
+            "azury-complementos-grid"
+        );
 
-    d.middle.classList.add("azury-complementos-grid");
+        const indexedComplements =
+            state.complements.map(
+                (
+                    item,
+                    index
+                ) => ({
+                    item,
+                    index
+                })
+            );
 
-    const indexedComplements = state.complements.map((item, index) => ({
-      item,
-      index,
-    }));
+        const regularComplements =
+            indexedComplements.filter(
+                ({ item }) =>
+                    !isAlwaysPaidComplement(
+                        item.nome
+                    )
+            );
 
-    const regularComplements = indexedComplements.filter(
-      ({ item }) => !isAlwaysPaidComplement(item.nome),
-    );
-    const specialComplements = indexedComplements.filter(({ item }) =>
-      isAlwaysPaidComplement(item.nome),
-    );
+        const specialComplements =
+            indexedComplements.filter(
+                ({ item }) =>
+                    isAlwaysPaidComplement(
+                        item.nome
+                    )
+            );
 
-    const renderComplementCard = ({ item, index }) => {
-      const alwaysPaid = !boxMode && isAlwaysPaidComplement(item.nome);
-      const priceText = boxMode
-        ? `Incluído dentro do limite • Adicional ${money(item.preco)}`
-        : alwaysPaid
-          ? `Adicional pago • ${money(item.preco)}`
-          : `Grátis dentro do limite • Extra ${money(item.preco)}`;
-      const image = complementImagePath(item.nome);
-      const groupName = `camada-complemento-${index}`;
-      const layerControls = boxMode
-        ? ""
-        : `
-                        <div
-                            class="complemento-camadas"
-                            aria-label="Posição de ${esc(item.nome)}"
-                        >
-                            <label>
-                                <input
-                                    type="radio"
-                                    class="complemento-camada"
-                                    name="${groupName}"
-                                    value="meio"
-                                    disabled
-                                >
-                                Meio
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    class="complemento-camada"
-                                    name="${groupName}"
-                                    value="cobertura"
-                                    disabled
-                                >
-                                Cobertura
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    class="complemento-camada"
-                                    name="${groupName}"
-                                    value="ambos"
-                                    checked
-                                    disabled
-                                >
-                                Nos dois
-                            </label>
-                        </div>
-                    `;
+        const renderComplementCard =
+            ({
+                item,
+                index
+            }) => {
+                const alwaysPaid =
+                    isAlwaysPaidComplement(
+                        item.nome
+                    );
 
-      return `
+                const priceText =
+                    alwaysPaid
+                        ? `Adicional pago • ${money(item.preco)}`
+                        : `Grátis dentro do limite • Extra ${money(item.preco)}`;
+
+                const image =
+                    complementImagePath(
+                        item.nome
+                    );
+
+                const groupName =
+                    `camada-complemento-${index}`;
+
+                return `
                     <div
                         class="complemento-card ${alwaysPaid ? "especial-pago" : ""}"
                         data-complement-card
                     >
+
                         <label
                             class="complemento-card-selecao"
                             for="complemento-${index}"
                         >
+
                             <span
                                 class="complemento-card-imagem ${image ? "" : "sem-imagem"}"
                             >
+
                                 ${
-                                  image
-                                    ? `
+                                    image
+                                        ? `
                                             <img
                                                 src="${esc(image)}"
                                                 alt="${esc(item.nome)}"
                                                 loading="lazy"
                                             >
                                         `
-                                    : ""
+                                        : ""
                                 }
+
                             </span>
-                            <span class="complemento-card-info">
-                                <strong>${esc(item.nome)}</strong>
-                                <small class="${alwaysPaid ? "especial" : ""}">
+
+
+                            <span
+                                class="complemento-card-info"
+                            >
+
+                                <strong>
+                                    ${esc(item.nome)}
+                                </strong>
+
+
+                                <small
+                                    class="${alwaysPaid ? "especial" : ""}"
+                                >
                                     ${esc(priceText)}
                                 </small>
+
                             </span>
+
+
                             <input
                                 type="checkbox"
                                 class="complemento-monte-seu complemento-card-check"
@@ -4919,1633 +5840,2437 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 data-especial-pago="${alwaysPaid ? "true" : "false"}"
                                 id="complemento-${index}"
                             >
+
                         </label>
-                        ${layerControls}
+
+
+                        <div
+                            class="complemento-camadas"
+                            aria-label="Posição de ${esc(item.nome)}"
+                        >
+
+                            <label>
+
+                                <input
+                                    type="radio"
+                                    class="complemento-camada"
+                                    name="${groupName}"
+                                    value="meio"
+                                    disabled
+                                >
+
+                                Meio
+
+                            </label>
+
+
+                            <label>
+
+                                <input
+                                    type="radio"
+                                    class="complemento-camada"
+                                    name="${groupName}"
+                                    value="cobertura"
+                                    disabled
+                                >
+
+                                Cobertura
+
+                            </label>
+
+
+                            <label>
+
+                                <input
+                                    type="radio"
+                                    class="complemento-camada"
+                                    name="${groupName}"
+                                    value="ambos"
+                                    checked
+                                    disabled
+                                >
+
+                                Nos dois
+
+                            </label>
+
+                        </div>
+
                     </div>
                 `;
-    };
+            };
 
-    if (boxMode) {
-      d.middle.innerHTML = `
-                <div
-                    class="azury-complementos-secao"
-                    aria-label="Complementos disponíveis para Azury Box"
-                >
-                    <div class="azury-complementos-secao-texto">
-                        <strong>Todos os complementos disponíveis</strong>
-                        <small>
-                            Qualquer complemento pode ser escolhido sem custo dentro do limite da Box. Acima do limite, o valor individual é cobrado.
-                        </small>
-                    </div>
-                    <span class="azury-complementos-secao-badge">
-                        Todos liberados
-                    </span>
-                </div>
-                ${indexedComplements.map(renderComplementCard).join("")}
-            `;
-    } else {
-      const regularSection = regularComplements.length
-        ? `
+        const regularSection =
+            regularComplements.length
+                ? `
                     <div
                         class="azury-complementos-secao"
                         aria-label="Complementos grátis e extras"
                     >
-                        <div class="azury-complementos-secao-texto">
-                            <strong>Complementos grátis / extras</strong>
+
+                        <div
+                            class="azury-complementos-secao-texto"
+                        >
+
+                            <strong>
+                                Complementos grátis / extras
+                            </strong>
+
+
                             <small>
                                 Entram no limite grátis do seu açaí. Depois do limite, o valor extra é cobrado.
                             </small>
+
                         </div>
-                        <span class="azury-complementos-secao-badge">
+
+
+                        <span
+                            class="azury-complementos-secao-badge"
+                        >
                             Limite do produto
                         </span>
-                    </div>
-                    ${regularComplements.map(renderComplementCard).join("")}
-                `
-        : "";
 
-      const specialSection = specialComplements.length
-        ? `
+                    </div>
+
+                    ${regularComplements
+                        .map(
+                            renderComplementCard
+                        )
+                        .join("")
+                    }
+                `
+                : "";
+
+        const specialSection =
+            specialComplements.length
+                ? `
                     <div
                         class="azury-complementos-secao especiais"
                         aria-label="Complementos especiais pagos"
                     >
-                        <div class="azury-complementos-secao-texto">
-                            <strong>Especiais pagos</strong>
+
+                        <div
+                            class="azury-complementos-secao-texto"
+                        >
+
+                            <strong>
+                                Especiais pagos
+                            </strong>
+
+
                             <small>
                                 São cobrados à parte e não ocupam nenhuma vaga dos complementos grátis.
                             </small>
+
                         </div>
-                        <span class="azury-complementos-secao-badge">
+
+
+                        <span
+                            class="azury-complementos-secao-badge"
+                        >
                             Pagos
                         </span>
+
                     </div>
-                    ${specialComplements.map(renderComplementCard).join("")}
+
+                    ${specialComplements
+                        .map(
+                            renderComplementCard
+                        )
+                        .join("")
+                    }
                 `
-        : "";
+                : "";
 
-      d.middle.innerHTML = regularSection + specialSection;
-    }
+        d.middle.innerHTML =
+            regularSection +
+            specialSection;
 
-    d.middle
-      .querySelectorAll(".complemento-card-imagem img")
-      .forEach((image) => {
-        image.addEventListener(
-          "error",
-          () => {
-            image
-              .closest(".complemento-card-imagem")
-              ?.classList.add("sem-imagem");
-            image.remove();
-          },
-          { once: true },
-        );
-      });
+        d.middle
+            .querySelectorAll(
+                ".complemento-card-imagem img"
+            )
+            .forEach(
+                image => {
+                    image.addEventListener(
+                        "error",
+                        () => {
+                            image
+                                .closest(
+                                    ".complemento-card-imagem"
+                                )
+                                ?.classList
+                                .add(
+                                    "sem-imagem"
+                                );
 
-    allComplements().forEach((input) => {
-      input.addEventListener("change", () => {
-        const card = input.closest(".complemento-card");
-        const layerInputs = card
-          ? Array.from(card.querySelectorAll(".complemento-camada"))
-          : [];
-
-        if (input.checked) {
-          complementSelectionCounter += 1;
-          input.dataset.ordemSelecao = String(complementSelectionCounter);
-
-          layerInputs.forEach((layerInput) => {
-            layerInput.disabled = false;
-          });
-
-          if (!layerInputs.some((layerInput) => layerInput.checked)) {
-            const both = layerInputs.find(
-              (layerInput) => layerInput.value === "ambos",
+                            image.remove();
+                        },
+                        {
+                            once:
+                                true
+                        }
+                    );
+                }
             );
 
-            if (both) {
-              both.checked = true;
-            }
-          }
-        } else {
-          delete input.dataset.ordemSelecao;
+        allComplements()
+            .forEach(
+                input => {
+                    input.addEventListener(
+                        "change",
+                        () => {
+                            const card =
+                                input.closest(
+                                    ".complemento-card"
+                                );
 
-          layerInputs.forEach((layerInput) => {
-            layerInput.disabled = true;
-          });
-        }
+                            const layerInputs =
+                                card
+                                    ? Array.from(
+                                        card.querySelectorAll(
+                                            ".complemento-camada"
+                                        )
+                                    )
+                                    : [];
 
-        card?.classList.toggle("selecionado", input.checked);
-        calculate();
-      });
-    });
+                            if (
+                                input.checked
+                            ) {
+                                complementSelectionCounter +=
+                                    1;
 
-    d.middle.querySelectorAll(".complemento-camada").forEach((input) => {
-      input.addEventListener("change", () => {
-        calculate();
-      });
-    });
+                                input.dataset.ordemSelecao =
+                                    String(
+                                        complementSelectionCounter
+                                    );
 
-    updateFreeComplementCounter([]);
-  }
+                                layerInputs
+                                    .forEach(
+                                        layerInput => {
+                                            layerInput.disabled =
+                                                isAzuryBoxProduct(currentProductDescriptor());
+                                        }
+                                    );
 
-  function nowLocal() {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: state.config?.fuso_horario || "America/Sao_Paulo",
+                                if (
+                                    !layerInputs.some(
+                                        layerInput =>
+                                            layerInput.checked
+                                    )
+                                ) {
+                                    const both =
+                                        layerInputs.find(
+                                            layerInput =>
+                                                layerInput.value ===
+                                                "ambos"
+                                        );
 
-      year: "numeric",
+                                    if (both) {
+                                        both.checked =
+                                            true;
+                                    }
+                                }
+                            } else {
+                                delete input
+                                    .dataset
+                                    .ordemSelecao;
 
-      month: "2-digit",
+                                layerInputs
+                                    .forEach(
+                                        layerInput => {
+                                            layerInput.disabled =
+                                                true;
+                                        }
+                                    );
+                            }
 
-      day: "2-digit",
+                            card?.classList.toggle(
+                                "selecionado",
+                                input.checked
+                            );
 
-      hour: "2-digit",
+                            calculate();
+                        }
+                    );
+                }
+            );
 
-      minute: "2-digit",
+        d.middle
+            .querySelectorAll(
+                ".complemento-camada"
+            )
+            .forEach(
+                input => {
+                    input.addEventListener(
+                        "change",
+                        () => {
+                            calculate();
+                        }
+                    );
+                }
+            );
 
-      hourCycle: "h23",
-    }).formatToParts(new Date());
-
-    const values = Object.fromEntries(
-      parts
-        .filter((part) => part.type !== "literal")
-        .map((part) => [part.type, Number(part.value)]),
-    );
-
-    return {
-      day: new Date(
-        Date.UTC(values.year, values.month - 1, values.day),
-      ).getUTCDay(),
-
-      minutes: values.hour * 60 + values.minute,
-    };
-  }
-
-  function schedule(day) {
-    return state.schedules.find(
-      (item) => Number(item.dia_semana) === Number(day),
-    );
-  }
-
-  function storeState() {
-    if (!state.operationReady) {
-      return {
-        open: false,
-
-        title: "CARREGANDO CARDÁPIO",
-
-        text: "Aguarde alguns segundos.",
-
-        alert: "O cardápio ainda está carregando.",
-      };
+        applyBuilderProductMode();
     }
 
-    if (state.config.pedidos_ativos !== true) {
-      const text =
-        state.config.mensagem_pausa ||
-        "Os pedidos estão temporariamente pausados.";
-
-      return {
-        open: false,
-
-        title: "PEDIDOS PAUSADOS",
-
-        text,
-
-        alert: text,
-      };
-    }
-
-    const now = nowLocal();
-
-    const today = schedule(now.day);
-
-    let open = false;
-
-    if (today?.ativo) {
-      const start = timeMinutes(today.abre_as);
-
-      const end = timeMinutes(today.fecha_as);
-
-      if (start !== null && end !== null) {
-        open =
-          end > start
-            ? now.minutes >= start && now.minutes < end
-            : now.minutes >= start;
-      }
-    }
-
-    if (!open) {
-      const previous = schedule((now.day + 6) % 7);
-
-      if (previous?.ativo) {
-        const start = timeMinutes(previous.abre_as);
-
-        const end = timeMinutes(previous.fecha_as);
-
-        if (
-          start !== null &&
-          end !== null &&
-          end < start &&
-          now.minutes < end
-        ) {
-          open = true;
-        }
-      }
-    }
-
-    if (open) {
-      return {
-        open: true,
-
-        title: "ABERTO AGORA",
-
-        text: `Faça seu pedido — atendimento até ${
-          timeLabel(today?.fecha_as) || "00:00"
-        }.`,
-
-        alert: "",
-      };
-    }
-
-    const names = [
-      "domingo",
-      "segunda-feira",
-      "terça-feira",
-      "quarta-feira",
-      "quinta-feira",
-      "sexta-feira",
-      "sábado",
-    ];
-
-    for (let offset = 0; offset < 8; offset += 1) {
-      const day = (now.day + offset) % 7;
-
-      const item = schedule(day);
-
-      const start = timeMinutes(item?.abre_as);
-
-      if (
-        !item?.ativo ||
-        start === null ||
-        (offset === 0 && now.minutes >= start)
-      ) {
-        continue;
-      }
-
-      const when = offset === 0 ? "hoje" : offset === 1 ? "amanhã" : names[day];
-
-      const text = `Abrimos ${when} às ${timeLabel(item.abre_as)}.`;
-
-      return {
-        open: false,
-
-        title: "FECHADO NO MOMENTO",
-
-        text,
-
-        alert: `A Azury está fechada no momento. ${text}`,
-      };
-    }
-
-    return {
-      open: false,
-
-      title: "FECHADO NO MOMENTO",
-
-      text: "Consulte novamente em breve.",
-
-      alert: "A Azury está fechada no momento.",
-    };
-  }
-
-  function syncOrderButtons(status) {
-    const hasItems = state.cart.length > 0;
-
-    if (d.add) {
-      d.add.disabled = !status.open;
-
-      d.add.textContent = status.open ? "Adicionar à sacola" : "Loja fechada";
-    }
-
-    if (d.next) {
-      d.next.disabled = !status.open || !hasItems;
-
-      d.next.textContent = !status.open
-        ? "Loja fechada"
-        : hasItems
-          ? "Continuar para entrega"
-          : "Adicione um item à sacola";
-    }
-
-    if (d.send && !state.sending) {
-      d.send.disabled = !status.open || !hasItems;
-
-      d.send.textContent = !status.open
-        ? "Loja fechada"
-        : hasItems
-          ? "Finalizar pedido"
-          : "Sacola vazia";
-    }
-
-    updateAssemblyStickyBar(state.subtotal, status);
-  }
-
-  function updateStore() {
-    const status = storeState();
-
-    d.store?.classList.toggle("aberta", status.open);
-    d.store?.classList.toggle("fechada", !status.open);
-
-    if (d.storeTitle) {
-      d.storeTitle.textContent = status.title;
-    }
-
-    if (d.storeMsg) {
-      d.storeMsg.textContent = status.text;
-    }
-
-    $$(".btn-montar").forEach((button) => {
-      const available = button.dataset.disponibilidade !== "em-breve";
-      const openText =
-        button.dataset.textoAberto ||
-        (button.dataset.produtoTipo === "azury_box"
-          ? "Montar minha Box"
-          : "Montar meu açaí");
-
-      button.disabled = !available || !status.open;
-      button.classList.toggle("btn-loja-fechada", available && !status.open);
-      button.textContent = !available
-        ? "Disponível em breve"
-        : status.open
-          ? openText
-          : "Loja fechada";
-    });
-
-    syncOrderButtons(status);
-    return status;
-  }
-
-  function requireOpen() {
-    const status = updateStore();
-
-    if (status.open) {
-      return true;
-    }
-
-    alert(status.alert);
-
-    return false;
-  }
-
-  function updateWhatsapp() {
-    const number = String(state.config?.whatsapp || "5511960220402").replace(
-      /\D/g,
-      "",
-    );
-
-    $$(".js-pedido-horario").forEach((link) => {
-      link.href = `https://wa.me/${number}`;
-    });
-  }
-
-  function updateBuilderCopy(product) {
-    const boxMode = isBoxProduct(product);
-    const title = document.getElementById("tituloMontagemProduto");
-    const intro = document.getElementById("descricaoMontagemProduto");
-    const sizeTitle = document.getElementById("tituloEscolhaTamanho");
-    const structureTitle = document.getElementById("tituloEstruturaProduto");
-    const structureText = document.getElementById("textoEstruturaProduto");
-    const structureDetail = document.getElementById("detalheEstruturaProduto");
-    const subtotalLabel = document.getElementById("rotuloSubtotalProduto");
-
-    if (title) {
-      title.textContent = boxMode ? "📦 Monte sua Azury Box" : "🥤 Monte o Seu Açaí";
-    }
-
-    if (intro) {
-      intro.textContent = boxMode
-        ? "Escolha o tamanho da Box, selecione seus complementos e adicione à sacola."
-        : "Monte cada copo, adicione à sacola e finalize tudo em um único pedido.";
-    }
-
-    if (sizeTitle) {
-      sizeTitle.textContent = boxMode
-        ? "Escolha o tamanho da Azury Box"
-        : "Escolha o tamanho do copo";
-    }
-
-    if (structureTitle) {
-      structureTitle.textContent = boxMode
-        ? "Como funciona a Azury Box"
-        : "Montagem do copo";
-    }
-
-    if (structureText) {
-      structureText.textContent = boxMode
-        ? "Escolha qualquer complemento disponível para montar sua Azury Box do seu jeito."
-        : "Metade do açaí no fundo, complementos no meio, a outra metade do açaí por cima e complementos na cobertura.";
-    }
-
-    if (structureDetail) {
-      structureDetail.textContent = boxMode
-        ? `Todos os complementos ficam incluídos sem custo até o limite de ${freeComplementLimit(product)} da Box escolhida. Somente o que ultrapassar esse limite é cobrado como adicional.`
-        : "Cada tamanho inclui uma quantidade de complementos grátis. Ingredientes especiais e extras acima do limite são cobrados à parte.";
-    }
-
-    if (subtotalLabel) {
-      subtotalLabel.textContent = boxMode
-        ? "Subtotal desta Box"
-        : "Subtotal deste copo";
-    }
-  }
-
-  function selectSize(size, base) {
-    const item = state.sizes.find(
-      (row) =>
-        Number(row.tamanho_ml) === Number(size) &&
-        row.disponivel === true &&
-        row.visivel === true,
-    );
-
-    if (!item) {
-      return;
-    }
-
-    const previousBoxMode = isBoxProduct(state.currentProduct);
-    state.currentProduct = {
-      ...item,
-      produto_tipo: "acai_copo",
-      produto_chave: null,
-    };
-
-    if (previousBoxMode) {
-      renderBuilderProductOptions("acai_copo");
-      renderComplements();
-    }
-
-    if (d.size) {
-      d.size.value = String(item.tamanho_ml);
-    }
-
-    if (d.base) {
-      d.base.value = String(item.preco_base ?? base);
-    }
-
-    $$("input[name='tamanhoMonteSeuOpcao']").forEach((input) => {
-      input.checked =
-        input.dataset.produtoTipo !== "azury_box" &&
-        Number(input.value) === Number(item.tamanho_ml);
-    });
-
-    updateBuilderCopy(item);
-    calculate();
-  }
-
-  function selectBox(key) {
-    const box = boxByKey(key);
-
-    if (!box || !productIsAvailable(box)) {
-      return;
-    }
-
-    const previousBoxMode = isBoxProduct(state.currentProduct);
-    state.currentProduct = {
-      ...box,
-      produto_tipo: "azury_box",
-      produto_chave: productKey(box),
-    };
-
-    if (!previousBoxMode) {
-      renderBuilderProductOptions("azury_box");
-      renderComplements();
-    }
-
-    if (d.size) {
-      d.size.value = productKey(box);
-    }
-
-    if (d.base) {
-      d.base.value = String(box.preco_base);
-    }
-
-    $$("input[name='tamanhoMonteSeuOpcao']").forEach((input) => {
-      input.checked =
-        input.dataset.produtoTipo === "azury_box" &&
-        resolveBoxKey(input.dataset.produtoChave || input.value) ===
-          productKey(box);
-    });
-
-    updateBuilderCopy(box);
-    calculate();
-  }
-
-  function allComplements() {
-    return $$(".complemento-monte-seu");
-  }
-
-  function currentComplementSelections() {
-    const boxMode = isBoxProduct(currentBuilderProduct());
-
-    return allComplements()
-      .filter((input) => input.checked)
-      .map((input, index) => {
-        const card = input.closest(".complemento-card");
-        const layerInput = card?.querySelector(".complemento-camada:checked");
+    function nowLocal() {
+        const parts =
+            new Intl.DateTimeFormat(
+                "en-CA",
+                {
+                    timeZone:
+                        state.config
+                            ?.fuso_horario ||
+                        "America/Sao_Paulo",
+
+                    year:
+                        "numeric",
+
+                    month:
+                        "2-digit",
+
+                    day:
+                        "2-digit",
+
+                    hour:
+                        "2-digit",
+
+                    minute:
+                        "2-digit",
+
+                    hourCycle:
+                        "h23"
+                }
+            ).formatToParts(
+                new Date()
+            );
+
+        const values =
+            Object.fromEntries(
+                parts
+                    .filter(
+                        part =>
+                            part.type !==
+                            "literal"
+                    )
+                    .map(
+                        part => [
+                            part.type,
+                            Number(
+                                part.value
+                            )
+                        ]
+                    )
+            );
 
         return {
-          id: input.dataset.id || null,
-          nome: input.value,
-          camada: boxMode ? "unica" : layerInput?.value || "ambos",
-          preco: num(input.dataset.preco, 0),
-          ordem_selecao: Math.max(
-            1,
-            Math.floor(num(input.dataset.ordemSelecao, index + 1)),
-          ),
+            day:
+                new Date(
+                    Date.UTC(
+                        values.year,
+                        values.month - 1,
+                        values.day
+                    )
+                ).getUTCDay(),
+
+            minutes:
+                (
+                    values.hour *
+                    60
+                ) +
+                values.minute
         };
-      });
-  }
-
-  function selected(layer) {
-    return currentComplementSelections().filter(
-      (complement) =>
-        complement.camada === layer || complement.camada === "ambos",
-    );
-  }
-
-  function updateFreeComplementCounter(
-    complements = currentComplementSelections(),
-  ) {
-    const counter = document.getElementById("contadorComplementosGratis");
-    const countText = document.getElementById("contadorComplementosGratisTexto");
-    const progressTrack = document.getElementById("barraComplementosGratis");
-    const progressFill = document.getElementById(
-      "barraComplementosGratisPreenchimento",
-    );
-    const messageText = document.getElementById("mensagemComplementosGratis");
-    const titleText = counter?.querySelector(
-      ".azury-complementos-progresso-titulo",
-    );
-
-    if (
-      !counter ||
-      !countText ||
-      !progressTrack ||
-      !progressFill ||
-      !messageText
-    ) {
-      return;
     }
 
-    const product = currentBuilderProduct();
-    const boxMode = isBoxProduct(product);
-    const limit = freeComplementLimit(product);
-
-    if (limit <= 0) {
-      counter.hidden = true;
-      return;
-    }
-
-    counter.hidden = false;
-
-    if (titleText) {
-      titleText.textContent = boxMode
-        ? "Complementos incluídos"
-        : "Complementos grátis";
-    }
-
-    const eligibleKeys = new Set(
-      (complements || [])
-        .filter(
-          (complement) => boxMode || !isAlwaysPaidComplement(complement.nome),
-        )
-        .map((complement) => norm(complement.nome))
-        .filter(Boolean),
-    );
-
-    const selectedCount = eligibleKeys.size;
-    const usedFree = Math.min(selectedCount, limit);
-    const extras = Math.max(selectedCount - limit, 0);
-    const percentage = Math.min((usedFree / limit) * 100, 100);
-
-    progressFill.style.width = `${percentage}%`;
-    progressTrack.setAttribute("aria-valuemax", String(limit));
-    progressTrack.setAttribute("aria-valuenow", String(usedFree));
-    countText.textContent = `${usedFree} de ${limit}`;
-    counter.classList.toggle(
-      "limite-atingido",
-      usedFree >= limit && extras === 0,
-    );
-    counter.classList.toggle("com-extras", extras > 0);
-
-    if (extras > 0) {
-      messageText.textContent = boxMode
-        ? `${usedFree} de ${limit} incluídos • ${extras} ${
-            extras === 1 ? "adicional será cobrado" : "adicionais serão cobrados"
-          }.`
-        : `${usedFree} de ${limit} grátis • ${extras} ${
-            extras === 1 ? "extra será cobrado" : "extras serão cobrados"
-          }.`;
-      return;
-    }
-
-    if (usedFree >= limit) {
-      messageText.textContent = boxMode
-        ? "Limite incluído atingido. Novas escolhas entram como adicional."
-        : "Limite grátis atingido.";
-      return;
-    }
-
-    const remaining = limit - usedFree;
-
-    if (boxMode) {
-      messageText.textContent =
-        remaining === 1
-          ? "Você ainda pode escolher 1 complemento sem custo."
-          : `Você ainda pode escolher ${remaining} complementos sem custo.`;
-      return;
-    }
-
-    messageText.textContent =
-      remaining === 1
-        ? "Você ainda pode escolher 1 complemento grátis."
-        : `Você ainda pode escolher ${remaining} complementos grátis.`;
-  }
-
-  function calculate() {
-    const product = currentBuilderProduct();
-    const base = product ? productBasePrice(product) : num(d.base?.value, 0);
-    const complements = currentComplementSelections();
-
-    updateFreeComplementCounter(complements);
-
-    const value = product
-      ? itemUnitPrice(product, base, complements)
-      : num(base, 0);
-
-    state.subtotal = value;
-
-    if (d.subtotal) {
-      d.subtotal.textContent = money(value);
-    }
-
-    updateAssemblyStickyBar(value);
-    return value;
-  }
-
-  function updateTotal() {
-    const subtotal = cartSubtotal();
-
-    const fee = subtotal > 0 ? num(d.fee?.value, 0) : 0;
-
-    const total = subtotal + fee;
-
-    if (d.total) {
-      d.total.textContent = money(total);
-    }
-
-    return total;
-  }
-
-  function showStep(step) {
-    const first = step === 1;
-
-    if (d.step1) {
-      d.step1.hidden = !first;
-
-      d.step1.classList.toggle("ativo", first);
-    }
-
-    if (d.step2) {
-      d.step2.hidden = first;
-
-      d.step2.classList.toggle("ativo", !first);
-    }
-
-    d.indicators.forEach((item) => {
-      const value = Number(item.dataset.indicadorEtapa);
-
-      item.classList.toggle("ativa", value === step);
-
-      item.classList.toggle("concluida", value < step);
-    });
-
-    if (d.content) {
-      d.content.scrollTop = 0;
-    }
-
-    syncAssemblyStickyBarVisibility(first);
-  }
-
-  function openModal() {
-    if (!d.modal) {
-      return;
-    }
-
-    d.modal.style.display = "flex";
-
-    document.body.style.overflow = "hidden";
-
-    syncAssemblyStickyBarVisibility();
-  }
-
-  function closeModal() {
-    if (!d.modal) {
-      return;
-    }
-
-    d.modal.style.display = "none";
-
-    document.body.style.overflow = "";
-
-    syncAssemblyStickyBarVisibility(false);
-  }
-
-  function resetAddress(
-    text = "Informe um CEP válido para calcular a entrega.",
-    type = "",
-  ) {
-    state.zipRequest += 1;
-
-    state.consultingZip = false;
-
-    if (d.addressOk) {
-      d.addressOk.value = "false";
-    }
-
-    if (d.fee) {
-      d.fee.value = "0";
-    }
-
-    if (d.districtId) {
-      d.districtId.value = "";
-    }
-
-    if (d.street) {
-      d.street.value = "";
-    }
-
-    if (d.district) {
-      d.district.value = "";
-    }
-
-    if (d.feeText) {
-      d.feeText.textContent = "A calcular";
-    }
-
-    message(text, type);
-
-    updateTotal();
-  }
-
-  function findDistrict(name) {
-    const key = norm(name);
-
-    if (!key) {
-      return null;
-    }
-
-    if (state.districtMap.has(key)) {
-      return state.districtMap.get(key);
-    }
-
-    const alias = state.aliases.find(
-      (item) => key.includes(item) || item.includes(key),
-    );
-
-    return alias ? state.districtMap.get(alias) : null;
-  }
-
-  async function consultZip(zip) {
-    const requestId = ++state.zipRequest;
-
-    state.consultingZip = true;
-
-    message("Consultando o CEP...", "carregando");
-
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${zip}/json/`);
-
-      if (!response.ok) {
-        throw new Error("Falha ao consultar CEP.");
-      }
-
-      const data = await response.json();
-
-      if (requestId !== state.zipRequest) {
-        return;
-      }
-
-      if (data.erro || !data.bairro || !data.logradouro) {
-        resetAddress("CEP inexistente ou sem endereço completo.", "erro");
-
-        return;
-      }
-
-      const district = findDistrict(data.bairro);
-
-      if (!district) {
-        resetAddress(`Ainda não entregamos no bairro ${data.bairro}.`, "erro");
-
-        return;
-      }
-
-      if (d.street) {
-        d.street.value = data.logradouro;
-      }
-
-      if (d.district) {
-        d.district.value = district.nome;
-      }
-
-      if (d.districtId) {
-        d.districtId.value = String(district.id);
-      }
-
-      if (d.addressOk) {
-        d.addressOk.value = "true";
-      }
-
-      if (d.fee) {
-        d.fee.value = String(district.taxa);
-      }
-
-      if (d.feeText) {
-        d.feeText.textContent = money(district.taxa);
-      }
-
-      message(
-        `Endereço validado. Entrega para ${district.nome}: ${money(district.taxa)}.`,
-        "sucesso",
-      );
-
-      updateTotal();
-    } catch (error) {
-      if (requestId === state.zipRequest) {
-        resetAddress(
-          "Não foi possível validar o CEP agora. Tente novamente.",
-          "erro",
+    function schedule(day) {
+        return state.schedules.find(
+            item =>
+                Number(
+                    item.dia_semana
+                ) ===
+                Number(day)
         );
-      }
-    } finally {
-      if (requestId === state.zipRequest) {
-        state.consultingZip = false;
-      }
-    }
-  }
-
-  function setupZip() {
-    d.zip?.addEventListener("input", () => {
-      const digits = d.zip.value.replace(/\D/g, "").slice(0, 8);
-
-      d.zip.value =
-        digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
-
-      resetAddress();
-
-      if (digits.length === 8) {
-        consultZip(digits);
-      }
-    });
-  }
-
-  async function fillCustomer() {
-    try {
-      const { data } = await sb.auth.getSession();
-
-      const user = data.session?.user;
-
-      if (!user) {
-        return;
-      }
-
-      let profile = {};
-
-      const result = await sb
-        .from("perfis")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!result.error) {
-        profile = result.data || {};
-      }
-
-      if (d.name && !d.name.value.trim()) {
-        d.name.value =
-          profile.nome ||
-          profile.nome_completo ||
-          user.user_metadata?.nome ||
-          user.email?.split("@")[0] ||
-          "";
-      }
-
-      if (d.phone && !d.phone.value.trim()) {
-        d.phone.value = profile.telefone || "";
-      }
-    } catch (_) {}
-  }
-
-  function resetBuilder() {
-    complementSelectionCounter = 0;
-
-    allComplements().forEach((input) => {
-      input.checked = false;
-
-      delete input.dataset.ordemSelecao;
-
-      const card = input.closest(".complemento-card");
-
-      card?.classList.remove("selecionado");
-
-      const layerInputs = card
-        ? Array.from(card.querySelectorAll(".complemento-camada"))
-        : [];
-
-      layerInputs.forEach((layerInput) => {
-        layerInput.disabled = true;
-
-        layerInput.checked = layerInput.value === "ambos";
-      });
-    });
-
-    calculate();
-  }
-
-  function resetOrder() {
-    resetBuilder();
-
-    $$("input[name='formaPagamentoMonteSeu']").forEach((item) => {
-      item.checked = false;
-    });
-
-    if (d.zip) {
-      d.zip.value = "";
     }
 
-    if (d.number) {
-      d.number.value = "";
-    }
-
-    if (d.addressExtra) {
-      d.addressExtra.value = "";
-    }
-
-    if (d.change) {
-      d.change.value = "";
-    }
-
-    resetAddress();
-  }
-
-  function payment() {
-    const value =
-      $("input[name='formaPagamentoMonteSeu']:checked")?.value || "";
-
-    return (
-      {
-        "Cartão de crédito": "cartao_credito",
-
-        "Cartão de débito": "cartao_debito",
-
-        Pix: "pix",
-
-        Dinheiro: "dinheiro",
-      }[value] || value
-    );
-  }
-
-  function paymentLabel(value) {
-    return (
-      {
-        cartao_credito: "Cartão de crédito",
-
-        cartao_debito: "Cartão de débito",
-
-        pix: "Pix",
-
-        dinheiro: "Dinheiro",
-      }[value] || value
-    );
-  }
-
-  function addressValid() {
-    return (
-      d.addressOk?.value === "true" &&
-      d.districtId?.value &&
-      d.name?.value.trim() &&
-      d.zip?.value.replace(/\D/g, "").length === 8 &&
-      d.street?.value.trim() &&
-      d.number?.value.trim()
-    );
-  }
-
-  async function createOrder() {
-    if (state.sending || !requireOpen()) {
-      return;
-    }
-
-    if (!state.cart.length) {
-      alert("Adicione pelo menos um item à sacola.");
-
-      showStep(1);
-
-      return;
-    }
-
-    if (state.consultingZip) {
-      alert("Aguarde a validação do CEP.");
-
-      return;
-    }
-
-    if (!addressValid()) {
-      showOrderWarning("Informe um endereço válido de um bairro atendido.");
-
-      return;
-    }
-
-    const pay = payment();
-
-    if (!pay) {
-      alert("Escolha a forma de pagamento.");
-
-      return;
-    }
-
-    const { data: sessionData } = await sb.auth.getSession();
-
-    if (!sessionData.session) {
-      saveCart();
-
-      sessionStorage.setItem("azuryRetornoLogin", "index.html#Cardapio");
-
-      alert(
-        "Entre na sua conta Azury para registrar o pedido. Sua sacola ficará salva.",
-      );
-
-      window.location.href = "login.html";
-
-      return;
-    }
-
-    state.sending = true;
-
-    d.send.disabled = true;
-
-    d.send.textContent = "Registrando pedido...";
-
-    const whatsappWindow = window.open("about:blank", "_blank");
-
-    const payload = {
-      cliente: {
-        nome: d.name.value.trim(),
-
-        telefone: d.phone?.value.trim() || null,
-      },
-
-      entrega: {
-        bairro_entrega_id: Number(d.districtId.value),
-
-        cep: d.zip.value.trim(),
-
-        rua: d.street.value.trim(),
-
-        numero: d.number.value.trim(),
-
-        complemento: d.addressExtra?.value.trim() || null,
-      },
-
-      pagamento: {
-        forma: pay,
-
-        troco_para:
-          pay === "dinheiro" && d.change?.value
-            ? Number(String(d.change.value).replace(",", "."))
-            : null,
-      },
-
-      itens: state.cart.map((item) => ({
-        produto_tipo: isBoxProduct(item) ? "azury_box" : "acai_copo",
-        produto_chave: isBoxProduct(item) ? productKey(item) : null,
-        tamanho_ml: isBoxProduct(item) ? null : Number(item.tamanho_ml),
-        tamanho_label: isBoxProduct(item) ? item.tamanho_label || null : null,
-        quantidade: Number(item.quantidade),
-        complementos: (item.complementos || []).map((complement) => ({
-          nome: complement.nome,
-          camada: isBoxProduct(item) ? "unica" : complement.camada,
-        })),
-      })),
-
-      observacoes: null,
-    };
-
-    try {
-      const { data, error } = await sb.rpc("criar_pedido_completo", {
-        p_dados: payload,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      const code = data?.codigo || "";
-
-      const productValue = num(data?.valor_produtos, cartSubtotal());
-
-      const fee = num(data?.taxa_entrega, d.fee.value);
-
-      const total = num(data?.valor_total, productValue + fee);
-
-      const list = (items) =>
-        items.length
-          ? items.map((item) => `• ${item.nome}`).join("\n")
-          : "• Nenhum complemento";
-
-      const itemsText = state.cart
-        .map((item, index) => {
-          const boxMode = isBoxProduct(item);
-          const all = item.complementos || [];
-          const middle = all.filter(
-            (complement) =>
-              complement.camada === "meio" || complement.camada === "ambos",
-          );
-          const top = all.filter(
-            (complement) =>
-              complement.camada === "cobertura" ||
-              complement.camada === "ambos",
-          );
-
-          const complementText = boxMode
-            ? `*Complementos escolhidos:*\n${list(all)}`
-            : `*Complementos no meio:*\n${list(middle)}\n\n` +
-              `*Complementos na cobertura:*\n${list(top)}`;
-
-          return (
-            `*${index + 1}. ${item.quantidade}× ${productDisplayName(item)}*\n` +
-            `Subtotal do item: ${money(
-              item.preco_unitario * item.quantidade,
-            )}\n\n` +
-            complementText
-          );
-        })
-        .join("\n\n————————————\n\n");
-
-      const text =
-        `Olá! Quero confirmar este pedido na AZURY:\n\n` +
-        `AZURY_EMOJI_RECIBO *Pedido:* ${code}\n` +
-        `AZURY_EMOJI_CLIENTE *Cliente:* ${d.name.value.trim()}\n\n` +
-        `AZURY_EMOJI_LOCAL *Endereço de entrega:*\n` +
-        `${d.street.value.trim()}, nº ${d.number.value.trim()}\n` +
-        `Bairro: ${d.district.value.trim()}\n` +
-        `CEP: ${d.zip.value.trim()}\n` +
-        `Complemento: ${d.addressExtra?.value.trim() || "Não informado"}\n\n` +
-        `AZURY_EMOJI_PAGAMENTO *Forma de pagamento:*\n` +
-        `${paymentLabel(pay)}\n\n` +
-        `AZURY_EMOJI_COPO *Itens da sacola:*\n\n` +
-        `${itemsText}\n\n` +
-        `AZURY_EMOJI_RECIBO *Resumo:*\n` +
-        `Produtos: ${money(productValue)}\n` +
-        `Entrega: ${money(fee)}\n` +
-        `AZURY_EMOJI_DINHEIRO *Total: ${money(total)}*`;
-
-      const number = String(state.config.whatsapp || "5511960220402").replace(
-        /\D/g,
-        "",
-      );
-
-      const whatsappEmojiUtf8 = {
-        AZURY_EMOJI_RECIBO: "%F0%9F%A7%BE",
-
-        AZURY_EMOJI_CLIENTE: "%F0%9F%91%A4",
-
-        AZURY_EMOJI_LOCAL: "%F0%9F%93%8D",
-
-        AZURY_EMOJI_PAGAMENTO: "%F0%9F%92%B3",
-
-        AZURY_EMOJI_COPO: "%F0%9F%A5%A4",
-
-        AZURY_EMOJI_DINHEIRO: "%F0%9F%92%B0",
-      };
-
-      let encodedWhatsappText = encodeURIComponent(text);
-
-      Object.entries(whatsappEmojiUtf8).forEach(([token, encodedEmoji]) => {
-        encodedWhatsappText = encodedWhatsappText
-          .split(token)
-          .join(encodedEmoji);
-      });
-
-      const url = `https://web.whatsapp.com/send?phone=${number}&text=${encodedWhatsappText}`;
-
-      saveLastOrderSnapshot({
-        codigo: code,
-
-        pedido_id: data?.pedido_id ?? data?.id ?? null,
-
-        criado_em:
-          data?.criado_em ?? data?.created_at ?? new Date().toISOString(),
-
-        valor_produtos: productValue,
-
-        taxa_entrega: fee,
-
-        valor_total: total,
-
-        pontos_gerados: num(data?.pontos_gerados, 0),
-
-        cliente: {
-          ...payload.cliente,
-        },
-
-        entrega: {
-          ...payload.entrega,
-
-          bairro: d.district.value.trim(),
-        },
-
-        pagamento: {
-          ...payload.pagamento,
-
-          forma_label: paymentLabel(pay),
-        },
-
-        itens: state.cart.map((item) => ({
-          produto_tipo: isBoxProduct(item) ? "azury_box" : "acai_copo",
-          produto_chave: isBoxProduct(item) ? productKey(item) : null,
-          tamanho_ml: isBoxProduct(item) ? null : Number(item.tamanho_ml),
-          tamanho_label: isBoxProduct(item) ? item.tamanho_label || null : null,
-          produto: productDisplayName(item),
-          quantidade: Number(item.quantidade),
-          preco_unitario: num(item.preco_unitario),
-          complementos: (item.complementos || []).map((complement) => ({
-            nome: complement.nome,
-            camada: isBoxProduct(item) ? "unica" : complement.camada,
-          })),
-        })),
-      });
-
-      closeModal();
-
-      showOrderSuccess(code);
-
-      clearCart();
-
-      resetOrder();
-
-      if (whatsappWindow) {
-        whatsappWindow.location.href = url;
-      } else {
-        window.open(url, "_blank", "noopener,noreferrer");
-      }
-    } catch (error) {
-      whatsappWindow?.close();
-
-      console.error("Erro ao registrar pedido:", error);
-
-      alert(error.message || "Não foi possível registrar o pedido.");
-    } finally {
-      state.sending = false;
-
-      updateStore();
-    }
-  }
-
-  function bind() {
-    $$(".btn-montar").forEach((button) => {
-      button.addEventListener("click", async () => {
-        if (button.dataset.disponibilidade === "em-breve" || !requireOpen()) {
-          return;
+    function storeState() {
+        if (
+            !state.operationReady
+        ) {
+            return {
+                open:
+                    false,
+
+                title:
+                    "CARREGANDO CARDÁPIO",
+
+                text:
+                    "Aguarde alguns segundos.",
+
+                alert:
+                    "O cardápio ainda está carregando."
+            };
         }
+
+        if (
+            state.config
+                .pedidos_ativos !==
+            true
+        ) {
+            const text =
+                state.config
+                    .mensagem_pausa ||
+                "Os pedidos estão temporariamente pausados.";
+
+            return {
+                open:
+                    false,
+
+                title:
+                    "PEDIDOS PAUSADOS",
+
+                text,
+
+                alert:
+                    text
+            };
+        }
+
+        const now =
+            nowLocal();
+
+        const today =
+            schedule(
+                now.day
+            );
+
+        let open =
+            false;
+
+        if (today?.ativo) {
+            const start =
+                timeMinutes(
+                    today.abre_as
+                );
+
+            const end =
+                timeMinutes(
+                    today.fecha_as
+                );
+
+            if (
+                start !== null &&
+                end !== null
+            ) {
+                open =
+                    end > start
+                        ? (
+                            now.minutes >=
+                                start &&
+                            now.minutes <
+                                end
+                        )
+                        : (
+                            now.minutes >=
+                            start
+                        );
+            }
+        }
+
+        if (!open) {
+            const previous =
+                schedule(
+                    (
+                        now.day +
+                        6
+                    ) % 7
+                );
+
+            if (
+                previous?.ativo
+            ) {
+                const start =
+                    timeMinutes(
+                        previous.abre_as
+                    );
+
+                const end =
+                    timeMinutes(
+                        previous.fecha_as
+                    );
+
+                if (
+                    start !== null &&
+                    end !== null &&
+                    end < start &&
+                    now.minutes < end
+                ) {
+                    open =
+                        true;
+                }
+            }
+        }
+
+        if (open) {
+            return {
+                open:
+                    true,
+
+                title:
+                    "ABERTO AGORA",
+
+                text:
+                    `Faça seu pedido — atendimento até ${
+                        timeLabel(
+                            today
+                                ?.fecha_as
+                        ) ||
+                        "00:00"
+                    }.`,
+
+                alert:
+                    ""
+            };
+        }
+
+        const names = [
+            "domingo",
+            "segunda-feira",
+            "terça-feira",
+            "quarta-feira",
+            "quinta-feira",
+            "sexta-feira",
+            "sábado"
+        ];
+
+        for (
+            let offset = 0;
+            offset < 8;
+            offset += 1
+        ) {
+            const day =
+                (
+                    now.day +
+                    offset
+                ) % 7;
+
+            const item =
+                schedule(day);
+
+            const start =
+                timeMinutes(
+                    item?.abre_as
+                );
+
+            if (
+                !item?.ativo ||
+                start === null ||
+                (
+                    offset === 0 &&
+                    now.minutes >=
+                        start
+                )
+            ) {
+                continue;
+            }
+
+            const when =
+                offset === 0
+                    ? "hoje"
+                    : offset === 1
+                        ? "amanhã"
+                        : names[day];
+
+            const text =
+                `Abrimos ${when} às ${timeLabel(item.abre_as)}.`;
+
+            return {
+                open:
+                    false,
+
+                title:
+                    "FECHADO NO MOMENTO",
+
+                text,
+
+                alert:
+                    `A Azury está fechada no momento. ${text}`
+            };
+        }
+
+        return {
+            open:
+                false,
+
+            title:
+                "FECHADO NO MOMENTO",
+
+            text:
+                "Consulte novamente em breve.",
+
+            alert:
+                "A Azury está fechada no momento."
+        };
+    }
+
+    function syncOrderButtons(
+        status
+    ) {
+        const hasItems =
+            state.cart.length >
+            0;
+
+        if (d.add) {
+            d.add.disabled =
+                !status.open;
+
+            d.add.textContent =
+                status.open
+                    ? "Adicionar à sacola"
+                    : "Loja fechada";
+        }
+
+        if (d.next) {
+            d.next.disabled =
+                !status.open ||
+                !hasItems;
+
+            d.next.textContent =
+                !status.open
+                    ? "Loja fechada"
+                    : hasItems
+                        ? "Continuar para entrega"
+                        : "Adicione um item à sacola";
+        }
+
+        if (
+            d.send &&
+            !state.sending
+        ) {
+            d.send.disabled =
+                !status.open ||
+                !hasItems;
+
+            d.send.textContent =
+                !status.open
+                    ? "Loja fechada"
+                    : hasItems
+                        ? "Finalizar pedido"
+                        : "Sacola vazia";
+        }
+
+        updateAssemblyStickyBar(
+            state.subtotal,
+            status
+        );
+    }
+
+    function updateStore() {
+        const status =
+            storeState();
+
+        d.store?.classList.toggle(
+            "aberta",
+            status.open
+        );
+
+        d.store?.classList.toggle(
+            "fechada",
+            !status.open
+        );
+
+        if (d.storeTitle) {
+            d.storeTitle.textContent =
+                status.title;
+        }
+
+        if (d.storeMsg) {
+            d.storeMsg.textContent =
+                status.text;
+        }
+
+        $$(".btn-montar")
+            .forEach(
+                button => {
+                    const available =
+                        button.dataset
+                            .disponibilidade !==
+                        "em-breve";
+
+                    button.disabled =
+                        !available ||
+                        !status.open;
+
+                    button.classList.toggle(
+                        "btn-loja-fechada",
+                        available &&
+                        !status.open
+                    );
+
+                    button.textContent =
+                        !available
+                            ? "Disponível em breve"
+                            : status.open
+                                ? (button.dataset.textoAberto || "Montar meu açaí")
+                                : "Loja fechada";
+                }
+            );
+
+        syncOrderButtons(
+            status
+        );
+
+        return status;
+    }
+
+    function requireOpen() {
+        const status =
+            updateStore();
+
+        if (status.open) {
+            return true;
+        }
+
+        alert(
+            status.alert
+        );
+
+        return false;
+    }
+
+    function updateWhatsapp() {
+        const number =
+            String(
+                state.config
+                    ?.whatsapp ||
+                "5511960220402"
+            ).replace(
+                /\D/g,
+                ""
+            );
+
+        $$(".js-pedido-horario")
+            .forEach(
+                link => {
+                    link.href =
+                        `https://wa.me/${number}`;
+                }
+            );
+    }
+
+    function selectSize(
+        size,
+        base
+    ) {
+        const item =
+            state.sizes.find(
+                row =>
+                    Number(
+                        row.tamanho_ml
+                    ) ===
+                        Number(size) &&
+                    row.disponivel ===
+                        true &&
+                    row.visivel ===
+                        true
+            );
+
+        if (!item) {
+            return;
+        }
+
+        state.currentProduct = {
+            produto_tipo: "acai_copo",
+            produto_chave: null,
+            produto_nome: productDisplayName(item),
+            tamanho_ml: Number(item.tamanho_ml),
+            tamanho_label: `${Number(item.tamanho_ml)}ml`,
+            preco_base: Number(item.preco_base ?? base ?? 0),
+            limite_complementos_gratis: freeComplementLimit(item),
+            disponivel: true,
+            visivel: true
+        };
+
+        if (d.size) {
+            d.size.value =
+                String(
+                    item.tamanho_ml
+                );
+        }
+
+        if (d.base) {
+            d.base.value =
+                String(
+                    item.preco_base ??
+                    base
+                );
+        }
+
+        $$(
+            "input[name='tamanhoMonteSeuOpcao']"
+        ).forEach(
+            input => {
+                input.checked =
+                    Number(
+                        input.value
+                    ) ===
+                    Number(
+                        item.tamanho_ml
+                    );
+            }
+        );
+
+        applyBuilderProductMode();
+    }
+
+    function allComplements() {
+        return $$(
+            ".complemento-monte-seu"
+        );
+    }
+
+    function currentComplementSelections() {
+        const boxMode = isAzuryBoxProduct(currentProductDescriptor());
+
+        return allComplements()
+            .filter(input => input.checked)
+            .map((input, index) => {
+                const card = input.closest(".complemento-card");
+                const layerInput = card?.querySelector(".complemento-camada:checked");
+
+                return {
+                    id: input.dataset.id || null,
+                    nome: input.value,
+                    camada: boxMode ? "unica" : (layerInput?.value || "ambos"),
+                    preco: num(input.dataset.preco, 0),
+                    ordem_selecao: Math.max(
+                        1,
+                        Math.floor(num(input.dataset.ordemSelecao, index + 1))
+                    )
+                };
+            });
+    }
+
+    function selected(layer) {
+        return (
+            currentComplementSelections()
+                .filter(
+                    complement =>
+                        complement.camada ===
+                            layer ||
+                        complement.camada ===
+                            "ambos"
+                )
+        );
+    }
+
+    function updateFreeComplementCounter(
+        complements = currentComplementSelections()
+    ) {
+        const counter = document.getElementById("contadorComplementosGratis");
+        const countText = document.getElementById("contadorComplementosGratisTexto");
+        const progressTrack = document.getElementById("barraComplementosGratis");
+        const progressFill = document.getElementById("barraComplementosGratisPreenchimento");
+        const messageText = document.getElementById("mensagemComplementosGratis");
+
+        if (!counter || !countText || !progressTrack || !progressFill || !messageText) {
+            return;
+        }
+
+        const product = currentProductDescriptor();
+        const boxMode = isAzuryBoxProduct(product);
+        const limit = freeComplementLimit(product);
+
+        if (limit <= 0) {
+            counter.hidden = true;
+            return;
+        }
+
+        counter.hidden = false;
+
+        const eligibleKeys = new Set(
+            (complements || [])
+                .filter(complement => boxMode || !isAlwaysPaidComplement(complement.nome))
+                .map(complement => norm(complement.nome))
+                .filter(Boolean)
+        );
+
+        const selectedCount = eligibleKeys.size;
+        const usedFree = Math.min(selectedCount, limit);
+        const extras = Math.max(selectedCount - limit, 0);
+        const percentage = Math.min((usedFree / limit) * 100, 100);
+
+        progressFill.style.width = `${percentage}%`;
+        progressTrack.setAttribute("aria-valuemax", String(limit));
+        progressTrack.setAttribute("aria-valuenow", String(usedFree));
+        countText.textContent = `${usedFree} de ${limit}`;
+        counter.classList.toggle("limite-atingido", usedFree >= limit && extras === 0);
+        counter.classList.toggle("com-extras", extras > 0);
+
+        const includedWord = boxMode ? "incluídos" : "grátis";
+
+        if (extras > 0) {
+            messageText.textContent =
+                `${usedFree} de ${limit} ${includedWord} • ${extras} ` +
+                `${extras === 1 ? "extra será cobrado" : "extras serão cobrados"}.`;
+            return;
+        }
+
+        if (usedFree >= limit) {
+            messageText.textContent = boxMode
+                ? "Limite de complementos incluídos atingido."
+                : "Limite grátis atingido.";
+            return;
+        }
+
+        const remaining = limit - usedFree;
+        messageText.textContent = remaining === 1
+            ? `Você ainda pode escolher 1 complemento ${boxMode ? "incluído" : "grátis"}.`
+            : `Você ainda pode escolher ${remaining} complementos ${includedWord}.`;
+    }
+
+    function calculate() {
+        const product = currentProductDescriptor();
+        const base = num(d.base?.value, product?.preco_base || 0);
+        const complements = currentComplementSelections();
+
+        updateFreeComplementCounter(complements);
+
+        const value = itemUnitPrice(product, base, complements);
+        state.subtotal = value;
+
+        if (d.subtotal) d.subtotal.textContent = money(value);
+        updateAssemblyStickyBar(value);
+        return value;
+    }
+
+    function updateTotal() {
+        const subtotal =
+            cartSubtotal();
+
+        const fee =
+            subtotal > 0
+                ? num(
+                    d.fee?.value,
+                    0
+                )
+                : 0;
+
+        const total =
+            subtotal +
+            fee;
+
+        if (d.total) {
+            d.total.textContent =
+                money(total);
+        }
+
+        return total;
+    }
+
+    function showStep(step) {
+        const first =
+            step === 1;
+
+        if (d.step1) {
+            d.step1.hidden =
+                !first;
+
+            d.step1.classList.toggle(
+                "ativo",
+                first
+            );
+        }
+
+        if (d.step2) {
+            d.step2.hidden =
+                first;
+
+            d.step2.classList.toggle(
+                "ativo",
+                !first
+            );
+        }
+
+        d.indicators.forEach(
+            item => {
+                const value =
+                    Number(
+                        item.dataset
+                            .indicadorEtapa
+                    );
+
+                item.classList.toggle(
+                    "ativa",
+                    value === step
+                );
+
+                item.classList.toggle(
+                    "concluida",
+                    value < step
+                );
+            }
+        );
+
+        if (d.content) {
+            d.content.scrollTop =
+                0;
+        }
+
+        syncAssemblyStickyBarVisibility(
+            first
+        );
+    }
+
+    function openModal() {
+        if (!d.modal) {
+            return;
+        }
+
+        d.modal.style.display =
+            "flex";
+
+        document.body.style.overflow =
+            "hidden";
+
+        syncAssemblyStickyBarVisibility();
+    }
+
+    function closeModal() {
+        if (!d.modal) {
+            return;
+        }
+
+        d.modal.style.display =
+            "none";
+
+        document.body.style.overflow =
+            "";
+
+        syncAssemblyStickyBarVisibility(
+            false
+        );
+    }
+
+    function resetAddress(
+        text =
+            "Informe um CEP válido para calcular a entrega.",
+        type = ""
+    ) {
+        state.zipRequest +=
+            1;
+
+        state.consultingZip =
+            false;
+
+        if (d.addressOk) {
+            d.addressOk.value =
+                "false";
+        }
+
+        if (d.fee) {
+            d.fee.value =
+                "0";
+        }
+
+        if (d.districtId) {
+            d.districtId.value =
+                "";
+        }
+
+        if (d.street) {
+            d.street.value =
+                "";
+        }
+
+        if (d.district) {
+            d.district.value =
+                "";
+        }
+
+        if (d.feeText) {
+            d.feeText.textContent =
+                "A calcular";
+        }
+
+        message(
+            text,
+            type
+        );
+
+        updateTotal();
+    }
+
+    function findDistrict(name) {
+        const key =
+            norm(name);
+
+        if (!key) {
+            return null;
+        }
+
+        if (
+            state.districtMap
+                .has(key)
+        ) {
+            return (
+                state.districtMap
+                    .get(key)
+            );
+        }
+
+        const alias =
+            state.aliases.find(
+                item =>
+                    key.includes(
+                        item
+                    ) ||
+                    item.includes(
+                        key
+                    )
+            );
+
+        return alias
+            ? state.districtMap
+                .get(alias)
+            : null;
+    }
+
+    async function consultZip(zip) {
+        const requestId =
+            ++state.zipRequest;
+
+        state.consultingZip =
+            true;
+
+        message(
+            "Consultando o CEP...",
+            "carregando"
+        );
+
+        try {
+            const response =
+                await fetch(
+                    `https://viacep.com.br/ws/${zip}/json/`
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Falha ao consultar CEP."
+                );
+            }
+
+            const data =
+                await response.json();
+
+            if (
+                requestId !==
+                state.zipRequest
+            ) {
+                return;
+            }
+
+            if (
+                data.erro ||
+                !data.bairro ||
+                !data.logradouro
+            ) {
+                resetAddress(
+                    "CEP inexistente ou sem endereço completo.",
+                    "erro"
+                );
+
+                return;
+            }
+
+            const district =
+                findDistrict(
+                    data.bairro
+                );
+
+            if (!district) {
+                resetAddress(
+                    `Ainda não entregamos no bairro ${data.bairro}.`,
+                    "erro"
+                );
+
+                return;
+            }
+
+            if (d.street) {
+                d.street.value =
+                    data.logradouro;
+            }
+
+            if (d.district) {
+                d.district.value =
+                    district.nome;
+            }
+
+            if (d.districtId) {
+                d.districtId.value =
+                    String(
+                        district.id
+                    );
+            }
+
+            if (d.addressOk) {
+                d.addressOk.value =
+                    "true";
+            }
+
+            if (d.fee) {
+                d.fee.value =
+                    String(
+                        district.taxa
+                    );
+            }
+
+            if (d.feeText) {
+                d.feeText.textContent =
+                    money(
+                        district.taxa
+                    );
+            }
+
+            message(
+                `Endereço validado. Entrega para ${district.nome}: ${money(district.taxa)}.`,
+                "sucesso"
+            );
+
+            updateTotal();
+        } catch (error) {
+            if (
+                requestId ===
+                state.zipRequest
+            ) {
+                resetAddress(
+                    "Não foi possível validar o CEP agora. Tente novamente.",
+                    "erro"
+                );
+            }
+        } finally {
+            if (
+                requestId ===
+                state.zipRequest
+            ) {
+                state.consultingZip =
+                    false;
+            }
+        }
+    }
+
+    function setupZip() {
+        d.zip?.addEventListener(
+            "input",
+            () => {
+                const digits =
+                    d.zip.value
+                        .replace(
+                            /\D/g,
+                            ""
+                        )
+                        .slice(
+                            0,
+                            8
+                        );
+
+                d.zip.value =
+                    digits.length > 5
+                        ? `${digits.slice(0, 5)}-${digits.slice(5)}`
+                        : digits;
+
+                resetAddress();
+
+                if (
+                    digits.length ===
+                    8
+                ) {
+                    consultZip(
+                        digits
+                    );
+                }
+            }
+        );
+    }
+
+    async function fillCustomer() {
+        try {
+            const {
+                data
+            } =
+                await sb.auth
+                    .getSession();
+
+            const user =
+                data.session
+                    ?.user;
+
+            if (!user) {
+                return;
+            }
+
+            let profile = {};
+
+            const result =
+                await sb
+                    .from(
+                        "perfis"
+                    )
+                    .select("*")
+                    .eq(
+                        "id",
+                        user.id
+                    )
+                    .maybeSingle();
+
+            if (
+                !result.error
+            ) {
+                profile =
+                    result.data ||
+                    {};
+            }
+
+            if (
+                d.name &&
+                !d.name.value.trim()
+            ) {
+                d.name.value =
+                    profile.nome ||
+                    profile.nome_completo ||
+                    user.user_metadata
+                        ?.nome ||
+                    user.email
+                        ?.split("@")[0] ||
+                    "";
+            }
+
+            if (
+                d.phone &&
+                !d.phone.value.trim()
+            ) {
+                d.phone.value =
+                    profile.telefone ||
+                    "";
+            }
+        } catch (_) {
+        }
+    }
+
+    function resetBuilder() {
+        complementSelectionCounter =
+            0;
+
+        allComplements()
+            .forEach(
+                input => {
+                    input.checked =
+                        false;
+
+                    delete input
+                        .dataset
+                        .ordemSelecao;
+
+                    const card =
+                        input.closest(
+                            ".complemento-card"
+                        );
+
+                    card?.classList.remove(
+                        "selecionado"
+                    );
+
+                    const layerInputs =
+                        card
+                            ? Array.from(
+                                card.querySelectorAll(
+                                    ".complemento-camada"
+                                )
+                            )
+                            : [];
+
+                    layerInputs.forEach(
+                        layerInput => {
+                            layerInput.disabled =
+                                true;
+
+                            layerInput.checked =
+                                layerInput.value ===
+                                "ambos";
+                        }
+                    );
+                }
+            );
+
+        calculate();
+    }
+
+    function resetOrder() {
+        resetBuilder();
+
+        $$(
+            "input[name='formaPagamentoMonteSeu']"
+        ).forEach(
+            item => {
+                item.checked =
+                    false;
+            }
+        );
+
+        if (d.zip) {
+            d.zip.value =
+                "";
+        }
+
+        if (d.number) {
+            d.number.value =
+                "";
+        }
+
+        if (d.addressExtra) {
+            d.addressExtra.value =
+                "";
+        }
+
+        if (d.change) {
+            d.change.value =
+                "";
+        }
+
+        resetAddress();
+    }
+
+    function payment() {
+        const value =
+            $(
+                "input[name='formaPagamentoMonteSeu']:checked"
+            )?.value ||
+            "";
+
+        return {
+            "Cartão de crédito":
+                "cartao_credito",
+
+            "Cartão de débito":
+                "cartao_debito",
+
+            "Pix":
+                "pix",
+
+            "Dinheiro":
+                "dinheiro"
+        }[value] || value;
+    }
+
+    function paymentLabel(value) {
+        return {
+            cartao_credito:
+                "Cartão de crédito",
+
+            cartao_debito:
+                "Cartão de débito",
+
+            pix:
+                "Pix",
+
+            dinheiro:
+                "Dinheiro"
+        }[value] || value;
+    }
+
+    function addressValid() {
+        return (
+            d.addressOk?.value ===
+                "true" &&
+
+            d.districtId?.value &&
+
+            d.name?.value.trim() &&
+
+            d.zip?.value
+                .replace(
+                    /\D/g,
+                    ""
+                ).length ===
+                8 &&
+
+            d.street?.value.trim() &&
+
+            d.number?.value.trim()
+        );
+    }
+
+    async function createOrder() {
+        if (
+            state.sending ||
+            !requireOpen()
+        ) {
+            return;
+        }
+
+        if (
+            !state.cart.length
+        ) {
+            alert(
+                "Adicione pelo menos um açaí à sacola."
+            );
+
+            showStep(1);
+
+            return;
+        }
+
+        if (
+            state.consultingZip
+        ) {
+            alert(
+                "Aguarde a validação do CEP."
+            );
+
+            return;
+        }
+
+        if (
+            !addressValid()
+        ) {
+            showOrderWarning(
+                "Informe um endereço válido de um bairro atendido."
+            );
+
+            return;
+        }
+
+        const pay =
+            payment();
+
+        if (!pay) {
+            alert(
+                "Escolha a forma de pagamento."
+            );
+
+            return;
+        }
+
+        const {
+            data:
+                sessionData
+        } =
+            await sb.auth
+                .getSession();
+
+        if (
+            !sessionData.session
+        ) {
+            saveCart();
+
+            sessionStorage.setItem(
+                "azuryRetornoLogin",
+                "index.html#Cardapio"
+            );
+
+            alert(
+                "Entre na sua conta Azury para registrar o pedido. Sua sacola ficará salva."
+            );
+
+            window.location.href =
+                "login.html";
+
+            return;
+        }
+
+        state.sending =
+            true;
+
+        d.send.disabled =
+            true;
+
+        d.send.textContent =
+            "Registrando pedido...";
+
+        const whatsappWindow =
+            window.open(
+                "about:blank",
+                "_blank"
+            );
+
+        const payload = {
+            cliente: {
+                nome:
+                    d.name.value
+                        .trim(),
+
+                telefone:
+                    d.phone?.value
+                        .trim() ||
+                    null
+            },
+
+            entrega: {
+                bairro_entrega_id:
+                    Number(
+                        d.districtId
+                            .value
+                    ),
+
+                cep:
+                    d.zip.value
+                        .trim(),
+
+                rua:
+                    d.street.value
+                        .trim(),
+
+                numero:
+                    d.number.value
+                        .trim(),
+
+                complemento:
+                    d.addressExtra
+                        ?.value
+                        .trim() ||
+                    null
+            },
+
+            pagamento: {
+                forma:
+                    pay,
+
+                troco_para:
+                    (
+                        pay ===
+                            "dinheiro" &&
+                        d.change?.value
+                    )
+                        ? Number(
+                            String(
+                                d.change.value
+                            ).replace(
+                                ",",
+                                "."
+                            )
+                        )
+                        : null
+            },
+
+            itens:
+                state.cart.map(
+                    item => ({
+                        produto_tipo: item.produto_tipo || "acai_copo",
+                        produto_chave: item.produto_chave || null,
+                        produto_nome: productDisplayName(item),
+                        tamanho_label: item.tamanho_label || (item.tamanho_ml ? `${item.tamanho_ml}ml` : null),
+                        tamanho_ml: item.tamanho_ml === null || item.tamanho_ml === undefined
+                            ? null
+                            : Number(item.tamanho_ml),
+                        quantidade: Number(item.quantidade),
+                        complementos: (item.complementos || []).map(complement => ({
+                            nome: complement.nome,
+                            camada: isAzuryBoxProduct(item) ? "unica" : complement.camada
+                        }))
+                    })
+                ),
+
+            observacoes:
+                null
+        };
+
+        try {
+            const {
+                data,
+                error
+            } =
+                await sb.rpc(
+                    "criar_pedido_completo",
+                    {
+                        p_dados:
+                            payload
+                    }
+                );
+
+            if (error) {
+                throw error;
+            }
+
+            const code =
+                data?.codigo ||
+                "";
+
+            const productValue =
+                num(
+                    data?.valor_produtos,
+                    cartSubtotal()
+                );
+
+            const fee =
+                num(
+                    data?.taxa_entrega,
+                    d.fee.value
+                );
+
+            const total =
+                num(
+                    data?.valor_total,
+                    productValue +
+                    fee
+                );
+
+            const list =
+                items =>
+                    items.length
+                        ? items
+                            .map(
+                                item =>
+                                    `• ${item.nome}`
+                            )
+                            .join("\n")
+                        : "• Nenhum complemento";
+
+            const itemsText =
+                state.cart
+                    .map((item, index) => {
+                        const boxMode = isAzuryBoxProduct(item);
+                        const title = productDisplayName(item);
+
+                        if (boxMode) {
+                            const complements = Array.from(
+                                new Set((item.complementos || []).map(complement => complement.nome))
+                            ).map(nome => ({ nome }));
+
+                            return (
+                                `*${index + 1}. ${item.quantidade}× ${title}*\n` +
+                                `Subtotal do item: ${money(item.preco_unitario * item.quantidade)}\n\n` +
+                                `*Complementos da Box:*\n${list(complements)}`
+                            );
+                        }
+
+                        const middle = (item.complementos || []).filter(complement =>
+                            complement.camada === "meio" || complement.camada === "ambos"
+                        );
+                        const top = (item.complementos || []).filter(complement =>
+                            complement.camada === "cobertura" || complement.camada === "ambos"
+                        );
+
+                        return (
+                            `*${index + 1}. ${item.quantidade}× ${title}*\n` +
+                            `Subtotal do item: ${money(item.preco_unitario * item.quantidade)}\n\n` +
+                            `*Complementos no meio:*\n${list(middle)}\n\n` +
+                            `*Complementos na cobertura:*\n${list(top)}`
+                        );
+                    })
+                    .join("\n\n————————————\n\n");
+
+            const text =
+                `Olá! Quero confirmar este pedido na AZURY:\n\n` +
+
+                `\u{1F9FE} *Pedido:* ${code}\n` +
+
+                `\u{1F464} *Cliente:* ${d.name.value.trim()}\n\n` +
+
+                `\u{1F4CD} *Endereço de entrega:*\n` +
+
+                `${d.street.value.trim()}, nº ${d.number.value.trim()}\n` +
+
+                `Bairro: ${d.district.value.trim()}\n` +
+
+                `CEP: ${d.zip.value.trim()}\n` +
+
+                `Complemento: ${
+                    d.addressExtra
+                        ?.value
+                        .trim() ||
+                    "Não informado"
+                }\n\n` +
+
+                `\u{1F4B3} *Forma de pagamento:*\n` +
+
+                `${paymentLabel(pay)}\n\n` +
+
+                `\u{1F964} *Itens da sacola:*\n\n` +
+
+                `${itemsText}\n\n` +
+
+                `\u{1F9FE} *Resumo:*\n` +
+
+                `Produtos: ${money(productValue)}\n` +
+
+                `Entrega: ${money(fee)}\n` +
+
+                `\u{1F4B0} *Total: ${money(total)}*`;
+            const number =
+                String(
+                    state.config
+                        .whatsapp ||
+                    "5511960220402"
+                ).replace(
+                    /\D/g,
+                    ""
+                );
+
+            const url =
+                `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+
+            saveLastOrderSnapshot({
+                codigo:
+                    code,
+
+                pedido_id:
+                    data?.pedido_id ??
+                    data?.id ??
+                    null,
+
+                criado_em:
+                    data?.criado_em ??
+                    data?.created_at ??
+                    new Date()
+                        .toISOString(),
+
+                valor_produtos:
+                    productValue,
+
+                taxa_entrega:
+                    fee,
+
+                valor_total:
+                    total,
+
+                pontos_gerados:
+                    num(
+                        data?.pontos_gerados,
+                        0
+                    ),
+
+                cliente: {
+                    ...payload.cliente
+                },
+
+                entrega: {
+                    ...payload.entrega,
+
+                    bairro:
+                        d.district.value
+                            .trim()
+                },
+
+                pagamento: {
+                    ...payload.pagamento,
+
+                    forma_label:
+                        paymentLabel(
+                            pay
+                        )
+                },
+
+                itens:
+                    state.cart.map(
+                        item => ({
+                            produto_tipo: item.produto_tipo || "acai_copo",
+
+                            produto_chave: item.produto_chave || null,
+
+                            tamanho_label: item.tamanho_label || null,
+
+                            tamanho_ml:
+                                item.tamanho_ml === null || item.tamanho_ml === undefined
+                                    ? null
+                                    : Number(item.tamanho_ml),
+
+                            produto:
+                                productDisplayName(item),
+
+                            quantidade:
+                                Number(
+                                    item.quantidade
+                                ),
+
+                            preco_unitario:
+                                num(
+                                    item.preco_unitario
+                                ),
+
+                            complementos:
+                                (
+                                    item.complementos ||
+                                    []
+                                ).map(
+                                    complement => ({
+                                        nome:
+                                            complement.nome,
+
+                                        camada:
+                                            complement.camada
+                                    })
+                                )
+                        })
+                    )
+            });
+
+            closeModal();
+
+            showOrderSuccess(
+                code
+            );
+
+            clearCart();
+
+            resetOrder();
+
+            if (whatsappWindow) {
+                whatsappWindow.location.href =
+                    url;
+            } else {
+                window.open(
+                    url,
+                    "_blank",
+                    "noopener,noreferrer"
+                );
+            }
+        } catch (error) {
+            whatsappWindow
+                ?.close();
+
+            console.error(
+                "Erro ao registrar pedido:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Não foi possível registrar o pedido."
+            );
+        } finally {
+            state.sending =
+                false;
+
+            updateStore();
+        }
+    }
+
+    function bind() {
+        $$(".btn-montar")
+            .forEach(
+                button => {
+                    button.addEventListener(
+                        "click",
+                        async () => {
+                            if (
+                                button.dataset
+                                    .disponibilidade ===
+                                    "em-breve" ||
+                                !requireOpen()
+                            ) {
+                                return;
+                            }
+
+                            resetBuilder();
+
+                            if (button.dataset.produtoTipo === "azury_box" || button.hasAttribute("data-btn-azury-box")) {
+                                const preferredKey =
+                                    button.dataset.produtoChave ||
+                                    getAzuryBoxes().find(box => box.visivel !== false && box.disponivel !== false)?.key ||
+                                    "";
+
+                                renderBoxBuilderSizes(preferredKey);
+                                selectAzuryBox(preferredKey);
+                            } else {
+                                renderSizes();
+                                selectSize(
+                                    button.dataset.tamanho,
+                                    button.dataset.precoBase
+                                );
+                            }
+
+                            await fillCustomer();
+
+                            renderCart();
+
+                            showStep(1);
+
+                            openModal();
+                        }
+                    );
+                }
+            );
+
+        d.add?.addEventListener(
+            "click",
+            addCurrentToCart
+        );
+
+        d.stickyAdd?.addEventListener(
+            "click",
+            addCurrentToCart
+        );
+
+        d.cartList?.addEventListener(
+            "click",
+            event => {
+                const button =
+                    event.target.closest(
+                        "button[data-cart-action]"
+                    );
+
+                if (!button) {
+                    return;
+                }
+
+                const id =
+                    button.dataset
+                        .id ||
+                    "";
+
+                const action =
+                    button.dataset
+                        .cartAction;
+
+                if (
+                    action ===
+                    "increase"
+                ) {
+                    changeCartItem(
+                        id,
+                        1
+                    );
+                } else if (
+                    action ===
+                    "decrease"
+                ) {
+                    changeCartItem(
+                        id,
+                        -1
+                    );
+                } else if (
+                    action ===
+                    "remove"
+                ) {
+                    removeCartItem(
+                        id
+                    );
+                }
+            }
+        );
+
+        d.next?.addEventListener(
+            "click",
+            () => {
+                if (
+                    !requireOpen()
+                ) {
+                    return;
+                }
+
+                if (
+                    !state.cart.length
+                ) {
+                    alert(
+                        "Adicione pelo menos um açaí à sacola."
+                    );
+
+                    return;
+                }
+
+                renderCart();
+
+                showStep(2);
+            }
+        );
+
+        d.back?.addEventListener(
+            "click",
+            () =>
+                showStep(1)
+        );
+
+        d.close?.addEventListener(
+            "click",
+            closeModal
+        );
+
+        d.modal?.addEventListener(
+            "click",
+            event => {
+                if (
+                    event.target ===
+                    d.modal
+                ) {
+                    closeModal();
+                }
+            }
+        );
+
+        d.send?.addEventListener(
+            "click",
+            createOrder
+        );
+
+        document.addEventListener(
+            "keydown",
+            event => {
+                if (
+                    event.key ===
+                    "Escape"
+                ) {
+                    closeModal();
+                }
+            }
+        );
+    }
+
+    function ensureDistrictField() {
+        if (
+            d.districtId ||
+            !d.addressOk
+        ) {
+            return;
+        }
+
+        const hidden =
+            document.createElement(
+                "input"
+            );
+
+        hidden.type =
+            "hidden";
+
+        hidden.id =
+            "bairroEntregaId";
+
+        hidden.value =
+            "";
+
+        d.addressOk.insertAdjacentElement(
+            "afterend",
+            hidden
+        );
+
+        d.districtId =
+            hidden;
+    }
+
+    function selectFirstAvailableSize() {
+        const firstAvailable =
+            state.sizes.find(
+                item =>
+                    item.disponivel ===
+                        true &&
+                    item.visivel ===
+                        true
+            );
+
+        if (firstAvailable) {
+            selectSize(
+                firstAvailable
+                    .tamanho_ml,
+
+                firstAvailable
+                    .preco_base
+            );
+        }
+    }
+
+    async function openRepeatedOrderIfNeeded() {
+        let repeatedOrder =
+            null;
+
+        try {
+            const stored =
+                sessionStorage.getItem(
+                    "azuryPedidoRepetido"
+                );
+
+            repeatedOrder =
+                stored
+                    ? JSON.parse(
+                        stored
+                    )
+                    : null;
+        } catch (_) {
+            repeatedOrder =
+                null;
+        }
+
+        if (!repeatedOrder) {
+            return;
+        }
+
+        const tamanho =
+            Number(
+                repeatedOrder
+                    .tamanho_ml
+            );
+
+        try {
+            sessionStorage.removeItem(
+                "azuryPedidoRepetido"
+            );
+        } catch (_) {
+        }
+
+        const size =
+            state.sizes.find(
+                item =>
+                    Number(
+                        item.tamanho_ml
+                    ) ===
+                        tamanho &&
+                    item.disponivel ===
+                        true &&
+                    item.visivel ===
+                        true
+            );
+
+        if (!size) {
+            alert(
+                "O tamanho deste pedido não está disponível no cardápio atual."
+            );
+
+            return;
+        }
+
+        state.cart =
+            [];
+
+        try {
+            sessionStorage.removeItem(
+                CART_KEY
+            );
+        } catch (_) {
+        }
+
+        renderCart();
 
         resetBuilder();
 
-        if (button.dataset.produtoTipo === "azury_box") {
-          const selectedBox =
-            boxByKey(button.dataset.produtoChave) ||
-            state.boxes.find(productIsAvailable);
-
-          if (!selectedBox) {
-            alert("A Azury Box está indisponível no momento.");
-            return;
-          }
-
-          selectBox(productKey(selectedBox));
-        } else {
-          selectSize(button.dataset.tamanho, button.dataset.precoBase);
-        }
-
-        await fillCustomer();
-        renderCart();
-        showStep(1);
-        openModal();
-      });
-    });
-
-    d.add?.addEventListener("click", addCurrentToCart);
-
-    d.stickyAdd?.addEventListener("click", addCurrentToCart);
-
-    d.cartList?.addEventListener("click", (event) => {
-      const button = event.target.closest("button[data-cart-action]");
-
-      if (!button) {
-        return;
-      }
-
-      const id = button.dataset.id || "";
-
-      const action = button.dataset.cartAction;
-
-      if (action === "increase") {
-        changeCartItem(id, 1);
-      } else if (action === "decrease") {
-        changeCartItem(id, -1);
-      } else if (action === "remove") {
-        removeCartItem(id);
-      }
-    });
-
-    d.next?.addEventListener("click", () => {
-      if (!requireOpen()) {
-        return;
-      }
-
-      if (!state.cart.length) {
-        alert("Adicione pelo menos um item à sacola.");
-
-        return;
-      }
-
-      renderCart();
-
-      showStep(2);
-    });
-
-    d.back?.addEventListener("click", () => showStep(1));
-
-    d.close?.addEventListener("click", closeModal);
-
-    d.modal?.addEventListener("click", (event) => {
-      if (event.target === d.modal) {
-        closeModal();
-      }
-    });
-
-    d.send?.addEventListener("click", createOrder);
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closeModal();
-      }
-    });
-  }
-
-  function ensureDistrictField() {
-    if (d.districtId || !d.addressOk) {
-      return;
-    }
-
-    const hidden = document.createElement("input");
-
-    hidden.type = "hidden";
-
-    hidden.id = "bairroEntregaId";
-
-    hidden.value = "";
-
-    d.addressOk.insertAdjacentElement("afterend", hidden);
-
-    d.districtId = hidden;
-  }
-
-  function selectFirstAvailableSize() {
-    const firstAvailable = state.sizes.find(
-      (item) => item.disponivel === true && item.visivel === true,
-    );
-
-    if (firstAvailable) {
-      selectSize(
-        firstAvailable.tamanho_ml,
-
-        firstAvailable.preco_base,
-      );
-    }
-  }
-
-  async function openRepeatedOrderIfNeeded() {
-    let repeatedOrder = null;
-
-    try {
-      const stored = sessionStorage.getItem("azuryPedidoRepetido");
-      repeatedOrder = stored ? JSON.parse(stored) : null;
-    } catch (_) {
-      repeatedOrder = null;
-    }
-
-    if (!repeatedOrder) {
-      return;
-    }
-
-    try {
-      sessionStorage.removeItem("azuryPedidoRepetido");
-    } catch (_) {}
-
-    const boxMode = isBoxProduct(repeatedOrder);
-    const product = boxMode
-      ? boxByKey(
-          repeatedOrder.produto_chave ||
-            repeatedOrder.tamanho_label ||
-            repeatedOrder.produto,
-        )
-      : state.sizes.find(
-          (item) =>
-            Number(item.tamanho_ml) === Number(repeatedOrder.tamanho_ml) &&
-            productIsAvailable(item),
+        selectSize(
+            size.tamanho_ml,
+            size.preco_base
         );
 
-    if (!product || !productIsAvailable(product)) {
-      alert("Este produto não está disponível no cardápio atual.");
-      return;
-    }
+        await fillCustomer();
 
-    state.cart = [];
+        renderCart();
 
-    try {
-      sessionStorage.removeItem(CART_KEY);
-    } catch (_) {}
+        showStep(1);
 
-    renderCart();
-    resetBuilder();
+        openModal();
 
-    if (boxMode) {
-      selectBox(productKey(product));
-    } else {
-      selectSize(product.tamanho_ml, product.preco_base);
-    }
+        if (d.cartFeedback) {
+            const message =
+                "Tamanho do pedido anterior selecionado. Escolha seus complementos novamente.";
 
-    await fillCustomer();
-    renderCart();
-    showStep(1);
-    openModal();
+            d.cartFeedback.textContent =
+                message;
 
-    if (d.cartFeedback) {
-      const feedback =
-        "Produto do pedido anterior selecionado. Escolha seus complementos novamente.";
-      d.cartFeedback.textContent = feedback;
-
-      window.setTimeout(() => {
-        if (d.cartFeedback && d.cartFeedback.textContent === feedback) {
-          d.cartFeedback.textContent = "";
+            window.setTimeout(
+                () => {
+                    if (
+                        d.cartFeedback &&
+                        d.cartFeedback
+                            .textContent ===
+                            message
+                    ) {
+                        d.cartFeedback
+                            .textContent =
+                            "";
+                    }
+                },
+                5000
+            );
         }
-      }, 5000);
-    }
-  }
-
-  function initializeInterface() {
-    if (state.interfaceReady) {
-      renderSizes();
-
-      renderComplements();
-
-      updateWhatsapp();
-
-      renderCart();
-
-      updateStore();
-
-      selectFirstAvailableSize();
-
-      return;
     }
 
-    state.interfaceReady = true;
+    function initializeInterface() {
+        if (
+            state.interfaceReady
+        ) {
+            renderSizes();
 
-    renderSizes();
+            renderAzuryBoxCard();
 
-    renderComplements();
+            renderComplements();
 
-    loadCart();
+            updateWhatsapp();
 
-    updateWhatsapp();
+            renderCart();
 
-    setupZip();
+            updateStore();
 
-    bind();
+            selectFirstAvailableSize();
 
-    selectFirstAvailableSize();
+            return;
+        }
 
-    renderCart();
+        state.interfaceReady =
+            true;
 
-    showStep(1);
+        renderSizes();
 
-    updateStore();
+        renderAzuryBoxCard();
 
-    void openRepeatedOrderIfNeeded();
+        renderComplements();
 
-    window.setInterval(updateStore, 30000);
-  }
+        loadCart();
 
-  function showOperationUnavailable() {
-    state.operationReady = false;
+        updateWhatsapp();
 
-    if (d.storeTitle) {
-      d.storeTitle.textContent = "CARDÁPIO TEMPORARIAMENTE INDISPONÍVEL";
+        setupZip();
+
+        bind();
+
+        selectFirstAvailableSize();
+
+        renderCart();
+
+        showStep(1);
+
+        updateStore();
+
+        void openRepeatedOrderIfNeeded();
+
+        window.setInterval(
+            updateStore,
+            30000
+        );
     }
 
-    if (d.storeMsg) {
-      d.storeMsg.textContent =
-        "Estamos tentando restabelecer o cardápio automaticamente.";
+    function showOperationUnavailable() {
+        state.operationReady =
+            false;
+
+        if (d.storeTitle) {
+            d.storeTitle.textContent =
+                "CARDÁPIO TEMPORARIAMENTE INDISPONÍVEL";
+        }
+
+        if (d.storeMsg) {
+            d.storeMsg.textContent =
+                "Estamos tentando restabelecer o cardápio automaticamente.";
+        }
+
+        d.store?.classList.remove(
+            "aberta"
+        );
+
+        d.store?.classList.add(
+            "fechada"
+        );
+
+        $$(".btn-montar")
+            .forEach(
+                button => {
+                    button.disabled =
+                        true;
+
+                    button.textContent =
+                        "Carregando cardápio...";
+                }
+            );
+
+        if (d.add) {
+            d.add.disabled =
+                true;
+        }
+
+        if (d.stickyAdd) {
+            d.stickyAdd.disabled =
+                true;
+
+            d.stickyAdd.textContent =
+                "Carregando cardápio...";
+        }
+
+        if (d.next) {
+            d.next.disabled =
+                true;
+        }
+
+        if (d.send) {
+            d.send.disabled =
+                true;
+        }
     }
 
-    d.store?.classList.remove("aberta");
+    function stopOperationRecovery() {
+        if (
+            !state.recoveryTimer
+        ) {
+            return;
+        }
 
-    d.store?.classList.add("fechada");
+        window.clearInterval(
+            state.recoveryTimer
+        );
 
-    $$(".btn-montar").forEach((button) => {
-      button.disabled = true;
-
-      button.textContent = "Carregando cardápio...";
-    });
-
-    if (d.add) {
-      d.add.disabled = true;
+        state.recoveryTimer =
+            null;
     }
 
-    if (d.stickyAdd) {
-      d.stickyAdd.disabled = true;
+    async function recoverOperation() {
+        if (
+            state.refreshingOperation
+        ) {
+            return;
+        }
 
-      d.stickyAdd.textContent = "Carregando cardápio...";
+        state.refreshingOperation =
+            true;
+
+        try {
+            await loadOperation();
+
+            initializeInterface();
+
+            stopOperationRecovery();
+
+            console.info(
+                "Conexão com o cardápio restabelecida."
+            );
+        } catch (error) {
+            console.warn(
+                "O cardápio continua aguardando reconexão.",
+                error
+            );
+        } finally {
+            state.refreshingOperation =
+                false;
+        }
     }
 
-    if (d.next) {
-      d.next.disabled = true;
+    function startOperationRecovery() {
+        if (
+            state.recoveryTimer
+        ) {
+            return;
+        }
+
+        state.recoveryTimer =
+            window.setInterval(
+                recoverOperation,
+                OPERATION_RECOVERY_INTERVAL
+            );
     }
 
-    if (d.send) {
-      d.send.disabled = true;
-    }
-  }
-
-  function stopOperationRecovery() {
-    if (!state.recoveryTimer) {
-      return;
-    }
-
-    window.clearInterval(state.recoveryTimer);
-
-    state.recoveryTimer = null;
-  }
-
-  async function recoverOperation() {
-    if (state.refreshingOperation) {
-      return;
-    }
-
-    state.refreshingOperation = true;
+    ensureDistrictField();
 
     try {
-      await loadOperation();
+        await loadOperation();
 
-      initializeInterface();
-
-      stopOperationRecovery();
-
-      console.info("Conexão com o cardápio restabelecida.");
+        initializeInterface();
     } catch (error) {
-      console.warn("O cardápio continua aguardando reconexão.", error);
-    } finally {
-      state.refreshingOperation = false;
+        console.error(
+            "Falha inicial ao carregar a operação Azury:",
+            error
+        );
+
+        const cacheLoaded =
+            applyCachedOperation();
+
+        if (cacheLoaded) {
+            initializeInterface();
+        } else {
+            showOperationUnavailable();
+        }
+
+        startOperationRecovery();
     }
-  }
-
-  function startOperationRecovery() {
-    if (state.recoveryTimer) {
-      return;
-    }
-
-    state.recoveryTimer = window.setInterval(
-      recoverOperation,
-      OPERATION_RECOVERY_INTERVAL,
-    );
-  }
-
-  ensureDistrictField();
-
-  try {
-    await loadOperation();
-
-    initializeInterface();
-  } catch (error) {
-    console.error("Falha inicial ao carregar a operação Azury:", error);
-
-    const cacheLoaded = applyCachedOperation();
-
-    if (cacheLoaded) {
-      initializeInterface();
-    } else {
-      showOperationUnavailable();
-    }
-
-    startOperationRecovery();
-  }
 });

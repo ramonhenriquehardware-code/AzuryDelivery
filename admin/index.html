@@ -157,6 +157,21 @@
                     Cardápio
                 </button>
 
+                <button class="nav-item" data-section="conteudo">
+                    <span>🎨</span>
+                    Conteúdo
+                </button>
+
+                <button class="nav-item" data-section="financeiro">
+                    <span>💰</span>
+                    Financeiro
+                </button>
+
+                <button class="nav-item" data-section="estoque">
+                    <span>📊</span>
+                    Estoque
+                </button>
+
                 <button class="nav-item" data-section="entregas">
                     <span>🛵</span>
                     Entregas
@@ -315,6 +330,88 @@
 
                     </div>
 
+
+                    <div class="section-toolbar" style="margin-top: 32px;">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                PH SABOR &amp; CIA
+                            </span>
+
+                            <h2>
+                                Visão geral PH Sabor &amp; Cia
+                            </h2>
+
+                            <p>
+                                Acompanhe os pedidos e a operação da PH separadamente da Azury.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div id="phOverviewCards" class="metric-grid"></div>
+
+
+                    <div class="two-column-grid">
+
+                        <article class="panel-card">
+
+                            <div class="panel-heading">
+
+                                <div>
+
+                                    <span class="eyebrow">
+                                        OPERAÇÃO PH
+                                    </span>
+
+                                    <h2>
+                                        Status da loja
+                                    </h2>
+
+                                </div>
+
+                                <button class="btn btn-small" data-go-section="horarios" type="button">
+                                    Gerenciar
+                                </button>
+
+                            </div>
+
+                            <div id="phStoreStatusPanel" class="store-status-panel"></div>
+
+                        </article>
+
+
+                        <article class="panel-card">
+
+                            <div class="panel-heading">
+
+                                <div>
+
+                                    <span class="eyebrow">
+                                        PEDIDOS PH
+                                    </span>
+
+                                    <h2>
+                                        Pedidos recentes
+                                    </h2>
+
+                                </div>
+
+                                <button class="btn btn-small" data-go-section="pedidos" type="button">
+                                    Ver todos
+                                </button>
+
+                            </div>
+
+                            <div id="phRecentOrders" class="compact-list"></div>
+
+                        </article>
+
+                    </div>
+
                 </section>
 
 
@@ -333,13 +430,23 @@
                             </h2>
 
                             <p>
-                                Aceite, prepare, despache, entregue ou cancele pedidos.
+                                Aceite, prepare, despache e entregue pedidos.
                             </p>
 
                         </div>
 
 
-                        <div class="toolbar-controls">
+                        <div class="toolbar-controls orders-toolbar-controls">
+
+                            <div class="company-switch-group" aria-label="Selecionar estabelecimento dos pedidos">
+                                <button id="ordersAzuryButton" class="btn btn-primary company-switch company-switch-azury" type="button">
+                                    Azury
+                                </button>
+
+                                <button id="ordersPhButton" class="btn btn-secondary company-switch company-switch-ph" type="button">
+                                    PH Sabor &amp; Cia
+                                </button>
+                            </div>
 
                             <label class="compact-field">
 
@@ -374,12 +481,7 @@
                                     <option value="entregue">
                                         Entregues
                                     </option>
-
-                                    <option value="cancelado">
-                                        Cancelados
-                                    </option>
-
-                                </select>
+</select>
 
                             </label>
 
@@ -464,7 +566,7 @@
 
                 <section id="section-cardapio" class="admin-section">
 
-                    <div class="section-toolbar">
+                    <div id="cardapioToolbar" class="section-toolbar cardapio-toolbar company-block company-block-azury">
 
                         <div>
 
@@ -473,18 +575,295 @@
                             </span>
 
                             <h2>
-                                Cardápio e complementos
+                                Cardápio
                             </h2>
 
-                            <p>
-                                Edite preços, disponibilidade e ordem de exibição.
+                            <p id="cardapioCompanyDescription">
+                                Copos, Azury Box e complementos da Azury.
                             </p>
 
                         </div>
 
-                        <button id="newComplementButton" class="btn btn-primary" type="button">
-                            + Novo complemento
-                        </button>
+                        <div class="toolbar-controls cardapio-toolbar-controls">
+
+                            <div class="company-switch-group" aria-label="Selecionar cardápio">
+
+                                <button id="cardapioAzuryButton" class="btn btn-primary company-switch company-switch-azury" type="button">
+                                    Azury
+                                </button>
+
+                                <button id="cardapioPhButton" class="btn btn-secondary company-switch company-switch-ph" type="button">
+                                    PH Sabor &amp; Cia
+                                </button>
+
+                            </div>
+
+                            <select id="cardapioAvailabilityFilter" class="form-control cardapio-status-filter" aria-label="Filtrar disponibilidade">
+                                <option value="todos">Todos</option>
+                                <option value="disponiveis">Disponíveis</option>
+                                <option value="indisponiveis">Indisponíveis</option>
+                            </select>
+
+                            <button id="newComplementButton" class="btn btn-primary" type="button">
+                                + Novo complemento
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div id="cardapioAzuryContent" class="cardapio-company-content">
+
+                        <article class="panel-card space-bottom company-block company-block-azury">
+
+                            <div class="panel-heading">
+
+                                <div>
+
+                                    <h3>
+                                        Copos tradicionais
+                                    </h3>
+
+                                    <p>
+                                        300, 400, 500 e 700 ml.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <div id="sizesList" class="data-grid"></div>
+
+                        </article>
+
+
+                        <article class="panel-card space-bottom company-block company-block-azury">
+
+                            <div class="panel-heading">
+
+                                <div>
+
+                                    <h3>
+                                        Azury Box
+                                    </h3>
+
+                                    <p>
+                                        P, M e G com seus limites de complementos.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <div id="azuryBoxesList" class="data-grid"></div>
+
+                        </article>
+
+
+                        <article class="panel-card company-block company-block-azury">
+
+                            <div class="panel-heading">
+
+                                <div>
+
+                                    <h3>
+                                        Complementos
+                                    </h3>
+
+                                    <p>
+                                        Itens disponíveis para montagem dos produtos Azury.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <div id="complementsList" class="data-grid"></div>
+
+                        </article>
+
+                    </div>
+
+
+                    <div id="cardapioPhContent" class="cardapio-company-content" hidden></div>
+
+                </section>
+
+
+                <section id="section-conteudo" class="admin-section">
+
+                    <div id="conteudoToolbar" class="section-toolbar company-block company-block-azury">
+
+                        <div>
+                            <span class="eyebrow">CONTEÚDO</span>
+                            <h2>Central de conteúdo</h2>
+                            <p id="conteudoCompanyDescription">
+                                Crie artes da Azury com visual comercial, dados atuais do painel e histórico para evitar repetição.
+                            </p>
+                        </div>
+
+                        <div class="toolbar-controls">
+                            <div class="company-switch-group" aria-label="Selecionar loja do conteúdo">
+                                <button id="conteudoAzuryButton" class="btn btn-primary company-switch company-switch-azury" type="button">
+                                    Azury
+                                </button>
+                                <button id="conteudoPhButton" class="btn btn-secondary company-switch company-switch-ph" type="button">
+                                    PH Sabor &amp; Cia
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="conteudo-layout">
+
+                        <article class="panel-card conteudo-creator-card">
+
+                            <div class="panel-heading">
+                                <div>
+                                    <h3>Criar nova arte</h3>
+                                    <p>Escolha o objetivo. O painel monta a publicação com as informações atuais da loja.</p>
+                                </div>
+                            </div>
+
+                            <div class="conteudo-control-section">
+                                <span class="conteudo-control-label">Tipo de conteúdo</span>
+                                <div class="conteudo-type-grid conteudo-type-grid-completo">
+                                    <button class="conteudo-type-card active" data-conteudo-type="cardapio_dia" type="button"><span class="conteudo-type-icon">📋</span><strong>Cardápio do dia</strong><small>Produtos disponíveis e preços atuais.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="loja_aberta" type="button"><span class="conteudo-type-icon">🟢</span><strong>Pedidos liberados</strong><small>Loja aberta, horário e chamada para pedido.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="promocao" type="button"><span class="conteudo-type-icon">🔥</span><strong>Promoção / oferta</strong><small>Produto, preço promocional e validade.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="produto_destaque" type="button"><span class="conteudo-type-icon">⭐</span><strong>Produto em destaque</strong><small>Um produto como protagonista da arte.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="novidade" type="button"><span class="conteudo-type-icon">🆕</span><strong>Novidade</strong><small>Apresente item novo ou lançamento.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="ultima_chamada" type="button"><span class="conteudo-type-icon">⏰</span><strong>Última chamada</strong><small>Peça antes do fechamento de hoje.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="loja_fechada" type="button"><span class="conteudo-type-icon">🔴</span><strong>Encerramos por hoje</strong><small>Aviso de fechamento e retorno.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="agradecimento" type="button"><span class="conteudo-type-icon">💙</span><strong>Agradecimento</strong><small>Mensagem aos clientes do dia.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="aviso" type="button"><span class="conteudo-type-icon">📢</span><strong>Aviso / comunicado</strong><small>Título e mensagem personalizados.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="horarios" type="button"><span class="conteudo-type-icon">🕐</span><strong>Horários</strong><small>Divulgue o funcionamento da loja.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="delivery" type="button"><span class="conteudo-type-icon">🛵</span><strong>Delivery</strong><small>Chamada forte para fazer pedido.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="manutencao" type="button"><span class="conteudo-type-icon">🔧</span><strong>Manutenção / pausa</strong><small>Avise pausa temporária e previsão de retorno.</small></button>
+                                    <button class="conteudo-type-card" data-conteudo-type="recompensas" data-conteudo-azury-only="true" type="button"><span class="conteudo-type-icon">🎁</span><strong>Benefícios / recompensas</strong><small>Conteúdo exclusivo do cadastro Azury.</small></button>
+                                </div>
+                            </div>
+
+                            <div class="conteudo-control-grid">
+                                <div class="conteudo-control-section conteudo-control-section-compact">
+                                    <label class="conteudo-field-label" for="conteudoFormatSelect">Formato</label>
+                                    <select id="conteudoFormatSelect" class="form-control">
+                                        <option value="story">Story / Status — 1080 × 1920</option>
+                                        <option value="post">Post Instagram — 1080 × 1350</option>
+                                    </select>
+                                </div>
+
+                                <div class="conteudo-control-section conteudo-control-section-compact">
+                                    <span class="conteudo-control-label">Visual</span>
+                                    <div id="conteudoVariationHint" class="conteudo-variation-hint conteudo-variation-hint-inline">
+                                        O próximo visual será escolhido pelo histórico.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="conteudoCustomOptions" class="conteudo-control-section" hidden></div>
+
+                            <div id="conteudoMenuOptions" class="conteudo-control-section">
+                                <div class="conteudo-items-heading">
+                                    <div>
+                                        <span id="conteudoItemsTitle" class="conteudo-control-label">Itens da arte</span>
+                                        <small id="conteudoItemsHelp">Já deixamos os principais marcados. Você pode ajustar.</small>
+                                    </div>
+                                    <button id="conteudoSelectAllButton" class="btn btn-small btn-secondary" type="button">Marcar todos</button>
+                                </div>
+                                <div id="conteudoItemsList" class="conteudo-items-list"></div>
+                            </div>
+
+                            <div class="conteudo-generate-box">
+                                <button id="conteudoGenerateButton" class="btn btn-primary conteudo-generate-button" type="button">
+                                    ✨ Gerar imagem
+                                </button>
+                            </div>
+
+                        </article>
+
+                        <article class="panel-card conteudo-preview-card">
+
+                            <div class="panel-heading">
+                                <div>
+                                    <h3>Prévia</h3>
+                                    <p>Arte em alta resolução com produto, marca e chamada comercial.</p>
+                                </div>
+                            </div>
+
+                            <div class="conteudo-canvas-shell">
+                                <canvas id="conteudoCanvas" width="1080" height="1920" aria-label="Prévia da arte gerada"></canvas>
+                            </div>
+
+                            <div class="conteudo-preview-actions">
+                                <button id="conteudoDownloadButton" class="btn btn-primary" type="button" disabled>⬇ Baixar PNG</button>
+                                <button id="conteudoVariationButton" class="btn btn-secondary" type="button" disabled>↻ Gerar outra variação</button>
+                            </div>
+
+                            <p class="conteudo-save-note">
+                                Cada geração fica registrada por loja, data, tipo e variação. O histórico é usado para não repetir o mesmo visual em sequência.
+                            </p>
+
+                        </article>
+
+                    </div>
+
+                    <article class="panel-card conteudo-history-card">
+
+                        <div class="panel-heading">
+                            <div>
+                                <span class="eyebrow">HISTÓRICO</span>
+                                <h3>Conteúdos já usados</h3>
+                                <p>Abra uma arte antiga, baixe novamente ou exclua o registro sem caixas de confirmação do navegador.</p>
+                            </div>
+                            <button id="conteudoRefreshHistoryButton" class="btn btn-small btn-secondary" type="button">↻ Atualizar</button>
+                        </div>
+
+                        <div id="conteudoHistoryList" class="conteudo-history-list"></div>
+
+                    </article>
+
+                </section>
+
+
+                <section id="section-financeiro" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                GESTÃO FINANCEIRA
+                            </span>
+
+                            <h2>
+                                Financeiro
+                            </h2>
+
+                            <p>
+                                Controle detalhado de ganhos, compras, despesas e investimentos.
+                            </p>
+
+                        </div>
+
+
+                        <div class="toolbar-controls">
+
+                            <button id="financeiroAzuryButton" class="btn btn-primary company-switch company-switch-azury" type="button">
+                                Azury
+                            </button>
+
+                            <button id="financeiroPhButton" class="btn btn-secondary company-switch company-switch-ph" type="button">
+                                PH Sabor &amp; Cia
+                            </button>
+
+                            <button id="newFinanceEntryButton" class="btn btn-primary" type="button">
+                                + Novo lançamento
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -495,19 +874,45 @@
 
                             <div>
 
-                                <h3>
-                                    Tamanhos oficiais
+                                <h3 id="financeiroCompanyTitle">
+                                    Financeiro Azury
                                 </h3>
 
                                 <p>
-                                    300, 400, 500 e 700 ml.
+                                    Resumo financeiro do período selecionado.
                                 </p>
 
                             </div>
 
+
+                            <form id="financeiroPeriodForm" class="toolbar-controls">
+
+                                <label class="compact-field">
+
+                                    <span>De</span>
+
+                                    <input id="financeiroDataInicio" type="date">
+
+                                </label>
+
+                                <label class="compact-field">
+
+                                    <span>Até</span>
+
+                                    <input id="financeiroDataFim" type="date">
+
+                                </label>
+
+                                <button class="btn btn-secondary" type="submit">
+                                    Atualizar
+                                </button>
+
+                            </form>
+
                         </div>
 
-                        <div id="sizesList" class="data-grid"></div>
+
+                        <div id="financeiroSummary" class="metric-grid compact-metrics"></div>
 
                     </article>
 
@@ -519,18 +924,109 @@
                             <div>
 
                                 <h3>
-                                    Complementos
+                                    Lançamentos
                                 </h3>
 
-                                <p>
-                                    Itens disponíveis para montagem dos copos.
+                                <p id="financeiroCompanyLabel">
+                                    Compras, despesas, investimentos e entradas da Azury.
                                 </p>
 
                             </div>
 
                         </div>
 
-                        <div id="complementsList" class="data-grid"></div>
+
+                        <div id="financeiroList" class="data-grid"></div>
+
+                    </article>
+
+                </section>
+
+
+                <section id="section-estoque" class="admin-section">
+
+                    <div class="section-toolbar">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                CONTROLE DE ESTOQUE
+                            </span>
+
+                            <h2>
+                                Estoque
+                            </h2>
+
+                            <p>
+                                Entradas, consumo pelos pedidos e saldo disponível, sem misturar Azury e PH.
+                            </p>
+
+                        </div>
+
+
+                        <div class="toolbar-controls">
+
+                            <button id="estoqueAzuryButton" class="btn btn-primary company-switch company-switch-azury" type="button">
+                                Azury
+                            </button>
+
+                            <button id="estoquePhButton" class="btn btn-secondary company-switch company-switch-ph" type="button">
+                                PH Sabor &amp; Cia
+                            </button>
+
+                            <button id="refreshEstoqueButton" class="btn btn-secondary" type="button">
+                                ↻ Atualizar estoque
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel-card space-bottom estoque-overview-panel">
+
+                        <div class="panel-heading">
+
+                            <div>
+
+                                <h3 id="estoqueCompanyTitle">
+                                    Estoque Azury
+                                </h3>
+
+                                <p id="estoqueCompanyLabel">
+                                    Embalagens e itens controlados da Azury.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div id="estoqueSummary" class="metric-grid compact-metrics"></div>
+
+                    </article>
+
+
+                    <article class="panel-card">
+
+                        <div class="panel-heading">
+
+                            <div>
+
+                                <h3>
+                                    Itens controlados
+                                </h3>
+
+                                <p>
+                                    O saldo é calculado pelas entradas e saídas registradas no Supabase.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div id="estoqueList" class="data-grid estoque-grid"></div>
 
                     </article>
 
@@ -571,7 +1067,7 @@
 
                 <section id="section-horarios" class="admin-section">
 
-                    <div class="section-toolbar">
+                    <div id="horariosToolbar" class="section-toolbar horarios-toolbar company-block company-block-azury">
 
                         <div>
 
@@ -583,47 +1079,113 @@
                                 Loja e horários
                             </h2>
 
-                            <p>
-                                Pause pedidos, altere a mensagem e defina os horários.
+                            <p id="horariosCompanyDescription">
+                                Pause pedidos, altere a mensagem e defina os horários da Azury.
                             </p>
+
+                        </div>
+
+                        <div class="toolbar-controls">
+
+                            <div class="company-switch-group" aria-label="Selecionar loja e horários">
+
+                                <button id="horariosAzuryButton" class="btn btn-primary company-switch company-switch-azury" type="button">
+                                    Azury
+                                </button>
+
+                                <button id="horariosPhButton" class="btn btn-secondary company-switch company-switch-ph" type="button">
+                                    PH Sabor &amp; Cia
+                                </button>
+
+                            </div>
 
                         </div>
 
                     </div>
 
 
-                    <article class="panel-card space-bottom">
+                    <div id="horariosAzuryContent" class="horarios-company-content">
 
-                        <div class="panel-heading">
+                        <article class="panel-card space-bottom company-block company-block-azury">
 
-                            <div>
-                                <h3>
-                                    Configuração geral
-                                </h3>
+                            <div class="panel-heading">
+
+                                <div>
+                                    <h3>
+                                        Configuração geral
+                                    </h3>
+                                </div>
+
                             </div>
 
-                        </div>
+                            <form id="storeConfigForm" class="form-grid"></form>
 
-                        <form id="storeConfigForm" class="form-grid"></form>
-
-                    </article>
+                        </article>
 
 
-                    <article class="panel-card">
+                        <article class="panel-card company-block company-block-azury">
 
-                        <div class="panel-heading">
+                            <div class="panel-heading">
 
-                            <div>
-                                <h3>
-                                    Horários da semana
-                                </h3>
+                                <div>
+                                    <h3>
+                                        Horários da semana
+                                    </h3>
+                                </div>
+
                             </div>
 
-                        </div>
+                            <div id="schedulesList" class="schedule-list"></div>
 
-                        <div id="schedulesList" class="schedule-list"></div>
+                        </article>
 
-                    </article>
+                    </div>
+
+
+                    <div id="horariosPhContent" class="horarios-company-content" hidden>
+
+                        <article class="panel-card space-bottom company-block company-block-ph">
+
+                            <div class="panel-heading">
+
+                                <div>
+                                    <h3>
+                                        Configuração geral
+                                    </h3>
+
+                                    <p>
+                                        Dados principais da PH Sabor &amp; Cia.
+                                    </p>
+                                </div>
+
+                            </div>
+
+                            <form id="phStoreConfigForm" class="form-grid"></form>
+
+                        </article>
+
+
+                        <article class="panel-card company-block company-block-ph">
+
+                            <div class="panel-heading">
+
+                                <div>
+                                    <h3>
+                                        Horários da semana
+                                    </h3>
+
+                                    <p>
+                                        Ative os dias e ajuste os horários da PH.
+                                    </p>
+                                </div>
+
+                            </div>
+
+                            <div id="phSchedulesList" class="schedule-list"></div>
+
+                        </article>
+
+                    </div>
 
                 </section>
 

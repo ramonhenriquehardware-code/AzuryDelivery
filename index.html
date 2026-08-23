@@ -477,104 +477,6 @@
             }
         }
 
-        /* =========================================
-           COPOS — MESMA LINGUAGEM VISUAL DA BOX
-        ========================================= */
-        .azury-copos-destaque {
-            max-width: 1180px;
-            margin: 34px auto 0;
-        }
-
-        .azury-copos-card {
-            background:
-                radial-gradient(circle at 9% 10%, rgba(0, 81, 255, 0.13), transparent 34%),
-                linear-gradient(145deg, #ffffff 0%, #f5f9ff 100%);
-        }
-
-        .azury-copos-imagem {
-            background:
-                radial-gradient(circle at 50% 45%, #ffffff 0%, #f7faff 72%, #eef4ff 100%);
-        }
-
-        .azury-copos-imagem img {
-            width: 86%;
-            height: 86%;
-            object-fit: contain;
-        }
-
-        .azury-copos-selo {
-            background: rgba(0, 81, 255, 0.11);
-        }
-
-        .azury-copos-opcoes {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-
-        .azury-copos-opcao {
-            position: relative;
-            min-height: 122px;
-        }
-
-        .azury-copos-opcao .azury-copos-tamanho {
-            width: fit-content;
-            min-width: 58px;
-            height: 31px;
-            padding: 0 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-            border-radius: 999px;
-            background: #0051ff;
-            color: #ffffff;
-            font-size: 0.78rem;
-            font-weight: 900;
-            line-height: 1;
-        }
-
-        .azury-copos-opcao-badge {
-            display: inline-flex;
-            width: fit-content;
-            margin-top: 8px;
-            padding: 4px 7px;
-            border-radius: 999px;
-            background: #eef4ff;
-            color: #0051ff;
-            font-size: 0.64rem;
-            font-weight: 900;
-            line-height: 1;
-        }
-
-        .azury-copos-opcao.indisponivel .azury-copos-opcao-badge {
-            background: #f2f4f7;
-            color: #667085;
-        }
-
-        @media (max-width: 980px) {
-            .azury-copos-opcoes {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 560px) {
-            .azury-copos-destaque {
-                margin-top: 24px;
-            }
-
-            .azury-copos-opcoes {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .azury-copos-opcao {
-                min-height: 112px;
-            }
-
-            .azury-copos-imagem img {
-                width: 92%;
-                height: 92%;
-            }
-        }
-
     </style>
 
 </head>
@@ -902,10 +804,10 @@
     <!-- CARDÁPIO -->
     <section id="Cardapio" class="cardapio">
 
-        <h2>Escolha seu jeito de pedir</h2>
+        <h2>Monte o Seu Açaí</h2>
 
         <p>
-            Monte seu açaí no copo ou escolha uma Azury Box e personalize do seu jeito.
+            Escolha o tamanho e monte cada camada do seu jeito.
         </p>
 
         <div id="statusLoja" class="status-loja" role="status" aria-live="polite">
@@ -926,78 +828,145 @@
 
         </div>
 
-        <div class="azury-copos-destaque" data-azury-copos-card>
+        <ul class="menu-grid">
 
-            <article class="azury-box-card azury-copos-card">
+            <li data-categoria="monte-seu">
 
-                <div class="azury-box-imagem azury-copos-imagem">
-                    <img src="../Imagens/Copo Vazio 400 ml.png"
-                        alt="Copo Azury para montagem personalizada de açaí">
-                </div>
+                <div class="monte-seu-imagem">
 
-                <div class="azury-box-conteudo">
-
-                    <span class="azury-box-selo azury-copos-selo">
-                        Monte do seu jeito • Copos
-                    </span>
-
-                    <h3>Monte seu Açaí</h3>
-
-                    <p class="azury-box-descricao">
-                        Escolha o tamanho do copo, monte o meio e a cobertura e aproveite os complementos grátis incluídos em cada tamanho.
-                    </p>
-
-                    <div id="azuryCoposOpcoes" class="azury-box-opcoes azury-copos-opcoes"
-                        aria-label="Tamanhos dos copos de açaí">
-                        <div class="azury-box-opcao azury-copos-opcao">
-                            <span class="azury-copos-tamanho">300ml</span>
-                            <strong>R$ 10,00</strong>
-                            <small>2 complementos grátis</small>
-                            <span class="azury-copos-opcao-badge">Promoção</span>
-                        </div>
-                        <div class="azury-box-opcao azury-copos-opcao">
-                            <span class="azury-copos-tamanho">400ml</span>
-                            <strong>R$ 14,99</strong>
-                            <small>3 complementos grátis</small>
-                            <span class="azury-copos-opcao-badge">Disponível</span>
-                        </div>
-                        <div class="azury-box-opcao azury-copos-opcao">
-                            <span class="azury-copos-tamanho">500ml</span>
-                            <strong>R$ 18,99</strong>
-                            <small>3 complementos grátis</small>
-                            <span class="azury-copos-opcao-badge">Disponível</span>
-                        </div>
-                        <div class="azury-box-opcao azury-copos-opcao">
-                            <span class="azury-copos-tamanho">700ml</span>
-                            <strong>R$ 29,99</strong>
-                            <small>4 complementos grátis</small>
-                            <span class="azury-copos-opcao-badge">Extra grande</span>
-                        </div>
-                    </div>
-
-                    <strong id="azuryCoposPrecoInicial" class="azury-box-preco">
-                        A partir de R$ 10,00
-                    </strong>
-
-                    <small class="azury-box-regra">
-                        Extras acima do limite e ingredientes especiais são cobrados à parte.
-                    </small>
-
-                    <button type="button" class="btn btn-montar"
-                        data-btn-azury-copos
-                        data-produto-tipo="acai_copo"
-                        data-tamanho="300"
-                        data-preco-base="10.00"
-                        data-disponibilidade="disponivel"
-                        data-texto-aberto="Montar meu açaí">
-                        Montar meu açaí
-                    </button>
+                    <img src="../Imagens/Copo vazio de 300ml.png" alt="Copo personalizado de açaí de 300 ml">
 
                 </div>
 
-            </article>
+                <span class="badge">
+                    Promoção
+                </span>
 
-        </div>
+                <h3>
+                    Monte o Seu • 300ml
+                </h3>
+
+                <p>
+                    Escolha os complementos do meio e da cobertura.
+                    As duas camadas de açaí já estão incluídas.
+                </p>
+
+                <strong>
+                    A partir de R$ 10,00
+                </strong>
+
+                <button type="button" class="btn btn-montar" data-tamanho="300" data-preco-base="10.00"
+                    data-texto-aberto="Montar meu açaí">
+
+                    Montar meu açaí
+
+                </button>
+
+            </li>
+
+            <li data-categoria="monte-seu">
+
+                <div class="monte-seu-imagem">
+
+                    <img src="../Imagens/Copo Vazio 400 ml.png" alt="Copo personalizado de açaí de 400 ml">
+
+                </div>
+
+                <span class="badge">
+                    Alta demanda
+                </span>
+
+                <h3>
+                    Monte o Seu • 400ml
+                </h3>
+
+                <p>
+                    Escolha os complementos do meio e da cobertura.
+                    As duas camadas de açaí já estão incluídas.
+                </p>
+
+                <strong>
+                    A partir de R$ 14,90
+                </strong>
+
+                <button type="button" class="btn btn-montar" data-tamanho="400" data-preco-base="14.90"
+                    data-texto-aberto="Montar meu açaí">
+
+                    Montar meu açaí
+
+                </button>
+
+            </li>
+
+            <li class="produto-em-breve" data-categoria="monte-seu" aria-label="Copo de 500 ml disponível em breve">
+
+                <div class="monte-seu-imagem">
+
+                    <img src="../Imagens/Copo vazio 500ml.png" alt="Copo personalizado de açaí de 500 ml">
+
+                </div>
+
+                <span class="badge badge-em-breve">
+                    Em breve
+                </span>
+
+                <h3>
+                    Monte o Seu • 500ml
+                </h3>
+
+                <p>
+                    Esse novo tamanho está chegando à Azury.
+                    Em breve estará disponível para pedidos.
+                </p>
+
+                <strong>
+                    Preço previsto: R$ 18,90
+                </strong>
+
+                <button type="button" class="btn btn-montar" data-tamanho="500" data-preco-base="18.90"
+                    data-disponibilidade="em-breve" disabled>
+
+                    Disponível em breve
+
+                </button>
+
+            </li>
+
+            <li data-categoria="monte-seu">
+
+                <div class="monte-seu-imagem">
+
+                    <img src="../Imagens/Copo vazio 700ml.png" alt="Copo personalizado de açaí de 700 ml">
+
+                </div>
+
+                <span class="badge">
+                    Tamanho família
+                </span>
+
+                <h3>
+                    Monte o Seu • 700ml
+                </h3>
+
+                <p>
+                    Escolha os complementos do meio e da cobertura.
+                    As duas camadas de açaí já estão incluídas.
+                </p>
+
+                <strong>
+                    A partir de R$ 24,90
+                </strong>
+
+                <button type="button" class="btn btn-montar" data-tamanho="700" data-preco-base="24.90"
+                    data-texto-aberto="Montar meu açaí">
+
+                    Montar meu açaí
+
+                </button>
+
+            </li>
+
+        </ul>
 
         <div class="azury-box-destaque" data-azury-box-card>
 
@@ -1227,7 +1196,7 @@
                 </p>
 
                 <p>
-                    &#x1F552; Terça a domingo, das 11:00 às 23:00
+                    &#x1F552; Terça a domingo, das 15:00 às 00:00
                 </p>
 
                 <p>
@@ -1808,7 +1777,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./js/supabase.js"></script>
     <script src="./js/sessao.js"></script>
-    <script src="./js/cardapio-supabase.js?v=20260817-2"></script>
+    <script src="./js/cardapio-supabase.js?v=20260823-1"></script>
 
     <script>
         (function () {
