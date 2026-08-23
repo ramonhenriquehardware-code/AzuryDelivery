@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         store: $("#statusLoja"),
         storeTitle: $("#statusLojaTitulo"),
         storeMsg: $("#statusLojaMensagem"),
+        footerSchedule: $("#footerHorarioLoja"),
         size: $("#tamanhoMonteSeu"),
         base: $("#precoBaseMonteSeu"),
         middle: $("#complementosMeio"),
@@ -4338,137 +4339,131 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderSizes() {
-        $$(".menu-grid > li")
-            .forEach(
-                card => {
-                    const button =
-                        card.querySelector(
-                            ".btn-montar"
-                        );
-
-                    const current =
-                        Number(
-                            button
-                                ?.dataset
-                                .tamanho
-                        );
-
-                    const item =
-                        state.sizes.find(
-                            size =>
-                                Number(
-                                    size.tamanho_ml
-                                ) ===
-                                current
-                        );
-
-                    if (
-                        !button ||
-                        !item
-                    ) {
-                        return;
-                    }
-
-                    const available =
-                        item.disponivel ===
-                            true &&
-                        item.visivel ===
-                            true;
-
-                    card.hidden =
-                        item.visivel ===
-                        false;
-
-                    card.classList.toggle(
-                        "produto-em-breve",
-                        !available
-                    );
-
-                    const badge =
-                        card.querySelector(
-                            ".badge"
-                        );
-
-                    const title =
-                        card.querySelector(
-                            "h3"
-                        );
-
-                    const description =
-                        card.querySelector(
-                            "h3 + p"
-                        );
-
-                    const price =
-                        card.querySelector(
-                            "h3 + p + strong"
-                        );
-
-                    if (badge) {
-                        badge.textContent =
-                            item.badge ||
-                            (
-                                available
-                                    ? "Disponível"
-                                    : "Em breve"
-                            );
-
-                        badge.classList.toggle(
-                            "badge-em-breve",
-                            !available
-                        );
-                    }
-
-                    if (title) {
-                        title.textContent =
-                            productDisplayName(
-                                item
-                            );
-                    }
-
-                    if (description) {
-                        const freeLimit =
-                            freeComplementLimit(
-                                item
-                            );
-
-                        description.textContent =
-                            available &&
-                            freeLimit > 0
-                                ? (
-                                    `${freeLimit} complementos grátis. Extras e ingredientes especiais são cobrados à parte.`
-                                )
-                                : (
-                                    item.descricao ||
-                                    "Escolha os complementos do meio e da cobertura."
-                                );
-                    }
-
-                    if (price) {
-                        price.textContent =
-                            `${
-                                available
-                                    ? "A partir de"
-                                    : "Preço previsto:"
-                            } ${money(
-                                item.preco_base
-                            )}`;
-                    }
-
-                    button.dataset.precoBase =
-                        String(
-                            item.preco_base
-                        );
-
-                    button.dataset.disponibilidade =
-                        available
-                            ? "disponivel"
-                            : "em-breve";
-
-                    button.disabled =
-                        !available;
-                }
+        const cupCard =
+            document.querySelector(
+                "[data-azury-cups-card]"
             );
+
+        const cupOptions =
+            document.getElementById(
+                "azuryCupOpcoes"
+            );
+
+        const initialPrice =
+            document.getElementById(
+                "azuryCupPrecoInicial"
+            );
+
+        const cupButton =
+            document.querySelector(
+                "[data-btn-azury-cups]"
+            );
+
+        const visibleSizes =
+            state.sizes.filter(
+                item =>
+                    item.visivel !==
+                    false
+            );
+
+        const availableSizes =
+            visibleSizes.filter(
+                item =>
+                    item.disponivel ===
+                    true
+            );
+
+        if (cupCard) {
+            cupCard.hidden =
+                visibleSizes.length ===
+                0;
+        }
+
+        if (cupOptions) {
+            cupOptions.innerHTML =
+                visibleSizes
+                    .map(
+                        item => {
+                            const available =
+                                item.disponivel ===
+                                true;
+
+                            const freeLimit =
+                                freeComplementLimit(
+                                    item
+                                );
+
+                            return `
+                        <div
+                            class="azury-box-opcao ${
+                                available
+                                    ? ""
+                                    : "indisponivel"
+                            }"
+                        >
+                            <span class="azury-box-tamanho azury-copo-tamanho">
+                                ${esc(item.tamanho_ml)}
+                            </span>
+
+                            <strong>
+                                ${money(item.preco_base)}
+                            </strong>
+
+                            <small>
+                                ${
+                                    available
+                                        ? `${esc(freeLimit)} complementos grátis`
+                                        : "Indisponível no momento"
+                                }
+                            </small>
+                        </div>
+                    `;
+                        }
+                    )
+                    .join(
+                        ""
+                    );
+        }
+
+        const firstAvailable =
+            availableSizes[0] ||
+            null;
+
+        if (initialPrice) {
+            initialPrice.textContent =
+                firstAvailable
+                    ? `A partir de ${money(firstAvailable.preco_base)}`
+                    : "Indisponível no momento";
+        }
+
+        if (cupButton) {
+            cupButton.dataset.tamanho =
+                firstAvailable
+                    ? String(
+                        firstAvailable
+                            .tamanho_ml
+                    )
+                    : "";
+
+            cupButton.dataset.precoBase =
+                firstAvailable
+                    ? String(
+                        firstAvailable
+                            .preco_base
+                    )
+                    : "0";
+
+            cupButton.dataset.disponibilidade =
+                firstAvailable
+                    ? "disponivel"
+                    : "em-breve";
+
+            cupButton.dataset.textoAberto =
+                "Montar meu açaí";
+
+            cupButton.disabled =
+                !firstAvailable;
+        }
 
         const container =
             $(
@@ -4480,12 +4475,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         container.innerHTML =
-            state.sizes
-                .filter(
-                    item =>
-                        item.visivel !==
-                        false
-                )
+            visibleSizes
                 .map(
                     (
                         item,
@@ -4494,6 +4484,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                         const available =
                             item.disponivel ===
                             true;
+
+                        const firstAvailableIndex =
+                            visibleSizes.findIndex(
+                                size =>
+                                    size.disponivel ===
+                                    true
+                            );
 
                         return `
                     <label
@@ -4512,13 +4509,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                             data-preco-base="${esc(item.preco_base)}"
                             ${available ? "" : "disabled"}
                             ${
-                                index === 0 &&
+                                index === firstAvailableIndex &&
                                 available
                                     ? "checked"
                                     : ""
                             }
                         >
-
 
                         <span>
 
@@ -4530,23 +4526,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 )}
                             </strong>
 
-
                             <small>
                                 ${
                                     available
                                         ? `${money(item.preco_base)} • ${freeComplementLimit(item)} grátis`
-                                        : "Em breve"
+                                        : "Indisponível"
                                 }
                             </small>
 
                         </span>
 
-
                     </label>
                 `;
                     }
                 )
-                .join("");
+                .join(
+                    ""
+                );
 
         $$(
             "input[name='tamanhoMonteSeuOpcao']"
@@ -6465,7 +6461,97 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
     }
 
+    function footerScheduleText() {
+        const active = state.schedules
+            .filter(item => item && item.ativo !== false)
+            .map(item => ({
+                day: Number(item.dia_semana),
+                open: timeLabel(item.abre_as),
+                close: timeLabel(item.fecha_as)
+            }))
+            .filter(item =>
+                Number.isInteger(item.day) &&
+                item.day >= 0 &&
+                item.day <= 6 &&
+                item.open &&
+                item.close
+            );
+
+        if (!active.length) {
+            return "Horário indisponível";
+        }
+
+        const sameHours = active.every(
+            item =>
+                item.open === active[0].open &&
+                item.close === active[0].close
+        );
+
+        const days = new Set(active.map(item => item.day));
+        const hours = `das ${active[0].open} às ${active[0].close}`;
+
+        if (sameHours) {
+            if (days.size === 7) {
+                return `Todos os dias, ${hours}`;
+            }
+
+            if (
+                days.size === 6 &&
+                !days.has(1) &&
+                [0, 2, 3, 4, 5, 6].every(day => days.has(day))
+            ) {
+                return `Terça a domingo, ${hours}`;
+            }
+
+            if (
+                days.size === 6 &&
+                !days.has(0) &&
+                [1, 2, 3, 4, 5, 6].every(day => days.has(day))
+            ) {
+                return `Segunda a sábado, ${hours}`;
+            }
+
+            if (
+                days.size === 5 &&
+                [1, 2, 3, 4, 5].every(day => days.has(day))
+            ) {
+                return `Segunda a sexta, ${hours}`;
+            }
+        }
+
+        const dayNames = [
+            "Dom",
+            "Seg",
+            "Ter",
+            "Qua",
+            "Qui",
+            "Sex",
+            "Sáb"
+        ];
+
+        return active
+            .sort((a, b) => {
+                const order = day => day === 0 ? 7 : day;
+                return order(a.day) - order(b.day);
+            })
+            .map(item =>
+                `${dayNames[item.day]} ${item.open}–${item.close}`
+            )
+            .join(" • ");
+    }
+
+    function updateFooterSchedule() {
+        if (!d.footerSchedule) {
+            return;
+        }
+
+        d.footerSchedule.textContent =
+            footerScheduleText();
+    }
+
     function updateStore() {
+        updateFooterSchedule();
+
         const status =
             storeState();
 
