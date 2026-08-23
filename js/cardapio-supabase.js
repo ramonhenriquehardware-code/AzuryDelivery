@@ -8173,6 +8173,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (
             state.interfaceReady
         ) {
+            updateStore();
+
             renderSizes();
 
             renderAzuryBoxCard();
@@ -8183,15 +8185,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             renderCart();
 
-            updateStore();
-
             selectFirstAvailableSize();
+
+            updateStore();
 
             return;
         }
 
         state.interfaceReady =
             true;
+
+        updateStore();
 
         renderSizes();
 

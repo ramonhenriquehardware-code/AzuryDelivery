@@ -465,11 +465,13 @@
         }
 
         .azury-copo-nome {
-            min-height: 38px;
+            min-height: 18px;
             margin-top: 9px;
             color: #101828;
-            font-size: 0.86rem !important;
-            line-height: 1.25;
+            font-size: clamp(0.66rem, 0.82vw, 0.80rem) !important;
+            line-height: 1.15;
+            white-space: nowrap;
+            letter-spacing: -0.015em;
         }
 
         .azury-copo-preco {
@@ -1771,7 +1773,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./js/supabase.js"></script>
     <script src="./js/sessao.js"></script>
-    <script src="./js/cardapio-supabase.js?v=20260823-2"></script>
+    <script src="./js/cardapio-supabase.js?v=20260823-4"></script>
 
     <script>
         (function () {
