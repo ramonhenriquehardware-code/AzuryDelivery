@@ -173,6 +173,8 @@
 
     refreshTimer: null,
 
+    ordersRenderSignature: "",
+
     modalSubmit: null,
 
     messageTimer: null,
@@ -3168,10 +3170,12 @@
   }
 
   function encodeWhatsAppConfirmationMessage(message) {
-    return encodeURIComponent(message)
-      .replace(/__AZURY_RECEIPT__/g, "%F0%9F%A7%BE")
-      .replace(/__AZURY_BLUE_HEART__/g, "%F0%9F%92%99")
-      .replace(/__AZURY_CHECK__/g, "%E2%9C%85");
+    const normalizedMessage = String(message || "")
+      .replace(/__AZURY_RECEIPT__/g, "🧾")
+      .replace(/__AZURY_BLUE_HEART__/g, "💙")
+      .replace(/__AZURY_CHECK__/g, "✅");
+
+    return encodeURIComponent(normalizedMessage);
   }
 
   function buildManualOrderConfirmationMessage(payload, orderCode = "") {
@@ -3321,13 +3325,7 @@
 
     const encodedMessage = encodeWhatsAppConfirmationMessage(message);
 
-    const isMobile =
-      navigator.userAgentData?.mobile === true ||
-      /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    const url = isMobile
-      ? `https://wa.me/${normalizedPhone}?text=${encodedMessage}`
-      : `https://web.whatsapp.com/send?phone=${normalizedPhone}&text=${encodedMessage}`;
+    const url = `https://wa.me/${normalizedPhone}?text=${encodedMessage}`;
 
     const opened = window.open(url, "_blank", "noopener,noreferrer");
 
@@ -4190,7 +4188,9 @@
     const isManualOrder = order?.dados_originais?.registro_manual === true;
 
     try {
-      await refreshOrders();
+      await refreshOrders({
+        silent: true,
+      });
     } catch (error) {
       console.error(
         "Não foi possível atualizar os pedidos após o evento em tempo real.",
@@ -6215,8 +6215,38 @@ ${printableOrderAddressHtml(order)}
       .join("");
   }
 
-  async function refreshOrders() {
-    setLoading(el.ordersList, "Atualizando pedidos...");
+  function ordersRefreshSignature(
+    pedidos,
+    resumo,
+    rastreamentos,
+    entregadores,
+  ) {
+    try {
+      return JSON.stringify({
+        pedidos: Array.isArray(pedidos) ? pedidos : [],
+        resumo: resumo && typeof resumo === "object" ? resumo : {},
+        rastreamentos: Array.isArray(rastreamentos) ? rastreamentos : [],
+        entregadores: Array.isArray(entregadores) ? entregadores : [],
+      });
+    } catch (error) {
+      console.warn(
+        "Não foi possível gerar a assinatura visual dos pedidos.",
+        error,
+      );
+
+      return String(Date.now());
+    }
+  }
+
+  async function refreshOrders({ silent = false, forceRender = false } = {}) {
+    const hasVisibleOrders =
+      Boolean(el.ordersList) &&
+      el.ordersList.children.length > 0 &&
+      !el.ordersList.querySelector(".loading-state");
+
+    if (!silent && !hasVisibleOrders) {
+      setLoading(el.ordersList, "Carregando pedidos...");
+    }
 
     try {
       const [data, trackingData, couriersData] = await Promise.all([
@@ -6231,19 +6261,45 @@ ${printableOrderAddressHtml(order)}
         rpc("listar_entregadores_admin"),
       ]);
 
-      state.pedidos = data.pedidos || [];
+      const nextPedidos = data.pedidos || [];
+      const nextResumo = data.resumo || {};
+      const nextRastreamentos = Array.isArray(trackingData) ? trackingData : [];
+      const nextEntregadores = Array.isArray(couriersData) ? couriersData : [];
 
-      state.resumoPedidos = data.resumo || {};
+      const nextSignature = ordersRefreshSignature(
+        nextPedidos,
+        nextResumo,
+        nextRastreamentos,
+        nextEntregadores,
+      );
 
-      state.rastreamentos = Array.isArray(trackingData) ? trackingData : [];
+      const shouldRender =
+        forceRender ||
+        !state.ordersRenderSignature ||
+        state.ordersRenderSignature !== nextSignature;
 
-      state.entregadores = Array.isArray(couriersData) ? couriersData : [];
+      state.pedidos = nextPedidos;
+      state.resumoPedidos = nextResumo;
+      state.rastreamentos = nextRastreamentos;
+      state.entregadores = nextEntregadores;
+      state.ordersRenderSignature = nextSignature;
 
-      renderOrders();
+      if (shouldRender) {
+        renderOrders();
 
-      renderOverview();
+        if (state.currentSection === "visao-geral") {
+          renderOverview();
+        }
+      }
     } catch (error) {
-      setEmpty(el.ordersList, error.message);
+      const canKeepCurrentContent =
+        Boolean(el.ordersList) &&
+        el.ordersList.children.length > 0 &&
+        !el.ordersList.querySelector(".loading-state");
+
+      if (!silent && !canKeepCurrentContent) {
+        setEmpty(el.ordersList, error.message);
+      }
 
       throw error;
     }
@@ -13401,6 +13457,218 @@ ${printableOrderAddressHtml(order)}
     }
   }
 
+  function injectAdminCompactOrganizationStyles() {
+    if (document.getElementById("azuryAdminCompactOrganizationStyles")) {
+      return;
+    }
+
+    const style = document.createElement("style");
+
+    style.id = "azuryAdminCompactOrganizationStyles";
+
+    style.textContent = `
+      /* =====================================================
+         AZURY ADMIN — ORGANIZAÇÃO COMPACTA
+         ===================================================== */
+
+      .topbar {
+        gap: 16px;
+      }
+
+      .topbar-actions {
+        min-width: 0;
+        gap: 7px;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+      }
+
+      .topbar-actions .connection-pill {
+        flex: 0 0 auto;
+        padding: 7px 10px;
+        white-space: nowrap;
+      }
+
+      .topbar-actions .btn {
+        width: auto;
+        min-width: 0;
+        min-height: 38px;
+        padding: 7px 11px;
+        border-radius: 10px;
+        gap: 6px;
+        font-size: 12.5px;
+        line-height: 1.15;
+        white-space: nowrap;
+      }
+
+      #section-pedidos > .section-toolbar {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+        align-items: end;
+        gap: 16px;
+      }
+
+      #section-pedidos .orders-toolbar-controls {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns:
+          max-content
+          minmax(120px, 150px)
+          max-content
+          max-content;
+        align-items: end;
+        justify-content: end;
+        gap: 8px;
+      }
+
+      #section-pedidos .orders-toolbar-controls .company-switch-group {
+        min-width: 0;
+        gap: 5px;
+        padding: 3px;
+        border-radius: 11px;
+        white-space: nowrap;
+      }
+
+      #section-pedidos .orders-toolbar-controls .company-switch {
+        width: auto;
+        min-width: 0;
+        min-height: 36px;
+        padding: 7px 11px;
+        border-radius: 9px;
+        font-size: 12.5px;
+        white-space: nowrap;
+      }
+
+      #section-pedidos .orders-toolbar-controls .compact-field {
+        min-width: 0;
+      }
+
+      #section-pedidos .orders-toolbar-controls .compact-field span {
+        margin-bottom: 5px;
+        font-size: 11px;
+      }
+
+      #section-pedidos .orders-toolbar-controls select {
+        width: 100%;
+        min-width: 0;
+        min-height: 38px;
+        padding-top: 7px;
+        padding-bottom: 7px;
+      }
+
+      #section-pedidos .orders-toolbar-controls > .btn {
+        width: auto;
+        min-width: 0;
+        min-height: 38px;
+        padding: 7px 12px;
+        border-radius: 10px;
+        font-size: 12.5px;
+        line-height: 1.15;
+        white-space: nowrap;
+      }
+
+      #section-pedidos .order-actions {
+        gap: 8px;
+      }
+
+      #section-pedidos .order-actions > .btn,
+      #section-pedidos .payment-control .btn {
+        min-height: 37px;
+        padding: 7px 11px;
+        border-radius: 9px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      #dynamicModalForm .modal-field {
+        min-width: 0;
+      }
+
+      #dynamicModalForm select[name="entregador_id"] {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        text-overflow: ellipsis;
+      }
+
+      @media (max-width: 1180px) and (min-width: 901px) {
+        #section-pedidos > .section-toolbar {
+          grid-template-columns: minmax(190px, 0.56fr) minmax(0, 1.44fr);
+          gap: 12px;
+        }
+
+        #section-pedidos .orders-toolbar-controls {
+          grid-template-columns:
+            max-content
+            minmax(105px, 130px)
+            minmax(190px, max-content)
+            max-content;
+          gap: 6px;
+        }
+
+        #section-pedidos .orders-toolbar-controls .company-switch,
+        #section-pedidos .orders-toolbar-controls > .btn {
+          padding-left: 9px;
+          padding-right: 9px;
+          font-size: 12px;
+        }
+      }
+
+      @media (max-width: 900px) {
+        #section-pedidos > .section-toolbar {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+
+        #section-pedidos .orders-toolbar-controls {
+          width: 100%;
+          grid-template-columns:
+            max-content
+            minmax(120px, 0.7fr)
+            minmax(190px, 1fr)
+            max-content;
+          justify-content: stretch;
+        }
+      }
+
+      @media (max-width: 700px) {
+        #section-pedidos .orders-toolbar-controls {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 8px;
+        }
+
+        #section-pedidos .orders-toolbar-controls .company-switch-group {
+          grid-column: 1 / -1;
+          width: 100%;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        #section-pedidos .orders-toolbar-controls .company-switch,
+        #section-pedidos .orders-toolbar-controls > .btn {
+          width: 100%;
+        }
+
+        #section-pedidos .orders-toolbar-controls .compact-field {
+          width: 100%;
+        }
+
+        #section-pedidos .orders-toolbar-controls .compact-field select {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .topbar-actions .btn {
+          white-space: normal;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
   function startAutoRefresh() {
     stopAutoRefresh();
 
@@ -13412,7 +13680,9 @@ ${printableOrderAddressHtml(order)}
 
         try {
           if (["visao-geral", "pedidos"].includes(state.currentSection)) {
-            await refreshOrders();
+            await refreshOrders({
+              silent: true,
+            });
           }
         } catch (error) {
           console.warn("Atualização automática falhou:", error);
@@ -13432,6 +13702,8 @@ ${printableOrderAddressHtml(order)}
   }
 
   injectOrderAlarmStyles();
+
+  injectAdminCompactOrganizationStyles();
 
   ensureOrderSoundButton();
 
