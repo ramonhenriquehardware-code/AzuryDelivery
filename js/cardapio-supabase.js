@@ -69,7 +69,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         refreshingOperation: false,
         recoveryTimer: null,
         operationSource: null,
-        currentProduct: null
+        currentProduct: null,
+        addressCoordinates: null,
+        zipCity: "",
+        zipState: ""
     };
 
     const CART_KEY = "azurySacola";
@@ -6953,6 +6956,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         state.consultingZip =
             false;
 
+        state.addressCoordinates =
+            null;
+
+        state.zipCity =
+            "";
+
+        state.zipState =
+            "";
+
         if (d.addressOk) {
             d.addressOk.value =
                 "false";
@@ -7086,6 +7098,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 return;
             }
+
+            state.zipCity =
+                String(
+                    data.localidade ||
+                    ""
+                ).trim();
+
+            state.zipState =
+                String(
+                    data.uf ||
+                    ""
+                ).trim();
+
+            state.addressCoordinates =
+                null;
 
             if (d.street) {
                 d.street.value =
@@ -7331,6 +7358,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         resetAddress();
     }
 
+    function setupAddressCoordinateInvalidation() {
+        [
+            d.street,
+            d.number,
+            d.district
+        ]
+            .filter(Boolean)
+            .forEach(
+                field => {
+                    field.addEventListener(
+                        "input",
+                        () => {
+                            state.addressCoordinates =
+                                null;
+                        }
+                    );
+                }
+            );
+    }
+
     function payment() {
         const value =
             $(
@@ -7367,6 +7414,239 @@ document.addEventListener("DOMContentLoaded", async () => {
             dinheiro:
                 "Dinheiro"
         }[value] || value;
+    }
+
+    function normalizeCoordinate(
+        value,
+        minimum,
+        maximum
+    ) {
+        const coordinate =
+            Number(value);
+
+        return (
+            Number.isFinite(
+                coordinate
+            ) &&
+            coordinate >=
+                minimum &&
+            coordinate <=
+                maximum
+        )
+            ? coordinate
+            : null;
+    }
+
+    function currentAddressSignature() {
+        return [
+            d.zip?.value
+                ?.replace(
+                    /\D/g,
+                    ""
+                ) ||
+                "",
+
+            d.street?.value
+                ?.trim() ||
+                "",
+
+            d.number?.value
+                ?.trim() ||
+                "",
+
+            d.district?.value
+                ?.trim() ||
+                "",
+
+            state.zipCity ||
+                "",
+
+            state.zipState ||
+                ""
+        ]
+            .map(
+                value =>
+                    norm(value)
+            )
+            .join("|");
+    }
+
+    async function geocodeDeliveryAddress() {
+        const signature =
+            currentAddressSignature();
+
+        if (
+            state.addressCoordinates?.signature ===
+                signature &&
+            Number.isFinite(
+                state.addressCoordinates.latitude
+            ) &&
+            Number.isFinite(
+                state.addressCoordinates.longitude
+            )
+        ) {
+            return (
+                state.addressCoordinates
+            );
+        }
+
+        const zip =
+            d.zip?.value
+                ?.replace(
+                    /\D/g,
+                    ""
+                ) ||
+            "";
+
+        const street =
+            d.street?.value
+                ?.trim() ||
+            "";
+
+        const number =
+            d.number?.value
+                ?.trim() ||
+            "";
+
+        const district =
+            d.district?.value
+                ?.trim() ||
+            "";
+
+        const city =
+            state.zipCity ||
+            "São Paulo";
+
+        const uf =
+            state.zipState ||
+            "SP";
+
+        if (
+            !zip ||
+            !street ||
+            !number ||
+            !district
+        ) {
+            return null;
+        }
+
+        const baseUrl =
+            "https://nominatim.openstreetmap.org/search";
+
+        const queries = [
+            {
+                street:
+                    `${number} ${street}`,
+
+                city,
+                state: uf,
+                postalcode: zip,
+                country: "Brasil"
+            },
+
+            {
+                q:
+                    `${street}, ${number}, ${district}, ${city} - ${uf}, ${zip}, Brasil`
+            }
+        ];
+
+        for (
+            const query of
+            queries
+        ) {
+            const params =
+                new URLSearchParams({
+                    format:
+                        "jsonv2",
+
+                    limit:
+                        "1",
+
+                    countrycodes:
+                        "br",
+
+                    addressdetails:
+                        "1",
+
+                    "accept-language":
+                        "pt-BR",
+
+                    ...query
+                });
+
+            try {
+                const response =
+                    await fetch(
+                        `${baseUrl}?${params.toString()}`,
+                        {
+                            headers: {
+                                Accept:
+                                    "application/json"
+                            }
+                        }
+                    );
+
+                if (!response.ok) {
+                    continue;
+                }
+
+                const results =
+                    await response.json();
+
+                if (
+                    !Array.isArray(
+                        results
+                    ) ||
+                    !results.length
+                ) {
+                    continue;
+                }
+
+                const latitude =
+                    normalizeCoordinate(
+                        results[0]?.lat,
+                        -90,
+                        90
+                    );
+
+                const longitude =
+                    normalizeCoordinate(
+                        results[0]?.lon,
+                        -180,
+                        180
+                    );
+
+                if (
+                    latitude ===
+                        null ||
+                    longitude ===
+                        null
+                ) {
+                    continue;
+                }
+
+                const coordinates = {
+                    latitude,
+                    longitude,
+                    signature
+                };
+
+                state.addressCoordinates =
+                    coordinates;
+
+                return coordinates;
+            } catch (error) {
+                console.warn(
+                    "Falha ao localizar as coordenadas do endereço.",
+                    error
+                );
+            }
+        }
+
+        state.addressCoordinates =
+            null;
+
+        return null;
     }
 
     function addressValid() {
@@ -7484,6 +7764,43 @@ document.addEventListener("DOMContentLoaded", async () => {
                 "_blank"
             );
 
+        message(
+            "Localizando o endereço da entrega...",
+            "carregando"
+        );
+
+        const addressCoordinates =
+            await geocodeDeliveryAddress();
+
+        if (!addressCoordinates) {
+            state.sending =
+                false;
+
+            d.send.disabled =
+                false;
+
+            d.send.textContent =
+                "Enviar pedido";
+
+            if (
+                whatsappWindow &&
+                !whatsappWindow.closed
+            ) {
+                whatsappWindow.close();
+            }
+
+            message(
+                "Não foi possível localizar o endereço com precisão. Confira rua, número e CEP e tente novamente.",
+                "erro"
+            );
+
+            showOrderWarning(
+                "Não conseguimos confirmar a localização exata desse endereço. Confira os dados e tente novamente."
+            );
+
+            return;
+        }
+
         const payload = {
             cliente: {
                 nome:
@@ -7519,7 +7836,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                     d.addressExtra
                         ?.value
                         .trim() ||
-                    null
+                    null,
+
+                latitude:
+                    addressCoordinates
+                        .latitude,
+
+                longitude:
+                    addressCoordinates
+                        .longitude
             },
 
             pagamento: {
@@ -8208,6 +8533,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateWhatsapp();
 
         setupZip();
+
+        setupAddressCoordinateInvalidation();
 
         bind();
 
