@@ -18,6 +18,9 @@
     let rastreamentoCarregando = false;
     let rastreamentoMapaChave = "";
 
+    let statusEntregaCardsTimer = null;
+    let statusEntregaCardsCarregando = false;
+
     function escaparTextoPedido(valor) {
         return String(valor ?? "")
             .replace(/&/g, "&amp;")
@@ -577,6 +580,13 @@
                 pedido
             );
 
+        const pedidoId =
+            escaparTextoPedido(
+                obterIdRealPedido(
+                    pedido
+                )
+            );
+
         const indiceAtual =
             {
                 recebido: 0,
@@ -585,11 +595,12 @@
                 em_preparo: 1,
                 pronto: 1,
                 saiu_para_entrega: 2,
-                entregue: 3
+                entregue: 4
             }[statusAtual] ?? 0;
 
         const etapas = [
             {
+                chave: "recebido",
                 titulo: "Recebido",
                 icone: "✓",
 
@@ -607,6 +618,7 @@
             },
 
             {
+                chave: "preparo",
                 titulo: "Em preparo",
                 icone: "🥤",
 
@@ -621,8 +633,9 @@
             },
 
             {
-                titulo: "Saiu",
-                icone: "🛵",
+                chave: "aguardando_entregador",
+                titulo: "Aguardando entregador",
+                icone: "⏳",
 
                 data:
                     obterDataEtapaPedido(
@@ -634,6 +647,16 @@
             },
 
             {
+                chave: "em_rota",
+                titulo: "Saiu para entrega",
+                icone: "🛵",
+
+                data:
+                    ""
+            },
+
+            {
+                chave: "entregue",
                 titulo: "Entregue",
                 icone: "✓",
 
@@ -678,7 +701,7 @@
                                 etapa.data
                             );
 
-                        const textoData =
+                        let textoData =
                             data ||
                             (
                                 concluida ||
@@ -687,12 +710,36 @@
                                     : "Aguardando"
                             );
 
+                        if (
+                            ativa &&
+                            etapa.chave ===
+                                "aguardando_entregador"
+                        ) {
+                            textoData =
+                                "Aguardando";
+                        }
+
+                        if (
+                            ativa &&
+                            etapa.chave ===
+                                "em_rota"
+                        ) {
+                            textoData =
+                                "Em rota";
+                        }
+
                         return `
                             <div
                                 class="
                                     etapa-rastreamento-pedido
                                     ${classe}
                                 "
+                                data-etapa-entrega="${
+                                    etapa.chave
+                                }"
+                                data-etapa-indice="${
+                                    indice
+                                }"
                             >
 
                                 <span
@@ -722,6 +769,8 @@
             <div
                 class="rastreamento-pedido"
                 aria-label="Acompanhamento do pedido"
+                data-rastreamento-pedido-id="${pedidoId}"
+                data-status-pedido="${statusAtual}"
             >
 
                 <div
@@ -1277,7 +1326,7 @@
 
                 grid-template-columns:
                     repeat(
-                        4,
+                        5,
                         minmax(
                             0,
                             1fr
@@ -1428,26 +1477,32 @@
             .pagina-cliente
             .etapa-rastreamento-pedido
             strong {
-                display:
-                    block;
+                min-height:
+                    28px;
 
-                overflow:
-                    hidden;
+                display:
+                    flex;
+
+                align-items:
+                    flex-start;
+
+                justify-content:
+                    center;
 
                 color:
                     inherit;
 
                 font-size:
-                    11px;
+                    10px;
 
                 line-height:
                     1.25;
 
-                text-overflow:
-                    ellipsis;
+                text-align:
+                    center;
 
                 white-space:
-                    nowrap;
+                    normal;
             }
 
             .pagina-cliente
@@ -3238,6 +3293,292 @@
                     criarHtmlPedido
                 )
                 .join("");
+
+        consultarStatusEntregasVisiveis()
+            .catch(
+                console.warn
+            );
+    }
+
+
+    function obterIndiceEtapaEntrega(
+        statusPedido,
+        statusEntrega
+    ) {
+        const pedido =
+            normalizarStatusPedido(
+                statusPedido ||
+                ""
+            );
+
+        const entrega =
+            normalizarStatusPedido(
+                statusEntrega ||
+                ""
+            );
+
+        if (pedido === "entregue") {
+            return 4;
+        }
+
+        if (
+            pedido === "saiu_para_entrega"
+        ) {
+            return entrega === "em_rota"
+                ? 3
+                : 2;
+        }
+
+        if (
+            pedido === "em_preparo" ||
+            pedido === "pronto"
+        ) {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    function atualizarEtapasRastreamentoCard(
+        pedidoId,
+        statusPedido,
+        statusEntrega
+    ) {
+        if (!pedidoId) {
+            return;
+        }
+
+        const indiceAtual =
+            obterIndiceEtapaEntrega(
+                statusPedido,
+                statusEntrega
+            );
+
+        const entregue =
+            normalizarStatusPedido(
+                statusPedido
+            ) === "entregue";
+
+        document
+            .querySelectorAll(
+                ".rastreamento-pedido[data-rastreamento-pedido-id]"
+            )
+            .forEach(
+                bloco => {
+                    if (
+                        bloco.dataset
+                            .rastreamentoPedidoId !==
+                        String(pedidoId)
+                    ) {
+                        return;
+                    }
+
+                    bloco.dataset.statusPedido =
+                        normalizarStatusPedido(
+                            statusPedido
+                        );
+
+                    bloco
+                        .querySelectorAll(
+                            ".etapa-rastreamento-pedido"
+                        )
+                        .forEach(
+                            etapa => {
+                                const indice =
+                                    Number(
+                                        etapa.dataset
+                                            .etapaIndice
+                                    );
+
+                                const concluida =
+                                    entregue ||
+                                    indice <
+                                        indiceAtual;
+
+                                const ativa =
+                                    !entregue &&
+                                    indice ===
+                                        indiceAtual;
+
+                                etapa.classList
+                                    .toggle(
+                                        "concluida",
+                                        concluida
+                                    );
+
+                                etapa.classList
+                                    .toggle(
+                                        "ativa",
+                                        ativa
+                                    );
+
+                                const pequeno =
+                                    etapa.querySelector(
+                                        "small"
+                                    );
+
+                                if (!pequeno) {
+                                    return;
+                                }
+
+                                const chave =
+                                    etapa.dataset
+                                        .etapaEntrega ||
+                                    "";
+
+                                if (
+                                    chave ===
+                                        "aguardando_entregador"
+                                ) {
+                                    if (ativa) {
+                                        pequeno.textContent =
+                                            "Aguardando";
+                                    } else if (
+                                        indiceAtual > 2 ||
+                                        entregue
+                                    ) {
+                                        pequeno.textContent =
+                                            "Concluído";
+                                    }
+                                }
+
+                                if (
+                                    chave ===
+                                        "em_rota"
+                                ) {
+                                    if (ativa) {
+                                        pequeno.textContent =
+                                            "Em rota";
+                                    } else if (
+                                        indiceAtual > 3 ||
+                                        entregue
+                                    ) {
+                                        pequeno.textContent =
+                                            "Concluído";
+                                    } else {
+                                        pequeno.textContent =
+                                            "Aguardando";
+                                    }
+                                }
+                            }
+                        );
+                }
+            );
+    }
+
+    async function consultarStatusEntregasVisiveis() {
+        if (statusEntregaCardsCarregando) {
+            return;
+        }
+
+        const contexto =
+            window.AzuryCliente ||
+            {};
+
+        const supabase =
+            contexto.supabase ||
+            window.azurySupabase;
+
+        if (!supabase) {
+            return;
+        }
+
+        const ids =
+            Array.from(
+                document.querySelectorAll(
+                    ".rastreamento-pedido[data-rastreamento-pedido-id]"
+                )
+            )
+                .filter(
+                    bloco =>
+                        normalizarStatusPedido(
+                            bloco.dataset
+                                .statusPedido ||
+                            ""
+                        ) ===
+                        "saiu_para_entrega"
+                )
+                .map(
+                    bloco =>
+                        bloco.dataset
+                            .rastreamentoPedidoId ||
+                        ""
+                )
+                .filter(Boolean);
+
+        const unicos =
+            [...new Set(ids)];
+
+        if (unicos.length === 0) {
+            return;
+        }
+
+        statusEntregaCardsCarregando =
+            true;
+
+        try {
+            await Promise.all(
+                unicos.map(
+                    async pedidoId => {
+                        const {
+                            data,
+                            error
+                        } =
+                            await supabase.rpc(
+                                "consultar_rastreamento_pedido_cliente",
+                                {
+                                    p_pedido_id:
+                                        pedidoId
+                                }
+                            );
+
+                        if (error) {
+                            throw error;
+                        }
+
+                        atualizarEtapasRastreamentoCard(
+                            pedidoId,
+                            data?.status ||
+                                "saiu_para_entrega",
+                            data?.status_entrega ||
+                                ""
+                        );
+                    }
+                )
+            );
+        } catch (erro) {
+            console.warn(
+                "Não foi possível atualizar o status do entregador nos cards.",
+                erro
+            );
+        } finally {
+            statusEntregaCardsCarregando =
+                false;
+        }
+    }
+
+    function iniciarAtualizacaoStatusEntregasVisiveis() {
+        if (statusEntregaCardsTimer) {
+            window.clearInterval(
+                statusEntregaCardsTimer
+            );
+        }
+
+        statusEntregaCardsTimer =
+            window.setInterval(
+                () => {
+                    consultarStatusEntregasVisiveis()
+                        .catch(
+                            console.warn
+                        );
+                },
+                TRACKING_REFRESH_MS
+            );
+
+        consultarStatusEntregasVisiveis()
+            .catch(
+                console.warn
+            );
     }
 
 
@@ -3579,6 +3920,19 @@
                 ""
             );
 
+        const statusEntrega =
+            normalizarStatusPedido(
+                data?.status_entrega ||
+                ""
+            );
+
+        atualizarEtapasRastreamentoCard(
+            data?.pedido_id ||
+                rastreamentoPedidoId,
+            status,
+            statusEntrega
+        );
+
         const disponivel =
             data?.rastreamento_disponivel ===
             true;
@@ -3673,6 +4027,29 @@
             if (textoAtualizacao) {
                 textoAtualizacao.textContent =
                     "Rastreamento finalizado";
+            }
+
+            return;
+        }
+
+        if (
+            status === "saiu_para_entrega" &&
+            statusEntrega === "aguardando"
+        ) {
+            definirStatusRastreamento(
+                "",
+                "Aguardando entregador",
+                "Seu pedido está pronto. Agora, aguardamos a retirada pelo entregador para dar continuidade à entrega."
+            );
+
+            redefinirMapaRastreamento(
+                "Aguardando retirada pelo entregador",
+                "O acompanhamento em tempo real começará assim que o entregador iniciar a rota."
+            );
+
+            if (textoAtualizacao) {
+                textoAtualizacao.textContent =
+                    "Atualização automática";
             }
 
             return;
@@ -4153,6 +4530,8 @@
         renderizarPedidosRecentes(
             usuario
         );
+
+        iniciarAtualizacaoStatusEntregasVisiveis();
 
         carregarAvaliacoesPedidos(
             usuario
