@@ -3,565 +3,436 @@
 ========================================= */
 
 (() => {
-    "use strict";
+  "use strict";
 
-    const CART_KEY = "azurySacola";
-    const REVIEWS_TABLE = "avaliacoes_pedido";
-    const TRACKING_REFRESH_MS = 5000;
+  const CART_KEY = "azurySacola";
+  const REVIEWS_TABLE = "avaliacoes_pedido";
+  const TRACKING_REFRESH_MS = 5000;
 
-    let usuarioAtual = null;
-    let eventosConectados = false;
-    let pedidoAvaliandoId = "";
-    let notaAvaliacao = 0;
-    let rastreamentoPedidoId = "";
-    let rastreamentoTimer = null;
-    let rastreamentoCarregando = false;
-    let rastreamentoMapaChave = "";
+  let usuarioAtual = null;
+  let eventosConectados = false;
+  let pedidoAvaliandoId = "";
+  let notaAvaliacao = 0;
+  let rastreamentoPedidoId = "";
+  let rastreamentoTimer = null;
+  let rastreamentoCarregando = false;
+  let rastreamentoMapaChave = "";
 
-    let statusEntregaCardsTimer = null;
-    let statusEntregaCardsCarregando = false;
+  let statusEntregaCardsTimer = null;
+  let statusEntregaCardsCarregando = false;
 
-    function escaparTextoPedido(valor) {
-        return String(valor ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+  function escaparTextoPedido(valor) {
+    return String(valor ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function normalizarTextoPedido(valor) {
+    return String(valor || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function normalizarStatusPedido(valor) {
+    return normalizarTextoPedido(valor).replace(/[-\s]+/g, "_");
+  }
+
+  function primeiroValor(objeto, chaves, fallback = null) {
+    for (const chave of chaves) {
+      if (
+        objeto &&
+        Object.prototype.hasOwnProperty.call(objeto, chave) &&
+        objeto[chave] !== null &&
+        objeto[chave] !== undefined &&
+        objeto[chave] !== ""
+      ) {
+        return objeto[chave];
+      }
     }
 
-    function normalizarTextoPedido(valor) {
-        return String(valor || "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .trim()
-            .toLowerCase();
+    return fallback;
+  }
+
+  function converterValorPedido(valor) {
+    if (
+      window.AzuryPontuacao &&
+      typeof window.AzuryPontuacao.converterValorParaNumero === "function"
+    ) {
+      return window.AzuryPontuacao.converterValorParaNumero(valor);
     }
 
-    function normalizarStatusPedido(valor) {
-        return normalizarTextoPedido(valor)
-            .replace(/[-\s]+/g, "_");
+    if (typeof valor === "number") {
+      return Number.isFinite(valor) ? valor : 0;
     }
 
-    function primeiroValor(objeto, chaves, fallback = null) {
-        for (const chave of chaves) {
-            if (
-                objeto &&
-                Object.prototype.hasOwnProperty.call(objeto, chave) &&
-                objeto[chave] !== null &&
-                objeto[chave] !== undefined &&
-                objeto[chave] !== ""
-            ) {
-                return objeto[chave];
-            }
-        }
+    let texto = String(valor ?? "")
+      .trim()
+      .replace(/\s/g, "")
+      .replace("R$", "");
 
-        return fallback;
+    if (!texto) return 0;
+
+    if (texto.includes(".") && texto.includes(",")) {
+      texto = texto.replace(/\./g, "").replace(",", ".");
+    } else {
+      texto = texto.replace(",", ".");
     }
 
-    function converterValorPedido(valor) {
-        if (
-            window.AzuryPontuacao &&
-            typeof window.AzuryPontuacao.converterValorParaNumero === "function"
-        ) {
-            return window.AzuryPontuacao.converterValorParaNumero(valor);
-        }
+    const numero = Number(texto);
+    return Number.isFinite(numero) ? numero : 0;
+  }
 
-        if (typeof valor === "number") {
-            return Number.isFinite(valor) ? valor : 0;
-        }
+  function formatarMoedaPedido(valor) {
+    return converterValorPedido(valor).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  }
 
-        let texto = String(valor ?? "")
-            .trim()
-            .replace(/\s/g, "")
-            .replace("R$", "");
+  function formatarData(valor) {
+    if (!valor) return "";
 
-        if (!texto) return 0;
+    const data = new Date(valor);
 
-        if (texto.includes(".") && texto.includes(",")) {
-            texto = texto.replace(/\./g, "").replace(",", ".");
-        } else {
-            texto = texto.replace(",", ".");
-        }
-
-        const numero = Number(texto);
-        return Number.isFinite(numero) ? numero : 0;
+    if (Number.isNaN(data.getTime())) {
+      return "";
     }
 
-    function formatarMoedaPedido(valor) {
-        return converterValorPedido(valor).toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
+    return data.toLocaleString("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  }
+
+  function formatarDataPedidoCliente(pedido) {
+    return (
+      formatarData(pedido?.criadoEm) || pedido?.data || "Data não informada"
+    );
+  }
+
+  function obterIconeStatusPedido(status) {
+    const texto = normalizarTextoPedido(status);
+
+    if (texto.includes("cancelado")) {
+      return "🔴";
     }
 
-    function formatarData(valor) {
-        if (!valor) return "";
-
-        const data = new Date(valor);
-
-        if (Number.isNaN(data.getTime())) {
-            return "";
-        }
-
-        return data.toLocaleString("pt-BR", {
-            dateStyle: "short",
-            timeStyle: "short"
-        });
+    if (texto.includes("entregue")) {
+      return "🟢";
     }
 
-    function formatarDataPedidoCliente(pedido) {
-        return (
-            formatarData(pedido?.criadoEm) ||
-            pedido?.data ||
-            "Data não informada"
-        );
+    if (texto.includes("aguardando entregador")) {
+      return "⏳";
     }
 
-    function obterIconeStatusPedido(status) {
-        const texto =
-            normalizarTextoPedido(status);
-
-        if (texto.includes("cancelado")) {
-            return "🔴";
-        }
-
-        if (texto.includes("entregue")) {
-            return "🟢";
-        }
-
-        if (texto.includes("aguardando entregador")) {
-            return "⏳";
-        }
-
-        if (texto.includes("saiu para entrega")) {
-            return "🛵";
-        }
-
-        if (texto.includes("pronto")) {
-            return "🔵";
-        }
-
-        if (
-            texto.includes("em preparo") ||
-            texto.includes("preparacao")
-        ) {
-            return "🟠";
-        }
-
-        if (texto.includes("recebido")) {
-            return "🟡";
-        }
-
-        return "⚪";
+    if (texto.includes("saiu para entrega")) {
+      return "🛵";
     }
 
-    function obterClasseStatusPedido(status) {
-        const texto =
-            normalizarTextoPedido(status);
-
-        if (texto.includes("cancelado")) {
-            return "status-cancelado";
-        }
-
-        if (texto.includes("entregue")) {
-            return "status-entregue";
-        }
-
-        if (
-            texto.includes("aguardando entregador") ||
-            texto.includes("saiu para entrega")
-        ) {
-            return "status-entrega";
-        }
-
-        if (
-            texto.includes("em preparo") ||
-            texto.includes("preparacao")
-        ) {
-            return "status-preparacao";
-        }
-
-        return "status-pedido";
+    if (texto.includes("pronto")) {
+      return "🔵";
     }
 
-    function obterValoresPedidoCliente(pedido) {
-        const taxaEntrega =
-            Math.max(
-                0,
-                converterValorPedido(
-                    pedido?.taxaEntrega ??
-                    pedido?.entrega ??
-                    0
-                )
-            );
-
-        const totalInformado =
-            Math.max(
-                0,
-                converterValorPedido(
-                    pedido?.valorTotal ??
-                    pedido?.total ??
-                    pedido?.valor ??
-                    0
-                )
-            );
-
-        const produtosInformados =
-            Math.max(
-                0,
-                converterValorPedido(
-                    pedido?.valorProdutos ??
-                    pedido?.subtotal ??
-                    pedido?.valorPedido ??
-                    0
-                )
-            );
-
-        const valorProdutos =
-            produtosInformados > 0
-                ? produtosInformados
-                : Math.max(
-                    0,
-                    totalInformado - taxaEntrega
-                );
-
-        const valorTotal =
-            totalInformado > 0
-                ? totalInformado
-                : valorProdutos + taxaEntrega;
-
-        return {
-            valorProdutos,
-            taxaEntrega,
-            valorTotal
-        };
+    if (texto.includes("em preparo") || texto.includes("preparacao")) {
+      return "🟠";
     }
 
-    function montarComplementosPedido(pedido) {
-        if (
-            !Array.isArray(pedido?.complementos) ||
-            pedido.complementos.length === 0
-        ) {
-            return "";
-        }
+    if (texto.includes("recebido")) {
+      return "🟡";
+    }
 
-        const listas =
-            pedido.complementos;
+    return "⚪";
+  }
 
-        if (Array.isArray(listas[0])) {
-            const conteudo =
-                listas
-                    .map(
-                        (
-                            complementosCopo,
-                            indice
-                        ) => {
-                            const nomes =
-                                complementosCopo
-                                    .map(
-                                        escaparTextoPedido
-                                    )
-                                    .join(", ");
+  function obterClasseStatusPedido(status) {
+    const texto = normalizarTextoPedido(status);
 
-                            if (listas.length === 1) {
-                                return `
+    if (texto.includes("cancelado")) {
+      return "status-cancelado";
+    }
+
+    if (texto.includes("entregue")) {
+      return "status-entregue";
+    }
+
+    if (
+      texto.includes("aguardando entregador") ||
+      texto.includes("saiu para entrega")
+    ) {
+      return "status-entrega";
+    }
+
+    if (texto.includes("em preparo") || texto.includes("preparacao")) {
+      return "status-preparacao";
+    }
+
+    return "status-pedido";
+  }
+
+  function obterValoresPedidoCliente(pedido) {
+    const taxaEntrega = Math.max(
+      0,
+      converterValorPedido(pedido?.taxaEntrega ?? pedido?.entrega ?? 0),
+    );
+
+    const totalInformado = Math.max(
+      0,
+      converterValorPedido(
+        pedido?.valorTotal ?? pedido?.total ?? pedido?.valor ?? 0,
+      ),
+    );
+
+    const produtosInformados = Math.max(
+      0,
+      converterValorPedido(
+        pedido?.valorProdutos ?? pedido?.subtotal ?? pedido?.valorPedido ?? 0,
+      ),
+    );
+
+    const valorProdutos =
+      produtosInformados > 0
+        ? produtosInformados
+        : Math.max(0, totalInformado - taxaEntrega);
+
+    const valorTotal =
+      totalInformado > 0 ? totalInformado : valorProdutos + taxaEntrega;
+
+    return {
+      valorProdutos,
+      taxaEntrega,
+      valorTotal,
+    };
+  }
+
+  function montarComplementosPedido(pedido) {
+    if (
+      !Array.isArray(pedido?.complementos) ||
+      pedido.complementos.length === 0
+    ) {
+      return "";
+    }
+
+    const listas = pedido.complementos;
+
+    if (Array.isArray(listas[0])) {
+      const conteudo = listas
+        .map((complementosCopo, indice) => {
+          const nomes = complementosCopo.map(escaparTextoPedido).join(", ");
+
+          if (listas.length === 1) {
+            return `
                                     <p class="complementos-pedido">
                                         🍓 Complementos:
                                         ${nomes}
                                     </p>
                                 `;
-                            }
+          }
 
-                            return `
+          return `
                                 <p class="complementos-pedido">
                                     🥤 Copo ${indice + 1}:
                                     ${nomes}
                                 </p>
                             `;
-                        }
-                    )
-                    .join("");
+        })
+        .join("");
 
-            return `
+      return `
                 <div class="detalhes-complementos-pedido">
                     ${conteudo}
                 </div>
             `;
-        }
-
-        return `
-            <p class="complementos-pedido">
-                🍓 Complementos:
-                ${listas
-                    .map(
-                        escaparTextoPedido
-                    )
-                    .join(", ")}
-            </p>
-        `;
     }
 
-    function montarEnderecoPedidoCliente(pedido) {
-        const endereco =
-            pedido?.enderecoEntrega &&
-            typeof pedido.enderecoEntrega === "object"
-                ? pedido.enderecoEntrega
-                : null;
+    return `
+            <p class="complementos-pedido">
+                🍓 Complementos:
+                ${listas.map(escaparTextoPedido).join(", ")}
+            </p>
+        `;
+  }
 
-        if (!endereco) {
-            return "";
-        }
+  function montarEnderecoPedidoCliente(pedido) {
+    const endereco =
+      pedido?.enderecoEntrega && typeof pedido.enderecoEntrega === "object"
+        ? pedido.enderecoEntrega
+        : null;
 
-        const rua =
-            String(
-                endereco.rua || ""
-            ).trim();
+    if (!endereco) {
+      return "";
+    }
 
-        const numero =
-            String(
-                endereco.numero || ""
-            ).trim();
+    const rua = String(endereco.rua || "").trim();
 
-        const bairro =
-            String(
-                endereco.bairro || ""
-            ).trim();
+    const numero = String(endereco.numero || "").trim();
 
-        const cep =
-            String(
-                endereco.cep || ""
-            ).trim();
+    const bairro = String(endereco.bairro || "").trim();
 
-        const complemento =
-            String(
-                endereco.complemento || ""
-            ).trim();
+    const cep = String(endereco.cep || "").trim();
 
-        if (
-            !rua &&
-            !numero &&
-            !bairro &&
-            !cep &&
-            !complemento
-        ) {
-            return "";
-        }
+    const complemento = String(endereco.complemento || "").trim();
 
-        const linhaPrincipal =
-            [
-                rua,
-                numero
-                    ? `nº ${numero}`
-                    : ""
-            ]
-                .filter(Boolean)
-                .map(
-                    escaparTextoPedido
-                )
-                .join(", ");
+    if (!rua && !numero && !bairro && !cep && !complemento) {
+      return "";
+    }
 
-        const linhaSecundaria =
-            [
-                bairro,
-                cep
-                    ? `CEP ${cep}`
-                    : ""
-            ]
-                .filter(Boolean)
-                .map(
-                    escaparTextoPedido
-                )
-                .join(" • ");
+    const linhaPrincipal = [rua, numero ? `nº ${numero}` : ""]
+      .filter(Boolean)
+      .map(escaparTextoPedido)
+      .join(", ");
 
-        return `
+    const linhaSecundaria = [bairro, cep ? `CEP ${cep}` : ""]
+      .filter(Boolean)
+      .map(escaparTextoPedido)
+      .join(" • ");
+
+    return `
             <div class="endereco-pedido-cliente">
 
                 <p>
-                    📍 ${
-                        linhaPrincipal ||
-                        "Endereço não informado"
-                    }
+                    📍 ${linhaPrincipal || "Endereço não informado"}
                 </p>
 
                 ${
-                    linhaSecundaria
-                        ? `
+                  linhaSecundaria
+                    ? `
                             <p>
                                 ${linhaSecundaria}
                             </p>
                         `
-                        : ""
+                    : ""
                 }
 
                 ${
-                    complemento
-                        ? `
+                  complemento
+                    ? `
                             <p>
                                 Complemento:
-                                ${escaparTextoPedido(
-                                    complemento
-                                )}
+                                ${escaparTextoPedido(complemento)}
                             </p>
                         `
-                        : ""
+                    : ""
                 }
 
             </div>
         `;
+  }
+
+  function montarPontosPedidoCliente(pedido) {
+    const pontosGerados = Math.max(0, Number(pedido?.pontosGerados) || 0);
+
+    if (normalizarTextoPedido(pedido?.tipo) === "recompensa") {
+      return "";
     }
 
-    function montarPontosPedidoCliente(pedido) {
-        const pontosGerados =
-            Math.max(
-                0,
-                Number(
-                    pedido?.pontosGerados
-                ) || 0
-            );
-
-        if (
-            normalizarTextoPedido(
-                pedido?.tipo
-            ) === "recompensa"
-        ) {
-            return "";
-        }
-
-        if (
-            pedido?.pontosCreditados ===
-            true
-        ) {
-            return `
+    if (pedido?.pontosCreditados === true) {
+      return `
                 <p class="pontos-pedido-cliente">
                     ⭐ ${pontosGerados}
                     ponto(s) creditado(s)
                 </p>
             `;
-        }
+    }
 
-        if (
-            normalizarTextoPedido(
-                pedido?.status
-            ).includes(
-                "cancelado"
-            )
-        ) {
-            return "";
-        }
+    if (normalizarTextoPedido(pedido?.status).includes("cancelado")) {
+      return "";
+    }
 
-        return `
+    return `
             <p class="pontos-pedido-cliente">
                 ⭐ Pontos liberados após a entrega
             </p>
         `;
+  }
+
+  function obterIdRealPedido(pedido) {
+    return String(
+      pedido?.pedidoId || pedido?.pedido_id || pedido?.id || "",
+    ).trim();
+  }
+
+  function obterStatusInternoPedido(pedido) {
+    return normalizarStatusPedido(
+      pedido?.statusInterno || pedido?.status || "recebido",
+    );
+  }
+
+  function obterStatusVisualPedido(pedido, statusEntrega = "") {
+    const status = obterStatusInternoPedido(pedido);
+
+    if (status === "cancelado") {
+      return "Cancelado";
     }
 
-    function obterIdRealPedido(pedido) {
-        return String(
-            pedido?.pedidoId ||
-            pedido?.pedido_id ||
-            pedido?.id ||
-            ""
-        ).trim();
+    if (status === "entregue") {
+      return "Entregue";
     }
 
-    function obterStatusInternoPedido(pedido) {
-        return normalizarStatusPedido(
-            pedido?.statusInterno ||
-            pedido?.status ||
-            "recebido"
-        );
+    if (status === "saiu_para_entrega") {
+      return "Saiu para entrega";
     }
 
-    function pedidoEstaEntregue(pedido) {
-        return (
-            obterStatusInternoPedido(
-                pedido
-            ) === "entregue"
-        );
+    if (status === "pronto") {
+      return "Aguardando entregador";
     }
 
-    function pedidoEstaCancelado(pedido) {
-        return (
-            obterStatusInternoPedido(
-                pedido
-            ) === "cancelado"
-        );
+    if (status === "em_preparo") {
+      return "Em preparo";
     }
 
-    function pedidoEstaEmAndamento(pedido) {
-        return (
-            !pedidoEstaEntregue(
-                pedido
-            ) &&
-            !pedidoEstaCancelado(
-                pedido
-            )
-        );
-    }
-
-    function pedidoSaiuParaEntrega(pedido) {
-        return (
-            obterStatusInternoPedido(
-                pedido
-            ) === "saiu_para_entrega"
-        );
-    }
-
-    function obterDataEtapaPedido(
-        pedido,
-        statusAceitos,
-        fallback = ""
+    if (
+      status === "recebido" ||
+      status === "confirmado" ||
+      status === "aceito"
     ) {
-        const historico =
-            Array.isArray(
-                pedido?.historicoStatus
-            )
-                ? pedido.historicoStatus
-                : [];
-
-        for (const item of historico) {
-            const status =
-                normalizarStatusPedido(
-                    primeiroValor(
-                        item,
-                        [
-                            "status_novo",
-                            "novo_status",
-                            "status"
-                        ],
-                        ""
-                    )
-                );
-
-            if (
-                statusAceitos.includes(
-                    status
-                )
-            ) {
-                return primeiroValor(
-                    item,
-                    [
-                        "criado_em",
-                        "created_at",
-                        "data"
-                    ],
-                    ""
-                );
-            }
-        }
-
-        return fallback;
+      return "Recebido";
     }
 
-    function montarRastreamentoPedido(pedido) {
-        if (
-            pedidoEstaCancelado(
-                pedido
-            )
-        ) {
-            return `
+    return pedido?.status || statusEntrega || "Pedido recebido";
+  }
+
+  function pedidoEstaEntregue(pedido) {
+    return obterStatusInternoPedido(pedido) === "entregue";
+  }
+
+  function pedidoEstaCancelado(pedido) {
+    return obterStatusInternoPedido(pedido) === "cancelado";
+  }
+
+  function pedidoEstaEmAndamento(pedido) {
+    return !pedidoEstaEntregue(pedido) && !pedidoEstaCancelado(pedido);
+  }
+
+  function pedidoSaiuParaEntrega(pedido) {
+    return obterStatusInternoPedido(pedido) === "saiu_para_entrega";
+  }
+
+  function obterDataEtapaPedido(pedido, statusAceitos, fallback = "") {
+    const historico = Array.isArray(pedido?.historicoStatus)
+      ? pedido.historicoStatus
+      : [];
+
+    for (const item of historico) {
+      const status = normalizarStatusPedido(
+        primeiroValor(item, ["status_novo", "novo_status", "status"], ""),
+      );
+
+      if (statusAceitos.includes(status)) {
+        return primeiroValor(item, ["criado_em", "created_at", "data"], "");
+      }
+    }
+
+    return fallback;
+  }
+
+  function montarRastreamentoPedido(pedido) {
+    if (pedidoEstaCancelado(pedido)) {
+      return `
                 <div
                     class="
                         rastreamento-pedido
@@ -580,173 +451,98 @@
 
                 </div>
             `;
+    }
+
+    const statusAtual = obterStatusInternoPedido(pedido);
+
+    const pedidoId = escaparTextoPedido(obterIdRealPedido(pedido));
+
+    const indiceAtual =
+      {
+        recebido: 0,
+        confirmado: 0,
+        aceito: 0,
+        em_preparo: 1,
+        pronto: 2,
+        saiu_para_entrega: 3,
+        entregue: 4,
+      }[statusAtual] ?? 0;
+
+    const etapas = [
+      {
+        chave: "recebido",
+        titulo: "Recebido",
+        icone: "✓",
+
+        data: obterDataEtapaPedido(
+          pedido,
+          ["recebido", "confirmado", "aceito"],
+          pedido?.criadoEm || "",
+        ),
+      },
+
+      {
+        chave: "preparo",
+        titulo: "Em preparo",
+        icone: "🥤",
+
+        data: obterDataEtapaPedido(pedido, ["em_preparo", "pronto"]),
+      },
+
+      {
+        chave: "aguardando_entregador",
+        titulo: "Aguardando entregador",
+        icone: "⏳",
+
+        data: obterDataEtapaPedido(pedido, ["pronto"]),
+      },
+
+      {
+        chave: "em_rota",
+        titulo: "Saiu para entrega",
+        icone: "🛵",
+
+        data: "",
+      },
+
+      {
+        chave: "entregue",
+        titulo: "Entregue",
+        icone: "✓",
+
+        data: obterDataEtapaPedido(pedido, ["entregue"]),
+      },
+    ];
+
+    const etapasHtml = etapas
+      .map((etapa, indice) => {
+        const concluida = indice < indiceAtual || pedidoEstaEntregue(pedido);
+
+        const ativa = indice === indiceAtual && !pedidoEstaEntregue(pedido);
+
+        const classe = concluida ? "concluida" : ativa ? "ativa" : "";
+
+        const data = formatarData(etapa.data);
+
+        let textoData =
+          data || (concluida || ativa ? "Atualizado" : "Aguardando");
+
+        if (ativa && etapa.chave === "aguardando_entregador") {
+          textoData = "Aguardando";
         }
 
-        const statusAtual =
-            obterStatusInternoPedido(
-                pedido
-            );
+        if (ativa && etapa.chave === "em_rota") {
+          textoData = "Em rota";
+        }
 
-        const pedidoId =
-            escaparTextoPedido(
-                obterIdRealPedido(
-                    pedido
-                )
-            );
-
-        const indiceAtual =
-            {
-                recebido: 0,
-                confirmado: 0,
-                aceito: 0,
-                em_preparo: 1,
-                pronto: 1,
-                saiu_para_entrega: 2,
-                entregue: 4
-            }[statusAtual] ?? 0;
-
-        const etapas = [
-            {
-                chave: "recebido",
-                titulo: "Recebido",
-                icone: "✓",
-
-                data:
-                    obterDataEtapaPedido(
-                        pedido,
-                        [
-                            "recebido",
-                            "confirmado",
-                            "aceito"
-                        ],
-                        pedido?.criadoEm ||
-                        ""
-                    )
-            },
-
-            {
-                chave: "preparo",
-                titulo: "Em preparo",
-                icone: "🥤",
-
-                data:
-                    obterDataEtapaPedido(
-                        pedido,
-                        [
-                            "em_preparo",
-                            "pronto"
-                        ]
-                    )
-            },
-
-            {
-                chave: "aguardando_entregador",
-                titulo: "Aguardando entregador",
-                icone: "⏳",
-
-                data:
-                    obterDataEtapaPedido(
-                        pedido,
-                        [
-                            "saiu_para_entrega"
-                        ]
-                    )
-            },
-
-            {
-                chave: "em_rota",
-                titulo: "Saiu para entrega",
-                icone: "🛵",
-
-                data:
-                    ""
-            },
-
-            {
-                chave: "entregue",
-                titulo: "Entregue",
-                icone: "✓",
-
-                data:
-                    obterDataEtapaPedido(
-                        pedido,
-                        [
-                            "entregue"
-                        ]
-                    )
-            }
-        ];
-
-        const etapasHtml =
-            etapas
-                .map(
-                    (
-                        etapa,
-                        indice
-                    ) => {
-                        const concluida =
-                            indice < indiceAtual ||
-                            pedidoEstaEntregue(
-                                pedido
-                            );
-
-                        const ativa =
-                            indice === indiceAtual &&
-                            !pedidoEstaEntregue(
-                                pedido
-                            );
-
-                        const classe =
-                            concluida
-                                ? "concluida"
-                                : ativa
-                                    ? "ativa"
-                                    : "";
-
-                        const data =
-                            formatarData(
-                                etapa.data
-                            );
-
-                        let textoData =
-                            data ||
-                            (
-                                concluida ||
-                                ativa
-                                    ? "Atualizado"
-                                    : "Aguardando"
-                            );
-
-                        if (
-                            ativa &&
-                            etapa.chave ===
-                                "aguardando_entregador"
-                        ) {
-                            textoData =
-                                "Aguardando";
-                        }
-
-                        if (
-                            ativa &&
-                            etapa.chave ===
-                                "em_rota"
-                        ) {
-                            textoData =
-                                "Em rota";
-                        }
-
-                        return `
+        return `
                             <div
                                 class="
                                     etapa-rastreamento-pedido
                                     ${classe}
                                 "
-                                data-etapa-entrega="${
-                                    etapa.chave
-                                }"
-                                data-etapa-indice="${
-                                    indice
-                                }"
+                                data-etapa-entrega="${etapa.chave}"
+                                data-etapa-indice="${indice}"
                             >
 
                                 <span
@@ -768,11 +564,10 @@
 
                             </div>
                         `;
-                    }
-                )
-                .join("");
+      })
+      .join("");
 
-        return `
+    return `
             <div
                 class="rastreamento-pedido"
                 aria-label="Acompanhamento do pedido"
@@ -792,11 +587,9 @@
 
                     <span>
                         ${
-                            pedidoEstaEmAndamento(
-                                pedido
-                            )
-                                ? "Atualização automática"
-                                : "Pedido concluído"
+                          pedidoEstaEmAndamento(pedido)
+                            ? "Atualização automática"
+                            : "Pedido concluído"
                         }
                     </span>
 
@@ -812,42 +605,27 @@
 
             </div>
         `;
+  }
+
+  function podeRepetirPedido(pedido) {
+    return (
+      normalizarTextoPedido(pedido?.tipo) !== "recompensa" &&
+      Array.isArray(pedido?.itens) &&
+      pedido.itens.length > 0
+    );
+  }
+
+  function montarAcoesPedido(pedido) {
+    const pedidoId = escaparTextoPedido(obterIdRealPedido(pedido));
+
+    if (!pedidoId) {
+      return "";
     }
 
-    function podeRepetirPedido(pedido) {
-        return (
-            normalizarTextoPedido(
-                pedido?.tipo
-            ) !== "recompensa" &&
+    const acoes = [];
 
-            Array.isArray(
-                pedido?.itens
-            ) &&
-
-            pedido.itens.length > 0
-        );
-    }
-
-    function montarAcoesPedido(pedido) {
-        const pedidoId =
-            escaparTextoPedido(
-                obterIdRealPedido(
-                    pedido
-                )
-            );
-
-        if (!pedidoId) {
-            return "";
-        }
-
-        const acoes = [];
-
-        if (
-            pedidoSaiuParaEntrega(
-                pedido
-            )
-        ) {
-            acoes.push(`
+    if (pedidoSaiuParaEntrega(pedido)) {
+      acoes.push(`
                 <button
                     type="button"
                     class="btn-acao-pedido btn-acompanhar-entrega"
@@ -857,14 +635,10 @@
                     🛵 Acompanhar entrega
                 </button>
             `);
-        }
+    }
 
-        if (
-            podeRepetirPedido(
-                pedido
-            )
-        ) {
-            acoes.push(`
+    if (podeRepetirPedido(pedido)) {
+      acoes.push(`
                 <button
                     type="button"
                     class="
@@ -877,37 +651,22 @@
                     🔁 Pedir novamente
                 </button>
             `);
-        }
+    }
 
-        if (
-            pedidoEstaEntregue(
-                pedido
-            )
-        ) {
-            const avaliacao =
-                pedido?.avaliacao ||
-                null;
+    if (pedidoEstaEntregue(pedido)) {
+      const avaliacao = pedido?.avaliacao || null;
 
-            const texto =
-                avaliacao
-                    ? `⭐ Avaliado: ${
-                        Number(
-                            avaliacao.nota
-                        ) || 0
-                    }/5`
-                    : "⭐ Avaliar pedido";
+      const texto = avaliacao
+        ? `⭐ Avaliado: ${Number(avaliacao.nota) || 0}/5`
+        : "⭐ Avaliar pedido";
 
-            acoes.push(`
+      acoes.push(`
                 <button
                     type="button"
                     class="
                         btn-acao-pedido
                         btn-avaliar-pedido
-                        ${
-                            avaliacao
-                                ? "avaliado"
-                                : ""
-                        }
+                        ${avaliacao ? "avaliado" : ""}
                     "
                     data-acao-pedido="avaliar"
                     data-pedido-id="${pedidoId}"
@@ -915,13 +674,13 @@
                     ${texto}
                 </button>
             `);
-        }
+    }
 
-        if (!acoes.length) {
-            return "";
-        }
+    if (!acoes.length) {
+      return "";
+    }
 
-        return `
+    return `
             <div
                 class="
                     acoes-pedido-cliente
@@ -930,147 +689,394 @@
                 ${acoes.join("")}
             </div>
         `;
-    }
+  }
 
-    function criarHtmlPedido(pedido) {
-        const produto =
-            escaparTextoPedido(
-                pedido?.produto ||
-                "Pedido Azury"
-            );
+  function obterResumoComplementosPedido(pedido) {
+    const listas = Array.isArray(pedido?.complementos)
+      ? pedido.complementos
+      : [];
 
-        const codigoPedido =
-            pedido?.id
-                ? escaparTextoPedido(
-                    pedido.id
-                )
-                : "";
-
-        const data =
-            escaparTextoPedido(
-                formatarDataPedidoCliente(
-                    pedido
-                )
-            );
-
-        const statusInterno =
-            obterStatusInternoPedido(
-                pedido
-            );
-
-        const statusInicialCard =
-            statusInterno ===
-            "saiu_para_entrega"
-                ? "Aguardando entregador"
-                : (
-                    pedido?.status ||
-                    "Pedido recebido"
-                );
-
-        const status =
-            escaparTextoPedido(
-                statusInicialCard
-            );
-
-        const tipoRecompensa =
-            normalizarTextoPedido(
-                pedido?.tipo
-            ) ===
-            "recompensa";
-
-        const quantidade =
-            Math.max(
-                1,
-                Number(
-                    pedido?.quantidade
-                ) || 1
-            );
-
-        const tamanho =
-            pedido?.tamanho
-                ? escaparTextoPedido(
-                    pedido.tamanho
-                )
-                : "";
-
-        const pontosUtilizados =
-            Math.max(
-                0,
-                Number(
-                    pedido?.pontosUtilizados
-                ) || 0
-            );
-
-        const iconeStatus =
-            obterIconeStatusPedido(
-                statusInicialCard
-            );
-
-        const classeStatus =
-            obterClasseStatusPedido(
-                statusInicialCard
-            );
-
-        const complementos =
-            montarComplementosPedido(
-                pedido
-            );
-
-        const endereco =
-            montarEnderecoPedidoCliente(
-                pedido
-            );
-
-        const pontos =
-            montarPontosPedidoCliente(
-                pedido
-            );
-
-        const valores =
-            obterValoresPedidoCliente(
-                pedido
-            );
-
-        const formaPagamento =
-            String(
-                pedido?.formaPagamento ||
-                pedido?.pagamento ||
-                "Não informada"
-            ).trim();
-
-        let detalhesProduto =
-            "";
-
-        if (codigoPedido) {
-            detalhesProduto += `
-                <p>
-                    🧾 Pedido:
-                    ${codigoPedido}
-                </p>
-            `;
+    const nomes = listas
+      .flatMap((item) => (Array.isArray(item) ? item : [item]))
+      .map((item) => {
+        if (item && typeof item === "object") {
+          return String(
+            primeiroValor(item, ["nome", "complemento_nome"], ""),
+          ).trim();
         }
 
-        if (
-            quantidade > 1
-        ) {
-            detalhesProduto += `
+        return String(item || "").trim();
+      })
+      .filter(Boolean);
+
+    return [...new Set(nomes)].join(", ");
+  }
+
+  function criarIdDetalhesPedido(pedido, prefixo) {
+    const pedidoId =
+      obterIdRealPedido(pedido) || String(pedido?.id || Date.now());
+
+    return `${prefixo}-${pedidoId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+  }
+
+  function criarHtmlDetalhesExpandidosPedido(
+    pedido,
+    { incluirProduto = false } = {},
+  ) {
+    const produto = escaparTextoPedido(pedido?.produto || "Pedido Azury");
+
+    const codigoPedido = escaparTextoPedido(pedido?.id || pedido?.codigo || "");
+
+    const data = escaparTextoPedido(formatarDataPedidoCliente(pedido));
+
+    const quantidade = Math.max(1, Number(pedido?.quantidade) || 1);
+
+    const tamanho = pedido?.tamanho ? escaparTextoPedido(pedido.tamanho) : "";
+
+    const endereco = montarEnderecoPedidoCliente(pedido);
+
+    const pontos = montarPontosPedidoCliente(pedido);
+
+    const valores = obterValoresPedidoCliente(pedido);
+
+    const formaPagamento = String(
+      pedido?.formaPagamento || pedido?.pagamento || "Não informada",
+    ).trim();
+
+    const complementos = montarComplementosPedido(pedido);
+
+    const tipoRecompensa = normalizarTextoPedido(pedido?.tipo) === "recompensa";
+
+    const pontosUtilizados = Math.max(0, Number(pedido?.pontosUtilizados) || 0);
+
+    let detalhesProduto = "";
+
+    if (incluirProduto) {
+      detalhesProduto += `
+                <div class="pedido-detalhes-produto">
+                    <strong>
+                        ${produto}
+                    </strong>
+
+                    ${
+                      data
+                        ? `
+                                <span>
+                                    📅 ${data}
+                                </span>
+                            `
+                        : ""
+                    }
+
+                    ${
+                      codigoPedido
+                        ? `
+                                <span>
+                                    🧾 Pedido:
+                                    ${codigoPedido}
+                                </span>
+                            `
+                        : ""
+                    }
+
+                    ${complementos}
+                </div>
+            `;
+    }
+
+    if (quantidade > 1) {
+      detalhesProduto += `
                 <p>
                     🥤 Quantidade:
                     ${quantidade} copos
                 </p>
             `;
-        }
+    }
 
-        if (tamanho) {
-            detalhesProduto += `
+    if (tamanho) {
+      detalhesProduto += `
                 <p>
                     📏 Tamanho:
                     ${tamanho}
                 </p>
             `;
-        }
+    }
 
-        let detalhesPagamento = `
+    let detalhesPagamento = `
+            <div class="valores-pedido-cliente">
+                <p>
+                    🥤 Produtos:
+                    ${formatarMoedaPedido(valores.valorProdutos)}
+                </p>
+
+                <p>
+                    🛵 Taxa de entrega:
+                    ${formatarMoedaPedido(valores.taxaEntrega)}
+                </p>
+
+                <p>
+                    💰 Total:
+                    <strong>
+                        ${formatarMoedaPedido(valores.valorTotal)}
+                    </strong>
+                </p>
+
+                <p>
+                    💳 Pagamento:
+                    ${escaparTextoPedido(formaPagamento)}
+                </p>
+            </div>
+        `;
+
+    if (tipoRecompensa) {
+      detalhesPagamento = `
+                <div class="valores-pedido-cliente">
+                    <p>
+                        🎁 Resgate de recompensa
+                    </p>
+
+                    <p>
+                        ⭐ ${pontosUtilizados}
+                        pontos utilizados
+                    </p>
+
+                    <p>
+                        💰 Total: R$ 0,00
+                    </p>
+                </div>
+            `;
+    }
+
+    return `
+            <div class="pedido-detalhes-expandidos">
+                ${detalhesProduto}
+
+                ${endereco}
+
+                ${detalhesPagamento}
+
+                ${pontos}
+
+                ${montarRastreamentoPedido(pedido)}
+
+                ${montarAcoesPedido(pedido)}
+            </div>
+        `;
+  }
+
+  function criarHtmlPedidoRecenteCompacto(pedido) {
+    const pedidoId = escaparTextoPedido(obterIdRealPedido(pedido));
+
+    const produto = escaparTextoPedido(pedido?.produto || "Pedido Azury");
+
+    const codigo = escaparTextoPedido(pedido?.id || pedido?.codigo || "Pedido");
+
+    const data = escaparTextoPedido(formatarDataPedidoCliente(pedido));
+
+    const complementos = escaparTextoPedido(
+      obterResumoComplementosPedido(pedido) || "Sem complementos",
+    );
+
+    const statusVisual = obterStatusVisualPedido(pedido);
+
+    const classeStatus = obterClasseStatusPedido(statusVisual);
+
+    const iconeStatus = obterIconeStatusPedido(statusVisual);
+
+    const detalhesId = criarIdDetalhesPedido(pedido, "pedido-recente-detalhes");
+
+    return `
+            <article
+                class="pedido-recente-compacto"
+                data-pedido-card-id="${pedidoId}"
+            >
+                <div class="pedido-recente-resumo">
+                    <div class="pedido-recente-info">
+                        <span
+                            class="
+                                pedido-status-resumo
+                                ${classeStatus}
+                            "
+                            data-status-resumo-pedido-id="${pedidoId}"
+                            data-status-base-class="pedido-status-resumo"
+                        >
+                            ${iconeStatus}
+                            ${escaparTextoPedido(statusVisual)}
+                        </span>
+
+                        <strong class="pedido-recente-produto">
+                            🥤 ${produto}
+                        </strong>
+
+                        <span>
+                            📅 ${data}
+                        </span>
+
+                        <span>
+                            🧾 Pedido: ${codigo}
+                        </span>
+
+                        <span class="pedido-recente-complementos">
+                            🍓 Complementos:
+                            ${complementos}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="pedido-toggle-detalhes"
+                        data-toggle-detalhes-pedido
+                        aria-expanded="false"
+                        aria-controls="${detalhesId}"
+                        title="Ver detalhes do pedido"
+                    >
+                        ›
+                    </button>
+                </div>
+
+                <div
+                    id="${detalhesId}"
+                    class="pedido-recente-detalhes"
+                    hidden
+                >
+                    ${criarHtmlDetalhesExpandidosPedido(pedido)}
+                </div>
+            </article>
+        `;
+  }
+
+  function criarHtmlPedidoEmAndamentoCompacto(pedido) {
+    const pedidoId = escaparTextoPedido(obterIdRealPedido(pedido));
+
+    const codigo = escaparTextoPedido(pedido?.id || pedido?.codigo || "Pedido");
+
+    const statusVisual = obterStatusVisualPedido(pedido);
+
+    const classeStatus = obterClasseStatusPedido(statusVisual);
+
+    const iconeStatus = obterIconeStatusPedido(statusVisual);
+
+    const detalhesId = criarIdDetalhesPedido(
+      pedido,
+      "pedido-andamento-detalhes",
+    );
+
+    return `
+            <article
+                class="pedido-andamento-compacto"
+                data-pedido-card-id="${pedidoId}"
+            >
+                <div class="pedido-andamento-cabecalho">
+                    <div>
+                        <strong>
+                            Pedido ${codigo}
+                        </strong>
+
+                        <span
+                            class="
+                                pedido-status-resumo
+                                ${classeStatus}
+                            "
+                            data-status-resumo-pedido-id="${pedidoId}"
+                            data-status-base-class="pedido-status-resumo"
+                        >
+                            ${iconeStatus}
+                            ${escaparTextoPedido(statusVisual)}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="pedido-toggle-detalhes"
+                        data-toggle-detalhes-pedido
+                        aria-expanded="false"
+                        aria-controls="${detalhesId}"
+                        title="Ver detalhes do pedido"
+                    >
+                        ›
+                    </button>
+                </div>
+
+                ${montarRastreamentoPedido(pedido)}
+
+                <div
+                    id="${detalhesId}"
+                    class="pedido-andamento-detalhes"
+                    hidden
+                >
+                    ${criarHtmlDetalhesExpandidosPedido(pedido, {
+                      incluirProduto: true,
+                    })}
+                </div>
+            </article>
+        `;
+  }
+
+  function criarHtmlPedido(pedido) {
+    const produto = escaparTextoPedido(pedido?.produto || "Pedido Azury");
+
+    const codigoPedido = pedido?.id ? escaparTextoPedido(pedido.id) : "";
+
+    const data = escaparTextoPedido(formatarDataPedidoCliente(pedido));
+
+    const statusInicialCard = obterStatusVisualPedido(pedido);
+
+    const status = escaparTextoPedido(statusInicialCard);
+
+    const tipoRecompensa = normalizarTextoPedido(pedido?.tipo) === "recompensa";
+
+    const quantidade = Math.max(1, Number(pedido?.quantidade) || 1);
+
+    const tamanho = pedido?.tamanho ? escaparTextoPedido(pedido.tamanho) : "";
+
+    const pontosUtilizados = Math.max(0, Number(pedido?.pontosUtilizados) || 0);
+
+    const iconeStatus = obterIconeStatusPedido(statusInicialCard);
+
+    const classeStatus = obterClasseStatusPedido(statusInicialCard);
+
+    const complementos = montarComplementosPedido(pedido);
+
+    const endereco = montarEnderecoPedidoCliente(pedido);
+
+    const pontos = montarPontosPedidoCliente(pedido);
+
+    const valores = obterValoresPedidoCliente(pedido);
+
+    const formaPagamento = String(
+      pedido?.formaPagamento || pedido?.pagamento || "Não informada",
+    ).trim();
+
+    let detalhesProduto = "";
+
+    if (codigoPedido) {
+      detalhesProduto += `
+                <p>
+                    🧾 Pedido:
+                    ${codigoPedido}
+                </p>
+            `;
+    }
+
+    if (quantidade > 1) {
+      detalhesProduto += `
+                <p>
+                    🥤 Quantidade:
+                    ${quantidade} copos
+                </p>
+            `;
+    }
+
+    if (tamanho) {
+      detalhesProduto += `
+                <p>
+                    📏 Tamanho:
+                    ${tamanho}
+                </p>
+            `;
+    }
+
+    let detalhesPagamento = `
             <div
                 class="
                     valores-pedido-cliente
@@ -1079,40 +1085,32 @@
 
                 <p>
                     🥤 Produtos:
-                    ${formatarMoedaPedido(
-                        valores.valorProdutos
-                    )}
+                    ${formatarMoedaPedido(valores.valorProdutos)}
                 </p>
 
                 <p>
                     🛵 Taxa de entrega:
-                    ${formatarMoedaPedido(
-                        valores.taxaEntrega
-                    )}
+                    ${formatarMoedaPedido(valores.taxaEntrega)}
                 </p>
 
                 <p>
                     💰 Total:
 
                     <strong>
-                        ${formatarMoedaPedido(
-                            valores.valorTotal
-                        )}
+                        ${formatarMoedaPedido(valores.valorTotal)}
                     </strong>
                 </p>
 
                 <p>
                     💳 Pagamento:
-                    ${escaparTextoPedido(
-                        formaPagamento
-                    )}
+                    ${escaparTextoPedido(formaPagamento)}
                 </p>
 
             </div>
         `;
 
-        if (tipoRecompensa) {
-            detalhesPagamento = `
+    if (tipoRecompensa) {
+      detalhesPagamento = `
                 <div
                     class="
                         valores-pedido-cliente
@@ -1134,35 +1132,24 @@
 
                 </div>
             `;
-        }
+    }
 
-        const classeAndamento =
-            pedidoEstaEmAndamento(
-                pedido
-            )
-                ? " pedido-em-andamento"
-                : "";
+    const classeAndamento = pedidoEstaEmAndamento(pedido)
+      ? " pedido-em-andamento"
+      : "";
 
-        return `
+    return `
             <div
                 class="
                     pedido${classeAndamento}
                 "
-                data-pedido-card-id="${
-                    escaparTextoPedido(
-                        obterIdRealPedido(
-                            pedido
-                        )
-                    )
-                }"
+                data-pedido-card-id="${escaparTextoPedido(
+                  obterIdRealPedido(pedido),
+                )}"
             >
 
                 <h4>
-                    ${
-                        tipoRecompensa
-                            ? "🎁"
-                            : "🥤"
-                    }
+                    ${tipoRecompensa ? "🎁" : "🥤"}
 
                     ${produto}
                 </h4>
@@ -1183,54 +1170,320 @@
 
                 <p
                     class="${classeStatus}"
-                    data-status-resumo-pedido-id="${
-                        escaparTextoPedido(
-                            obterIdRealPedido(
-                                pedido
-                            )
-                        )
-                    }"
+                    data-status-resumo-pedido-id="${escaparTextoPedido(
+                      obterIdRealPedido(pedido),
+                    )}"
                 >
                     ${iconeStatus}
                     ${status}
                 </p>
 
-                ${
-                    montarRastreamentoPedido(
-                        pedido
-                    )
-                }
+                ${montarRastreamentoPedido(pedido)}
 
-                ${
-                    montarAcoesPedido(
-                        pedido
-                    )
-                }
+                ${montarAcoesPedido(pedido)}
 
             </div>
         `;
+  }
+
+  function garantirEstilosPedidosCliente() {
+    if (document.getElementById("azuryPedidosClienteEstilos")) {
+      return;
     }
 
-    function garantirEstilosPedidosCliente() {
-        if (
-            document.getElementById(
-                "azuryPedidosClienteEstilos"
-            )
-        ) {
-            return;
-        }
+    const style = document.createElement("style");
 
-        const style =
-            document.createElement(
-                "style"
-            );
+    style.id = "azuryPedidosClienteEstilos";
 
-        style.id =
-            "azuryPedidosClienteEstilos";
-
-        style.textContent = `
+    style.textContent = `
             .pagina-cliente .pedido {
                 position: relative;
+            }
+
+            .pagina-cliente
+            .pedido-recente-compacto,
+            .pagina-cliente
+            .pedido-andamento-compacto {
+                border:
+                    1px solid
+                    #dbe4f2;
+
+                border-radius:
+                    14px;
+
+                background:
+                    #ffffff;
+
+                overflow:
+                    hidden;
+            }
+
+            .pagina-cliente
+            .pedido-recente-compacto
+            + .pedido-recente-compacto,
+            .pagina-cliente
+            .pedido-andamento-compacto
+            + .pedido-andamento-compacto {
+                margin-top:
+                    10px;
+            }
+
+            .pagina-cliente
+            .pedido-recente-resumo,
+            .pagina-cliente
+            .pedido-andamento-cabecalho {
+                min-height:
+                    74px;
+
+                display:
+                    flex;
+
+                align-items:
+                    center;
+
+                justify-content:
+                    space-between;
+
+                gap:
+                    14px;
+
+                padding:
+                    12px 14px;
+            }
+
+            .pagina-cliente
+            .pedido-recente-info {
+                min-width:
+                    0;
+
+                display:
+                    grid;
+
+                grid-template-columns:
+                    auto auto;
+
+                align-items:
+                    center;
+
+                justify-content:
+                    start;
+
+                gap:
+                    4px 12px;
+
+                color:
+                    #667085;
+
+                font-size:
+                    11px;
+            }
+
+            .pagina-cliente
+            .pedido-recente-produto {
+                grid-column:
+                    1 / -1;
+
+                color:
+                    #17233c;
+
+                font-size:
+                    14px;
+            }
+
+            .pagina-cliente
+            .pedido-recente-complementos {
+                grid-column:
+                    1 / -1;
+
+                overflow:
+                    hidden;
+
+                text-overflow:
+                    ellipsis;
+
+                white-space:
+                    nowrap;
+            }
+
+            .pagina-cliente
+            .pedido-status-resumo {
+                width:
+                    fit-content;
+
+                margin:
+                    0 0 2px;
+
+                padding:
+                    4px 8px;
+
+                border-radius:
+                    999px;
+
+                font-size:
+                    10px;
+
+                font-weight:
+                    900;
+            }
+
+            .pagina-cliente
+            .pedido-recente-info
+            .pedido-status-resumo {
+                grid-column:
+                    1 / -1;
+            }
+
+            .pagina-cliente
+            .pedido-toggle-detalhes {
+                width:
+                    38px;
+
+                height:
+                    38px;
+
+                flex:
+                    0 0 38px;
+
+                display:
+                    grid;
+
+                place-items:
+                    center;
+
+                border:
+                    1px solid
+                    #d9e3f2;
+
+                border-radius:
+                    11px;
+
+                background:
+                    #f7faff;
+
+                color:
+                    #0758f8;
+
+                font-size:
+                    25px;
+
+                font-weight:
+                    700;
+
+                line-height:
+                    1;
+
+                cursor:
+                    pointer;
+
+                transition:
+                    transform
+                    0.18s ease,
+                    background
+                    0.18s ease;
+            }
+
+            .pagina-cliente
+            .pedido-toggle-detalhes[
+                aria-expanded="true"
+            ] {
+                transform:
+                    rotate(
+                        90deg
+                    );
+
+                background:
+                    #eaf1ff;
+            }
+
+            .pagina-cliente
+            .pedido-recente-detalhes,
+            .pagina-cliente
+            .pedido-andamento-detalhes {
+                padding:
+                    0 14px 14px;
+
+                border-top:
+                    1px solid
+                    #edf1f7;
+            }
+
+            .pagina-cliente
+            .pedido-recente-detalhes[hidden],
+            .pagina-cliente
+            .pedido-andamento-detalhes[hidden] {
+                display:
+                    none;
+            }
+
+            .pagina-cliente
+            .pedido-detalhes-expandidos {
+                padding-top:
+                    12px;
+            }
+
+            .pagina-cliente
+            .pedido-detalhes-produto {
+                display:
+                    grid;
+
+                gap:
+                    4px;
+
+                margin-bottom:
+                    12px;
+
+                color:
+                    #667085;
+
+                font-size:
+                    12px;
+            }
+
+            .pagina-cliente
+            .pedido-detalhes-produto
+            strong {
+                color:
+                    #17233c;
+
+                font-size:
+                    14px;
+            }
+
+            .pagina-cliente
+            .pedido-andamento-cabecalho
+            > div {
+                min-width:
+                    0;
+
+                display:
+                    flex;
+
+                align-items:
+                    center;
+
+                flex-wrap:
+                    wrap;
+
+                gap:
+                    8px 10px;
+            }
+
+            .pagina-cliente
+            .pedido-andamento-cabecalho
+            > div
+            > strong {
+                color:
+                    #17233c;
+
+                font-size:
+                    13px;
+            }
+
+            .pagina-cliente
+            .pedido-andamento-compacto
+            > .rastreamento-pedido {
+                margin:
+                    0 14px 14px;
             }
 
             .pagina-cliente
@@ -2162,6 +2415,55 @@
                         100%;
                 }
 
+                .pagina-cliente
+                .pedido-recente-resumo,
+                .pagina-cliente
+                .pedido-andamento-cabecalho {
+                    min-height:
+                        66px;
+
+                    padding:
+                        10px 11px;
+                }
+
+                .pagina-cliente
+                .pedido-recente-info {
+                    grid-template-columns:
+                        1fr;
+
+                    gap:
+                        3px;
+                }
+
+                .pagina-cliente
+                .pedido-recente-info
+                > span:not(
+                    .pedido-status-resumo
+                ) {
+                    font-size:
+                        10px;
+                }
+
+                .pagina-cliente
+                .pedido-recente-complementos {
+                    max-width:
+                        calc(
+                            100vw - 110px
+                        );
+                }
+
+                .pagina-cliente
+                .pedido-toggle-detalhes {
+                    width:
+                        34px;
+
+                    height:
+                        34px;
+
+                    flex-basis:
+                        34px;
+                }
+
                 #modalAvaliacaoPedidoAzury {
                     padding:
                         10px;
@@ -2190,32 +2492,19 @@
             }
         `;
 
-        document.head.appendChild(
-            style
-        );
+    document.head.appendChild(style);
+  }
+
+  function garantirModalAvaliacaoPedido() {
+    if (document.getElementById("modalAvaliacaoPedidoAzury")) {
+      return;
     }
 
-    function garantirModalAvaliacaoPedido() {
-    if (
-        document.getElementById(
-            "modalAvaliacaoPedidoAzury"
-        )
-    ) {
-        return;
-    }
+    const modal = document.createElement("div");
 
-    const modal =
-        document.createElement(
-            "div"
-        );
+    modal.id = "modalAvaliacaoPedidoAzury";
 
-    modal.id =
-        "modalAvaliacaoPedidoAzury";
-
-    modal.setAttribute(
-        "aria-hidden",
-        "true"
-    );
+    modal.setAttribute("aria-hidden", "true");
 
     modal.innerHTML = `
         <div
@@ -2261,10 +2550,9 @@
                 aria-label="Nota do pedido"
             >
 
-                ${
-                    [1, 2, 3, 4, 5]
-                        .map(
-                            nota => `
+                ${[1, 2, 3, 4, 5]
+                  .map(
+                    (nota) => `
                                 <button
                                     type="button"
                                     class="estrela-avaliacao"
@@ -2272,17 +2560,14 @@
                                     role="radio"
                                     aria-checked="false"
                                     aria-label="${nota} estrela${
-                                        nota > 1
-                                            ? "s"
-                                            : ""
+                                      nota > 1 ? "s" : ""
                                     }"
                                 >
                                     ★
                                 </button>
-                            `
-                        )
-                        .join("")
-                }
+                            `,
+                  )
+                  .join("")}
 
             </div>
 
@@ -2340,1391 +2625,743 @@
         </div>
     `;
 
-    document.body.appendChild(
-        modal
+    document.body.appendChild(modal);
+  }
+
+  function obterUsuarioPedidosAtual() {
+    if (window.AzuryCliente?.usuario) {
+      return window.AzuryCliente.usuario;
+    }
+
+    if (usuarioAtual) {
+      return usuarioAtual;
+    }
+
+    try {
+      return JSON.parse(localStorage.getItem("clienteAzury") || "null");
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function salvarUsuarioPedidosLocal(usuario) {
+    if (!usuario) {
+      return;
+    }
+
+    usuarioAtual = usuario;
+
+    if (window.AzuryCliente) {
+      window.AzuryCliente.usuario = usuario;
+    }
+
+    try {
+      localStorage.setItem("clienteAzury", JSON.stringify(usuario));
+    } catch (_) {}
+  }
+
+  function encontrarPedidoPorId(pedidoId) {
+    const usuario = obterUsuarioPedidosAtual();
+
+    if (!usuario || !Array.isArray(usuario.pedidos)) {
+      return null;
+    }
+
+    return (
+      usuario.pedidos.find(
+        (pedido) => obterIdRealPedido(pedido) === String(pedidoId),
+      ) || null
     );
-}
+  }
 
-    function obterUsuarioPedidosAtual() {
-        if (
-            window.AzuryCliente?.usuario
-        ) {
-            return window
-                .AzuryCliente
-                .usuario;
-        }
+  function gerarIdSacolaRepetida() {
+    return (
+      window.crypto?.randomUUID?.() ||
+      `repetido-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
+  }
 
-        if (usuarioAtual) {
-            return usuarioAtual;
-        }
+  function prepararItensPedidoParaSacola(pedido) {
+    const itens = Array.isArray(pedido?.itens) ? pedido.itens : [];
 
-        try {
-            return JSON.parse(
-                localStorage.getItem(
-                    "clienteAzury"
-                ) ||
-                "null"
-            );
-        } catch (_) {
-            return null;
-        }
-    }
-
-    function salvarUsuarioPedidosLocal(
-        usuario
-    ) {
-        if (!usuario) {
-            return;
-        }
-
-        usuarioAtual =
-            usuario;
-
-        if (
-            window.AzuryCliente
-        ) {
-            window
-                .AzuryCliente
-                .usuario =
-                usuario;
-        }
-
-        try {
-            localStorage.setItem(
-                "clienteAzury",
-                JSON.stringify(
-                    usuario
-                )
-            );
-        } catch (_) {
-        }
-    }
-
-    function encontrarPedidoPorId(
-        pedidoId
-    ) {
-        const usuario =
-            obterUsuarioPedidosAtual();
-
-        if (
-            !usuario ||
-            !Array.isArray(
-                usuario.pedidos
-            )
-        ) {
-            return null;
-        }
-
-        return (
-            usuario.pedidos.find(
-                pedido =>
-                    obterIdRealPedido(
-                        pedido
-                    ) ===
-                    String(
-                        pedidoId
-                    )
-            ) ||
-            null
+    return itens
+      .map((item) => {
+        const tamanho = Number(
+          primeiroValor(item, ["tamanho_ml", "tamanho"], 0),
         );
+
+        if (!Number.isFinite(tamanho) || tamanho <= 0) {
+          return null;
+        }
+
+        const complementosOriginais = Array.isArray(item?.complementos)
+          ? item.complementos
+          : [];
+
+        const complementos = complementosOriginais
+          .map((complemento, indice) => {
+            const nome = String(
+              primeiroValor(complemento, ["nome", "complemento_nome"], ""),
+            ).trim();
+
+            if (!nome) {
+              return null;
+            }
+
+            const camadaOriginal = normalizarStatusPedido(
+              primeiroValor(complemento, ["camada"], "meio"),
+            );
+
+            const camada =
+              camadaOriginal === "cobertura"
+                ? "cobertura"
+                : camadaOriginal === "ambos" || camadaOriginal === "unica"
+                  ? "ambos"
+                  : "meio";
+
+            return {
+              nome,
+
+              camada,
+
+              ordem_selecao: Math.max(
+                1,
+
+                Number(
+                  primeiroValor(
+                    complemento,
+                    ["ordem_selecao", "ordem"],
+                    indice + 1,
+                  ),
+                ) || indice + 1,
+              ),
+            };
+          })
+          .filter(Boolean);
+
+        return {
+          id: gerarIdSacolaRepetida(),
+
+          tamanho_ml: tamanho,
+
+          quantidade: Math.max(
+            1,
+
+            Number(item?.quantidade) || 1,
+          ),
+
+          preco_unitario: 0,
+
+          complementos,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function repetirPedidoAnterior(pedido) {
+    const itens = Array.isArray(pedido?.itens) ? pedido.itens : [];
+
+    const primeiroItemValido = itens.find((item) => {
+      const tamanho = Number(primeiroValor(item, ["tamanho_ml", "tamanho"], 0));
+
+      return Number.isFinite(tamanho) && tamanho > 0;
+    });
+
+    if (!primeiroItemValido) {
+      alert("Não foi possível identificar o tamanho deste pedido.");
+
+      return;
     }
 
-    function gerarIdSacolaRepetida() {
-        return (
-            window.crypto
-                ?.randomUUID?.() ||
+    const tamanho = Number(
+      primeiroValor(primeiroItemValido, ["tamanho_ml", "tamanho"], 0),
+    );
 
-            `repetido-${
-                Date.now()
-            }-${
-                Math.random()
-                    .toString(16)
-                    .slice(2)
-            }`
+    let sacolaAtual = [];
+
+    try {
+      sacolaAtual = JSON.parse(sessionStorage.getItem(CART_KEY) || "[]");
+    } catch (_) {
+      sacolaAtual = [];
+    }
+
+    try {
+      /*
+       * PEDIR NOVAMENTE:
+       * não coloca o pedido antigo pronto
+       * dentro da sacola.
+       *
+       * A sacola começa vazia e o cliente
+       * escolhe novamente os complementos.
+       */
+      sessionStorage.removeItem(CART_KEY);
+
+      /*
+       * Guarda somente o tamanho do pedido
+       * anterior para o cardápio abrir o
+       * montador já no tamanho correto.
+       */
+      sessionStorage.setItem(
+        "azuryPedidoRepetido",
+
+        JSON.stringify({
+          pedido_id: obterIdRealPedido(pedido),
+
+          codigo: pedido?.codigo || pedido?.id || "",
+
+          tamanho_ml: tamanho,
+
+          criado_em: new Date().toISOString(),
+        }),
+      );
+    } catch (erro) {
+      console.error("Erro ao preparar pedido novamente:", erro);
+
+      alert("Não foi possível abrir este pedido novamente.");
+
+      return;
+    }
+
+    window.location.href = "index.html#Cardapio";
+  }
+
+  function atualizarEstrelasAvaliacao() {
+    document
+      .querySelectorAll("#modalAvaliacaoPedidoAzury [data-nota-avaliacao]")
+      .forEach((botao) => {
+        const nota = Number(botao.dataset.notaAvaliacao) || 0;
+
+        const selecionada = nota <= notaAvaliacao;
+
+        botao.classList.toggle("selecionada", selecionada);
+
+        botao.setAttribute(
+          "aria-checked",
+
+          nota === notaAvaliacao ? "true" : "false",
         );
+      });
+  }
+
+  function fecharModalAvaliacaoPedido() {
+    const modal = document.getElementById("modalAvaliacaoPedidoAzury");
+
+    if (!modal) {
+      return;
     }
 
-    function prepararItensPedidoParaSacola(
-        pedido
-    ) {
-        const itens =
-            Array.isArray(
-                pedido?.itens
-            )
-                ? pedido.itens
-                : [];
+    modal.classList.remove("visivel");
 
-        return itens
-            .map(
-                item => {
-                    const tamanho =
-                        Number(
-                            primeiroValor(
-                                item,
-                                [
-                                    "tamanho_ml",
-                                    "tamanho"
-                                ],
-                                0
-                            )
-                        );
+    modal.setAttribute("aria-hidden", "true");
 
-                    if (
-                        !Number.isFinite(
-                            tamanho
-                        ) ||
-                        tamanho <= 0
-                    ) {
-                        return null;
-                    }
+    document.body.style.overflow = "";
 
-                    const complementosOriginais =
-                        Array.isArray(
-                            item?.complementos
-                        )
-                            ? item.complementos
-                            : [];
+    pedidoAvaliandoId = "";
+  }
 
-                    const complementos =
-                        complementosOriginais
-                            .map(
-                                (
-                                    complemento,
-                                    indice
-                                ) => {
-                                    const nome =
-                                        String(
-                                            primeiroValor(
-                                                complemento,
-                                                [
-                                                    "nome",
-                                                    "complemento_nome"
-                                                ],
-                                                ""
-                                            )
-                                        ).trim();
-
-                                    if (!nome) {
-                                        return null;
-                                    }
-
-                                    const camadaOriginal =
-                                        normalizarStatusPedido(
-                                            primeiroValor(
-                                                complemento,
-                                                [
-                                                    "camada"
-                                                ],
-                                                "meio"
-                                            )
-                                        );
-
-                                    const camada =
-                                        camadaOriginal ===
-                                        "cobertura"
-                                            ? "cobertura"
-
-                                            : (
-                                                camadaOriginal ===
-                                                "ambos" ||
-                                                camadaOriginal ===
-                                                "unica"
-                                            )
-                                                ? "ambos"
-
-                                                : "meio";
-
-                                    return {
-                                        nome,
-
-                                        camada,
-
-                                        ordem_selecao:
-                                            Math.max(
-                                                1,
-
-                                                Number(
-                                                    primeiroValor(
-                                                        complemento,
-                                                        [
-                                                            "ordem_selecao",
-                                                            "ordem"
-                                                        ],
-                                                        indice +
-                                                        1
-                                                    )
-                                                ) ||
-                                                indice +
-                                                1
-                                            )
-                                    };
-                                }
-                            )
-                            .filter(
-                                Boolean
-                            );
-
-                    return {
-                        id:
-                            gerarIdSacolaRepetida(),
-
-                        tamanho_ml:
-                            tamanho,
-
-                        quantidade:
-                            Math.max(
-                                1,
-
-                                Number(
-                                    item
-                                        ?.quantidade
-                                ) ||
-                                1
-                            ),
-
-                        preco_unitario:
-                            0,
-
-                        complementos
-                    };
-                }
-            )
-            .filter(
-                Boolean
-            );
+  function abrirModalAvaliacaoPedido(pedido) {
+    if (!pedido || !pedidoEstaEntregue(pedido)) {
+      return;
     }
 
-    function repetirPedidoAnterior(
-        pedido
-    ) {
-        const itens =
-            Array.isArray(
-                pedido?.itens
-            )
-                ? pedido.itens
-                : [];
+    garantirModalAvaliacaoPedido();
 
-        const primeiroItemValido =
-            itens.find(item => {
-                const tamanho =
-                    Number(
-                        primeiroValor(
-                            item,
-                            [
-                                "tamanho_ml",
-                                "tamanho"
-                            ],
-                            0
-                        )
-                    );
+    const modal = document.getElementById("modalAvaliacaoPedidoAzury");
 
-                return (
-                    Number.isFinite(tamanho) &&
-                    tamanho > 0
-                );
-            });
+    const comentario = document.getElementById(
+      "comentarioAvaliacaoPedidoAzury",
+    );
 
-        if (!primeiroItemValido) {
-            alert(
-                "Não foi possível identificar o tamanho deste pedido."
-            );
+    const contador = document.getElementById("contadorAvaliacaoPedidoAzury");
 
-            return;
-        }
+    const status = document.getElementById("statusAvaliacaoPedidoAzury");
 
-        const tamanho =
-            Number(
-                primeiroValor(
-                    primeiroItemValido,
-                    [
-                        "tamanho_ml",
-                        "tamanho"
-                    ],
-                    0
-                )
-            );
+    const subtitulo = document.getElementById("subtituloAvaliacaoPedidoAzury");
 
-        let sacolaAtual =
-            [];
+    const avaliacao = pedido?.avaliacao || null;
 
-        try {
-            sacolaAtual =
-                JSON.parse(
-                    sessionStorage
-                        .getItem(
-                            CART_KEY
-                        ) ||
-                    "[]"
-                );
-        } catch (_) {
-            sacolaAtual =
-                [];
-        }
+    pedidoAvaliandoId = obterIdRealPedido(pedido);
 
-        
+    notaAvaliacao = Math.max(
+      0,
 
-        try {
-            /*
-             * PEDIR NOVAMENTE:
-             * não coloca o pedido antigo pronto
-             * dentro da sacola.
-             *
-             * A sacola começa vazia e o cliente
-             * escolhe novamente os complementos.
-             */
-            sessionStorage
-                .removeItem(
-                    CART_KEY
-                );
+      Math.min(
+        5,
 
-            /*
-             * Guarda somente o tamanho do pedido
-             * anterior para o cardápio abrir o
-             * montador já no tamanho correto.
-             */
-            sessionStorage
-                .setItem(
-                    "azuryPedidoRepetido",
+        Number(avaliacao?.nota) || 0,
+      ),
+    );
 
-                    JSON.stringify(
-                        {
-                            pedido_id:
-                                obterIdRealPedido(
-                                    pedido
-                                ),
-
-                            codigo:
-                                pedido?.codigo ||
-                                pedido?.id ||
-                                "",
-
-                            tamanho_ml:
-                                tamanho,
-
-                            criado_em:
-                                new Date()
-                                    .toISOString()
-                        }
-                    )
-                );
-
-        } catch (erro) {
-            console.error(
-                "Erro ao preparar pedido novamente:",
-                erro
-            );
-
-            alert(
-                "Não foi possível abrir este pedido novamente."
-            );
-
-            return;
-        }
-
-        window.location.href =
-            "index.html#Cardapio";
+    if (comentario) {
+      comentario.value = String(avaliacao?.comentario || "");
     }
 
-
-    function atualizarEstrelasAvaliacao() {
-        document
-            .querySelectorAll(
-                "#modalAvaliacaoPedidoAzury [data-nota-avaliacao]"
-            )
-            .forEach(
-                botao => {
-                    const nota =
-                        Number(
-                            botao
-                                .dataset
-                                .notaAvaliacao
-                        ) ||
-                        0;
-
-                    const selecionada =
-                        nota <=
-                        notaAvaliacao;
-
-                    botao
-                        .classList
-                        .toggle(
-                            "selecionada",
-                            selecionada
-                        );
-
-                    botao
-                        .setAttribute(
-                            "aria-checked",
-
-                            nota ===
-                            notaAvaliacao
-                                ? "true"
-                                : "false"
-                        );
-                }
-            );
+    if (contador) {
+      contador.textContent = `${comentario?.value.length || 0}/500`;
     }
 
-    function fecharModalAvaliacaoPedido() {
-        const modal =
-            document
-                .getElementById(
-                    "modalAvaliacaoPedidoAzury"
-                );
+    if (status) {
+      status.textContent = "";
 
-        if (!modal) {
-            return;
-        }
-
-        modal
-            .classList
-            .remove(
-                "visivel"
-            );
-
-        modal
-            .setAttribute(
-                "aria-hidden",
-                "true"
-            );
-
-        document
-            .body
-            .style
-            .overflow =
-            "";
-
-        pedidoAvaliandoId =
-            "";
+      status.className = "status-avaliacao";
     }
 
-    function abrirModalAvaliacaoPedido(
-        pedido
-    ) {
-        if (
-            !pedido ||
-            !pedidoEstaEntregue(
-                pedido
-            )
-        ) {
-            return;
-        }
-
-        garantirModalAvaliacaoPedido();
-
-        const modal =
-            document
-                .getElementById(
-                    "modalAvaliacaoPedidoAzury"
-                );
-
-        const comentario =
-            document
-                .getElementById(
-                    "comentarioAvaliacaoPedidoAzury"
-                );
-
-        const contador =
-            document
-                .getElementById(
-                    "contadorAvaliacaoPedidoAzury"
-                );
-
-        const status =
-            document
-                .getElementById(
-                    "statusAvaliacaoPedidoAzury"
-                );
-
-        const subtitulo =
-            document
-                .getElementById(
-                    "subtituloAvaliacaoPedidoAzury"
-                );
-
-        const avaliacao =
-            pedido?.avaliacao ||
-            null;
-
-        pedidoAvaliandoId =
-            obterIdRealPedido(
-                pedido
-            );
-
-        notaAvaliacao =
-            Math.max(
-                0,
-
-                Math.min(
-                    5,
-
-                    Number(
-                        avaliacao
-                            ?.nota
-                    ) ||
-                    0
-                )
-            );
-
-        if (comentario) {
-            comentario.value =
-                String(
-                    avaliacao
-                        ?.comentario ||
-                    ""
-                );
-        }
-
-        if (contador) {
-            contador.textContent =
-                `${
-                    comentario
-                        ?.value
-                        .length ||
-                    0
-                }/500`;
-        }
-
-        if (status) {
-            status.textContent =
-                "";
-
-            status.className =
-                "status-avaliacao";
-        }
-
-        if (subtitulo) {
-            subtitulo.textContent =
-                avaliacao
-                    ? `Você já avaliou o pedido ${
-                        pedido?.codigo ||
-                        pedido?.id ||
-                        ""
-                    }. Pode editar sua avaliação.`
-
-                    : `Como foi sua experiência com o pedido ${
-                        pedido?.codigo ||
-                        pedido?.id ||
-                        ""
-                    }?`;
-        }
-
-        atualizarEstrelasAvaliacao();
-
-        modal
-            .classList
-            .add(
-                "visivel"
-            );
-
-        modal
-            .setAttribute(
-                "aria-hidden",
-                "false"
-            );
-
-        document
-            .body
-            .style
-            .overflow =
-            "hidden";
+    if (subtitulo) {
+      subtitulo.textContent = avaliacao
+        ? `Você já avaliou o pedido ${
+            pedido?.codigo || pedido?.id || ""
+          }. Pode editar sua avaliação.`
+        : `Como foi sua experiência com o pedido ${
+            pedido?.codigo || pedido?.id || ""
+          }?`;
     }
 
-    async function salvarAvaliacaoPedido() {
-        const pedido =
-            encontrarPedidoPorId(
-                pedidoAvaliandoId
-            );
+    atualizarEstrelasAvaliacao();
 
-        const contexto =
-            window.AzuryCliente ||
-            {};
+    modal.classList.add("visivel");
 
-        const supabase =
-            contexto.supabase ||
-            window.azurySupabase;
+    modal.setAttribute("aria-hidden", "false");
 
-        const clienteId =
-            contexto.session
-                ?.user
-                ?.id ||
-            contexto.usuario
-                ?.id ||
-            "";
+    document.body.style.overflow = "hidden";
+  }
 
-        const comentario =
-            document
-                .getElementById(
-                    "comentarioAvaliacaoPedidoAzury"
-                );
+  async function salvarAvaliacaoPedido() {
+    const pedido = encontrarPedidoPorId(pedidoAvaliandoId);
 
-        const status =
-            document
-                .getElementById(
-                    "statusAvaliacaoPedidoAzury"
-                );
+    const contexto = window.AzuryCliente || {};
 
-        const botao =
-            document
-                .getElementById(
-                    "btnSalvarAvaliacaoPedidoAzury"
-                );
+    const supabase = contexto.supabase || window.azurySupabase;
 
-        if (
-            !pedido ||
-            !pedidoEstaEntregue(
-                pedido
-            )
-        ) {
-            return;
+    const clienteId = contexto.session?.user?.id || contexto.usuario?.id || "";
+
+    const comentario = document.getElementById(
+      "comentarioAvaliacaoPedidoAzury",
+    );
+
+    const status = document.getElementById("statusAvaliacaoPedidoAzury");
+
+    const botao = document.getElementById("btnSalvarAvaliacaoPedidoAzury");
+
+    if (!pedido || !pedidoEstaEntregue(pedido)) {
+      return;
+    }
+
+    if (!supabase || !clienteId) {
+      if (status) {
+        status.textContent =
+          "Sua sessão não está disponível. Atualize a página e tente novamente.";
+
+        status.className = "status-avaliacao erro";
+      }
+
+      return;
+    }
+
+    if (notaAvaliacao < 1 || notaAvaliacao > 5) {
+      if (status) {
+        status.textContent = "Escolha de 1 a 5 estrelas.";
+
+        status.className = "status-avaliacao erro";
+      }
+
+      return;
+    }
+
+    const pedidoId = obterIdRealPedido(pedido);
+
+    const textoComentario = String(comentario?.value || "")
+      .trim()
+      .slice(0, 500);
+
+    if (botao) {
+      botao.disabled = true;
+
+      botao.textContent = "Salvando...";
+    }
+
+    if (status) {
+      status.textContent = "Salvando sua avaliação...";
+
+      status.className = "status-avaliacao";
+    }
+
+    try {
+      const agora = new Date().toISOString();
+
+      const { data, error } = await supabase
+        .from(REVIEWS_TABLE)
+        .upsert(
+          {
+            pedido_id: pedidoId,
+
+            cliente_id: clienteId,
+
+            nota: notaAvaliacao,
+
+            comentario: textoComentario || null,
+
+            atualizado_em: agora,
+          },
+
+          {
+            onConflict: "pedido_id,cliente_id",
+          },
+        )
+        .select("pedido_id,nota,comentario,criado_em,atualizado_em")
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      pedido.avaliacao = data || {
+        pedido_id: pedidoId,
+
+        nota: notaAvaliacao,
+
+        comentario: textoComentario || null,
+
+        atualizado_em: agora,
+      };
+
+      const usuario = obterUsuarioPedidosAtual();
+
+      salvarUsuarioPedidosLocal(usuario);
+
+      renderizarPedidosRecentes(usuario);
+
+      if (typeof window.renderizarTodosPedidos === "function") {
+        const listaTodos = document.getElementById("listaTodosPedidos");
+
+        if (listaTodos && listaTodos.innerHTML.trim()) {
+          window.renderizarTodosPedidos(usuario);
+        }
+      }
+
+      if (status) {
+        status.textContent = "Avaliação salva. Obrigado! 💙";
+
+        status.className = "status-avaliacao sucesso";
+      }
+
+      window.setTimeout(fecharModalAvaliacaoPedido, 650);
+    } catch (erro) {
+      console.error("Erro ao salvar avaliação do pedido:", erro);
+
+      if (status) {
+        status.textContent =
+          erro?.message || "Não foi possível salvar sua avaliação.";
+
+        status.className = "status-avaliacao erro";
+      }
+    } finally {
+      if (botao) {
+        botao.disabled = false;
+
+        botao.textContent = "Salvar avaliação";
+      }
+    }
+  }
+
+  async function carregarAvaliacoesPedidos(usuario) {
+    const contexto = window.AzuryCliente || {};
+
+    const supabase = contexto.supabase || window.azurySupabase;
+
+    const clienteId = contexto.session?.user?.id || usuario?.id || "";
+
+    if (!supabase || !clienteId || !Array.isArray(usuario?.pedidos)) {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from(REVIEWS_TABLE)
+        .select("pedido_id,nota,comentario,criado_em,atualizado_em")
+        .eq("cliente_id", clienteId);
+
+      if (error) {
+        throw error;
+      }
+
+      const mapa = new Map(
+        (data || []).map((avaliacao) => [
+          String(avaliacao.pedido_id),
+
+          avaliacao,
+        ]),
+      );
+
+      usuario.pedidos.forEach((pedido) => {
+        pedido.avaliacao = mapa.get(obterIdRealPedido(pedido)) || null;
+      });
+
+      salvarUsuarioPedidosLocal(usuario);
+
+      renderizarPedidosRecentes(usuario);
+    } catch (erro) {
+      console.warn(
+        "Não foi possível carregar as avaliações dos pedidos.",
+        erro,
+      );
+    }
+  }
+
+  function renderizarPedidosRecentes(usuario) {
+    const pedidosDiv = document.getElementById("pedidos");
+
+    if (!pedidosDiv) {
+      return;
+    }
+
+    if (!Array.isArray(usuario?.pedidos)) {
+      usuario.pedidos = [];
+    }
+
+    pedidosDiv.innerHTML = "";
+
+    if (usuario.pedidos.length === 0) {
+      pedidosDiv.innerHTML = "<p>Nenhum pedido realizado.</p>";
+
+      return;
+    }
+
+    pedidosDiv.innerHTML = usuario.pedidos
+      .slice(0, 5)
+      .map((pedido) => criarHtmlPedidoRecenteCompacto(pedido))
+      .join("");
+
+    consultarStatusEntregasVisiveis().catch(console.warn);
+  }
+
+  function obterIndiceEtapaEntrega(statusPedido, statusEntrega) {
+    const pedido = normalizarStatusPedido(statusPedido || "");
+
+    if (pedido === "entregue") {
+      return 4;
+    }
+
+    if (pedido === "saiu_para_entrega") {
+      return 3;
+    }
+
+    if (pedido === "pronto") {
+      return 2;
+    }
+
+    if (pedido === "em_preparo") {
+      return 1;
+    }
+
+    return 0;
+  }
+
+  function atualizarStatusResumoPedidoCard(
+    pedidoId,
+    statusPedido,
+    statusEntrega,
+  ) {
+    if (!pedidoId) {
+      return;
+    }
+
+    const pedido = normalizarStatusPedido(statusPedido || "");
+
+    let texto = statusPedido || "Pedido recebido";
+
+    if (pedido === "pronto") {
+      texto = "Aguardando entregador";
+    }
+
+    if (pedido === "saiu_para_entrega") {
+      texto = "Saiu para entrega";
+    }
+
+    if (pedido === "entregue") {
+      texto = "Entregue";
+    }
+
+    if (pedido === "cancelado") {
+      texto = "Cancelado";
+    }
+
+    const icone = obterIconeStatusPedido(texto);
+
+    const classe = obterClasseStatusPedido(texto);
+
+    document
+      .querySelectorAll("[data-status-resumo-pedido-id]")
+      .forEach((elemento) => {
+        if (elemento.dataset.statusResumoPedidoId !== String(pedidoId)) {
+          return;
         }
 
-        if (
-            !supabase ||
-            !clienteId
-        ) {
-            if (status) {
-                status.textContent =
-                    "Sua sessão não está disponível. Atualize a página e tente novamente.";
+        const classeBase = elemento.dataset.statusBaseClass || "";
 
-                status.className =
-                    "status-avaliacao erro";
+        elemento.className = [classeBase, classe].filter(Boolean).join(" ");
+
+        elemento.textContent = `${icone} ${texto}`;
+      });
+  }
+
+  function atualizarEtapasRastreamentoCard(
+    pedidoId,
+    statusPedido,
+    statusEntrega,
+  ) {
+    if (!pedidoId) {
+      return;
+    }
+
+    atualizarStatusResumoPedidoCard(pedidoId, statusPedido, statusEntrega);
+
+    const indiceAtual = obterIndiceEtapaEntrega(statusPedido, statusEntrega);
+
+    const entregue = normalizarStatusPedido(statusPedido) === "entregue";
+
+    document
+      .querySelectorAll(".rastreamento-pedido[data-rastreamento-pedido-id]")
+      .forEach((bloco) => {
+        if (bloco.dataset.rastreamentoPedidoId !== String(pedidoId)) {
+          return;
+        }
+
+        bloco.dataset.statusPedido = normalizarStatusPedido(statusPedido);
+
+        bloco
+          .querySelectorAll(".etapa-rastreamento-pedido")
+          .forEach((etapa) => {
+            const indice = Number(etapa.dataset.etapaIndice);
+
+            const concluida = entregue || indice < indiceAtual;
+
+            const ativa = !entregue && indice === indiceAtual;
+
+            etapa.classList.toggle("concluida", concluida);
+
+            etapa.classList.toggle("ativa", ativa);
+
+            const pequeno = etapa.querySelector("small");
+
+            if (!pequeno) {
+              return;
             }
 
-            return;
-        }
+            const chave = etapa.dataset.etapaEntrega || "";
 
-        if (
-            notaAvaliacao < 1 ||
-            notaAvaliacao > 5
-        ) {
-            if (status) {
-                status.textContent =
-                    "Escolha de 1 a 5 estrelas.";
-
-                status.className =
-                    "status-avaliacao erro";
+            if (chave === "aguardando_entregador") {
+              if (ativa) {
+                pequeno.textContent = "Aguardando";
+              } else if (indiceAtual > 2 || entregue) {
+                pequeno.textContent = "Concluído";
+              }
             }
 
-            return;
-        }
-
-        const pedidoId =
-            obterIdRealPedido(
-                pedido
-            );
-
-        const textoComentario =
-            String(
-                comentario
-                    ?.value ||
-                ""
-            )
-                .trim()
-                .slice(
-                    0,
-                    500
-                );
-
-        if (botao) {
-            botao.disabled =
-                true;
-
-            botao.textContent =
-                "Salvando...";
-        }
-
-        if (status) {
-            status.textContent =
-                "Salvando sua avaliação...";
-
-            status.className =
-                "status-avaliacao";
-        }
-
-        try {
-            const agora =
-                new Date()
-                    .toISOString();
-
-            const {
-                data,
-                error
-            } =
-                await supabase
-                    .from(
-                        REVIEWS_TABLE
-                    )
-                    .upsert(
-                        {
-                            pedido_id:
-                                pedidoId,
-
-                            cliente_id:
-                                clienteId,
-
-                            nota:
-                                notaAvaliacao,
-
-                            comentario:
-                                textoComentario ||
-                                null,
-
-                            atualizado_em:
-                                agora
-                        },
-
-                        {
-                            onConflict:
-                                "pedido_id,cliente_id"
-                        }
-                    )
-                    .select(
-                        "pedido_id,nota,comentario,criado_em,atualizado_em"
-                    )
-                    .single();
-
-            if (error) {
-                throw error;
+            if (chave === "em_rota") {
+              if (ativa) {
+                pequeno.textContent = "Em rota";
+              } else if (indiceAtual > 3 || entregue) {
+                pequeno.textContent = "Concluído";
+              } else {
+                pequeno.textContent = "Aguardando";
+              }
             }
+          });
+      });
+  }
 
-            pedido.avaliacao =
-                data ||
-                {
-                    pedido_id:
-                        pedidoId,
-
-                    nota:
-                        notaAvaliacao,
-
-                    comentario:
-                        textoComentario ||
-                        null,
-
-                    atualizado_em:
-                        agora
-                };
-
-            const usuario =
-                obterUsuarioPedidosAtual();
-
-            salvarUsuarioPedidosLocal(
-                usuario
-            );
-
-            renderizarPedidosRecentes(
-                usuario
-            );
-
-            if (
-                typeof window.renderizarTodosPedidos ===
-                "function"
-            ) {
-                const listaTodos =
-                    document
-                        .getElementById(
-                            "listaTodosPedidos"
-                        );
-
-                if (
-                    listaTodos &&
-                    listaTodos
-                        .innerHTML
-                        .trim()
-                ) {
-                    window
-                        .renderizarTodosPedidos(
-                            usuario
-                        );
-                }
-            }
-
-            if (status) {
-                status.textContent =
-                    "Avaliação salva. Obrigado! 💙";
-
-                status.className =
-                    "status-avaliacao sucesso";
-            }
-
-            window
-                .setTimeout(
-                    fecharModalAvaliacaoPedido,
-                    650
-                );
-
-        } catch (erro) {
-            console.error(
-                "Erro ao salvar avaliação do pedido:",
-                erro
-            );
-
-            if (status) {
-                status.textContent =
-                    erro?.message ||
-                    "Não foi possível salvar sua avaliação.";
-
-                status.className =
-                    "status-avaliacao erro";
-            }
-
-        } finally {
-            if (botao) {
-                botao.disabled =
-                    false;
-
-                botao.textContent =
-                    "Salvar avaliação";
-            }
-        }
+  async function consultarStatusEntregasVisiveis() {
+    if (statusEntregaCardsCarregando) {
+      return;
     }
 
-    async function carregarAvaliacoesPedidos(
-        usuario
-    ) {
-        const contexto =
-            window.AzuryCliente ||
-            {};
+    const contexto = window.AzuryCliente || {};
 
-        const supabase =
-            contexto.supabase ||
-            window.azurySupabase;
+    const supabase = contexto.supabase || window.azurySupabase;
 
-        const clienteId =
-            contexto.session
-                ?.user
-                ?.id ||
-            usuario?.id ||
-            "";
-
-        if (
-            !supabase ||
-            !clienteId ||
-            !Array.isArray(
-                usuario?.pedidos
-            )
-        ) {
-            return;
-        }
-
-        try {
-            const {
-                data,
-                error
-            } =
-                await supabase
-                    .from(
-                        REVIEWS_TABLE
-                    )
-                    .select(
-                        "pedido_id,nota,comentario,criado_em,atualizado_em"
-                    )
-                    .eq(
-                        "cliente_id",
-                        clienteId
-                    );
-
-            if (error) {
-                throw error;
-            }
-
-            const mapa =
-                new Map(
-                    (
-                        data ||
-                        []
-                    )
-                        .map(
-                            avaliacao => [
-                                String(
-                                    avaliacao
-                                        .pedido_id
-                                ),
-
-                                avaliacao
-                            ]
-                        )
-                );
-
-            usuario.pedidos
-                .forEach(
-                    pedido => {
-                        pedido.avaliacao =
-                            mapa.get(
-                                obterIdRealPedido(
-                                    pedido
-                                )
-                            ) ||
-                            null;
-                    }
-                );
-
-            salvarUsuarioPedidosLocal(
-                usuario
-            );
-
-            renderizarPedidosRecentes(
-                usuario
-            );
-
-        } catch (erro) {
-            console.warn(
-                "Não foi possível carregar as avaliações dos pedidos.",
-                erro
-            );
-        }
+    if (!supabase) {
+      return;
     }
 
-    function renderizarPedidosRecentes(
-        usuario
-    ) {
-        const pedidosDiv =
-            document
-                .getElementById(
-                    "pedidos"
-                );
+    const ids = Array.from(
+      document.querySelectorAll(
+        ".rastreamento-pedido[data-rastreamento-pedido-id]",
+      ),
+    )
+      .filter((bloco) => {
+        const status = normalizarStatusPedido(bloco.dataset.statusPedido || "");
 
-        if (!pedidosDiv) {
-            return;
-        }
+        return status !== "entregue" && status !== "cancelado";
+      })
+      .map((bloco) => bloco.dataset.rastreamentoPedidoId || "")
+      .filter(Boolean);
 
-        if (
-            !Array.isArray(
-                usuario?.pedidos
-            )
-        ) {
-            usuario.pedidos =
-                [];
-        }
+    const unicos = [...new Set(ids)];
 
-        pedidosDiv.innerHTML =
-            "";
-
-        if (
-            usuario.pedidos.length ===
-            0
-        ) {
-            pedidosDiv.innerHTML =
-                "<p>Nenhum pedido realizado.</p>";
-
-            return;
-        }
-
-        pedidosDiv.innerHTML =
-            usuario.pedidos
-                .slice(
-                    0,
-                    3
-                )
-                .map(
-                    criarHtmlPedido
-                )
-                .join("");
-
-        consultarStatusEntregasVisiveis()
-            .catch(
-                console.warn
-            );
+    if (unicos.length === 0) {
+      return;
     }
 
+    statusEntregaCardsCarregando = true;
 
-    function obterIndiceEtapaEntrega(
-        statusPedido,
-        statusEntrega
-    ) {
-        const pedido =
-            normalizarStatusPedido(
-                statusPedido ||
-                ""
-            );
+    try {
+      await Promise.all(
+        unicos.map(async (pedidoId) => {
+          const { data, error } = await supabase.rpc(
+            "consultar_rastreamento_pedido_cliente",
+            {
+              p_pedido_id: pedidoId,
+            },
+          );
 
-        const entrega =
-            normalizarStatusPedido(
-                statusEntrega ||
-                ""
-            );
+          if (error) {
+            throw error;
+          }
 
-        if (pedido === "entregue") {
-            return 4;
-        }
-
-        if (
-            pedido === "saiu_para_entrega"
-        ) {
-            return entrega === "em_rota"
-                ? 3
-                : 2;
-        }
-
-        if (
-            pedido === "em_preparo" ||
-            pedido === "pronto"
-        ) {
-            return 1;
-        }
-
-        return 0;
-    }
-
-    function atualizarStatusResumoPedidoCard(
-        pedidoId,
-        statusPedido,
-        statusEntrega
-    ) {
-        if (!pedidoId) {
-            return;
-        }
-
-        const pedido =
-            normalizarStatusPedido(
-                statusPedido ||
-                ""
-            );
-
-        const entrega =
-            normalizarStatusPedido(
-                statusEntrega ||
-                ""
-            );
-
-        let texto =
-            statusPedido ||
-            "Pedido recebido";
-
-        if (
-            pedido ===
-            "saiu_para_entrega"
-        ) {
-            texto =
-                entrega === "em_rota"
-                    ? "Saiu para entrega"
-                    : "Aguardando entregador";
-        }
-
-        if (
-            pedido ===
-            "entregue"
-        ) {
-            texto =
-                "Entregue";
-        }
-
-        if (
-            pedido ===
-            "cancelado"
-        ) {
-            texto =
-                "Cancelado";
-        }
-
-        const icone =
-            obterIconeStatusPedido(
-                texto
-            );
-
-        const classe =
-            obterClasseStatusPedido(
-                texto
-            );
-
-        document
-            .querySelectorAll(
-                "[data-status-resumo-pedido-id]"
-            )
-            .forEach(
-                elemento => {
-                    if (
-                        elemento.dataset
-                            .statusResumoPedidoId !==
-                        String(pedidoId)
-                    ) {
-                        return;
-                    }
-
-                    elemento.className =
-                        classe;
-
-                    elemento.textContent =
-                        `${icone} ${texto}`;
-                }
-            );
-    }
-
-
-    function atualizarEtapasRastreamentoCard(
-        pedidoId,
-        statusPedido,
-        statusEntrega
-    ) {
-        if (!pedidoId) {
-            return;
-        }
-
-        atualizarStatusResumoPedidoCard(
+          atualizarEtapasRastreamentoCard(
             pedidoId,
-            statusPedido,
-            statusEntrega
-        );
+            data?.status || "saiu_para_entrega",
+            data?.status_entrega || "",
+          );
+        }),
+      );
+    } catch (erro) {
+      console.warn(
+        "Não foi possível atualizar o status do entregador nos cards.",
+        erro,
+      );
+    } finally {
+      statusEntregaCardsCarregando = false;
+    }
+  }
 
-        const indiceAtual =
-            obterIndiceEtapaEntrega(
-                statusPedido,
-                statusEntrega
-            );
-
-        const entregue =
-            normalizarStatusPedido(
-                statusPedido
-            ) === "entregue";
-
-        document
-            .querySelectorAll(
-                ".rastreamento-pedido[data-rastreamento-pedido-id]"
-            )
-            .forEach(
-                bloco => {
-                    if (
-                        bloco.dataset
-                            .rastreamentoPedidoId !==
-                        String(pedidoId)
-                    ) {
-                        return;
-                    }
-
-                    bloco.dataset.statusPedido =
-                        normalizarStatusPedido(
-                            statusPedido
-                        );
-
-                    bloco
-                        .querySelectorAll(
-                            ".etapa-rastreamento-pedido"
-                        )
-                        .forEach(
-                            etapa => {
-                                const indice =
-                                    Number(
-                                        etapa.dataset
-                                            .etapaIndice
-                                    );
-
-                                const concluida =
-                                    entregue ||
-                                    indice <
-                                        indiceAtual;
-
-                                const ativa =
-                                    !entregue &&
-                                    indice ===
-                                        indiceAtual;
-
-                                etapa.classList
-                                    .toggle(
-                                        "concluida",
-                                        concluida
-                                    );
-
-                                etapa.classList
-                                    .toggle(
-                                        "ativa",
-                                        ativa
-                                    );
-
-                                const pequeno =
-                                    etapa.querySelector(
-                                        "small"
-                                    );
-
-                                if (!pequeno) {
-                                    return;
-                                }
-
-                                const chave =
-                                    etapa.dataset
-                                        .etapaEntrega ||
-                                    "";
-
-                                if (
-                                    chave ===
-                                        "aguardando_entregador"
-                                ) {
-                                    if (ativa) {
-                                        pequeno.textContent =
-                                            "Aguardando";
-                                    } else if (
-                                        indiceAtual > 2 ||
-                                        entregue
-                                    ) {
-                                        pequeno.textContent =
-                                            "Concluído";
-                                    }
-                                }
-
-                                if (
-                                    chave ===
-                                        "em_rota"
-                                ) {
-                                    if (ativa) {
-                                        pequeno.textContent =
-                                            "Em rota";
-                                    } else if (
-                                        indiceAtual > 3 ||
-                                        entregue
-                                    ) {
-                                        pequeno.textContent =
-                                            "Concluído";
-                                    } else {
-                                        pequeno.textContent =
-                                            "Aguardando";
-                                    }
-                                }
-                            }
-                        );
-                }
-            );
+  function iniciarAtualizacaoStatusEntregasVisiveis() {
+    if (statusEntregaCardsTimer) {
+      window.clearInterval(statusEntregaCardsTimer);
     }
 
-    async function consultarStatusEntregasVisiveis() {
-        if (statusEntregaCardsCarregando) {
-            return;
-        }
+    statusEntregaCardsTimer = window.setInterval(() => {
+      consultarStatusEntregasVisiveis().catch(console.warn);
+    }, TRACKING_REFRESH_MS);
 
-        const contexto =
-            window.AzuryCliente ||
-            {};
+    consultarStatusEntregasVisiveis().catch(console.warn);
+  }
 
-        const supabase =
-            contexto.supabase ||
-            window.azurySupabase;
-
-        if (!supabase) {
-            return;
-        }
-
-        const ids =
-            Array.from(
-                document.querySelectorAll(
-                    ".rastreamento-pedido[data-rastreamento-pedido-id]"
-                )
-            )
-                .filter(
-                    bloco =>
-                        normalizarStatusPedido(
-                            bloco.dataset
-                                .statusPedido ||
-                            ""
-                        ) ===
-                        "saiu_para_entrega"
-                )
-                .map(
-                    bloco =>
-                        bloco.dataset
-                            .rastreamentoPedidoId ||
-                        ""
-                )
-                .filter(Boolean);
-
-        const unicos =
-            [...new Set(ids)];
-
-        if (unicos.length === 0) {
-            return;
-        }
-
-        statusEntregaCardsCarregando =
-            true;
-
-        try {
-            await Promise.all(
-                unicos.map(
-                    async pedidoId => {
-                        const {
-                            data,
-                            error
-                        } =
-                            await supabase.rpc(
-                                "consultar_rastreamento_pedido_cliente",
-                                {
-                                    p_pedido_id:
-                                        pedidoId
-                                }
-                            );
-
-                        if (error) {
-                            throw error;
-                        }
-
-                        atualizarEtapasRastreamentoCard(
-                            pedidoId,
-                            data?.status ||
-                                "saiu_para_entrega",
-                            data?.status_entrega ||
-                                ""
-                        );
-                    }
-                )
-            );
-        } catch (erro) {
-            console.warn(
-                "Não foi possível atualizar o status do entregador nos cards.",
-                erro
-            );
-        } finally {
-            statusEntregaCardsCarregando =
-                false;
-        }
+  function pararAtualizacaoRastreamento() {
+    if (rastreamentoTimer) {
+      window.clearInterval(rastreamentoTimer);
     }
 
-    function iniciarAtualizacaoStatusEntregasVisiveis() {
-        if (statusEntregaCardsTimer) {
-            window.clearInterval(
-                statusEntregaCardsTimer
-            );
-        }
+    rastreamentoTimer = null;
+  }
 
-        statusEntregaCardsTimer =
-            window.setInterval(
-                () => {
-                    consultarStatusEntregasVisiveis()
-                        .catch(
-                            console.warn
-                        );
-                },
-                TRACKING_REFRESH_MS
-            );
+  function garantirModalRastreamentoPedido() {
+    if (!document.getElementById("azuryRastreamentoPedidoEstilos")) {
+      const style = document.createElement("style");
 
-        consultarStatusEntregasVisiveis()
-            .catch(
-                console.warn
-            );
-    }
+      style.id = "azuryRastreamentoPedidoEstilos";
 
-
-    function pararAtualizacaoRastreamento() {
-        if (rastreamentoTimer) {
-            window.clearInterval(
-                rastreamentoTimer
-            );
-        }
-
-        rastreamentoTimer = null;
-    }
-
-    function garantirModalRastreamentoPedido() {
-        if (
-            !document.getElementById(
-                "azuryRastreamentoPedidoEstilos"
-            )
-        ) {
-            const style =
-                document.createElement(
-                    "style"
-                );
-
-            style.id =
-                "azuryRastreamentoPedidoEstilos";
-
-            style.textContent = `
+      style.textContent = `
                 .pagina-cliente .btn-acompanhar-entrega{border-color:#0758f8;background:linear-gradient(135deg,#0758f8,#0046cc);box-shadow:0 8px 20px rgba(7,88,248,.18)}
                 .pagina-cliente .btn-acompanhar-entrega:hover{background:linear-gradient(135deg,#004de2,#003dac)}
                 #modalRastreamentoPedidoAzury{position:fixed;inset:0;z-index:100001;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(8,18,38,.62);backdrop-filter:blur(5px)}
@@ -3770,33 +3407,20 @@
                 }
             `;
 
-            document.head.appendChild(
-                style
-            );
-        }
+      document.head.appendChild(style);
+    }
 
-        if (
-            document.getElementById(
-                "modalRastreamentoPedidoAzury"
-            )
-        ) {
-            return;
-        }
+    if (document.getElementById("modalRastreamentoPedidoAzury")) {
+      return;
+    }
 
-        const modal =
-            document.createElement(
-                "div"
-            );
+    const modal = document.createElement("div");
 
-        modal.id =
-            "modalRastreamentoPedidoAzury";
+    modal.id = "modalRastreamentoPedidoAzury";
 
-        modal.setAttribute(
-            "aria-hidden",
-            "true"
-        );
+    modal.setAttribute("aria-hidden", "true");
 
-        modal.innerHTML = `
+    modal.innerHTML = `
             <section
                 class="rastreamento-modal-card"
                 role="dialog"
@@ -3892,774 +3516,559 @@
             </section>
         `;
 
-        document.body.appendChild(
-            modal
-        );
+    document.body.appendChild(modal);
+  }
+
+  function definirStatusRastreamento(tipo, titulo, detalhe) {
+    const box = document.getElementById("statusRastreamentoPedidoAzury");
+
+    if (!box) {
+      return;
     }
 
-    function definirStatusRastreamento(
-        tipo,
-        titulo,
-        detalhe
-    ) {
-        const box =
-            document.getElementById(
-                "statusRastreamentoPedidoAzury"
-            );
+    box.className = `rastreamento-status-box${tipo ? ` ${tipo}` : ""}`;
 
-        if (!box) {
-            return;
-        }
-
-        box.className =
-            `rastreamento-status-box${
-                tipo
-                    ? ` ${tipo}`
-                    : ""
-            }`;
-
-        box.innerHTML = `
+    box.innerHTML = `
             <strong>${escaparTextoPedido(titulo)}</strong>
             <span>${escaparTextoPedido(detalhe)}</span>
         `;
+  }
+
+  function redefinirMapaRastreamento(titulo, detalhe) {
+    const mapa = document.getElementById("mapaRastreamentoPedidoAzury");
+
+    const placeholder = document.getElementById(
+      "placeholderRastreamentoPedidoAzury",
+    );
+
+    rastreamentoMapaChave = "";
+
+    if (mapa) {
+      mapa.hidden = true;
+      mapa.removeAttribute("src");
     }
 
-    function redefinirMapaRastreamento(
-        titulo,
-        detalhe
-    ) {
-        const mapa =
-            document.getElementById(
-                "mapaRastreamentoPedidoAzury"
-            );
-
-        const placeholder =
-            document.getElementById(
-                "placeholderRastreamentoPedidoAzury"
-            );
-
-        rastreamentoMapaChave = "";
-
-        if (mapa) {
-            mapa.hidden = true;
-            mapa.removeAttribute(
-                "src"
-            );
-        }
-
-        if (placeholder) {
-            placeholder.hidden = false;
-            placeholder.innerHTML = `
+    if (placeholder) {
+      placeholder.hidden = false;
+      placeholder.innerHTML = `
                 <div>
                     <strong>${escaparTextoPedido(titulo)}</strong>
                     <p>${escaparTextoPedido(detalhe)}</p>
                 </div>
             `;
-        }
+    }
+  }
+
+  function atualizarMapaRastreamento(latitude, longitude) {
+    const mapa = document.getElementById("mapaRastreamentoPedidoAzury");
+
+    const placeholder = document.getElementById(
+      "placeholderRastreamentoPedidoAzury",
+    );
+
+    if (!mapa || !placeholder) {
+      return;
     }
 
-    function atualizarMapaRastreamento(
-        latitude,
-        longitude
-    ) {
-        const mapa =
-            document.getElementById(
-                "mapaRastreamentoPedidoAzury"
+    const chave = `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
+
+    placeholder.hidden = true;
+    mapa.hidden = false;
+
+    if (rastreamentoMapaChave === chave && mapa.hasAttribute("src")) {
+      return;
+    }
+
+    const params = new URLSearchParams({
+      q: `${latitude},${longitude}`,
+      z: "16",
+      output: "embed",
+    });
+
+    mapa.src = `https://www.google.com/maps?${params.toString()}`;
+
+    rastreamentoMapaChave = chave;
+  }
+
+  function renderizarRastreamentoPedido(data) {
+    const codigo = document.getElementById("codigoRastreamentoPedidoAzury");
+
+    const atualizacao = document.getElementById(
+      "atualizacaoRastreamentoPedidoAzury",
+    );
+
+    const precisao = document.getElementById("precisaoRastreamentoPedidoAzury");
+
+    const textoAtualizacao = document.getElementById(
+      "textoAtualizacaoRastreamentoPedidoAzury",
+    );
+
+    const status = normalizarStatusPedido(data?.status || "");
+
+    const statusEntrega = normalizarStatusPedido(data?.status_entrega || "");
+
+    atualizarEtapasRastreamentoCard(
+      data?.pedido_id || rastreamentoPedidoId,
+      status,
+      statusEntrega,
+    );
+
+    const disponivel = data?.rastreamento_disponivel === true;
+
+    const ativo = data?.ativo === true;
+
+    const latitude = Number(data?.latitude);
+
+    const longitude = Number(data?.longitude);
+
+    const precisaoMetros = Number(data?.precisao_metros);
+
+    const temPosicao =
+      data?.latitude !== null &&
+      data?.latitude !== undefined &&
+      data?.longitude !== null &&
+      data?.longitude !== undefined &&
+      Number.isFinite(latitude) &&
+      Number.isFinite(longitude);
+
+    if (codigo) {
+      codigo.textContent = data?.codigo || "Pedido";
+    }
+
+    if (atualizacao) {
+      atualizacao.textContent = formatarData(data?.atualizado_em) || "—";
+    }
+
+    if (precisao) {
+      precisao.textContent =
+        Number.isFinite(precisaoMetros) && precisaoMetros >= 0
+          ? `${Math.round(precisaoMetros)} m`
+          : "—";
+    }
+
+    if (status === "entregue") {
+      pararAtualizacaoRastreamento();
+
+      definirStatusRastreamento(
+        "encerrado",
+        "Pedido entregue",
+        "A entrega foi concluída. Obrigado por escolher a Azury!",
+      );
+
+      redefinirMapaRastreamento(
+        "Entrega concluída",
+        "O rastreamento deste pedido foi encerrado.",
+      );
+
+      if (textoAtualizacao) {
+        textoAtualizacao.textContent = "Rastreamento finalizado";
+      }
+
+      return;
+    }
+
+    if (status === "cancelado") {
+      pararAtualizacaoRastreamento();
+
+      definirStatusRastreamento(
+        "encerrado",
+        "Pedido cancelado",
+        "Este pedido foi cancelado e não possui mais rastreamento.",
+      );
+
+      redefinirMapaRastreamento(
+        "Rastreamento encerrado",
+        "Este pedido não está mais em entrega.",
+      );
+
+      if (textoAtualizacao) {
+        textoAtualizacao.textContent = "Rastreamento finalizado";
+      }
+
+      return;
+    }
+
+    if (status === "saiu_para_entrega" && statusEntrega === "aguardando") {
+      definirStatusRastreamento(
+        "",
+        "Saiu para entrega",
+        "Seu pedido já está com o entregador e está na fila de entregas. O acompanhamento em tempo real começará quando esta rota for iniciada.",
+      );
+
+      redefinirMapaRastreamento(
+        "Entrega na fila do entregador",
+        "A localização será exibida automaticamente quando o entregador iniciar esta entrega.",
+      );
+
+      if (textoAtualizacao) {
+        textoAtualizacao.textContent = "Atualização automática";
+      }
+
+      return;
+    }
+
+    if (!disponivel) {
+      definirStatusRastreamento(
+        "",
+        "Preparando o rastreamento",
+        "O pedido já saiu para entrega. A localização aparecerá assim que a Azury liberar o acompanhamento.",
+      );
+
+      redefinirMapaRastreamento(
+        "Aguardando entregador",
+        "A posição será exibida automaticamente assim que o compartilhamento começar.",
+      );
+
+      return;
+    }
+
+    if (!ativo) {
+      definirStatusRastreamento(
+        "encerrado",
+        "Rastreamento temporariamente indisponível",
+        "A localização deste pedido não está sendo compartilhada neste momento.",
+      );
+
+      redefinirMapaRastreamento(
+        "Localização indisponível",
+        "A Azury não está compartilhando a posição do entregador neste momento.",
+      );
+
+      return;
+    }
+
+    if (!temPosicao) {
+      definirStatusRastreamento(
+        "",
+        "Aguardando o entregador",
+        "O rastreamento está ativo. A posição aparecerá assim que o entregador iniciar o GPS.",
+      );
+
+      redefinirMapaRastreamento(
+        "Aguardando localização",
+        "A posição do entregador será exibida aqui automaticamente.",
+      );
+
+      return;
+    }
+
+    definirStatusRastreamento(
+      "ativo",
+      "Entregador a caminho",
+      "A posição abaixo é atualizada automaticamente durante a entrega.",
+    );
+
+    atualizarMapaRastreamento(latitude, longitude);
+
+    if (textoAtualizacao) {
+      textoAtualizacao.textContent = "Atualização automática a cada 5 segundos";
+    }
+  }
+
+  async function consultarRastreamentoPedido() {
+    if (rastreamentoCarregando || !rastreamentoPedidoId) {
+      return;
+    }
+
+    const contexto = window.AzuryCliente || {};
+
+    const supabase = contexto.supabase || window.azurySupabase;
+
+    if (!supabase) {
+      definirStatusRastreamento(
+        "erro",
+        "Conexão indisponível",
+        "Não foi possível acessar o rastreamento agora.",
+      );
+
+      return;
+    }
+
+    rastreamentoCarregando = true;
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "consultar_rastreamento_pedido_cliente",
+        {
+          p_pedido_id: rastreamentoPedidoId,
+        },
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      renderizarRastreamentoPedido(data || {});
+    } catch (erro) {
+      console.error("Erro ao consultar rastreamento do pedido:", erro);
+
+      definirStatusRastreamento(
+        "erro",
+        "Rastreamento indisponível",
+        erro?.message || "Não foi possível carregar a localização agora.",
+      );
+
+      redefinirMapaRastreamento(
+        "Localização indisponível",
+        "Tente atualizar novamente em alguns instantes.",
+      );
+    } finally {
+      rastreamentoCarregando = false;
+    }
+  }
+
+  function iniciarAtualizacaoRastreamento() {
+    pararAtualizacaoRastreamento();
+
+    rastreamentoTimer = window.setInterval(() => {
+      consultarRastreamentoPedido().catch(console.error);
+    }, TRACKING_REFRESH_MS);
+  }
+
+  async function abrirRastreamentoPedido(pedido) {
+    const pedidoId = obterIdRealPedido(pedido);
+
+    if (!pedidoId) {
+      return;
+    }
+
+    garantirModalRastreamentoPedido();
+
+    rastreamentoPedidoId = pedidoId;
+
+    rastreamentoMapaChave = "";
+
+    const modal = document.getElementById("modalRastreamentoPedidoAzury");
+
+    const subtitulo = document.getElementById(
+      "subtituloRastreamentoPedidoAzury",
+    );
+
+    if (subtitulo) {
+      subtitulo.textContent = `Pedido ${
+        pedido?.codigo || pedido?.id || ""
+      } • localização em tempo real`;
+    }
+
+    definirStatusRastreamento(
+      "",
+      "Carregando rastreamento...",
+      "Consultando a localização mais recente do entregador.",
+    );
+
+    redefinirMapaRastreamento(
+      "Carregando localização",
+      "Aguarde enquanto buscamos a posição do entregador.",
+    );
+
+    if (modal) {
+      modal.classList.add("visivel");
+
+      modal.setAttribute("aria-hidden", "false");
+
+      document.body.style.overflow = "hidden";
+    }
+
+    await consultarRastreamentoPedido();
+
+    iniciarAtualizacaoRastreamento();
+  }
+
+  function fecharRastreamentoPedido() {
+    pararAtualizacaoRastreamento();
+
+    rastreamentoPedidoId = "";
+    rastreamentoMapaChave = "";
+
+    const modal = document.getElementById("modalRastreamentoPedidoAzury");
+
+    if (modal) {
+      modal.classList.remove("visivel");
+
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    document.body.style.overflow = "";
+  }
+
+  function conectarEventosPedidosCliente() {
+    if (eventosConectados) {
+      return;
+    }
+
+    eventosConectados = true;
+
+    document.addEventListener(
+      "click",
+
+      (event) => {
+        const toggleDetalhes = event.target.closest?.(
+          "[data-toggle-detalhes-pedido]",
+        );
+
+        if (toggleDetalhes) {
+          const detalhesId = toggleDetalhes.getAttribute("aria-controls");
+
+          const detalhes = detalhesId
+            ? document.getElementById(detalhesId)
+            : null;
+
+          if (detalhes) {
+            const abrir =
+              toggleDetalhes.getAttribute("aria-expanded") !== "true";
+
+            toggleDetalhes.setAttribute(
+              "aria-expanded",
+              abrir ? "true" : "false",
             );
 
-        const placeholder =
-            document.getElementById(
-                "placeholderRastreamentoPedidoAzury"
-            );
+            detalhes.hidden = !abrir;
+          }
+
+          return;
+        }
+
+        const acao = event.target.closest?.("[data-acao-pedido]");
+
+        if (acao) {
+          const pedido = encontrarPedidoPorId(acao.dataset.pedidoId || "");
+
+          if (!pedido) {
+            return;
+          }
+
+          if (acao.dataset.acaoPedido === "acompanhar") {
+            abrirRastreamentoPedido(pedido).catch(console.error);
+
+            return;
+          }
+
+          if (acao.dataset.acaoPedido === "repetir") {
+            repetirPedidoAnterior(pedido);
+
+            return;
+          }
+
+          if (acao.dataset.acaoPedido === "avaliar") {
+            abrirModalAvaliacaoPedido(pedido);
+
+            return;
+          }
+        }
 
         if (
-            !mapa ||
-            !placeholder
+          event.target.closest?.(
+            "#modalRastreamentoPedidoAzury [data-fechar-rastreamento]",
+          )
         ) {
-            return;
-        }
+          fecharRastreamentoPedido();
 
-        const chave =
-            `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
-
-        placeholder.hidden = true;
-        mapa.hidden = false;
-
-        if (
-            rastreamentoMapaChave ===
-            chave &&
-            mapa.hasAttribute(
-                "src"
-            )
-        ) {
-            return;
-        }
-
-        const params =
-            new URLSearchParams({
-                q: `${latitude},${longitude}`,
-                z: "16",
-                output: "embed"
-            });
-
-        mapa.src =
-            `https://www.google.com/maps?${params.toString()}`;
-
-        rastreamentoMapaChave =
-            chave;
-    }
-
-    function renderizarRastreamentoPedido(
-        data
-    ) {
-        const codigo =
-            document.getElementById(
-                "codigoRastreamentoPedidoAzury"
-            );
-
-        const atualizacao =
-            document.getElementById(
-                "atualizacaoRastreamentoPedidoAzury"
-            );
-
-        const precisao =
-            document.getElementById(
-                "precisaoRastreamentoPedidoAzury"
-            );
-
-        const textoAtualizacao =
-            document.getElementById(
-                "textoAtualizacaoRastreamentoPedidoAzury"
-            );
-
-        const status =
-            normalizarStatusPedido(
-                data?.status ||
-                ""
-            );
-
-        const statusEntrega =
-            normalizarStatusPedido(
-                data?.status_entrega ||
-                ""
-            );
-
-        atualizarEtapasRastreamentoCard(
-            data?.pedido_id ||
-                rastreamentoPedidoId,
-            status,
-            statusEntrega
-        );
-
-        const disponivel =
-            data?.rastreamento_disponivel ===
-            true;
-
-        const ativo =
-            data?.ativo ===
-            true;
-
-        const latitude =
-            Number(
-                data?.latitude
-            );
-
-        const longitude =
-            Number(
-                data?.longitude
-            );
-
-        const precisaoMetros =
-            Number(
-                data?.precisao_metros
-            );
-
-        const temPosicao =
-            data?.latitude !== null &&
-            data?.latitude !== undefined &&
-            data?.longitude !== null &&
-            data?.longitude !== undefined &&
-            Number.isFinite(latitude) &&
-            Number.isFinite(longitude);
-
-        if (codigo) {
-            codigo.textContent =
-                data?.codigo ||
-                "Pedido";
-        }
-
-        if (atualizacao) {
-            atualizacao.textContent =
-                formatarData(
-                    data?.atualizado_em
-                ) ||
-                "—";
-        }
-
-        if (precisao) {
-            precisao.textContent =
-                Number.isFinite(
-                    precisaoMetros
-                ) &&
-                precisaoMetros >= 0
-                    ? `${Math.round(precisaoMetros)} m`
-                    : "—";
-        }
-
-        if (status === "entregue") {
-            pararAtualizacaoRastreamento();
-
-            definirStatusRastreamento(
-                "encerrado",
-                "Pedido entregue",
-                "A entrega foi concluída. Obrigado por escolher a Azury!"
-            );
-
-            redefinirMapaRastreamento(
-                "Entrega concluída",
-                "O rastreamento deste pedido foi encerrado."
-            );
-
-            if (textoAtualizacao) {
-                textoAtualizacao.textContent =
-                    "Rastreamento finalizado";
-            }
-
-            return;
-        }
-
-        if (status === "cancelado") {
-            pararAtualizacaoRastreamento();
-
-            definirStatusRastreamento(
-                "encerrado",
-                "Pedido cancelado",
-                "Este pedido foi cancelado e não possui mais rastreamento."
-            );
-
-            redefinirMapaRastreamento(
-                "Rastreamento encerrado",
-                "Este pedido não está mais em entrega."
-            );
-
-            if (textoAtualizacao) {
-                textoAtualizacao.textContent =
-                    "Rastreamento finalizado";
-            }
-
-            return;
+          return;
         }
 
         if (
-            status === "saiu_para_entrega" &&
-            statusEntrega === "aguardando"
+          event.target.closest?.(
+            "#modalRastreamentoPedidoAzury [data-atualizar-rastreamento]",
+          )
         ) {
-            definirStatusRastreamento(
-                "",
-                "Aguardando entregador",
-                "Seu pedido está pronto. Agora, aguardamos a retirada pelo entregador para dar continuidade à entrega."
-            );
+          consultarRastreamentoPedido().catch(console.error);
 
-            redefinirMapaRastreamento(
-                "Aguardando retirada pelo entregador",
-                "O acompanhamento em tempo real começará assim que o entregador iniciar a rota."
-            );
-
-            if (textoAtualizacao) {
-                textoAtualizacao.textContent =
-                    "Atualização automática";
-            }
-
-            return;
+          return;
         }
 
-        if (!disponivel) {
-            definirStatusRastreamento(
-                "",
-                "Preparando o rastreamento",
-                "O pedido já saiu para entrega. A localização aparecerá assim que a Azury liberar o acompanhamento."
-            );
-
-            redefinirMapaRastreamento(
-                "Aguardando entregador",
-                "A posição será exibida automaticamente assim que o compartilhamento começar."
-            );
-
-            return;
-        }
-
-        if (!ativo) {
-            definirStatusRastreamento(
-                "encerrado",
-                "Rastreamento temporariamente indisponível",
-                "A localização deste pedido não está sendo compartilhada neste momento."
-            );
-
-            redefinirMapaRastreamento(
-                "Localização indisponível",
-                "A Azury não está compartilhando a posição do entregador neste momento."
-            );
-
-            return;
-        }
-
-        if (!temPosicao) {
-            definirStatusRastreamento(
-                "",
-                "Aguardando o entregador",
-                "O rastreamento está ativo. A posição aparecerá assim que o entregador iniciar o GPS."
-            );
-
-            redefinirMapaRastreamento(
-                "Aguardando localização",
-                "A posição do entregador será exibida aqui automaticamente."
-            );
-
-            return;
-        }
-
-        definirStatusRastreamento(
-            "ativo",
-            "Entregador a caminho",
-            "A posição abaixo é atualizada automaticamente durante a entrega."
-        );
-
-        atualizarMapaRastreamento(
-            latitude,
-            longitude
-        );
-
-        if (textoAtualizacao) {
-            textoAtualizacao.textContent =
-                "Atualização automática a cada 5 segundos";
-        }
-    }
-
-    async function consultarRastreamentoPedido() {
         if (
-            rastreamentoCarregando ||
-            !rastreamentoPedidoId
+          event.target.closest?.(
+            "#modalAvaliacaoPedidoAzury [data-fechar-avaliacao]",
+          )
         ) {
-            return;
+          fecharModalAvaliacaoPedido();
+
+          return;
         }
 
-        const contexto =
-            window.AzuryCliente ||
-            {};
-
-        const supabase =
-            contexto.supabase ||
-            window.azurySupabase;
-
-        if (!supabase) {
-            definirStatusRastreamento(
-                "erro",
-                "Conexão indisponível",
-                "Não foi possível acessar o rastreamento agora."
-            );
-
-            return;
-        }
-
-        rastreamentoCarregando = true;
-
-        try {
-            const {
-                data,
-                error
-            } =
-                await supabase.rpc(
-                    "consultar_rastreamento_pedido_cliente",
-                    {
-                        p_pedido_id:
-                            rastreamentoPedidoId
-                    }
-                );
-
-            if (error) {
-                throw error;
-            }
-
-            renderizarRastreamentoPedido(
-                data ||
-                {}
-            );
-
-        } catch (erro) {
-            console.error(
-                "Erro ao consultar rastreamento do pedido:",
-                erro
-            );
-
-            definirStatusRastreamento(
-                "erro",
-                "Rastreamento indisponível",
-                erro?.message ||
-                "Não foi possível carregar a localização agora."
-            );
-
-            redefinirMapaRastreamento(
-                "Localização indisponível",
-                "Tente atualizar novamente em alguns instantes."
-            );
-
-        } finally {
-            rastreamentoCarregando = false;
-        }
-    }
-
-    function iniciarAtualizacaoRastreamento() {
-        pararAtualizacaoRastreamento();
-
-        rastreamentoTimer =
-            window.setInterval(
-                () => {
-                    consultarRastreamentoPedido()
-                        .catch(
-                            console.error
-                        );
-                },
-                TRACKING_REFRESH_MS
-            );
-    }
-
-    async function abrirRastreamentoPedido(
-        pedido
-    ) {
-        const pedidoId =
-            obterIdRealPedido(
-                pedido
-            );
-
-        if (!pedidoId) {
-            return;
-        }
-
-        garantirModalRastreamentoPedido();
-
-        rastreamentoPedidoId =
-            pedidoId;
-
-        rastreamentoMapaChave =
-            "";
-
-        const modal =
-            document.getElementById(
-                "modalRastreamentoPedidoAzury"
-            );
-
-        const subtitulo =
-            document.getElementById(
-                "subtituloRastreamentoPedidoAzury"
-            );
-
-        if (subtitulo) {
-            subtitulo.textContent =
-                `Pedido ${
-                    pedido?.codigo ||
-                    pedido?.id ||
-                    ""
-                } • localização em tempo real`;
-        }
-
-        definirStatusRastreamento(
-            "",
-            "Carregando rastreamento...",
-            "Consultando a localização mais recente do entregador."
+        const estrela = event.target.closest?.(
+          "#modalAvaliacaoPedidoAzury [data-nota-avaliacao]",
         );
 
-        redefinirMapaRastreamento(
-            "Carregando localização",
-            "Aguarde enquanto buscamos a posição do entregador."
-        );
+        if (estrela) {
+          notaAvaliacao = Number(estrela.dataset.notaAvaliacao) || 0;
 
-        if (modal) {
-            modal.classList.add(
-                "visivel"
-            );
+          atualizarEstrelasAvaliacao();
 
-            modal.setAttribute(
-                "aria-hidden",
-                "false"
-            );
-
-            document.body.style.overflow =
-                "hidden";
+          return;
         }
 
-        await consultarRastreamentoPedido();
+        if (event.target?.id === "btnSalvarAvaliacaoPedidoAzury") {
+          salvarAvaliacaoPedido();
 
-        iniciarAtualizacaoRastreamento();
-    }
-
-    function fecharRastreamentoPedido() {
-        pararAtualizacaoRastreamento();
-
-        rastreamentoPedidoId = "";
-        rastreamentoMapaChave = "";
-
-        const modal =
-            document.getElementById(
-                "modalRastreamentoPedidoAzury"
-            );
-
-        if (modal) {
-            modal.classList.remove(
-                "visivel"
-            );
-
-            modal.setAttribute(
-                "aria-hidden",
-                "true"
-            );
+          return;
         }
 
-        document.body.style.overflow =
-            "";
-    }
+        const modal = document.getElementById("modalAvaliacaoPedidoAzury");
 
-    function conectarEventosPedidosCliente() {
-        if (
-            eventosConectados
-        ) {
-            return;
+        if (modal && event.target === modal) {
+          fecharModalAvaliacaoPedido();
+        }
+      },
+    );
+
+    document.addEventListener(
+      "input",
+
+      (event) => {
+        if (event.target?.id !== "comentarioAvaliacaoPedidoAzury") {
+          return;
         }
 
-        eventosConectados =
-            true;
-
-        document.addEventListener(
-            "click",
-
-            event => {
-                const acao =
-                    event.target
-                        .closest?.(
-                            "[data-acao-pedido]"
-                        );
-
-                if (acao) {
-                    const pedido =
-                        encontrarPedidoPorId(
-                            acao
-                                .dataset
-                                .pedidoId ||
-                            ""
-                        );
-
-                    if (!pedido) {
-                        return;
-                    }
-
-                    if (
-                        acao
-                            .dataset
-                            .acaoPedido ===
-                        "acompanhar"
-                    ) {
-                        abrirRastreamentoPedido(
-                            pedido
-                        )
-                            .catch(
-                                console.error
-                            );
-
-                        return;
-                    }
-
-                    if (
-                        acao
-                            .dataset
-                            .acaoPedido ===
-                        "repetir"
-                    ) {
-                        repetirPedidoAnterior(
-                            pedido
-                        );
-
-                        return;
-                    }
-
-                    if (
-                        acao
-                            .dataset
-                            .acaoPedido ===
-                        "avaliar"
-                    ) {
-                        abrirModalAvaliacaoPedido(
-                            pedido
-                        );
-
-                        return;
-                    }
-                }
-
-                if (
-                    event.target
-                        .closest?.(
-                            "#modalRastreamentoPedidoAzury [data-fechar-rastreamento]"
-                        )
-                ) {
-                    fecharRastreamentoPedido();
-
-                    return;
-                }
-
-                if (
-                    event.target
-                        .closest?.(
-                            "#modalRastreamentoPedidoAzury [data-atualizar-rastreamento]"
-                        )
-                ) {
-                    consultarRastreamentoPedido()
-                        .catch(
-                            console.error
-                        );
-
-                    return;
-                }
-
-                if (
-                    event.target
-                        .closest?.(
-                            "#modalAvaliacaoPedidoAzury [data-fechar-avaliacao]"
-                        )
-                ) {
-                    fecharModalAvaliacaoPedido();
-
-                    return;
-                }
-
-                const estrela =
-                    event.target
-                        .closest?.(
-                            "#modalAvaliacaoPedidoAzury [data-nota-avaliacao]"
-                        );
-
-                if (estrela) {
-                    notaAvaliacao =
-                        Number(
-                            estrela
-                                .dataset
-                                .notaAvaliacao
-                        ) ||
-                        0;
-
-                    atualizarEstrelasAvaliacao();
-
-                    return;
-                }
-
-                if (
-                    event.target?.id ===
-                    "btnSalvarAvaliacaoPedidoAzury"
-                ) {
-                    salvarAvaliacaoPedido();
-
-                    return;
-                }
-
-                const modal =
-                    document
-                        .getElementById(
-                            "modalAvaliacaoPedidoAzury"
-                        );
-
-                if (
-                    modal &&
-                    event.target === modal
-                ) {
-                    fecharModalAvaliacaoPedido();
-                }
-            }
+        const contador = document.getElementById(
+          "contadorAvaliacaoPedidoAzury",
         );
 
-        document.addEventListener(
-            "input",
+        if (contador) {
+          contador.textContent = `${event.target.value.length}/500`;
+        }
+      },
+    );
 
-            event => {
-                if (
-                    event.target?.id !==
-                    "comentarioAvaliacaoPedidoAzury"
-                ) {
-                    return;
-                }
+    document.addEventListener(
+      "keydown",
 
-                const contador =
-                    document
-                        .getElementById(
-                            "contadorAvaliacaoPedidoAzury"
-                        );
+      (event) => {
+        if (event.key !== "Escape") {
+          return;
+        }
 
-                if (contador) {
-                    contador.textContent =
-                        `${
-                            event
-                                .target
-                                .value
-                                .length
-                        }/500`;
-                }
-            }
-        );
+        const modal = document.getElementById("modalAvaliacaoPedidoAzury");
 
-        document.addEventListener(
-            "keydown",
+        if (modal?.classList.contains("visivel")) {
+          fecharModalAvaliacaoPedido();
+        }
+      },
+    );
+  }
 
-            event => {
-                if (
-                    event.key !==
-                    "Escape"
-                ) {
-                    return;
-                }
+  function inicializarPedidos(usuario) {
+    usuarioAtual = usuario;
 
-                const modal =
-                    document
-                        .getElementById(
-                            "modalAvaliacaoPedidoAzury"
-                        );
+    garantirEstilosPedidosCliente();
 
-                if (
-                    modal
-                        ?.classList
-                        .contains(
-                            "visivel"
-                        )
-                ) {
-                    fecharModalAvaliacaoPedido();
-                }
-            }
-        );
-    }
+    garantirModalAvaliacaoPedido();
 
-    function inicializarPedidos(usuario) {
-        usuarioAtual =
-            usuario;
+    garantirModalRastreamentoPedido();
 
-        garantirEstilosPedidosCliente();
+    conectarEventosPedidosCliente();
 
-        garantirModalAvaliacaoPedido();
+    renderizarPedidosRecentes(usuario);
 
-        garantirModalRastreamentoPedido();
+    iniciarAtualizacaoStatusEntregasVisiveis();
 
-        conectarEventosPedidosCliente();
+    carregarAvaliacoesPedidos(usuario);
+  }
 
-        renderizarPedidosRecentes(
-            usuario
-        );
+  window.criarHtmlPedido = criarHtmlPedido;
 
-        iniciarAtualizacaoStatusEntregasVisiveis();
+  window.criarHtmlPedidoEmAndamentoCompacto =
+    criarHtmlPedidoEmAndamentoCompacto;
 
-        carregarAvaliacoesPedidos(
-            usuario
-        );
-    }
-
-    window.criarHtmlPedido =
-        criarHtmlPedido;
-
-    window.inicializarPedidos =
-        inicializarPedidos;
-
+  window.inicializarPedidos = inicializarPedidos;
 })();
