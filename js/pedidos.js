@@ -7,11 +7,16 @@
 
     const CART_KEY = "azurySacola";
     const REVIEWS_TABLE = "avaliacoes_pedido";
+    const TRACKING_REFRESH_MS = 5000;
 
     let usuarioAtual = null;
     let eventosConectados = false;
     let pedidoAvaliandoId = "";
     let notaAvaliacao = 0;
+    let rastreamentoPedidoId = "";
+    let rastreamentoTimer = null;
+    let rastreamentoCarregando = false;
+    let rastreamentoMapaChave = "";
 
     function escaparTextoPedido(valor) {
         return String(valor ?? "")
@@ -486,6 +491,14 @@
         );
     }
 
+    function pedidoSaiuParaEntrega(pedido) {
+        return (
+            obterStatusInternoPedido(
+                pedido
+            ) === "saiu_para_entrega"
+        );
+    }
+
     function obterDataEtapaPedido(
         pedido,
         statusAceitos,
@@ -772,6 +785,23 @@
         }
 
         const acoes = [];
+
+        if (
+            pedidoSaiuParaEntrega(
+                pedido
+            )
+        ) {
+            acoes.push(`
+                <button
+                    type="button"
+                    class="btn-acao-pedido btn-acompanhar-entrega"
+                    data-acao-pedido="acompanhar"
+                    data-pedido-id="${pedidoId}"
+                >
+                    🛵 Acompanhar entrega
+                </button>
+            `);
+        }
 
         if (
             podeRepetirPedido(
@@ -3210,6 +3240,689 @@
                 .join("");
     }
 
+
+    function pararAtualizacaoRastreamento() {
+        if (rastreamentoTimer) {
+            window.clearInterval(
+                rastreamentoTimer
+            );
+        }
+
+        rastreamentoTimer = null;
+    }
+
+    function garantirModalRastreamentoPedido() {
+        if (
+            !document.getElementById(
+                "azuryRastreamentoPedidoEstilos"
+            )
+        ) {
+            const style =
+                document.createElement(
+                    "style"
+                );
+
+            style.id =
+                "azuryRastreamentoPedidoEstilos";
+
+            style.textContent = `
+                .pagina-cliente .btn-acompanhar-entrega{border-color:#0758f8;background:linear-gradient(135deg,#0758f8,#0046cc);box-shadow:0 8px 20px rgba(7,88,248,.18)}
+                .pagina-cliente .btn-acompanhar-entrega:hover{background:linear-gradient(135deg,#004de2,#003dac)}
+                #modalRastreamentoPedidoAzury{position:fixed;inset:0;z-index:100001;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(8,18,38,.62);backdrop-filter:blur(5px)}
+                #modalRastreamentoPedidoAzury.visivel{display:flex}
+                #modalRastreamentoPedidoAzury .rastreamento-modal-card{width:min(760px,100%);max-height:calc(100vh - 36px);overflow:auto;border:1px solid #dbe4f0;border-radius:22px;background:#fff;box-shadow:0 30px 80px rgba(3,20,52,.28)}
+                #modalRastreamentoPedidoAzury .rastreamento-modal-topo{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 20px 17px;color:#fff;background:linear-gradient(135deg,#0051ff,#083ea8)}
+                #modalRastreamentoPedidoAzury .rastreamento-modal-topo h2{margin:0;font-size:21px;line-height:1.2}
+                #modalRastreamentoPedidoAzury .rastreamento-modal-topo p{margin:7px 0 0;color:#dbeafe;font-size:13px;line-height:1.45}
+                #modalRastreamentoPedidoAzury .rastreamento-fechar{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.32);border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:22px;font-weight:800;cursor:pointer}
+                #modalRastreamentoPedidoAzury .rastreamento-modal-conteudo{display:grid;gap:14px;padding:18px}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box{padding:14px 15px;border:1px solid #bfdbfe;border-radius:14px;background:#eff6ff}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box.ativo{border-color:#86efac;background:#f0fdf4}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box.encerrado{border-color:#d7dee9;background:#f8fafc}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box.erro{border-color:#fecaca;background:#fef2f2}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box strong{display:block;color:#1847a8;font-size:15px}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box.ativo strong{color:#15803d}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box.encerrado strong{color:#334155}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box.erro strong{color:#b91c1c}
+                #modalRastreamentoPedidoAzury .rastreamento-status-box span{display:block;margin-top:5px;color:#5b6678;font-size:12px;line-height:1.45}
+                #modalRastreamentoPedidoAzury .rastreamento-metricas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+                #modalRastreamentoPedidoAzury .rastreamento-metrica{min-width:0;padding:12px;border:1px solid #e1e7f0;border-radius:12px;background:#fff}
+                #modalRastreamentoPedidoAzury .rastreamento-metrica span{display:block;color:#738096;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.35px}
+                #modalRastreamentoPedidoAzury .rastreamento-metrica strong{display:block;margin-top:5px;overflow:hidden;color:#18243a;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+                #modalRastreamentoPedidoAzury .rastreamento-mapa-box{min-height:360px;overflow:hidden;position:relative;border:1px solid #dce4ef;border-radius:16px;background:#eef3fa}
+                #modalRastreamentoPedidoAzury .rastreamento-mapa{width:100%;height:360px;display:block;border:0}
+                #modalRastreamentoPedidoAzury .rastreamento-mapa[hidden]{display:none}
+                #modalRastreamentoPedidoAzury .rastreamento-placeholder{min-height:360px;display:grid;place-items:center;padding:26px;text-align:center}
+                #modalRastreamentoPedidoAzury .rastreamento-placeholder[hidden]{display:none}
+                #modalRastreamentoPedidoAzury .rastreamento-placeholder strong{display:block;color:#22314c;font-size:16px}
+                #modalRastreamentoPedidoAzury .rastreamento-placeholder p{max-width:430px;margin:7px auto 0;color:#68768d;font-size:12px;line-height:1.5}
+                #modalRastreamentoPedidoAzury .rastreamento-rodape{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#65738a;font-size:11px}
+                #modalRastreamentoPedidoAzury .rastreamento-atualizar{min-height:38px;padding:8px 12px;border:1px solid #d8e2f1;border-radius:9px;background:#fff;color:#0758f8;font-size:12px;font-weight:900;cursor:pointer}
+                @media(max-width:620px){
+                    #modalRastreamentoPedidoAzury{padding:0;align-items:stretch}
+                    #modalRastreamentoPedidoAzury .rastreamento-modal-card{width:100%;max-height:100vh;border:0;border-radius:0}
+                    #modalRastreamentoPedidoAzury .rastreamento-modal-topo{padding:18px 16px 15px}
+                    #modalRastreamentoPedidoAzury .rastreamento-modal-conteudo{padding:14px}
+                    #modalRastreamentoPedidoAzury .rastreamento-metricas{grid-template-columns:1fr 1fr}
+                    #modalRastreamentoPedidoAzury .rastreamento-metrica:first-child{grid-column:1/-1}
+                    #modalRastreamentoPedidoAzury .rastreamento-mapa-box,
+                    #modalRastreamentoPedidoAzury .rastreamento-mapa,
+                    #modalRastreamentoPedidoAzury .rastreamento-placeholder{min-height:330px;height:330px}
+                }
+            `;
+
+            document.head.appendChild(
+                style
+            );
+        }
+
+        if (
+            document.getElementById(
+                "modalRastreamentoPedidoAzury"
+            )
+        ) {
+            return;
+        }
+
+        const modal =
+            document.createElement(
+                "div"
+            );
+
+        modal.id =
+            "modalRastreamentoPedidoAzury";
+
+        modal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        modal.innerHTML = `
+            <section
+                class="rastreamento-modal-card"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="tituloRastreamentoPedidoAzury"
+            >
+                <header class="rastreamento-modal-topo">
+                    <div>
+                        <h2 id="tituloRastreamentoPedidoAzury">
+                            🛵 Acompanhar entrega
+                        </h2>
+
+                        <p id="subtituloRastreamentoPedidoAzury">
+                            Localização do entregador em tempo real
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="rastreamento-fechar"
+                        data-fechar-rastreamento
+                        aria-label="Fechar rastreamento"
+                    >
+                        ×
+                    </button>
+                </header>
+
+                <div class="rastreamento-modal-conteudo">
+                    <div
+                        id="statusRastreamentoPedidoAzury"
+                        class="rastreamento-status-box"
+                    >
+                        <strong>Carregando rastreamento...</strong>
+                        <span>Aguarde alguns segundos.</span>
+                    </div>
+
+                    <div class="rastreamento-metricas">
+                        <div class="rastreamento-metrica">
+                            <span>Pedido</span>
+                            <strong id="codigoRastreamentoPedidoAzury">—</strong>
+                        </div>
+
+                        <div class="rastreamento-metrica">
+                            <span>Última atualização</span>
+                            <strong id="atualizacaoRastreamentoPedidoAzury">—</strong>
+                        </div>
+
+                        <div class="rastreamento-metrica">
+                            <span>Precisão</span>
+                            <strong id="precisaoRastreamentoPedidoAzury">—</strong>
+                        </div>
+                    </div>
+
+                    <div class="rastreamento-mapa-box">
+                        <div
+                            id="placeholderRastreamentoPedidoAzury"
+                            class="rastreamento-placeholder"
+                        >
+                            <div>
+                                <strong>Aguardando localização</strong>
+                                <p>
+                                    A posição do entregador aparecerá
+                                    aqui automaticamente assim que o
+                                    compartilhamento for iniciado.
+                                </p>
+                            </div>
+                        </div>
+
+                        <iframe
+                            id="mapaRastreamentoPedidoAzury"
+                            class="rastreamento-mapa"
+                            title="Localização do entregador"
+                            loading="eager"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            hidden
+                        ></iframe>
+                    </div>
+
+                    <div class="rastreamento-rodape">
+                        <span id="textoAtualizacaoRastreamentoPedidoAzury">
+                            Atualização automática a cada 5 segundos
+                        </span>
+
+                        <button
+                            type="button"
+                            class="rastreamento-atualizar"
+                            data-atualizar-rastreamento
+                        >
+                            Atualizar agora
+                        </button>
+                    </div>
+                </div>
+            </section>
+        `;
+
+        document.body.appendChild(
+            modal
+        );
+    }
+
+    function definirStatusRastreamento(
+        tipo,
+        titulo,
+        detalhe
+    ) {
+        const box =
+            document.getElementById(
+                "statusRastreamentoPedidoAzury"
+            );
+
+        if (!box) {
+            return;
+        }
+
+        box.className =
+            `rastreamento-status-box${
+                tipo
+                    ? ` ${tipo}`
+                    : ""
+            }`;
+
+        box.innerHTML = `
+            <strong>${escaparTextoPedido(titulo)}</strong>
+            <span>${escaparTextoPedido(detalhe)}</span>
+        `;
+    }
+
+    function redefinirMapaRastreamento(
+        titulo,
+        detalhe
+    ) {
+        const mapa =
+            document.getElementById(
+                "mapaRastreamentoPedidoAzury"
+            );
+
+        const placeholder =
+            document.getElementById(
+                "placeholderRastreamentoPedidoAzury"
+            );
+
+        rastreamentoMapaChave = "";
+
+        if (mapa) {
+            mapa.hidden = true;
+            mapa.removeAttribute(
+                "src"
+            );
+        }
+
+        if (placeholder) {
+            placeholder.hidden = false;
+            placeholder.innerHTML = `
+                <div>
+                    <strong>${escaparTextoPedido(titulo)}</strong>
+                    <p>${escaparTextoPedido(detalhe)}</p>
+                </div>
+            `;
+        }
+    }
+
+    function atualizarMapaRastreamento(
+        latitude,
+        longitude
+    ) {
+        const mapa =
+            document.getElementById(
+                "mapaRastreamentoPedidoAzury"
+            );
+
+        const placeholder =
+            document.getElementById(
+                "placeholderRastreamentoPedidoAzury"
+            );
+
+        if (
+            !mapa ||
+            !placeholder
+        ) {
+            return;
+        }
+
+        const chave =
+            `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
+
+        placeholder.hidden = true;
+        mapa.hidden = false;
+
+        if (
+            rastreamentoMapaChave ===
+            chave &&
+            mapa.hasAttribute(
+                "src"
+            )
+        ) {
+            return;
+        }
+
+        const params =
+            new URLSearchParams({
+                q: `${latitude},${longitude}`,
+                z: "16",
+                output: "embed"
+            });
+
+        mapa.src =
+            `https://www.google.com/maps?${params.toString()}`;
+
+        rastreamentoMapaChave =
+            chave;
+    }
+
+    function renderizarRastreamentoPedido(
+        data
+    ) {
+        const codigo =
+            document.getElementById(
+                "codigoRastreamentoPedidoAzury"
+            );
+
+        const atualizacao =
+            document.getElementById(
+                "atualizacaoRastreamentoPedidoAzury"
+            );
+
+        const precisao =
+            document.getElementById(
+                "precisaoRastreamentoPedidoAzury"
+            );
+
+        const textoAtualizacao =
+            document.getElementById(
+                "textoAtualizacaoRastreamentoPedidoAzury"
+            );
+
+        const status =
+            normalizarStatusPedido(
+                data?.status ||
+                ""
+            );
+
+        const disponivel =
+            data?.rastreamento_disponivel ===
+            true;
+
+        const ativo =
+            data?.ativo ===
+            true;
+
+        const latitude =
+            Number(
+                data?.latitude
+            );
+
+        const longitude =
+            Number(
+                data?.longitude
+            );
+
+        const precisaoMetros =
+            Number(
+                data?.precisao_metros
+            );
+
+        const temPosicao =
+            data?.latitude !== null &&
+            data?.latitude !== undefined &&
+            data?.longitude !== null &&
+            data?.longitude !== undefined &&
+            Number.isFinite(latitude) &&
+            Number.isFinite(longitude);
+
+        if (codigo) {
+            codigo.textContent =
+                data?.codigo ||
+                "Pedido";
+        }
+
+        if (atualizacao) {
+            atualizacao.textContent =
+                formatarData(
+                    data?.atualizado_em
+                ) ||
+                "—";
+        }
+
+        if (precisao) {
+            precisao.textContent =
+                Number.isFinite(
+                    precisaoMetros
+                ) &&
+                precisaoMetros >= 0
+                    ? `${Math.round(precisaoMetros)} m`
+                    : "—";
+        }
+
+        if (status === "entregue") {
+            pararAtualizacaoRastreamento();
+
+            definirStatusRastreamento(
+                "encerrado",
+                "Pedido entregue",
+                "A entrega foi concluída. Obrigado por escolher a Azury!"
+            );
+
+            redefinirMapaRastreamento(
+                "Entrega concluída",
+                "O rastreamento deste pedido foi encerrado."
+            );
+
+            if (textoAtualizacao) {
+                textoAtualizacao.textContent =
+                    "Rastreamento finalizado";
+            }
+
+            return;
+        }
+
+        if (status === "cancelado") {
+            pararAtualizacaoRastreamento();
+
+            definirStatusRastreamento(
+                "encerrado",
+                "Pedido cancelado",
+                "Este pedido foi cancelado e não possui mais rastreamento."
+            );
+
+            redefinirMapaRastreamento(
+                "Rastreamento encerrado",
+                "Este pedido não está mais em entrega."
+            );
+
+            if (textoAtualizacao) {
+                textoAtualizacao.textContent =
+                    "Rastreamento finalizado";
+            }
+
+            return;
+        }
+
+        if (!disponivel) {
+            definirStatusRastreamento(
+                "",
+                "Preparando o rastreamento",
+                "O pedido já saiu para entrega. A localização aparecerá assim que a Azury liberar o acompanhamento."
+            );
+
+            redefinirMapaRastreamento(
+                "Aguardando entregador",
+                "A posição será exibida automaticamente assim que o compartilhamento começar."
+            );
+
+            return;
+        }
+
+        if (!ativo) {
+            definirStatusRastreamento(
+                "encerrado",
+                "Rastreamento temporariamente indisponível",
+                "A localização deste pedido não está sendo compartilhada neste momento."
+            );
+
+            redefinirMapaRastreamento(
+                "Localização indisponível",
+                "A Azury não está compartilhando a posição do entregador neste momento."
+            );
+
+            return;
+        }
+
+        if (!temPosicao) {
+            definirStatusRastreamento(
+                "",
+                "Aguardando o entregador",
+                "O rastreamento está ativo. A posição aparecerá assim que o entregador iniciar o GPS."
+            );
+
+            redefinirMapaRastreamento(
+                "Aguardando localização",
+                "A posição do entregador será exibida aqui automaticamente."
+            );
+
+            return;
+        }
+
+        definirStatusRastreamento(
+            "ativo",
+            "Entregador a caminho",
+            "A posição abaixo é atualizada automaticamente durante a entrega."
+        );
+
+        atualizarMapaRastreamento(
+            latitude,
+            longitude
+        );
+
+        if (textoAtualizacao) {
+            textoAtualizacao.textContent =
+                "Atualização automática a cada 5 segundos";
+        }
+    }
+
+    async function consultarRastreamentoPedido() {
+        if (
+            rastreamentoCarregando ||
+            !rastreamentoPedidoId
+        ) {
+            return;
+        }
+
+        const contexto =
+            window.AzuryCliente ||
+            {};
+
+        const supabase =
+            contexto.supabase ||
+            window.azurySupabase;
+
+        if (!supabase) {
+            definirStatusRastreamento(
+                "erro",
+                "Conexão indisponível",
+                "Não foi possível acessar o rastreamento agora."
+            );
+
+            return;
+        }
+
+        rastreamentoCarregando = true;
+
+        try {
+            const {
+                data,
+                error
+            } =
+                await supabase.rpc(
+                    "consultar_rastreamento_pedido_cliente",
+                    {
+                        p_pedido_id:
+                            rastreamentoPedidoId
+                    }
+                );
+
+            if (error) {
+                throw error;
+            }
+
+            renderizarRastreamentoPedido(
+                data ||
+                {}
+            );
+
+        } catch (erro) {
+            console.error(
+                "Erro ao consultar rastreamento do pedido:",
+                erro
+            );
+
+            definirStatusRastreamento(
+                "erro",
+                "Rastreamento indisponível",
+                erro?.message ||
+                "Não foi possível carregar a localização agora."
+            );
+
+            redefinirMapaRastreamento(
+                "Localização indisponível",
+                "Tente atualizar novamente em alguns instantes."
+            );
+
+        } finally {
+            rastreamentoCarregando = false;
+        }
+    }
+
+    function iniciarAtualizacaoRastreamento() {
+        pararAtualizacaoRastreamento();
+
+        rastreamentoTimer =
+            window.setInterval(
+                () => {
+                    consultarRastreamentoPedido()
+                        .catch(
+                            console.error
+                        );
+                },
+                TRACKING_REFRESH_MS
+            );
+    }
+
+    async function abrirRastreamentoPedido(
+        pedido
+    ) {
+        const pedidoId =
+            obterIdRealPedido(
+                pedido
+            );
+
+        if (!pedidoId) {
+            return;
+        }
+
+        garantirModalRastreamentoPedido();
+
+        rastreamentoPedidoId =
+            pedidoId;
+
+        rastreamentoMapaChave =
+            "";
+
+        const modal =
+            document.getElementById(
+                "modalRastreamentoPedidoAzury"
+            );
+
+        const subtitulo =
+            document.getElementById(
+                "subtituloRastreamentoPedidoAzury"
+            );
+
+        if (subtitulo) {
+            subtitulo.textContent =
+                `Pedido ${
+                    pedido?.codigo ||
+                    pedido?.id ||
+                    ""
+                } • localização em tempo real`;
+        }
+
+        definirStatusRastreamento(
+            "",
+            "Carregando rastreamento...",
+            "Consultando a localização mais recente do entregador."
+        );
+
+        redefinirMapaRastreamento(
+            "Carregando localização",
+            "Aguarde enquanto buscamos a posição do entregador."
+        );
+
+        if (modal) {
+            modal.classList.add(
+                "visivel"
+            );
+
+            modal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.style.overflow =
+                "hidden";
+        }
+
+        await consultarRastreamentoPedido();
+
+        iniciarAtualizacaoRastreamento();
+    }
+
+    function fecharRastreamentoPedido() {
+        pararAtualizacaoRastreamento();
+
+        rastreamentoPedidoId = "";
+        rastreamentoMapaChave = "";
+
+        const modal =
+            document.getElementById(
+                "modalRastreamentoPedidoAzury"
+            );
+
+        if (modal) {
+            modal.classList.remove(
+                "visivel"
+            );
+
+            modal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+        }
+
+        document.body.style.overflow =
+            "";
+    }
+
     function conectarEventosPedidosCliente() {
         if (
             eventosConectados
@@ -3247,6 +3960,22 @@
                         acao
                             .dataset
                             .acaoPedido ===
+                        "acompanhar"
+                    ) {
+                        abrirRastreamentoPedido(
+                            pedido
+                        )
+                            .catch(
+                                console.error
+                            );
+
+                        return;
+                    }
+
+                    if (
+                        acao
+                            .dataset
+                            .acaoPedido ===
                         "repetir"
                     ) {
                         repetirPedidoAnterior(
@@ -3268,6 +3997,31 @@
 
                         return;
                     }
+                }
+
+                if (
+                    event.target
+                        .closest?.(
+                            "#modalRastreamentoPedidoAzury [data-fechar-rastreamento]"
+                        )
+                ) {
+                    fecharRastreamentoPedido();
+
+                    return;
+                }
+
+                if (
+                    event.target
+                        .closest?.(
+                            "#modalRastreamentoPedidoAzury [data-atualizar-rastreamento]"
+                        )
+                ) {
+                    consultarRastreamentoPedido()
+                        .catch(
+                            console.error
+                        );
+
+                    return;
                 }
 
                 if (
@@ -3391,6 +4145,8 @@
         garantirEstilosPedidosCliente();
 
         garantirModalAvaliacaoPedido();
+
+        garantirModalRastreamentoPedido();
 
         conectarEventosPedidosCliente();
 
