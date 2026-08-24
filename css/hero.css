@@ -448,19 +448,19 @@
 .hero-wrapper .hero-image-card::after {
     content: "";
 
-    width: 61%;
-    height: 37px;
+    width: 54%;
+    height: 26px;
 
     position: absolute;
     left: 53%;
-    bottom: 14px;
+    bottom: 90px;
 
     background:
-        rgba(30, 34, 44, 0.18);
+        rgba(30, 34, 44, 0.13);
 
     border-radius: 50%;
 
-    filter: blur(18px);
+    filter: blur(15px);
 
     transform:
         translateX(-50%);
@@ -473,11 +473,11 @@
     width: auto;
 
     height:
-        clamp(500px,
-            77svh,
-            550px);
+        clamp(540px,
+            82svh,
+            600px);
 
-    max-width: 105%;
+    max-width: 115%;
 
     display: block;
 
@@ -580,9 +580,9 @@
 
     .hero-wrapper .hero-media img {
         height:
-            clamp(470px,
-                68svh,
-                520px);
+            clamp(500px,
+                72svh,
+                560px);
     }
 
 }
@@ -721,15 +721,15 @@
         width: 72%;
         height: 28px;
 
-        bottom: 35px;
+        bottom: 64px;
     }
 
 
     .hero-wrapper .hero-media img {
         width: auto;
-        height: 420px;
+        height: 450px;
 
-        max-width: 128%;
+        max-width: 132%;
 
         transform:
             translateX(5px) translateY(-3px);
@@ -898,15 +898,15 @@
         height: 23px;
 
         left: 52%;
-        bottom: 30px;
+        bottom: 52px;
     }
 
 
     .hero-wrapper .hero-media img {
         width: auto;
-        height: 325px;
+        height: 342px;
 
-        max-width: 142%;
+        max-width: 145%;
 
         transform:
             translateX(-5px) translateY(-15px);
@@ -1054,14 +1054,14 @@
 
     .hero-wrapper .hero-image-card::after {
         left: 51%;
-        bottom: 28px;
+        bottom: 48px;
     }
 
 
     .hero-wrapper .hero-media img {
-        height: 300px;
+        height: 316px;
 
-        max-width: 140%;
+        max-width: 143%;
 
         transform:
             translateX(-4px) translateY(-16px);
