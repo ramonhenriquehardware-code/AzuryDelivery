@@ -129,6 +129,8 @@
 
     rastreamentos: [],
 
+    entregadores: [],
+
     clientes: [],
 
     resumoClientes: {},
@@ -732,6 +734,8 @@
     state.admin = null;
 
     state.rastreamentos = [];
+
+    state.entregadores = [];
 
     delete document.body.dataset.adminAccess;
 
@@ -5793,6 +5797,148 @@ ${printableOrderAddressHtml(order)}
       : "azury";
   }
 
+  function courierRouteCount(courier) {
+    const count = Number(courier?.quantidade_na_rota || 0);
+
+    return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+  }
+
+  function courierOnlineNow(courier) {
+    return courier?.online_agora === true;
+  }
+
+  function courierOptionLabel(courier) {
+    const name =
+      String(courier?.nome || courier?.email || "Entregador").trim() ||
+      "Entregador";
+
+    const routeCount = courierRouteCount(courier);
+
+    const routeLabel =
+      routeCount === 1
+        ? "1 entrega na rota"
+        : `${routeCount} entregas na rota`;
+
+    return `${name} • ${courierOnlineNow(courier) ? "Online" : "Offline"} • ${routeLabel}`;
+  }
+
+  function availableDeliveryCouriers() {
+    return (Array.isArray(state.entregadores) ? state.entregadores : [])
+      .filter((courier) => courier?.id && courier?.ativo !== false)
+      .slice()
+      .sort((a, b) => {
+        const onlineDifference =
+          Number(courierOnlineNow(b)) - Number(courierOnlineNow(a));
+
+        if (onlineDifference !== 0) {
+          return onlineDifference;
+        }
+
+        const routeDifference = courierRouteCount(a) - courierRouteCount(b);
+
+        if (routeDifference !== 0) {
+          return routeDifference;
+        }
+
+        return String(a?.nome || a?.email || "").localeCompare(
+          String(b?.nome || b?.email || ""),
+          "pt-BR",
+        );
+      });
+  }
+
+  function openAssignDeliveryModal(orderId) {
+    const order = state.pedidos.find(
+      (item) => String(item.id) === String(orderId),
+    );
+
+    if (!order) {
+      throw new Error("Pedido não encontrado no painel.");
+    }
+
+    if (orderEstablishmentKey(order) !== "azury") {
+      throw new Error("A atribuição de entregador está disponível apenas para a Azury.");
+    }
+
+    if (order.status !== "pronto") {
+      throw new Error("O pedido precisa estar pronto antes de ser enviado para entrega.");
+    }
+
+    const couriers = availableDeliveryCouriers();
+
+    if (!couriers.length) {
+      throw new Error(
+        "Nenhum entregador ativo está cadastrado. Cadastre ou reative um entregador antes de continuar.",
+      );
+    }
+
+    const code = order.codigo || order.id || "";
+
+    openModal({
+      title: "Enviar para entrega",
+
+      message:
+        "Escolha o entregador responsável. O pedido será adicionado à fila dele e aguardará a definição da próxima rota no Azury Entregador.",
+
+      messageType: "info",
+
+      fields: [
+        {
+          name: "entregador_id",
+
+          label: "Entregador",
+
+          type: "select",
+
+          required: true,
+
+          value: couriers[0]?.id || "",
+
+          options: couriers.map((courier) => ({
+            value: courier.id,
+            label: courierOptionLabel(courier),
+          })),
+        },
+      ],
+
+      submitText: "Confirmar entregador",
+
+      submitClass: "btn-primary",
+
+      onSubmit: async (values) => {
+        const courierId = String(values.entregador_id || "").trim();
+
+        if (!courierId) {
+          throw new Error("Escolha o entregador.");
+        }
+
+        const courier = couriers.find(
+          (item) => String(item.id) === String(courierId),
+        );
+
+        const result = await rpc("atribuir_entrega_entregador_admin", {
+          p_pedido_id: orderId,
+          p_entregador_id: courierId,
+        });
+
+        await refreshOrders();
+
+        const courierName =
+          String(
+            result?.entregador_nome ||
+              courier?.nome ||
+              courier?.email ||
+              "entregador selecionado",
+          ).trim() || "entregador selecionado";
+
+        showMessage(
+          `Pedido ${code} enviado para a fila de ${courierName}.`,
+          "success",
+        );
+      },
+    });
+  }
+
   function renderOrders() {
     const adminLevel = String(state.admin?.nivel_acesso || "").toLowerCase();
 
@@ -5906,6 +6052,13 @@ ${printableOrderAddressHtml(order)}
         const canStartTracking =
           !trackingActive && !["entregue", "cancelado"].includes(order.status);
 
+        const primaryOrderAction =
+          establishmentKey === "azury" && order.status === "pronto"
+            ? `<button class="btn btn-primary" data-order-action="assign-delivery" type="button">🛵 Enviar para entrega</button>`
+            : next
+              ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>`
+              : "";
+
         return `
             <article
               class="order-card order-company-${escapeHtml(establishmentKey)}"
@@ -5997,11 +6150,7 @@ ${printableOrderAddressHtml(order)}
 
               <footer class="order-actions">
 
-                ${
-                  next
-                    ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>`
-                    : ""
-                }
+                ${primaryOrderAction}
 
                 <button class="btn btn-secondary" data-order-action="print" type="button">
                   🖨️ Imprimir comanda
@@ -6068,7 +6217,7 @@ ${printableOrderAddressHtml(order)}
     setLoading(el.ordersList, "Atualizando pedidos...");
 
     try {
-      const [data, trackingData] = await Promise.all([
+      const [data, trackingData, couriersData] = await Promise.all([
         rpc("listar_pedidos_admin", {
           p_status: null,
 
@@ -6076,6 +6225,8 @@ ${printableOrderAddressHtml(order)}
         }),
 
         rpc("listar_rastreamentos_admin"),
+
+        rpc("listar_entregadores_admin"),
       ]);
 
       state.pedidos = data.pedidos || [];
@@ -6083,6 +6234,8 @@ ${printableOrderAddressHtml(order)}
       state.resumoPedidos = data.resumo || {};
 
       state.rastreamentos = Array.isArray(trackingData) ? trackingData : [];
+
+      state.entregadores = Array.isArray(couriersData) ? couriersData : [];
 
       renderOrders();
 
@@ -6212,6 +6365,12 @@ ${printableOrderAddressHtml(order)}
         );
 
         openOrderWhatsApp(order);
+
+        return;
+      }
+
+      if (action === "assign-delivery") {
+        openAssignDeliveryModal(orderId);
 
         return;
       }
