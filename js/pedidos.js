@@ -130,6 +130,10 @@
             return "🟢";
         }
 
+        if (texto.includes("aguardando entregador")) {
+            return "⏳";
+        }
+
         if (texto.includes("saiu para entrega")) {
             return "🛵";
         }
@@ -164,7 +168,10 @@
             return "status-entregue";
         }
 
-        if (texto.includes("saiu para entrega")) {
+        if (
+            texto.includes("aguardando entregador") ||
+            texto.includes("saiu para entrega")
+        ) {
             return "status-entrega";
         }
 
@@ -946,10 +953,23 @@
                 )
             );
 
+        const statusInterno =
+            obterStatusInternoPedido(
+                pedido
+            );
+
+        const statusInicialCard =
+            statusInterno ===
+            "saiu_para_entrega"
+                ? "Aguardando entregador"
+                : (
+                    pedido?.status ||
+                    "Pedido recebido"
+                );
+
         const status =
             escaparTextoPedido(
-                pedido?.status ||
-                "Pedido recebido"
+                statusInicialCard
             );
 
         const tipoRecompensa =
@@ -983,12 +1003,12 @@
 
         const iconeStatus =
             obterIconeStatusPedido(
-                pedido?.status
+                statusInicialCard
             );
 
         const classeStatus =
             obterClasseStatusPedido(
-                pedido?.status
+                statusInicialCard
             );
 
         const complementos =
@@ -1163,6 +1183,13 @@
 
                 <p
                     class="${classeStatus}"
+                    data-status-resumo-pedido-id="${
+                        escaparTextoPedido(
+                            obterIdRealPedido(
+                                pedido
+                            )
+                        )
+                    }"
                 >
                     ${iconeStatus}
                     ${status}
@@ -3339,6 +3366,91 @@
         return 0;
     }
 
+    function atualizarStatusResumoPedidoCard(
+        pedidoId,
+        statusPedido,
+        statusEntrega
+    ) {
+        if (!pedidoId) {
+            return;
+        }
+
+        const pedido =
+            normalizarStatusPedido(
+                statusPedido ||
+                ""
+            );
+
+        const entrega =
+            normalizarStatusPedido(
+                statusEntrega ||
+                ""
+            );
+
+        let texto =
+            statusPedido ||
+            "Pedido recebido";
+
+        if (
+            pedido ===
+            "saiu_para_entrega"
+        ) {
+            texto =
+                entrega === "em_rota"
+                    ? "Saiu para entrega"
+                    : "Aguardando entregador";
+        }
+
+        if (
+            pedido ===
+            "entregue"
+        ) {
+            texto =
+                "Entregue";
+        }
+
+        if (
+            pedido ===
+            "cancelado"
+        ) {
+            texto =
+                "Cancelado";
+        }
+
+        const icone =
+            obterIconeStatusPedido(
+                texto
+            );
+
+        const classe =
+            obterClasseStatusPedido(
+                texto
+            );
+
+        document
+            .querySelectorAll(
+                "[data-status-resumo-pedido-id]"
+            )
+            .forEach(
+                elemento => {
+                    if (
+                        elemento.dataset
+                            .statusResumoPedidoId !==
+                        String(pedidoId)
+                    ) {
+                        return;
+                    }
+
+                    elemento.className =
+                        classe;
+
+                    elemento.textContent =
+                        `${icone} ${texto}`;
+                }
+            );
+    }
+
+
     function atualizarEtapasRastreamentoCard(
         pedidoId,
         statusPedido,
@@ -3347,6 +3459,12 @@
         if (!pedidoId) {
             return;
         }
+
+        atualizarStatusResumoPedidoCard(
+            pedidoId,
+            statusPedido,
+            statusEntrega
+        );
 
         const indiceAtual =
             obterIndiceEtapaEntrega(
