@@ -6055,9 +6055,11 @@ ${printableOrderAddressHtml(order)}
         const primaryOrderAction =
           establishmentKey === "azury" && order.status === "pronto"
             ? `<button class="btn btn-primary" data-order-action="assign-delivery" type="button">🛵 Enviar para entrega</button>`
-            : next
-              ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>`
-              : "";
+            : establishmentKey === "azury" && order.status === "saiu_para_entrega"
+              ? ""
+              : next
+                ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>`
+                : "";
 
         return `
             <article
@@ -6157,7 +6159,7 @@ ${printableOrderAddressHtml(order)}
                 </button>
 
                 ${
-                  trackingActive
+                  establishmentKey !== "azury" && trackingActive
                     ? `
                       <button class="btn btn-secondary" data-order-action="tracking-courier" type="button">🛵 Abrir entregador</button>
                       <button class="btn btn-success" data-order-action="tracking-customer" type="button">🔗 Enviar rastreamento</button>
@@ -6167,7 +6169,7 @@ ${printableOrderAddressHtml(order)}
                 }
 
                 ${
-                  canStartTracking
+                  establishmentKey !== "azury" && canStartTracking
                     ? `<button class="btn btn-secondary" data-order-action="tracking-start" type="button">📍 Ativar rastreamento</button>`
                     : ""
                 }
