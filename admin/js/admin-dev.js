@@ -3170,12 +3170,10 @@
   }
 
   function encodeWhatsAppConfirmationMessage(message) {
-    const normalizedMessage = String(message || "")
-      .replace(/__AZURY_RECEIPT__/g, "🧾")
-      .replace(/__AZURY_BLUE_HEART__/g, "💙")
-      .replace(/__AZURY_CHECK__/g, "✅");
-
-    return encodeURIComponent(normalizedMessage);
+    return encodeURIComponent(message)
+      .replace(/__AZURY_RECEIPT__/g, "%F0%9F%A7%BE")
+      .replace(/__AZURY_BLUE_HEART__/g, "%F0%9F%92%99")
+      .replace(/__AZURY_CHECK__/g, "%E2%9C%85");
   }
 
   function buildManualOrderConfirmationMessage(payload, orderCode = "") {
@@ -3325,7 +3323,13 @@
 
     const encodedMessage = encodeWhatsAppConfirmationMessage(message);
 
-    const url = `https://wa.me/${normalizedPhone}?text=${encodedMessage}`;
+    const isMobile =
+      navigator.userAgentData?.mobile === true ||
+      /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    const url = isMobile
+      ? `https://wa.me/${normalizedPhone}?text=${encodedMessage}`
+      : `https://web.whatsapp.com/send?phone=${normalizedPhone}&text=${encodedMessage}`;
 
     const opened = window.open(url, "_blank", "noopener,noreferrer");
 
@@ -13656,6 +13660,75 @@ ${printableOrderAddressHtml(order)}
 
         #section-pedidos .orders-toolbar-controls .compact-field select {
           width: 100%;
+        }
+      }
+
+      /* =====================================================
+         PEDIDOS — EMPRESA EM LINHA SUPERIOR
+         ===================================================== */
+
+      @media (min-width: 901px) {
+        #section-pedidos .orders-toolbar-controls {
+          grid-template-columns:
+            minmax(118px, 150px)
+            max-content
+            max-content;
+          grid-template-areas:
+            "company company company"
+            "status manual refresh";
+          column-gap: 8px;
+          row-gap: 7px;
+          align-items: end;
+          justify-content: end;
+        }
+
+        #section-pedidos .orders-toolbar-controls .company-switch-group {
+          grid-area: company;
+          justify-self: end;
+          align-self: center;
+        }
+
+        #section-pedidos .orders-toolbar-controls .compact-field {
+          grid-area: status;
+        }
+
+        #section-pedidos .orders-toolbar-controls #newManualOrderButton {
+          grid-area: manual;
+        }
+
+        #section-pedidos .orders-toolbar-controls #refreshOrdersButton {
+          grid-area: refresh;
+        }
+      }
+
+      @media (max-width: 900px) and (min-width: 701px) {
+        #section-pedidos .orders-toolbar-controls {
+          grid-template-columns:
+            minmax(118px, 150px)
+            minmax(190px, max-content)
+            max-content;
+          grid-template-areas:
+            "company company company"
+            "status manual refresh";
+          column-gap: 8px;
+          row-gap: 7px;
+        }
+
+        #section-pedidos .orders-toolbar-controls .company-switch-group {
+          grid-area: company;
+          justify-self: end;
+        }
+
+        #section-pedidos .orders-toolbar-controls .compact-field {
+          grid-area: status;
+        }
+
+        #section-pedidos .orders-toolbar-controls #newManualOrderButton {
+          grid-area: manual;
+        }
+
+        #section-pedidos .orders-toolbar-controls #refreshOrdersButton {
+          grid-area: refresh;
         }
       }
 
