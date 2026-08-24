@@ -817,8 +817,10 @@
     }
 
     container.innerHTML = recent
-      .map(
-        (order) => `
+      .map((order) => {
+        const statusMeta = orderAdminStatusMeta(order);
+
+        return `
             <div class="compact-item">
 
               <div>
@@ -848,14 +850,14 @@
               </div>
 
               <span
-                class="status-badge status-${escapeHtml(order.status)}"
+                class="status-badge status-${escapeHtml(statusMeta.key)}"
               >
-                ${escapeHtml(statusLabel(order.status))}
+                ${escapeHtml(statusMeta.label)}
               </span>
 
             </div>
-          `,
-      )
+          `;
+      })
       .join("");
   }
 
@@ -4251,6 +4253,28 @@
           });
         },
       )
+      .on(
+        "postgres_changes",
+
+        {
+          event: "*",
+
+          schema: "public",
+
+          table: "entregas_entregador",
+        },
+
+        () => {
+          refreshOrders({
+            silent: true,
+          }).catch((error) => {
+            console.warn(
+              "Não foi possível atualizar o status da entrega em tempo real.",
+              error,
+            );
+          });
+        },
+      )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           console.info("Pedidos em tempo real ativados.");
@@ -5801,10 +5825,22 @@ ${printableOrderAddressHtml(order)}
       : "azury";
   }
 
-  function courierRouteCount(courier) {
-    const count = Number(courier?.quantidade_na_rota || 0);
+  function positiveInteger(value) {
+    const number = Number(value);
 
-    return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+    return Number.isFinite(number) && number > 0 ? Math.floor(number) : 0;
+  }
+
+  function courierRouteCount(courier) {
+    return positiveInteger(courier?.quantidade_na_rota);
+  }
+
+  function courierWaitingCount(courier) {
+    return positiveInteger(courier?.quantidade_aguardando);
+  }
+
+  function courierInRouteCount(courier) {
+    return positiveInteger(courier?.quantidade_em_rota);
   }
 
   function courierOnlineNow(courier) {
@@ -5816,14 +5852,122 @@ ${printableOrderAddressHtml(order)}
       String(courier?.nome || courier?.email || "Entregador").trim() ||
       "Entregador";
 
-    const routeCount = courierRouteCount(courier);
+    const total = courierRouteCount(courier);
+    const waiting = courierWaitingCount(courier);
+    const inRoute = courierInRouteCount(courier);
 
-    const routeLabel =
-      routeCount === 1
-        ? "1 entrega na rota"
-        : `${routeCount} entregas na rota`;
+    return `${name} • ${courierOnlineNow(courier) ? "Online" : "Offline"} • Fila ${total} (${waiting} aguard. / ${inRoute} rota)`;
+  }
 
-    return `${name} • ${courierOnlineNow(courier) ? "Online" : "Offline"} • ${routeLabel}`;
+  function orderDeliveryAssignment(order) {
+    const assignment = order?.entrega_entregador;
+
+    return assignment &&
+      typeof assignment === "object" &&
+      !Array.isArray(assignment)
+      ? assignment
+      : {};
+  }
+
+  function orderDeliveryStatus(order) {
+    return String(orderDeliveryAssignment(order)?.status || "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function orderAdminStatusMeta(order) {
+    const orderStatus = String(order?.status || "").trim().toLowerCase();
+
+    if (
+      orderEstablishmentKey(order) === "azury" &&
+      orderStatus === "saiu_para_entrega"
+    ) {
+      const deliveryStatus = orderDeliveryStatus(order);
+
+      if (deliveryStatus === "aguardando") {
+        return {
+          key: "aguardando_entregador",
+          label: "Aguardando entregador",
+        };
+      }
+
+      if (deliveryStatus === "em_rota") {
+        return {
+          key: "em_rota",
+          label: "Em rota",
+        };
+      }
+    }
+
+    return {
+      key: orderStatus || "nao_informado",
+      label: statusLabel(orderStatus),
+    };
+  }
+
+  function orderDeliveryCourierInfo(order) {
+    const assignment = orderDeliveryAssignment(order);
+    const courierId = String(assignment?.entregador_id || "").trim();
+
+    const liveCourier = courierId
+      ? (Array.isArray(state.entregadores) ? state.entregadores : []).find(
+          (courier) => String(courier?.id || "") === courierId,
+        )
+      : null;
+
+    const name =
+      String(
+        assignment?.entregador_nome ||
+          liveCourier?.nome ||
+          liveCourier?.email ||
+          "",
+      ).trim();
+
+    const onlineNow =
+      assignment?.entregador_online_agora === true ||
+      liveCourier?.online_agora === true;
+
+    const waiting = positiveInteger(
+      assignment?.quantidade_aguardando_entregador ??
+        liveCourier?.quantidade_aguardando,
+    );
+
+    const inRoute = positiveInteger(
+      assignment?.quantidade_em_rota_entregador ??
+        liveCourier?.quantidade_em_rota,
+    );
+
+    const total = positiveInteger(
+      assignment?.quantidade_na_rota_entregador ??
+        liveCourier?.quantidade_na_rota ??
+        waiting + inRoute,
+    );
+
+    return {
+      id: courierId,
+      name: name || "Não atribuído",
+      onlineNow,
+      waiting,
+      inRoute,
+      total,
+    };
+  }
+
+  function syncCourierSelectTitle() {
+    const select = el.dynamicModalForm?.querySelector(
+      'select[name="entregador_id"]',
+    );
+
+    if (!select) {
+      return;
+    }
+
+    const syncTitle = () => {
+      select.title = select.selectedOptions?.[0]?.textContent?.trim() || "";
+    };
+
+    syncTitle();
+    select.addEventListener("change", syncTitle);
   }
 
   function availableDeliveryCouriers() {
@@ -5851,7 +5995,7 @@ ${printableOrderAddressHtml(order)}
       });
   }
 
-  function openAssignDeliveryModal(orderId) {
+  function openAssignDeliveryModal(orderId, { reassign = false } = {}) {
     const order = state.pedidos.find(
       (item) => String(item.id) === String(orderId),
     );
@@ -5864,33 +6008,60 @@ ${printableOrderAddressHtml(order)}
       throw new Error("A atribuição de entregador está disponível apenas para a Azury.");
     }
 
-    if (order.status !== "pronto") {
-      throw new Error("O pedido precisa estar pronto antes de ser enviado para entrega.");
+    const deliveryStatus = orderDeliveryStatus(order);
+    const currentCourier = orderDeliveryCourierInfo(order);
+    const waitingWithoutCourier =
+      order.status === "saiu_para_entrega" &&
+      deliveryStatus === "aguardando" &&
+      !currentCourier.id;
+
+    if (reassign) {
+      if (
+        order.status !== "saiu_para_entrega" ||
+        deliveryStatus !== "aguardando" ||
+        !currentCourier.id
+      ) {
+        throw new Error(
+          "O entregador só pode ser trocado enquanto o pedido estiver aguardando retirada.",
+        );
+      }
+    } else if (order.status !== "pronto" && !waitingWithoutCourier) {
+      throw new Error(
+        "O pedido precisa estar pronto ou aguardando entregador para receber uma atribuição.",
+      );
     }
 
-    const couriers = availableDeliveryCouriers();
+    const availableCouriers = availableDeliveryCouriers();
+    const couriers = reassign
+      ? availableCouriers.filter(
+          (courier) => String(courier.id) !== String(currentCourier.id),
+        )
+      : availableCouriers;
 
     if (!couriers.length) {
       throw new Error(
-        "Nenhum entregador ativo está cadastrado. Cadastre ou reative um entregador antes de continuar.",
+        reassign
+          ? "Nenhum outro entregador ativo está disponível para receber este pedido."
+          : "Nenhum entregador ativo está cadastrado. Cadastre ou reative um entregador antes de continuar.",
       );
     }
 
     const code = order.codigo || order.id || "";
 
     openModal({
-      title: "Enviar para entrega",
+      title: reassign ? "Trocar entregador" : "Enviar para entrega",
 
-      message:
-        "Escolha o entregador responsável. O pedido será adicionado à fila dele e aguardará a definição da próxima rota no Azury Entregador.",
+      message: reassign
+        ? `O pedido ${code} ainda está aguardando retirada por ${currentCourier.name}. Escolha o novo entregador responsável.`
+        : "Escolha o entregador responsável. O pedido será adicionado à fila dele e aguardará a definição da próxima rota no Azury Entregador.",
 
-      messageType: "info",
+      messageType: reassign ? "warning" : "info",
 
       fields: [
         {
           name: "entregador_id",
 
-          label: "Entregador",
+          label: reassign ? "Novo entregador" : "Entregador",
 
           type: "select",
 
@@ -5905,7 +6076,7 @@ ${printableOrderAddressHtml(order)}
         },
       ],
 
-      submitText: "Confirmar entregador",
+      submitText: reassign ? "Confirmar troca" : "Confirmar entregador",
 
       submitClass: "btn-primary",
 
@@ -5925,7 +6096,9 @@ ${printableOrderAddressHtml(order)}
           p_entregador_id: courierId,
         });
 
-        await refreshOrders();
+        await refreshOrders({
+          forceRender: true,
+        });
 
         const courierName =
           String(
@@ -5936,11 +6109,15 @@ ${printableOrderAddressHtml(order)}
           ).trim() || "entregador selecionado";
 
         showMessage(
-          `Pedido ${code} enviado para a fila de ${courierName}.`,
+          reassign
+            ? `Pedido ${code} transferido para a fila de ${courierName}.`
+            : `Pedido ${code} enviado para a fila de ${courierName}.`,
           "success",
         );
       },
     });
+
+    syncCourierSelectTitle();
   }
 
   function renderOrders() {
@@ -6056,14 +6233,62 @@ ${printableOrderAddressHtml(order)}
         const canStartTracking =
           !trackingActive && !["entregue", "cancelado"].includes(order.status);
 
+        const deliveryStatus = orderDeliveryStatus(order);
+        const deliveryCourier = orderDeliveryCourierInfo(order);
+        const statusMeta = orderAdminStatusMeta(order);
+
+        const waitingWithoutCourier =
+          establishmentKey === "azury" &&
+          order.status === "saiu_para_entrega" &&
+          deliveryStatus === "aguardando" &&
+          !deliveryCourier.id;
+
         const primaryOrderAction =
           establishmentKey === "azury" && order.status === "pronto"
             ? `<button class="btn btn-primary" data-order-action="assign-delivery" type="button">🛵 Enviar para entrega</button>`
-            : establishmentKey === "azury" && order.status === "saiu_para_entrega"
-              ? ""
-              : next
-                ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>`
-                : "";
+            : waitingWithoutCourier
+              ? `<button class="btn btn-primary" data-order-action="assign-delivery" type="button">🛵 Escolher entregador</button>`
+              : establishmentKey === "azury" && order.status === "saiu_para_entrega"
+                ? ""
+                : next
+                  ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>`
+                  : "";
+
+        const changeCourierAction =
+          establishmentKey === "azury" &&
+          order.status === "saiu_para_entrega" &&
+          deliveryStatus === "aguardando" &&
+          Boolean(deliveryCourier.id)
+            ? `<button class="btn btn-secondary" data-order-action="change-courier" type="button">🛵 Trocar entregador</button>`
+            : "";
+
+        const deliveryMetrics =
+          establishmentKey === "azury" &&
+          order.status === "saiu_para_entrega" &&
+          ["aguardando", "em_rota"].includes(deliveryStatus)
+            ? `
+                <div class="order-metric order-metric-courier">
+                  <span>Entregador</span>
+                  <strong>
+                    ${escapeHtml(deliveryCourier.name)}
+                    •
+                    ${deliveryCourier.onlineNow ? "Online" : "Offline"}
+                  </strong>
+                </div>
+
+                <div class="order-metric order-metric-courier-load">
+                  <span>Fila do entregador</span>
+                  <strong>
+                    ${escapeHtml(deliveryCourier.total)}
+                    ${deliveryCourier.total === 1 ? "entrega" : "entregas"}
+                    •
+                    ${escapeHtml(deliveryCourier.waiting)} aguardando
+                    •
+                    ${escapeHtml(deliveryCourier.inRoute)} em rota
+                  </strong>
+                </div>
+              `
+            : "";
 
         return `
             <article
@@ -6086,8 +6311,8 @@ ${printableOrderAddressHtml(order)}
 
                 </div>
 
-                <span class="status-badge status-${escapeHtml(order.status)}">
-                  ${escapeHtml(statusLabel(order.status))}
+                <span class="status-badge status-${escapeHtml(statusMeta.key)}">
+                  ${escapeHtml(statusMeta.label)}
                 </span>
 
               </header>
@@ -6124,6 +6349,8 @@ ${printableOrderAddressHtml(order)}
                   <strong>${trackingActive ? "Ativo" : "Desativado"}</strong>
                 </div>
 
+                ${deliveryMetrics}
+
               </div>
 
               <div class="order-body">
@@ -6157,6 +6384,8 @@ ${printableOrderAddressHtml(order)}
               <footer class="order-actions">
 
                 ${primaryOrderAction}
+
+                ${changeCourierAction}
 
                 <button class="btn btn-secondary" data-order-action="print" type="button">
                   🖨️ Imprimir comanda
@@ -6433,6 +6662,14 @@ ${printableOrderAddressHtml(order)}
 
       if (action === "assign-delivery") {
         openAssignDeliveryModal(orderId);
+
+        return;
+      }
+
+      if (action === "change-courier") {
+        openAssignDeliveryModal(orderId, {
+          reassign: true,
+        });
 
         return;
       }
@@ -13592,7 +13829,32 @@ ${printableOrderAddressHtml(order)}
         width: 100%;
         max-width: 100%;
         min-width: 0;
+        overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .status-badge.status-aguardando_entregador {
+        color: #9a3412;
+        background: #fff7ed;
+        border-color: #fed7aa;
+      }
+
+      .status-badge.status-em_rota {
+        color: #1d4ed8;
+        background: #eff6ff;
+        border-color: #bfdbfe;
+      }
+
+      #section-pedidos .order-metric-courier,
+      #section-pedidos .order-metric-courier-load {
+        min-width: 0;
+      }
+
+      #section-pedidos .order-metric-courier strong,
+      #section-pedidos .order-metric-courier-load strong {
+        overflow-wrap: anywhere;
       }
 
       @media (max-width: 1180px) and (min-width: 901px) {
