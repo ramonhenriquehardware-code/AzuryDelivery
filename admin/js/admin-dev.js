@@ -26,7 +26,10 @@
         return false;
       }
     } catch (error) {
-      console.warn("Não foi possível ler uma preferência local do painel.", error);
+      console.warn(
+        "Não foi possível ler uma preferência local do painel.",
+        error,
+      );
     }
 
     return null;
@@ -36,7 +39,10 @@
     try {
       window.localStorage.setItem(key, value ? "true" : "false");
     } catch (error) {
-      console.warn("Não foi possível salvar uma preferência local do painel.", error);
+      console.warn(
+        "Não foi possível salvar uma preferência local do painel.",
+        error,
+      );
     }
   }
 
@@ -564,7 +570,9 @@
   }
 
   function currentAccessLevel() {
-    return String(state.admin?.nivel_acesso || "").trim().toLowerCase();
+    return String(state.admin?.nivel_acesso || "")
+      .trim()
+      .toLowerCase();
   }
 
   function isEmployeeAccess() {
@@ -771,9 +779,7 @@
   }
 
   function overviewOrderEstablishment(order) {
-    return order?.estabelecimento === "ph_sabor_cia"
-      ? "ph_sabor_cia"
-      : "azury";
+    return order?.estabelecimento === "ph_sabor_cia" ? "ph_sabor_cia" : "azury";
   }
 
   function overviewSummaryFor(establishment) {
@@ -788,18 +794,14 @@
       .filter((order) => order.status === "entregue")
       .reduce(
         (total, order) =>
-          total +
-          toNumber(
-            firstDefined(order, ["valor_total", "total"], 0),
-          ),
+          total + toNumber(firstDefined(order, ["valor_total", "total"], 0)),
         0,
       );
 
     return {
       total: orders.length,
       recebidos: count("recebido"),
-      em_andamento:
-        count("confirmado") + count("em_preparo") + count("pronto"),
+      em_andamento: count("confirmado") + count("em_preparo") + count("pronto"),
       faturamento_entregue: faturamentoEntregue,
     };
   }
@@ -1218,7 +1220,9 @@
             ? fallback.disponivel
             : saved.disponivel !== false,
         visivel:
-          saved.visivel === undefined ? fallback.visivel : saved.visivel !== false,
+          saved.visivel === undefined
+            ? fallback.visivel
+            : saved.visivel !== false,
         ordem:
           Number.isFinite(order) && order >= 0
             ? Math.floor(order)
@@ -1449,7 +1453,7 @@
     const boxOptions = getAzuryBoxesAdmin()
       .filter((box) => box.visivel !== false && box.disponivel !== false)
       .map(
-      (box) => `
+        (box) => `
             <option
               value="${escapeHtml(box.key)}"
               ${box.key === String(selectedValue) ? "selected" : ""}
@@ -1459,7 +1463,8 @@
               ${formatMoney(box.preco)}
             </option>
           `,
-    ).join("");
+      )
+      .join("");
 
     return `
       <optgroup label="Açaí no copo">
@@ -2947,9 +2952,7 @@
       establishment === "ph_sabor_cia" &&
       formNode.dataset.phDeliveryCalculating === "true"
     ) {
-      throw new Error(
-        "Aguarde o cálculo da taxa de entrega da PH terminar.",
-      );
+      throw new Error("Aguarde o cálculo da taxa de entrega da PH terminar.");
     }
 
     if (!["azury", "ph_sabor_cia"].includes(establishment)) {
@@ -4440,7 +4443,10 @@
         try {
           await subscription.unsubscribe();
         } catch (error) {
-          console.warn("Não foi possível remover a inscrição push local.", error);
+          console.warn(
+            "Não foi possível remover a inscrição push local.",
+            error,
+          );
         }
       }
 
@@ -4513,7 +4519,9 @@
       return false;
     }
 
-    const subscription = await getOrCreatePushSubscription({ allowCreate: true });
+    const subscription = await getOrCreatePushSubscription({
+      allowCreate: true,
+    });
 
     if (!subscription) {
       state.pushEnabled = false;
@@ -4578,7 +4586,10 @@
     try {
       await activatePushNotifications({ silent: true });
     } catch (error) {
-      console.info("Não foi possível restaurar a inscrição push automaticamente.", error);
+      console.info(
+        "Não foi possível restaurar a inscrição push automaticamente.",
+        error,
+      );
     }
   }
 
@@ -5788,12 +5799,9 @@ ${printableOrderAddressHtml(order)}
     },
   });
 
-  function ordersCompanyConfig(
-    establishment = state.ordersEstabelecimento,
-  ) {
+  function ordersCompanyConfig(establishment = state.ordersEstabelecimento) {
     return (
-      ORDERS_ESTABELECIMENTOS[establishment] ||
-      ORDERS_ESTABELECIMENTOS.azury
+      ORDERS_ESTABELECIMENTOS[establishment] || ORDERS_ESTABELECIMENTOS.azury
     );
   }
 
@@ -5820,9 +5828,7 @@ ${printableOrderAddressHtml(order)}
   }
 
   function orderEstablishmentKey(order) {
-    return order?.estabelecimento === "ph_sabor_cia"
-      ? "ph_sabor_cia"
-      : "azury";
+    return order?.estabelecimento === "ph_sabor_cia" ? "ph_sabor_cia" : "azury";
   }
 
   function positiveInteger(value) {
@@ -5876,7 +5882,9 @@ ${printableOrderAddressHtml(order)}
   }
 
   function orderAdminStatusMeta(order) {
-    const orderStatus = String(order?.status || "").trim().toLowerCase();
+    const orderStatus = String(order?.status || "")
+      .trim()
+      .toLowerCase();
 
     if (
       orderEstablishmentKey(order) === "azury" &&
@@ -5915,13 +5923,12 @@ ${printableOrderAddressHtml(order)}
         )
       : null;
 
-    const name =
-      String(
-        assignment?.entregador_nome ||
-          liveCourier?.nome ||
-          liveCourier?.email ||
-          "",
-      ).trim();
+    const name = String(
+      assignment?.entregador_nome ||
+        liveCourier?.nome ||
+        liveCourier?.email ||
+        "",
+    ).trim();
 
     const onlineNow =
       assignment?.entregador_online_agora === true ||
@@ -5972,7 +5979,10 @@ ${printableOrderAddressHtml(order)}
 
   function availableDeliveryCouriers() {
     return (Array.isArray(state.entregadores) ? state.entregadores : [])
-      .filter((courier) => courier?.id && courier?.ativo !== false)
+      .filter(
+        (courier) =>
+          courier?.id && courier?.ativo !== false && courierOnlineNow(courier),
+      )
       .slice()
       .sort((a, b) => {
         const onlineDifference =
@@ -6005,7 +6015,9 @@ ${printableOrderAddressHtml(order)}
     }
 
     if (orderEstablishmentKey(order) !== "azury") {
-      throw new Error("A atribuição de entregador está disponível apenas para a Azury.");
+      throw new Error(
+        "A atribuição de entregador está disponível apenas para a Azury.",
+      );
     }
 
     const deliveryStatus = orderDeliveryStatus(order);
@@ -6041,8 +6053,8 @@ ${printableOrderAddressHtml(order)}
     if (!couriers.length) {
       throw new Error(
         reassign
-          ? "Nenhum outro entregador ativo está disponível para receber este pedido."
-          : "Nenhum entregador ativo está cadastrado. Cadastre ou reative um entregador antes de continuar.",
+          ? "Nenhum outro entregador online está disponível para receber este pedido."
+          : "Nenhum entregador está online agora. Abra o Azury Entregador e aguarde o status Online antes de enviar o pedido.",
       );
     }
 
@@ -6221,8 +6233,16 @@ ${printableOrderAddressHtml(order)}
         const subtotal = firstDefined(order, ["subtotal", "valor_produtos"], 0);
         const fee = firstDefined(order, ["taxa_entrega", "taxa"], 0);
         const total = firstDefined(order, ["valor_total", "total"], 0);
-        const payment = firstDefined(order, ["forma_pagamento"], "Não informada");
-        const paymentStatus = firstDefined(order, ["status_pagamento"], "pendente");
+        const payment = firstDefined(
+          order,
+          ["forma_pagamento"],
+          "Não informada",
+        );
+        const paymentStatus = firstDefined(
+          order,
+          ["status_pagamento"],
+          "pendente",
+        );
         const note = firstDefined(order, ["observacoes", "observacao"], "");
 
         const establishmentKey = orderEstablishmentKey(order);
@@ -6248,11 +6268,18 @@ ${printableOrderAddressHtml(order)}
             ? `<button class="btn btn-primary" data-order-action="assign-delivery" type="button">🛵 Enviar para entrega</button>`
             : waitingWithoutCourier
               ? `<button class="btn btn-primary" data-order-action="assign-delivery" type="button">🛵 Escolher entregador</button>`
-              : establishmentKey === "azury" && order.status === "saiu_para_entrega"
+              : establishmentKey === "azury" &&
+                  order.status === "saiu_para_entrega"
                 ? ""
                 : next
                   ? `<button class="btn ${next.className}" data-order-action="next" data-next-status="${next.status}" type="button">${escapeHtml(next.label)}</button>`
                   : "";
+
+        const manualDeliveryFinishAction =
+          establishmentKey === "azury" &&
+          ["pronto", "saiu_para_entrega"].includes(order.status)
+            ? `<button class="btn btn-success" data-order-action="manual-delivery-finish" type="button">Finalizar como entregue</button>`
+            : "";
 
         const changeCourierAction =
           establishmentKey === "azury" &&
@@ -6260,6 +6287,14 @@ ${printableOrderAddressHtml(order)}
           deliveryStatus === "aguardando" &&
           Boolean(deliveryCourier.id)
             ? `<button class="btn btn-secondary" data-order-action="change-courier" type="button">🛵 Trocar entregador</button>`
+            : "";
+
+        const removeCourierAction =
+          establishmentKey === "azury" &&
+          order.status === "saiu_para_entrega" &&
+          deliveryStatus === "aguardando" &&
+          Boolean(deliveryCourier.id)
+            ? `<button class="btn btn-secondary" data-order-action="remove-courier" type="button">Retirar entregador</button>`
             : "";
 
         const deliveryMetrics =
@@ -6385,7 +6420,11 @@ ${printableOrderAddressHtml(order)}
 
                 ${primaryOrderAction}
 
+                ${manualDeliveryFinishAction}
+
                 ${changeCourierAction}
+
+                ${removeCourierAction}
 
                 <button class="btn btn-secondary" data-order-action="print" type="button">
                   🖨️ Imprimir comanda
@@ -6674,6 +6713,109 @@ ${printableOrderAddressHtml(order)}
         return;
       }
 
+      if (action === "remove-courier") {
+        const order = state.pedidos.find(
+          (item) => String(item.id) === String(orderId),
+        );
+
+        if (!order) {
+          throw new Error("Pedido não encontrado no painel.");
+        }
+
+        const deliveryStatus = orderDeliveryStatus(order);
+        const deliveryCourier = orderDeliveryCourierInfo(order);
+
+        if (
+          orderEstablishmentKey(order) !== "azury" ||
+          order.status !== "saiu_para_entrega" ||
+          deliveryStatus !== "aguardando" ||
+          !deliveryCourier.id
+        ) {
+          throw new Error(
+            "O entregador só pode ser retirado enquanto o pedido estiver aguardando retirada.",
+          );
+        }
+
+        const code = order.codigo || order.id || "";
+        const courierName =
+          String(deliveryCourier.name || "entregador selecionado").trim() ||
+          "entregador selecionado";
+
+        openModal({
+          title: "Retirar entregador",
+          message: `Retirar ${courierName} do pedido ${code}? O pedido continuará em entrega, mas ficará aguardando a escolha de outro entregador.`,
+          messageType: "warning",
+          fields: [],
+          submitText: "Confirmar retirada",
+          submitClass: "btn-danger",
+          onSubmit: async () => {
+            const result = await rpc("remover_entregador_entrega_admin", {
+              p_pedido_id: orderId,
+            });
+
+            await refreshOrders({
+              forceRender: true,
+            });
+
+            showMessage(
+              result?.mensagem || `Entregador retirado do pedido ${code}.`,
+              "warning",
+            );
+          },
+        });
+
+        return;
+      }
+
+      if (action === "manual-delivery-finish") {
+        const order = state.pedidos.find(
+          (item) => String(item.id) === String(orderId),
+        );
+
+        if (!order) {
+          throw new Error("Pedido não encontrado no painel.");
+        }
+
+        if (
+          orderEstablishmentKey(order) !== "azury" ||
+          !["pronto", "saiu_para_entrega"].includes(order.status)
+        ) {
+          throw new Error(
+            "Este pedido não pode ser finalizado manualmente neste status.",
+          );
+        }
+
+        const applyManualDeliveryFinish = async () => {
+          await rpc("finalizar_pedido_manual_admin", {
+            p_pedido_id: orderId,
+          });
+
+          await refreshOrders({
+            forceRender: true,
+          });
+
+          showMessage(
+            "Pedido finalizado manualmente como entregue.",
+            "success",
+          );
+
+          scheduleWhatsAppStatusPrompt(orderId, "entregue");
+        };
+
+        openModal({
+          title: "Finalizar pedido",
+          message:
+            "Confirma que o pedido foi entregue ao cliente? Esta opção finaliza o pedido manualmente, sem exigir envio ao motoboy pelo aplicativo.",
+          messageType: "success",
+          fields: [],
+          submitText: "Confirmar entrega",
+          submitClass: "btn-success",
+          onSubmit: applyManualDeliveryFinish,
+        });
+
+        return;
+      }
+
       if (action === "next") {
         const status = button.dataset.nextStatus;
 
@@ -6866,6 +7008,16 @@ ${printableOrderAddressHtml(order)}
           title: `Editar pedido ${code}`,
 
           fields: [
+            {
+              name: "codigo",
+
+              label: "Número do pedido",
+
+              value: code,
+
+              required: true,
+            },
+
             {
               name: "cliente_nome",
 
@@ -7085,6 +7237,8 @@ ${printableOrderAddressHtml(order)}
                 p_pedido_id: orderId,
 
                 p_dados: {
+                  codigo: String(values.codigo || "").trim(),
+
                   cliente_nome: String(values.cliente_nome || "").trim(),
 
                   cliente_telefone:
@@ -8135,11 +8289,7 @@ ${printableOrderAddressHtml(order)}
     const summary = data.resumo || {};
 
     el.financeiroSummary.innerHTML = [
-      metricCard(
-        "💵",
-        formatMoney(summary.ganhos_total ?? 0),
-        "Ganhos",
-      ),
+      metricCard("💵", formatMoney(summary.ganhos_total ?? 0), "Ganhos"),
 
       metricCard("🛒", formatMoney(summary.compras ?? 0), "Compras pagas"),
 
@@ -8308,12 +8458,9 @@ ${printableOrderAddressHtml(order)}
     },
   });
 
-  function estoqueCompanyConfig(
-    establishment = state.estoqueEstabelecimento,
-  ) {
+  function estoqueCompanyConfig(establishment = state.estoqueEstabelecimento) {
     return (
-      ESTOQUE_ESTABELECIMENTOS[establishment] ||
-      ESTOQUE_ESTABELECIMENTOS.azury
+      ESTOQUE_ESTABELECIMENTOS[establishment] || ESTOQUE_ESTABELECIMENTOS.azury
     );
   }
 
@@ -9728,7 +9875,8 @@ ${printableOrderAddressHtml(order)}
       return panel;
     }
 
-    const section = el.cardapioPhContent || document.getElementById("section-cardapio");
+    const section =
+      el.cardapioPhContent || document.getElementById("section-cardapio");
 
     if (!section) {
       return null;
@@ -9813,7 +9961,9 @@ ${printableOrderAddressHtml(order)}
     });
 
     const rawDays =
-      schedule.dias ?? schedule.dias_funcionamento ?? schedule.diasFuncionamento;
+      schedule.dias ??
+      schedule.dias_funcionamento ??
+      schedule.diasFuncionamento;
 
     const activeDayKeys = new Set(
       (Array.isArray(rawDays)
@@ -10226,17 +10376,17 @@ ${printableOrderAddressHtml(order)}
 
     const config = state.phConfig;
 
-    const meals = (Array.isArray(config.marmitas) ? config.marmitas : []).filter(
-      (item) => cardapioMatchesAvailability(item?.ativo !== false),
-    );
+    const meals = (
+      Array.isArray(config.marmitas) ? config.marmitas : []
+    ).filter((item) => cardapioMatchesAvailability(item?.ativo !== false));
 
     const drinks = (Array.isArray(config.bebidas) ? config.bebidas : []).filter(
       (item) => cardapioMatchesAvailability(item?.ativo !== false),
     );
 
-    const addons = (Array.isArray(config.adicionais) ? config.adicionais : []).filter(
-      (item) => cardapioMatchesAvailability(item?.ativo !== false),
-    );
+    const addons = (
+      Array.isArray(config.adicionais) ? config.adicionais : []
+    ).filter((item) => cardapioMatchesAvailability(item?.ativo !== false));
 
     const accompaniments = (
       Array.isArray(config.acompanhamentos) ? config.acompanhamentos : []
@@ -10827,7 +10977,10 @@ ${printableOrderAddressHtml(order)}
     button.disabled = true;
 
     try {
-      await savePhConfig(next, `${row.querySelector("strong")?.textContent?.trim() || "Dia"} atualizado.`);
+      await savePhConfig(
+        next,
+        `${row.querySelector("strong")?.textContent?.trim() || "Dia"} atualizado.`,
+      );
     } finally {
       button.disabled = false;
     }
@@ -12625,25 +12778,92 @@ ${printableOrderAddressHtml(order)}
     }
   }
 
-
   // =========================================================
   // CONTEÚDO — CENTRAL COMPLETA DE POSTS AZURY / PH
   // =========================================================
 
   const CONTEUDO_TYPE_META = Object.freeze({
-    cardapio_dia: { label: "Cardápio do dia", mode: "multi", title: "CARDÁPIO DO DIA", badge: "HOJE" },
-    loja_aberta: { label: "Pedidos liberados", mode: "none", title: "PEDIDOS LIBERADOS!", badge: "LOJA ABERTA", requiresOpen: true },
-    promocao: { label: "Promoção / oferta", mode: "single", title: "OFERTA DO DIA", badge: "PROMOÇÃO" },
-    produto_destaque: { label: "Produto em destaque", mode: "single", title: "DESTAQUE DO DIA", badge: "VOCÊ VAI AMAR" },
-    novidade: { label: "Novidade", mode: "single", title: "NOVIDADE NA ÁREA", badge: "CHEGOU" },
-    ultima_chamada: { label: "Última chamada", mode: "none", title: "ÚLTIMA CHAMADA!", badge: "AINDA DÁ TEMPO", requiresOpen: true },
-    loja_fechada: { label: "Encerramos por hoje", mode: "none", title: "ENCERRAMOS POR HOJE", badge: "OBRIGADO" },
-    agradecimento: { label: "Agradecimento", mode: "none", title: "OBRIGADO PELOS PEDIDOS!", badge: "VOCÊS SÃO DEMAIS" },
-    aviso: { label: "Aviso / comunicado", mode: "none", title: "AVISO IMPORTANTE", badge: "COMUNICADO" },
-    horarios: { label: "Horários", mode: "none", title: "NOSSO HORÁRIO", badge: "FUNCIONAMENTO" },
-    delivery: { label: "Delivery", mode: "none", title: "BATEU VONTADE?", badge: "DELIVERY RÁPIDO" },
-    manutencao: { label: "Manutenção / pausa", mode: "none", title: "PAUSA TEMPORÁRIA", badge: "AVISO" },
-    recompensas: { label: "Benefícios / recompensas", mode: "none", title: "SER AZURY TEM VANTAGENS", badge: "RECOMPENSAS", azuryOnly: true },
+    cardapio_dia: {
+      label: "Cardápio do dia",
+      mode: "multi",
+      title: "CARDÁPIO DO DIA",
+      badge: "HOJE",
+    },
+    loja_aberta: {
+      label: "Pedidos liberados",
+      mode: "none",
+      title: "PEDIDOS LIBERADOS!",
+      badge: "LOJA ABERTA",
+      requiresOpen: true,
+    },
+    promocao: {
+      label: "Promoção / oferta",
+      mode: "single",
+      title: "OFERTA DO DIA",
+      badge: "PROMOÇÃO",
+    },
+    produto_destaque: {
+      label: "Produto em destaque",
+      mode: "single",
+      title: "DESTAQUE DO DIA",
+      badge: "VOCÊ VAI AMAR",
+    },
+    novidade: {
+      label: "Novidade",
+      mode: "single",
+      title: "NOVIDADE NA ÁREA",
+      badge: "CHEGOU",
+    },
+    ultima_chamada: {
+      label: "Última chamada",
+      mode: "none",
+      title: "ÚLTIMA CHAMADA!",
+      badge: "AINDA DÁ TEMPO",
+      requiresOpen: true,
+    },
+    loja_fechada: {
+      label: "Encerramos por hoje",
+      mode: "none",
+      title: "ENCERRAMOS POR HOJE",
+      badge: "OBRIGADO",
+    },
+    agradecimento: {
+      label: "Agradecimento",
+      mode: "none",
+      title: "OBRIGADO PELOS PEDIDOS!",
+      badge: "VOCÊS SÃO DEMAIS",
+    },
+    aviso: {
+      label: "Aviso / comunicado",
+      mode: "none",
+      title: "AVISO IMPORTANTE",
+      badge: "COMUNICADO",
+    },
+    horarios: {
+      label: "Horários",
+      mode: "none",
+      title: "NOSSO HORÁRIO",
+      badge: "FUNCIONAMENTO",
+    },
+    delivery: {
+      label: "Delivery",
+      mode: "none",
+      title: "BATEU VONTADE?",
+      badge: "DELIVERY RÁPIDO",
+    },
+    manutencao: {
+      label: "Manutenção / pausa",
+      mode: "none",
+      title: "PAUSA TEMPORÁRIA",
+      badge: "AVISO",
+    },
+    recompensas: {
+      label: "Benefícios / recompensas",
+      mode: "none",
+      title: "SER AZURY TEM VANTAGENS",
+      badge: "RECOMPENSAS",
+      azuryOnly: true,
+    },
   });
 
   const CONTEUDO_TEMPLATES = Object.freeze(
@@ -12681,7 +12901,9 @@ ${printableOrderAddressHtml(order)}
     }).format(date);
   }
 
-  function conteudoCompanyMeta(estabelecimento = state.conteudoEstabelecimento) {
+  function conteudoCompanyMeta(
+    estabelecimento = state.conteudoEstabelecimento,
+  ) {
     const isPh = estabelecimento === "ph_sabor_cia";
     const phStore = state.phConfig?.loja || {};
     const azuryStore = state.operacao?.configuracao_loja || {};
@@ -12696,7 +12918,12 @@ ${printableOrderAddressHtml(order)}
           accent: "#fff1d6",
           dark: "#160b03",
           soft: "#fff4e8",
-          contact: String(phStore.whatsapp || phStore.telefone || state.phConfig?.whatsapp || "").trim(),
+          contact: String(
+            phStore.whatsapp ||
+              phStore.telefone ||
+              state.phConfig?.whatsapp ||
+              "",
+          ).trim(),
           cta: "Peça pelo WhatsApp",
         }
       : {
@@ -12717,19 +12944,24 @@ ${printableOrderAddressHtml(order)}
     return CONTEUDO_TYPE_META[type] || CONTEUDO_TYPE_META.cardapio_dia;
   }
 
-  function conteudoOrdersActive(estabelecimento = state.conteudoEstabelecimento) {
+  function conteudoOrdersActive(
+    estabelecimento = state.conteudoEstabelecimento,
+  ) {
     if (estabelecimento === "ph_sabor_cia") {
       return state.phConfig?.loja?.pedidos_ativos !== false;
     }
     return state.operacao?.configuracao_loja?.pedidos_ativos !== false;
   }
 
-  function conteudoCurrentSchedule(estabelecimento = state.conteudoEstabelecimento) {
+  function conteudoCurrentSchedule(
+    estabelecimento = state.conteudoEstabelecimento,
+  ) {
     const todayIndex = new Date().getDay();
 
     if (estabelecimento === "ph_sabor_cia") {
       const schedule = getPhWeeklySchedules()[todayIndex];
-      if (!schedule || schedule.ativo === false) return { ativo: false, label: "Fechado hoje" };
+      if (!schedule || schedule.ativo === false)
+        return { ativo: false, label: "Fechado hoje" };
       return {
         ativo: true,
         abertura: formatTime(schedule.abertura || "11:00"),
@@ -12738,27 +12970,64 @@ ${printableOrderAddressHtml(order)}
       };
     }
 
-    const schedules = Array.isArray(state.operacao?.horarios) ? state.operacao.horarios : [];
-    const byNumber = schedules.find((item) => Number(item?.dia_semana) === todayIndex);
-    const dayNames = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+    const schedules = Array.isArray(state.operacao?.horarios)
+      ? state.operacao.horarios
+      : [];
+    const byNumber = schedules.find(
+      (item) => Number(item?.dia_semana) === todayIndex,
+    );
+    const dayNames = [
+      "domingo",
+      "segunda",
+      "terca",
+      "quarta",
+      "quinta",
+      "sexta",
+      "sabado",
+    ];
     const todayKey = dayNames[todayIndex];
-    const schedule = byNumber || schedules.find((item) => normalizeKey(item?.nome_dia || "").includes(todayKey));
-    if (!schedule || schedule.ativo === false) return { ativo: false, label: "Fechado hoje" };
-    const opening = formatTime(schedule.abre_as || schedule.abertura || "11:00");
-    const closing = formatTime(schedule.fecha_as || schedule.fechamento || "23:00");
-    return { ativo: true, abertura: opening, fechamento: closing, label: `${opening} às ${closing}` };
+    const schedule =
+      byNumber ||
+      schedules.find((item) =>
+        normalizeKey(item?.nome_dia || "").includes(todayKey),
+      );
+    if (!schedule || schedule.ativo === false)
+      return { ativo: false, label: "Fechado hoje" };
+    const opening = formatTime(
+      schedule.abre_as || schedule.abertura || "11:00",
+    );
+    const closing = formatTime(
+      schedule.fecha_as || schedule.fechamento || "23:00",
+    );
+    return {
+      ativo: true,
+      abertura: opening,
+      fechamento: closing,
+      label: `${opening} às ${closing}`,
+    };
   }
 
   function conteudoPhMarmitaPriceLabel(item) {
     const sizes = (Array.isArray(item?.tamanhos) ? item.tamanhos : [])
-      .filter((size) => size && size.ativo !== false && Number.isFinite(Number(size.preco)))
-      .sort((a, b) => Number(a.capacidade_ml ?? a.capacidadeMl ?? a.ml ?? 0) - Number(b.capacidade_ml ?? b.capacidadeMl ?? b.ml ?? 0));
+      .filter(
+        (size) =>
+          size && size.ativo !== false && Number.isFinite(Number(size.preco)),
+      )
+      .sort(
+        (a, b) =>
+          Number(a.capacidade_ml ?? a.capacidadeMl ?? a.ml ?? 0) -
+          Number(b.capacidade_ml ?? b.capacidadeMl ?? b.ml ?? 0),
+      );
     if (!sizes.length) return "Consulte";
     if (sizes.length === 1) return formatMoney(Number(sizes[0].preco));
-    const prices = sizes.map((size) => Number(size.preco)).filter(Number.isFinite);
+    const prices = sizes
+      .map((size) => Number(size.preco))
+      .filter(Number.isFinite);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
-    return min === max ? formatMoney(min) : `${formatMoney(min)} a ${formatMoney(max)}`;
+    return min === max
+      ? formatMoney(min)
+      : `${formatMoney(min)} a ${formatMoney(max)}`;
   }
 
   function conteudoNormalizePhImage(item) {
@@ -12771,7 +13040,9 @@ ${printableOrderAddressHtml(order)}
 
   function conteudoMenuItems(estabelecimento = state.conteudoEstabelecimento) {
     if (estabelecimento === "ph_sabor_cia") {
-      const meals = (Array.isArray(state.phConfig?.marmitas) ? state.phConfig.marmitas : [])
+      const meals = (
+        Array.isArray(state.phConfig?.marmitas) ? state.phConfig.marmitas : []
+      )
         .filter((item) => item && item.ativo !== false)
         .map((item) => ({
           id: `marmita:${String(item.id || item.nome)}`,
@@ -12782,8 +13053,13 @@ ${printableOrderAddressHtml(order)}
           principal: true,
           imagem: conteudoNormalizePhImage(item),
         }));
-      const drinks = (Array.isArray(state.phConfig?.bebidas) ? state.phConfig.bebidas : [])
-        .filter((item) => item && item.ativo !== false && Number.isFinite(Number(item.preco)))
+      const drinks = (
+        Array.isArray(state.phConfig?.bebidas) ? state.phConfig.bebidas : []
+      )
+        .filter(
+          (item) =>
+            item && item.ativo !== false && Number.isFinite(Number(item.preco)),
+        )
         .map((item) => ({
           id: `bebida:${String(item.id || item.nome)}`,
           categoria: "Bebidas",
@@ -12793,8 +13069,15 @@ ${printableOrderAddressHtml(order)}
           principal: false,
           imagem: conteudoNormalizePhImage(item),
         }));
-      const addons = (Array.isArray(state.phConfig?.adicionais) ? state.phConfig.adicionais : [])
-        .filter((item) => item && item.ativo !== false && Number.isFinite(Number(item.preco)))
+      const addons = (
+        Array.isArray(state.phConfig?.adicionais)
+          ? state.phConfig.adicionais
+          : []
+      )
+        .filter(
+          (item) =>
+            item && item.ativo !== false && Number.isFinite(Number(item.preco)),
+        )
         .map((item) => ({
           id: `adicional:${String(item.id || item.nome)}`,
           categoria: "Adicionais",
@@ -12807,8 +13090,16 @@ ${printableOrderAddressHtml(order)}
       return [...meals, ...drinks, ...addons];
     }
 
-    const cups = (Array.isArray(state.operacao?.tamanhos) ? state.operacao.tamanhos : [])
-      .filter((item) => item && item.disponivel !== false && item.visivel !== false && Number.isFinite(Number(item.tamanho_ml)))
+    const cups = (
+      Array.isArray(state.operacao?.tamanhos) ? state.operacao.tamanhos : []
+    )
+      .filter(
+        (item) =>
+          item &&
+          item.disponivel !== false &&
+          item.visivel !== false &&
+          Number.isFinite(Number(item.tamanho_ml)),
+      )
       .sort((a, b) => Number(a.tamanho_ml) - Number(b.tamanho_ml))
       .map((item) => {
         const size = Number(item.tamanho_ml);
@@ -12848,20 +13139,27 @@ ${printableOrderAddressHtml(order)}
     // Em cardápios com vários produtos, cada variação usa um produto
     // diferente como destaque para não gerar sempre a mesma capa.
     if (snapshotItems.length) {
-      return snapshotItems[Math.abs(Number(variant) || 0) % snapshotItems.length] || snapshotItems[0];
+      return (
+        snapshotItems[Math.abs(Number(variant) || 0) % snapshotItems.length] ||
+        snapshotItems[0]
+      );
     }
 
     // Posts sem seleção de produto (Loja aberta, Delivery, Horários etc.)
     // também recebem um produto real da loja. O índice considera o tipo
     // do conteúdo + a variação, então tipos diferentes não ficam presos
     // ao mesmo copo.
-    const pool = conteudoMenuItems(snapshot?.estabelecimento)
-      .filter((item) => item && (item.heroImagem || item.imagem));
+    const pool = conteudoMenuItems(snapshot?.estabelecimento).filter(
+      (item) => item && (item.heroImagem || item.imagem),
+    );
 
     if (!pool.length) return null;
 
     const typeKeys = Object.keys(CONTEUDO_TYPE_META);
-    const typeIndex = Math.max(0, typeKeys.indexOf(String(snapshot?.tipo || "")));
+    const typeIndex = Math.max(
+      0,
+      typeKeys.indexOf(String(snapshot?.tipo || "")),
+    );
     const variation = Math.abs(Number(variant) || 0);
 
     if (snapshot?.estabelecimento === "azury") {
@@ -12869,10 +13167,17 @@ ${printableOrderAddressHtml(order)}
 
       // Alguns conteúdos alternam propositalmente entre copo e Box.
       if (boxIndex >= 0) {
-        if (["ultima_chamada", "agradecimento", "recompensas"].includes(snapshot?.tipo)) {
+        if (
+          ["ultima_chamada", "agradecimento", "recompensas"].includes(
+            snapshot?.tipo,
+          )
+        ) {
           return pool[boxIndex];
         }
-        if (["loja_aberta", "delivery", "horarios"].includes(snapshot?.tipo) && variation % 2 === 1) {
+        if (
+          ["loja_aberta", "delivery", "horarios"].includes(snapshot?.tipo) &&
+          variation % 2 === 1
+        ) {
           return pool[boxIndex];
         }
       }
@@ -12897,7 +13202,10 @@ ${printableOrderAddressHtml(order)}
       state.conteudoSelecionados = new Set(preferred ? [preferred.id] : []);
       return;
     }
-    const preferred = state.conteudoEstabelecimento === "ph_sabor_cia" ? items.filter((item) => item.principal) : items;
+    const preferred =
+      state.conteudoEstabelecimento === "ph_sabor_cia"
+        ? items.filter((item) => item.principal)
+        : items;
     const selected = preferred.length ? preferred : items.slice(0, 12);
     state.conteudoSelecionados = new Set(selected.map((item) => item.id));
   }
@@ -12915,10 +13223,14 @@ ${printableOrderAddressHtml(order)}
     el.conteudoPhButton?.classList.toggle("btn-secondary", isAzury);
     el.conteudoToolbar?.classList.toggle("company-block-azury", isAzury);
     el.conteudoToolbar?.classList.toggle("company-block-ph", !isAzury);
-    document.getElementById("section-conteudo")?.classList.toggle("company-block-ph", !isAzury);
-    document.querySelectorAll("[data-conteudo-azury-only='true']").forEach((node) => {
-      node.hidden = !isAzury;
-    });
+    document
+      .getElementById("section-conteudo")
+      ?.classList.toggle("company-block-ph", !isAzury);
+    document
+      .querySelectorAll("[data-conteudo-azury-only='true']")
+      .forEach((node) => {
+        node.hidden = !isAzury;
+      });
     if (!isAzury && conteudoTypeMeta().azuryOnly) {
       state.conteudoTipo = "cardapio_dia";
       conteudoResetSelectedItems();
@@ -12932,19 +13244,36 @@ ${printableOrderAddressHtml(order)}
 
   function updateConteudoTypeUI() {
     document.querySelectorAll("[data-conteudo-type]").forEach((button) => {
-      button.classList.toggle("active", button.dataset.conteudoType === state.conteudoTipo);
+      button.classList.toggle(
+        "active",
+        button.dataset.conteudoType === state.conteudoTipo,
+      );
     });
     const mode = conteudoSelectionMode();
     if (el.conteudoMenuOptions) el.conteudoMenuOptions.hidden = mode === "none";
     const title = document.getElementById("conteudoItemsTitle");
     const help = document.getElementById("conteudoItemsHelp");
-    if (title) title.textContent = mode === "single" ? "Produto da arte" : "Itens da arte";
-    if (help) help.textContent = mode === "single" ? "Escolha um produto para ser o destaque." : "Marque os itens que devem aparecer na publicação.";
-    if (el.conteudoSelectAllButton) el.conteudoSelectAllButton.hidden = mode !== "multi";
+    if (title)
+      title.textContent =
+        mode === "single" ? "Produto da arte" : "Itens da arte";
+    if (help)
+      help.textContent =
+        mode === "single"
+          ? "Escolha um produto para ser o destaque."
+          : "Marque os itens que devem aparecer na publicação.";
+    if (el.conteudoSelectAllButton)
+      el.conteudoSelectAllButton.hidden = mode !== "multi";
     renderConteudoCustomOptions();
   }
 
-  function conteudoCustomFieldHtml({ id, label, type = "text", placeholder = "", value = "", rows = 3 }) {
+  function conteudoCustomFieldHtml({
+    id,
+    label,
+    type = "text",
+    placeholder = "",
+    value = "",
+    rows = 3,
+  }) {
     if (type === "textarea") {
       return `<label class="conteudo-custom-field"><span>${escapeHtml(label)}</span><textarea id="${escapeHtml(id)}" rows="${rows}" placeholder="${escapeHtml(placeholder)}">${escapeHtml(value)}</textarea></label>`;
     }
@@ -12958,30 +13287,89 @@ ${printableOrderAddressHtml(order)}
     const fields = [];
     if (type === "promocao") {
       fields.push(
-        { id: "conteudoCustomTitle", label: "Chamada da promoção", placeholder: "Ex.: OFERTA RELÂMPAGO", value: "OFERTA DO DIA" },
-        { id: "conteudoPromoPrice", label: "Preço promocional", placeholder: "Ex.: R$ 10,00" },
-        { id: "conteudoCustomNote", label: "Validade / observação", placeholder: "Ex.: Hoje até 18h30 ou enquanto durar o estoque" },
+        {
+          id: "conteudoCustomTitle",
+          label: "Chamada da promoção",
+          placeholder: "Ex.: OFERTA RELÂMPAGO",
+          value: "OFERTA DO DIA",
+        },
+        {
+          id: "conteudoPromoPrice",
+          label: "Preço promocional",
+          placeholder: "Ex.: R$ 10,00",
+        },
+        {
+          id: "conteudoCustomNote",
+          label: "Validade / observação",
+          placeholder: "Ex.: Hoje até 18h30 ou enquanto durar o estoque",
+        },
       );
     } else if (["produto_destaque", "novidade"].includes(type)) {
-      fields.push({ id: "conteudoCustomNote", label: "Frase de apoio", placeholder: type === "novidade" ? "Ex.: Chegou novidade no nosso cardápio!" : "Ex.: Seu favorito de hoje merece destaque." });
+      fields.push({
+        id: "conteudoCustomNote",
+        label: "Frase de apoio",
+        placeholder:
+          type === "novidade"
+            ? "Ex.: Chegou novidade no nosso cardápio!"
+            : "Ex.: Seu favorito de hoje merece destaque.",
+      });
     } else if (type === "aviso") {
       fields.push(
-        { id: "conteudoCustomTitle", label: "Título", placeholder: "Ex.: AVISO IMPORTANTE", value: "AVISO IMPORTANTE" },
-        { id: "conteudoCustomMessage", label: "Mensagem", type: "textarea", placeholder: "Digite o comunicado que deve aparecer na arte." },
+        {
+          id: "conteudoCustomTitle",
+          label: "Título",
+          placeholder: "Ex.: AVISO IMPORTANTE",
+          value: "AVISO IMPORTANTE",
+        },
+        {
+          id: "conteudoCustomMessage",
+          label: "Mensagem",
+          type: "textarea",
+          placeholder: "Digite o comunicado que deve aparecer na arte.",
+        },
       );
     } else if (type === "manutencao") {
       fields.push(
-        { id: "conteudoCustomMessage", label: "Mensagem", type: "textarea", placeholder: "Ex.: Estamos fechados para manutenção." },
-        { id: "conteudoCustomNote", label: "Previsão de retorno", placeholder: "Ex.: Voltamos na terça-feira" },
+        {
+          id: "conteudoCustomMessage",
+          label: "Mensagem",
+          type: "textarea",
+          placeholder: "Ex.: Estamos fechados para manutenção.",
+        },
+        {
+          id: "conteudoCustomNote",
+          label: "Previsão de retorno",
+          placeholder: "Ex.: Voltamos na terça-feira",
+        },
       );
     } else if (type === "loja_fechada") {
-      fields.push({ id: "conteudoCustomNote", label: "Mensagem de retorno", placeholder: "Ex.: Voltamos amanhã às 11h" });
+      fields.push({
+        id: "conteudoCustomNote",
+        label: "Mensagem de retorno",
+        placeholder: "Ex.: Voltamos amanhã às 11h",
+      });
     } else if (type === "agradecimento") {
-      fields.push({ id: "conteudoCustomMessage", label: "Mensagem", type: "textarea", placeholder: "Ex.: Obrigado a todos que pediram com a gente hoje!" });
+      fields.push({
+        id: "conteudoCustomMessage",
+        label: "Mensagem",
+        type: "textarea",
+        placeholder: "Ex.: Obrigado a todos que pediram com a gente hoje!",
+      });
     } else if (type === "delivery") {
-      fields.push({ id: "conteudoCustomMessage", label: "Chamada", type: "textarea", placeholder: "Ex.: Monte seu pedido e receba sem sair de casa." });
+      fields.push({
+        id: "conteudoCustomMessage",
+        label: "Chamada",
+        type: "textarea",
+        placeholder: "Ex.: Monte seu pedido e receba sem sair de casa.",
+      });
     } else if (type === "recompensas") {
-      fields.push({ id: "conteudoCustomMessage", label: "Mensagem", type: "textarea", placeholder: "Ex.: Cadastre-se no site, acumule pontos e libere benefícios exclusivos." });
+      fields.push({
+        id: "conteudoCustomMessage",
+        label: "Mensagem",
+        type: "textarea",
+        placeholder:
+          "Ex.: Cadastre-se no site, acumule pontos e libere benefícios exclusivos.",
+      });
     }
     box.hidden = !fields.length;
     box.innerHTML = fields.length
@@ -12991,7 +13379,12 @@ ${printableOrderAddressHtml(order)}
 
   function conteudoReadCustomData() {
     const get = (id) => String(document.getElementById(id)?.value || "").trim();
-    return { title: get("conteudoCustomTitle"), message: get("conteudoCustomMessage"), note: get("conteudoCustomNote"), promoPrice: get("conteudoPromoPrice") };
+    return {
+      title: get("conteudoCustomTitle"),
+      message: get("conteudoCustomMessage"),
+      note: get("conteudoCustomNote"),
+      promoPrice: get("conteudoPromoPrice"),
+    };
   }
 
   function renderConteudoItems() {
@@ -13011,15 +13404,23 @@ ${printableOrderAddressHtml(order)}
       if (!groups.has(item.categoria)) groups.set(item.categoria, []);
       groups.get(item.categoria).push(item);
     });
-    el.conteudoItemsList.innerHTML = Array.from(groups.entries()).map(([category, rows]) => `
+    el.conteudoItemsList.innerHTML = Array.from(groups.entries())
+      .map(
+        ([category, rows]) => `
       <div class="conteudo-item-group">
         <strong class="conteudo-item-category">${escapeHtml(category)}</strong>
-        ${rows.map((item) => `
+        ${rows
+          .map(
+            (item) => `
           <label class="conteudo-item-row">
             <input type="${mode === "single" ? "radio" : "checkbox"}" name="${mode === "single" ? "conteudo-produto-unico" : `conteudo-${escapeHtml(category)}`}" data-conteudo-item="${escapeHtml(item.id)}" ${state.conteudoSelecionados.has(item.id) ? "checked" : ""}>
             <span class="conteudo-item-copy"><strong>${escapeHtml(item.nome)}</strong><small>${escapeHtml([item.detalhe, item.preco].filter(Boolean).join(" • "))}</small></span>
-          </label>`).join("")}
-      </div>`).join("");
+          </label>`,
+          )
+          .join("")}
+      </div>`,
+      )
+      .join("");
   }
 
   function conteudoHandleItemToggle(input) {
@@ -13046,20 +13447,34 @@ ${printableOrderAddressHtml(order)}
   function conteudoNextTemplate(forceNext = false) {
     const templates = CONTEUDO_TEMPLATES[state.conteudoTipo] || [];
     if (!templates.length) return `${state.conteudoTipo || "padrao"}-1`;
-    const relevant = (state.conteudoHistorico || []).filter((item) => item.estabelecimento === state.conteudoEstabelecimento && item.tipo === state.conteudoTipo && item.formato === state.conteudoFormato);
+    const relevant = (state.conteudoHistorico || []).filter(
+      (item) =>
+        item.estabelecimento === state.conteudoEstabelecimento &&
+        item.tipo === state.conteudoTipo &&
+        item.formato === state.conteudoFormato,
+    );
     if (forceNext && state.conteudoUltimaGeracao?.template_id) {
-      const currentIndex = templates.indexOf(state.conteudoUltimaGeracao.template_id);
+      const currentIndex = templates.indexOf(
+        state.conteudoUltimaGeracao.template_id,
+      );
       return templates[(Math.max(0, currentIndex) + 1) % templates.length];
     }
     const recent = relevant.slice(0, Math.min(3, templates.length - 1));
     const recentSet = new Set(recent.map((item) => item.template_id));
-    return templates.find((template) => !recentSet.has(template)) || templates[relevant.length % templates.length];
+    return (
+      templates.find((template) => !recentSet.has(template)) ||
+      templates[relevant.length % templates.length]
+    );
   }
 
   function updateConteudoVariationHint() {
     if (!el.conteudoVariationHint) return;
     const next = conteudoNextTemplate(false);
-    const recent = (state.conteudoHistorico || []).filter((item) => item.estabelecimento === state.conteudoEstabelecimento && item.tipo === state.conteudoTipo);
+    const recent = (state.conteudoHistorico || []).filter(
+      (item) =>
+        item.estabelecimento === state.conteudoEstabelecimento &&
+        item.tipo === state.conteudoTipo,
+    );
     el.conteudoVariationHint.textContent = recent.length
       ? `${conteudoTemplateLabel(next)} será usada agora. As últimas variações ficam fora da rotação.`
       : `${conteudoTemplateLabel(next)} será a primeira variação deste tipo.`;
@@ -13107,21 +13522,38 @@ ${printableOrderAddressHtml(order)}
   }
 
   function conteudoCanvasText(ctx, text, x, y, options = {}) {
-    const { font = "700 48px Arial, sans-serif", color = "#ffffff", align = "left", baseline = "alphabetic", maxWidth = null } = options;
+    const {
+      font = "700 48px Arial, sans-serif",
+      color = "#ffffff",
+      align = "left",
+      baseline = "alphabetic",
+      maxWidth = null,
+    } = options;
     ctx.font = font;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = baseline;
     let value = String(text || "");
     if (maxWidth) {
-      while (value.length > 1 && ctx.measureText(value).width > maxWidth) value = `${value.slice(0, -2).trim()}…`;
+      while (value.length > 1 && ctx.measureText(value).width > maxWidth)
+        value = `${value.slice(0, -2).trim()}…`;
     }
     ctx.fillText(value, x, y);
   }
 
-  function conteudoWrapText(ctx, text, x, y, maxWidth, lineHeight, options = {}) {
+  function conteudoWrapText(
+    ctx,
+    text,
+    x,
+    y,
+    maxWidth,
+    lineHeight,
+    options = {},
+  ) {
     if (options.font) ctx.font = options.font;
-    const words = String(text || "").split(/\s+/).filter(Boolean);
+    const words = String(text || "")
+      .split(/\s+/)
+      .filter(Boolean);
     const lines = [];
     let line = "";
     for (const word of words) {
@@ -13133,7 +13565,11 @@ ${printableOrderAddressHtml(order)}
     }
     if (line) lines.push(line);
     const maxLines = Number(options.maxLines || lines.length || 1);
-    lines.slice(0, maxLines).forEach((row, index) => conteudoCanvasText(ctx, row, x, y + index * lineHeight, options));
+    lines
+      .slice(0, maxLines)
+      .forEach((row, index) =>
+        conteudoCanvasText(ctx, row, x, y + index * lineHeight, options),
+      );
     return Math.min(lines.length, maxLines) * lineHeight;
   }
 
@@ -13164,24 +13600,40 @@ ${printableOrderAddressHtml(order)}
   function conteudoDrawBackground(ctx, width, height, company, variant) {
     const gradient = ctx.createLinearGradient(0, 0, width, height);
     gradient.addColorStop(0, company.dark);
-    gradient.addColorStop(.5, company.key === "azury" ? "#061a57" : "#472000");
+    gradient.addColorStop(0.5, company.key === "azury" ? "#061a57" : "#472000");
     gradient.addColorStop(1, "#03050c");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
     ctx.save();
-    ctx.globalAlpha = .16;
+    ctx.globalAlpha = 0.16;
     for (let i = 0; i < 6; i += 1) {
       ctx.strokeStyle = i % 2 ? company.brand : company.accent;
       ctx.lineWidth = 14 + i * 5;
       ctx.beginPath();
-      ctx.arc(variant % 2 ? width * .12 : width * .9, variant < 2 ? height * .1 : height * .86, 170 + i * 72, 0, Math.PI * 2);
+      ctx.arc(
+        variant % 2 ? width * 0.12 : width * 0.9,
+        variant < 2 ? height * 0.1 : height * 0.86,
+        170 + i * 72,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
     }
     ctx.restore();
 
-    const glow = ctx.createRadialGradient(width * .7, height * .4, 0, width * .7, height * .4, width * .55);
-    glow.addColorStop(0, company.key === "azury" ? "rgba(0,81,255,.32)" : "rgba(255,122,0,.28)");
+    const glow = ctx.createRadialGradient(
+      width * 0.7,
+      height * 0.4,
+      0,
+      width * 0.7,
+      height * 0.4,
+      width * 0.55,
+    );
+    glow.addColorStop(
+      0,
+      company.key === "azury" ? "rgba(0,81,255,.32)" : "rgba(255,122,0,.28)",
+    );
     glow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, width, height);
@@ -13206,13 +13658,22 @@ ${printableOrderAddressHtml(order)}
       ctx.stroke();
       ctx.fillRect(5 * scale, 34 * scale, 106 * scale, 6 * scale);
       ctx.restore();
-      conteudoCanvasText(ctx, "AZURY", x + 140 * scale, y + 38 * scale, { font: `900 ${44 * scale}px Arial Black, Arial, sans-serif`, color: "#ffffff" });
+      conteudoCanvasText(ctx, "AZURY", x + 140 * scale, y + 38 * scale, {
+        font: `900 ${44 * scale}px Arial Black, Arial, sans-serif`,
+        color: "#ffffff",
+      });
     } else {
       conteudoRoundRect(ctx, x, y, 78 * scale, 78 * scale, 22 * scale);
       ctx.fillStyle = company.brand;
       ctx.fill();
-      conteudoCanvasText(ctx, "PH", x + 39 * scale, y + 39 * scale, { font: `900 ${34 * scale}px Arial Black, Arial, sans-serif`, align: "center", baseline: "middle" });
-      conteudoCanvasText(ctx, "SABOR & CIA", x + 96 * scale, y + 48 * scale, { font: `900 ${30 * scale}px Arial Black, Arial, sans-serif` });
+      conteudoCanvasText(ctx, "PH", x + 39 * scale, y + 39 * scale, {
+        font: `900 ${34 * scale}px Arial Black, Arial, sans-serif`,
+        align: "center",
+        baseline: "middle",
+      });
+      conteudoCanvasText(ctx, "SABOR & CIA", x + 96 * scale, y + 48 * scale, {
+        font: `900 ${30 * scale}px Arial Black, Arial, sans-serif`,
+      });
     }
   }
 
@@ -13222,7 +13683,11 @@ ${printableOrderAddressHtml(order)}
     conteudoRoundRect(ctx, x, y, w, 54 * scale, 27 * scale);
     ctx.fillStyle = company.key === "azury" ? company.brand : company.brand;
     ctx.fill();
-    conteudoCanvasText(ctx, text, x + w / 2, y + 27 * scale, { font: `900 ${22 * scale}px Arial Black, Arial, sans-serif`, align: "center", baseline: "middle" });
+    conteudoCanvasText(ctx, text, x + w / 2, y + 27 * scale, {
+      font: `900 ${22 * scale}px Arial Black, Arial, sans-serif`,
+      align: "center",
+      baseline: "middle",
+    });
     return w;
   }
 
@@ -13236,32 +13701,88 @@ ${printableOrderAddressHtml(order)}
     conteudoRoundRect(ctx, x, y, w, h, h / 2);
     ctx.fillStyle = company.key === "azury" ? company.accent : company.brand;
     ctx.fill();
-    conteudoCanvasText(ctx, snapshot.company.cta.toUpperCase(), x + 34, y + h / 2, { font: `900 ${isPost ? 28 : 34}px Arial Black, Arial, sans-serif`, color: company.key === "azury" ? "#07143c" : "#ffffff", baseline: "middle" });
-    conteudoCanvasText(ctx, snapshot.company.contact || "", x + w - 34, y + h / 2, { font: `800 ${isPost ? 25 : 30}px Arial, sans-serif`, color: company.key === "azury" ? "#07143c" : "#ffffff", align: "right", baseline: "middle", maxWidth: w * .48 });
+    conteudoCanvasText(
+      ctx,
+      snapshot.company.cta.toUpperCase(),
+      x + 34,
+      y + h / 2,
+      {
+        font: `900 ${isPost ? 28 : 34}px Arial Black, Arial, sans-serif`,
+        color: company.key === "azury" ? "#07143c" : "#ffffff",
+        baseline: "middle",
+      },
+    );
+    conteudoCanvasText(
+      ctx,
+      snapshot.company.contact || "",
+      x + w - 34,
+      y + h / 2,
+      {
+        font: `800 ${isPost ? 25 : 30}px Arial, sans-serif`,
+        color: company.key === "azury" ? "#07143c" : "#ffffff",
+        align: "right",
+        baseline: "middle",
+        maxWidth: w * 0.48,
+      },
+    );
   }
 
-  async function conteudoDrawHeroProduct(ctx, snapshot, item, box, variant = 0) {
+  async function conteudoDrawHeroProduct(
+    ctx,
+    snapshot,
+    item,
+    box,
+    variant = 0,
+  ) {
     const company = snapshot.company;
     const resolvedItem = item || conteudoHeroItemForSnapshot(snapshot, variant);
     let src = resolvedItem?.heroImagem || resolvedItem?.imagem || "";
     if (!src && company.key === "azury") src = CONTEUDO_AZURY_IMAGES.hero;
     const image = await conteudoLoadImage(src);
     ctx.save();
-    const glow = ctx.createRadialGradient(box.x + box.w / 2, box.y + box.h * .58, 20, box.x + box.w / 2, box.y + box.h * .58, box.w * .58);
-    glow.addColorStop(0, company.key === "azury" ? "rgba(0,81,255,.65)" : "rgba(255,122,0,.55)");
+    const glow = ctx.createRadialGradient(
+      box.x + box.w / 2,
+      box.y + box.h * 0.58,
+      20,
+      box.x + box.w / 2,
+      box.y + box.h * 0.58,
+      box.w * 0.58,
+    );
+    glow.addColorStop(
+      0,
+      company.key === "azury" ? "rgba(0,81,255,.65)" : "rgba(255,122,0,.55)",
+    );
     glow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow;
-    ctx.fillRect(box.x - box.w * .2, box.y, box.w * 1.4, box.h);
+    ctx.fillRect(box.x - box.w * 0.2, box.y, box.w * 1.4, box.h);
     if (image) {
       ctx.shadowColor = "rgba(0,0,0,.55)";
       ctx.shadowBlur = 32;
       ctx.shadowOffsetY = 18;
       conteudoDrawImageContain(ctx, image, box.x, box.y, box.w, box.h);
     } else {
-      conteudoRoundRect(ctx, box.x + box.w * .15, box.y + box.h * .18, box.w * .7, box.h * .64, 42);
+      conteudoRoundRect(
+        ctx,
+        box.x + box.w * 0.15,
+        box.y + box.h * 0.18,
+        box.w * 0.7,
+        box.h * 0.64,
+        42,
+      );
       ctx.fillStyle = "rgba(255,255,255,.08)";
       ctx.fill();
-      conteudoCanvasText(ctx, company.key === "azury" ? "AÇAÍ" : "PH", box.x + box.w / 2, box.y + box.h / 2, { font: `900 ${Math.max(50, box.w * .12)}px Arial Black, Arial, sans-serif`, color: company.brand, align: "center", baseline: "middle" });
+      conteudoCanvasText(
+        ctx,
+        company.key === "azury" ? "AÇAÍ" : "PH",
+        box.x + box.w / 2,
+        box.y + box.h / 2,
+        {
+          font: `900 ${Math.max(50, box.w * 0.12)}px Arial Black, Arial, sans-serif`,
+          color: company.brand,
+          align: "center",
+          baseline: "middle",
+        },
+      );
     }
     ctx.restore();
   }
@@ -13271,19 +13792,54 @@ ${printableOrderAddressHtml(order)}
     const isPost = snapshot.formato === "post";
     const items = (snapshot.items || []).slice(0, isPost ? 10 : 12);
     const margin = isPost ? 58 : 70;
-    conteudoDrawBrand(ctx, company, margin, isPost ? 55 : 78, isPost ? .78 : .92);
-    conteudoDrawBadge(ctx, "CARDÁPIO DO DIA", margin, isPost ? 145 : 190, company, isPost ? .9 : 1);
+    conteudoDrawBrand(
+      ctx,
+      company,
+      margin,
+      isPost ? 55 : 78,
+      isPost ? 0.78 : 0.92,
+    );
+    conteudoDrawBadge(
+      ctx,
+      "CARDÁPIO DO DIA",
+      margin,
+      isPost ? 145 : 190,
+      company,
+      isPost ? 0.9 : 1,
+    );
 
     const heroLeft = variant % 2 === 1;
     const heroBox = isPost
       ? { x: heroLeft ? 36 : 595, y: 70, w: 410, h: 430 }
       : { x: heroLeft ? 28 : 565, y: 150, w: 450, h: 580 };
-    const heroItem = conteudoHeroItemForSnapshot(snapshot, variant) || items.find((item) => item.principal) || items[0];
+    const heroItem =
+      conteudoHeroItemForSnapshot(snapshot, variant) ||
+      items.find((item) => item.principal) ||
+      items[0];
     await conteudoDrawHeroProduct(ctx, snapshot, heroItem, heroBox, variant);
 
     const headingX = heroLeft ? (isPost ? 525 : 540) : margin;
-    conteudoCanvasText(ctx, company.key === "azury" ? "SEU AÇAÍ" : "SABOR DE CASA", headingX, isPost ? 270 : 330, { font: `900 ${isPost ? 60 : 72}px Arial Black, Arial, sans-serif`, maxWidth: heroLeft ? width - headingX - margin : width * .46 });
-    conteudoCanvasText(ctx, company.key === "azury" ? "DO SEU JEITO" : "TODO DIA", headingX, isPost ? 332 : 406, { font: `900 ${isPost ? 60 : 72}px Arial Black, Arial, sans-serif`, color: company.key === "azury" ? company.accent : company.brand2, maxWidth: heroLeft ? width - headingX - margin : width * .48 });
+    conteudoCanvasText(
+      ctx,
+      company.key === "azury" ? "SEU AÇAÍ" : "SABOR DE CASA",
+      headingX,
+      isPost ? 270 : 330,
+      {
+        font: `900 ${isPost ? 60 : 72}px Arial Black, Arial, sans-serif`,
+        maxWidth: heroLeft ? width - headingX - margin : width * 0.46,
+      },
+    );
+    conteudoCanvasText(
+      ctx,
+      company.key === "azury" ? "DO SEU JEITO" : "TODO DIA",
+      headingX,
+      isPost ? 332 : 406,
+      {
+        font: `900 ${isPost ? 60 : 72}px Arial Black, Arial, sans-serif`,
+        color: company.key === "azury" ? company.accent : company.brand2,
+        maxWidth: heroLeft ? width - headingX - margin : width * 0.48,
+      },
+    );
 
     const gridTop = isPost ? 520 : 760;
     const gridBottom = height - (isPost ? 185 : 235);
@@ -13293,7 +13849,13 @@ ${printableOrderAddressHtml(order)}
     const gridW = width - margin * 2;
     const cardW = (gridW - colGap) / 2;
     const rows = Math.max(1, Math.ceil(items.length / columns));
-    const cardH = Math.min(isPost ? 126 : 150, Math.max(isPost ? 92 : 116, (gridBottom - gridTop - gap * (rows - 1)) / rows));
+    const cardH = Math.min(
+      isPost ? 126 : 150,
+      Math.max(
+        isPost ? 92 : 116,
+        (gridBottom - gridTop - gap * (rows - 1)) / rows,
+      ),
+    );
 
     for (let i = 0; i < items.length; i += 1) {
       const item = items[i];
@@ -13304,17 +13866,36 @@ ${printableOrderAddressHtml(order)}
       conteudoRoundRect(ctx, x, y, cardW, cardH, 28);
       ctx.fillStyle = "rgba(7,15,36,.88)";
       ctx.fill();
-      ctx.strokeStyle = i % 4 === variant ? company.brand : "rgba(255,255,255,.14)";
+      ctx.strokeStyle =
+        i % 4 === variant ? company.brand : "rgba(255,255,255,.14)";
       ctx.lineWidth = 2;
       ctx.stroke();
 
       const thumbW = cardH - 16;
       const image = await conteudoLoadImage(item.imagem);
-      if (image) conteudoDrawImageContain(ctx, image, x + 8, y + 8, thumbW, thumbW);
+      if (image)
+        conteudoDrawImageContain(ctx, image, x + 8, y + 8, thumbW, thumbW);
       const tx = x + (image ? thumbW + 18 : 20);
-      conteudoCanvasText(ctx, item.nome, tx, y + cardH * .35, { font: `900 ${isPost ? 22 : 27}px Arial Black, Arial, sans-serif`, maxWidth: cardW - (tx - x) - 18 });
-      conteudoCanvasText(ctx, item.detalhe || item.categoria, tx, y + cardH * .61, { font: `600 ${isPost ? 16 : 19}px Arial, sans-serif`, color: "rgba(255,255,255,.66)", maxWidth: cardW - (tx - x) - 18 });
-      conteudoCanvasText(ctx, item.preco, x + cardW - 18, y + cardH - 18, { font: `900 ${isPost ? 23 : 28}px Arial Black, Arial, sans-serif`, color: company.key === "azury" ? company.accent : company.brand2, align: "right" });
+      conteudoCanvasText(ctx, item.nome, tx, y + cardH * 0.35, {
+        font: `900 ${isPost ? 22 : 27}px Arial Black, Arial, sans-serif`,
+        maxWidth: cardW - (tx - x) - 18,
+      });
+      conteudoCanvasText(
+        ctx,
+        item.detalhe || item.categoria,
+        tx,
+        y + cardH * 0.61,
+        {
+          font: `600 ${isPost ? 16 : 19}px Arial, sans-serif`,
+          color: "rgba(255,255,255,.66)",
+          maxWidth: cardW - (tx - x) - 18,
+        },
+      );
+      conteudoCanvasText(ctx, item.preco, x + cardW - 18, y + cardH - 18, {
+        font: `900 ${isPost ? 23 : 28}px Arial Black, Arial, sans-serif`,
+        color: company.key === "azury" ? company.accent : company.brand2,
+        align: "right",
+      });
     }
     conteudoDrawCta(ctx, snapshot, width, height);
   }
@@ -13327,8 +13908,21 @@ ${printableOrderAddressHtml(order)}
     const item = snapshot.items?.[0] || null;
     const custom = snapshot.custom || {};
     const margin = isPost ? 58 : 70;
-    conteudoDrawBrand(ctx, company, margin, isPost ? 50 : 74, isPost ? .78 : .92);
-    conteudoDrawBadge(ctx, meta.badge || "HOJE", margin, isPost ? 150 : 190, company, isPost ? .9 : 1);
+    conteudoDrawBrand(
+      ctx,
+      company,
+      margin,
+      isPost ? 50 : 74,
+      isPost ? 0.78 : 0.92,
+    );
+    conteudoDrawBadge(
+      ctx,
+      meta.badge || "HOJE",
+      margin,
+      isPost ? 150 : 190,
+      company,
+      isPost ? 0.9 : 1,
+    );
 
     let title = custom.title || meta.title;
     let line1 = title;
@@ -13343,9 +13937,17 @@ ${printableOrderAddressHtml(order)}
     const heroLeft = variant % 2 === 1;
     const titleY = isPost ? 290 : 350;
     const titleX = heroLeft ? (isPost ? 540 : 555) : margin;
-    const titleWidth = heroLeft ? width - titleX - margin : width * .62;
-    conteudoCanvasText(ctx, line1, titleX, titleY, { font: `900 ${isPost ? 67 : 84}px Arial Black, Arial, sans-serif`, maxWidth: titleWidth });
-    if (line2) conteudoCanvasText(ctx, line2, titleX, titleY + (isPost ? 72 : 92), { font: `900 ${isPost ? 67 : 84}px Arial Black, Arial, sans-serif`, color: company.key === "azury" ? company.accent : company.brand2, maxWidth: titleWidth });
+    const titleWidth = heroLeft ? width - titleX - margin : width * 0.62;
+    conteudoCanvasText(ctx, line1, titleX, titleY, {
+      font: `900 ${isPost ? 67 : 84}px Arial Black, Arial, sans-serif`,
+      maxWidth: titleWidth,
+    });
+    if (line2)
+      conteudoCanvasText(ctx, line2, titleX, titleY + (isPost ? 72 : 92), {
+        font: `900 ${isPost ? 67 : 84}px Arial Black, Arial, sans-serif`,
+        color: company.key === "azury" ? company.accent : company.brand2,
+        maxWidth: titleWidth,
+      });
 
     const heroBox = isPost
       ? { x: heroLeft ? 28 : 535, y: 230, w: 500, h: 650 }
@@ -13355,7 +13957,10 @@ ${printableOrderAddressHtml(order)}
     let message = custom.message || custom.note || "";
     let stat = "";
     if (type === "loja_aberta") {
-      message = company.key === "azury" ? "Seu açaí do seu jeito, com os complementos que você ama." : "Comida caseira, pedido rápido e sabor de verdade.";
+      message =
+        company.key === "azury"
+          ? "Seu açaí do seu jeito, com os complementos que você ama."
+          : "Comida caseira, pedido rápido e sabor de verdade.";
       stat = snapshot.schedule?.label || "Consulte o horário";
     } else if (type === "promocao") {
       message = custom.note || "Aproveite hoje e faça seu pedido.";
@@ -13368,45 +13973,85 @@ ${printableOrderAddressHtml(order)}
       stat = item?.preco || "Já disponível";
     } else if (type === "ultima_chamada") {
       message = "Não deixa para amanhã: ainda dá tempo de pedir hoje.";
-      stat = snapshot.schedule?.fechamento ? `Até ${snapshot.schedule.fechamento}` : "Últimos pedidos";
+      stat = snapshot.schedule?.fechamento
+        ? `Até ${snapshot.schedule.fechamento}`
+        : "Últimos pedidos";
     } else if (type === "loja_fechada") {
-      message = custom.note || "Obrigado por mais um dia com a gente. Em breve estaremos de volta.";
+      message =
+        custom.note ||
+        "Obrigado por mais um dia com a gente. Em breve estaremos de volta.";
       stat = "Pedidos encerrados";
     } else if (type === "agradecimento") {
-      message = custom.message || "Obrigado a cada cliente que escolheu a gente hoje. Até o próximo pedido!";
+      message =
+        custom.message ||
+        "Obrigado a cada cliente que escolheu a gente hoje. Até o próximo pedido!";
       stat = "Gratidão 💙";
     } else if (type === "aviso") {
-      message = custom.message || "Confira as informações atualizadas antes de fazer seu pedido.";
+      message =
+        custom.message ||
+        "Confira as informações atualizadas antes de fazer seu pedido.";
       stat = "Fique por dentro";
     } else if (type === "horarios") {
       message = "Planeje seu pedido e aproveite nosso horário de atendimento.";
       stat = snapshot.schedule?.label || "Consulte o horário";
     } else if (type === "delivery") {
-      message = custom.message || (company.key === "azury" ? "Monte seu açaí pelo site e receba sem sair de casa." : "Escolha sua refeição e chame a gente no WhatsApp.");
+      message =
+        custom.message ||
+        (company.key === "azury"
+          ? "Monte seu açaí pelo site e receba sem sair de casa."
+          : "Escolha sua refeição e chame a gente no WhatsApp.");
       stat = "Faça seu pedido";
     } else if (type === "manutencao") {
-      message = custom.message || "Estamos em uma pausa temporária para manutenção.";
+      message =
+        custom.message || "Estamos em uma pausa temporária para manutenção.";
       stat = custom.note || "Voltamos em breve";
     } else if (type === "recompensas") {
-      message = custom.message || "Cadastre-se no site, acumule pontos e desbloqueie benefícios exclusivos da Azury.";
+      message =
+        custom.message ||
+        "Cadastre-se no site, acumule pontos e desbloqueie benefícios exclusivos da Azury.";
       stat = "Cadastro gratuito";
     }
 
     const infoY = isPost ? 840 : 1220;
     const infoX = heroLeft ? (isPost ? 410 : 360) : margin;
-    const infoW = heroLeft ? width - infoX - margin : (isPost ? 660 : 720);
+    const infoW = heroLeft ? width - infoX - margin : isPost ? 660 : 720;
     conteudoRoundRect(ctx, infoX, infoY, infoW, isPost ? 260 : 330, 38);
-    const cardGrad = ctx.createLinearGradient(infoX, infoY, infoX + infoW, infoY);
+    const cardGrad = ctx.createLinearGradient(
+      infoX,
+      infoY,
+      infoX + infoW,
+      infoY,
+    );
     cardGrad.addColorStop(0, "rgba(8,18,45,.95)");
-    cardGrad.addColorStop(1, company.key === "azury" ? "rgba(0,81,255,.28)" : "rgba(255,122,0,.24)");
+    cardGrad.addColorStop(
+      1,
+      company.key === "azury" ? "rgba(0,81,255,.28)" : "rgba(255,122,0,.24)",
+    );
     ctx.fillStyle = cardGrad;
     ctx.fill();
-    ctx.strokeStyle = company.key === "azury" ? "rgba(0,81,255,.75)" : "rgba(255,122,0,.75)";
+    ctx.strokeStyle =
+      company.key === "azury" ? "rgba(0,81,255,.75)" : "rgba(255,122,0,.75)";
     ctx.lineWidth = 2;
     ctx.stroke();
-    conteudoCanvasText(ctx, stat, infoX + 34, infoY + (isPost ? 60 : 76), { font: `900 ${isPost ? 38 : 48}px Arial Black, Arial, sans-serif`, color: company.key === "azury" ? company.accent : company.brand2, maxWidth: infoW - 68 });
+    conteudoCanvasText(ctx, stat, infoX + 34, infoY + (isPost ? 60 : 76), {
+      font: `900 ${isPost ? 38 : 48}px Arial Black, Arial, sans-serif`,
+      color: company.key === "azury" ? company.accent : company.brand2,
+      maxWidth: infoW - 68,
+    });
     ctx.font = `600 ${isPost ? 25 : 31}px Arial, sans-serif`;
-    conteudoWrapText(ctx, message, infoX + 34, infoY + (isPost ? 112 : 145), infoW - 68, isPost ? 36 : 45, { font: `600 ${isPost ? 25 : 31}px Arial, sans-serif`, color: "rgba(255,255,255,.88)", maxLines: isPost ? 3 : 4 });
+    conteudoWrapText(
+      ctx,
+      message,
+      infoX + 34,
+      infoY + (isPost ? 112 : 145),
+      infoW - 68,
+      isPost ? 36 : 45,
+      {
+        font: `600 ${isPost ? 25 : 31}px Arial, sans-serif`,
+        color: "rgba(255,255,255,.88)",
+        maxLines: isPost ? 3 : 4,
+      },
+    );
     conteudoDrawCta(ctx, snapshot, width, height);
   }
 
@@ -13419,8 +14064,20 @@ ${printableOrderAddressHtml(order)}
     const company = conteudoCompanyMeta();
     conteudoDrawBackground(ctx, canvas.width, canvas.height, company, 0);
     conteudoDrawBrand(ctx, company, 70, 90, 1);
-    conteudoCanvasText(ctx, "PRONTO PARA CRIAR", 70, canvas.height * .46, { font: "900 78px Arial Black, Arial, sans-serif" });
-    conteudoCanvasText(ctx, "Escolha o tipo e gere uma arte no padrão da loja.", 70, canvas.height * .46 + 70, { font: "600 30px Arial, sans-serif", color: "rgba(255,255,255,.72)", maxWidth: 850 });
+    conteudoCanvasText(ctx, "PRONTO PARA CRIAR", 70, canvas.height * 0.46, {
+      font: "900 78px Arial Black, Arial, sans-serif",
+    });
+    conteudoCanvasText(
+      ctx,
+      "Escolha o tipo e gere uma arte no padrão da loja.",
+      70,
+      canvas.height * 0.46 + 70,
+      {
+        font: "600 30px Arial, sans-serif",
+        color: "rgba(255,255,255,.72)",
+        maxWidth: 850,
+      },
+    );
   }
 
   async function renderConteudoCanvas(snapshot) {
@@ -13430,32 +14087,62 @@ ${printableOrderAddressHtml(order)}
     canvas.width = 1080;
     canvas.height = isPost ? 1350 : 1920;
     const ctx = canvas.getContext("2d");
-    const company = snapshot.company || conteudoCompanyMeta(snapshot.estabelecimento);
+    const company =
+      snapshot.company || conteudoCompanyMeta(snapshot.estabelecimento);
     snapshot.company = company;
     const variant = conteudoTemplateIndex(snapshot.template_id);
     conteudoDrawBackground(ctx, canvas.width, canvas.height, company, variant);
-    if (snapshot.tipo === "cardapio_dia") await conteudoDrawMenu(ctx, snapshot, canvas.width, canvas.height, variant);
-    else await conteudoDrawMarketing(ctx, snapshot, canvas.width, canvas.height, variant);
+    if (snapshot.tipo === "cardapio_dia")
+      await conteudoDrawMenu(
+        ctx,
+        snapshot,
+        canvas.width,
+        canvas.height,
+        variant,
+      );
+    else
+      await conteudoDrawMarketing(
+        ctx,
+        snapshot,
+        canvas.width,
+        canvas.height,
+        variant,
+      );
   }
 
   function renderConteudoHistory() {
     if (!el.conteudoHistoryList) return;
-    const items = (state.conteudoHistorico || []).filter((item) => item.estabelecimento === state.conteudoEstabelecimento);
+    const items = (state.conteudoHistorico || []).filter(
+      (item) => item.estabelecimento === state.conteudoEstabelecimento,
+    );
     if (!items.length) {
       el.conteudoHistoryList.innerHTML = `<div class="empty-state">Nenhuma arte registrada para esta loja ainda.</div>`;
       return;
     }
-    el.conteudoHistoryList.innerHTML = items.slice(0, 40).map((item) => {
-      const typeLabel = CONTEUDO_TYPE_META[item.tipo]?.label || item.tipo || "Conteúdo";
-      const formatLabel = item.formato === "post" ? "Post" : "Story / Status";
-      const date = item.data_uso ? new Date(`${item.data_uso}T12:00:00`).toLocaleDateString("pt-BR") : "—";
-      return `<div class="conteudo-history-item"><div class="conteudo-history-main"><span class="conteudo-used-badge">Usada</span><strong>${escapeHtml(typeLabel)}</strong><small>${escapeHtml(date)} • ${escapeHtml(formatLabel)} • ${escapeHtml(conteudoTemplateLabel(item.template_id))}</small></div><div class="conteudo-history-actions"><button class="btn btn-small btn-secondary" data-conteudo-open-history="${escapeHtml(item.id)}" type="button">Abrir</button><button class="btn btn-small btn-ghost" data-conteudo-delete-history="${escapeHtml(item.id)}" type="button">Excluir</button></div></div>`;
-    }).join("");
+    el.conteudoHistoryList.innerHTML = items
+      .slice(0, 40)
+      .map((item) => {
+        const typeLabel =
+          CONTEUDO_TYPE_META[item.tipo]?.label || item.tipo || "Conteúdo";
+        const formatLabel = item.formato === "post" ? "Post" : "Story / Status";
+        const date = item.data_uso
+          ? new Date(`${item.data_uso}T12:00:00`).toLocaleDateString("pt-BR")
+          : "—";
+        return `<div class="conteudo-history-item"><div class="conteudo-history-main"><span class="conteudo-used-badge">Usada</span><strong>${escapeHtml(typeLabel)}</strong><small>${escapeHtml(date)} • ${escapeHtml(formatLabel)} • ${escapeHtml(conteudoTemplateLabel(item.template_id))}</small></div><div class="conteudo-history-actions"><button class="btn btn-small btn-secondary" data-conteudo-open-history="${escapeHtml(item.id)}" type="button">Abrir</button><button class="btn btn-small btn-ghost" data-conteudo-delete-history="${escapeHtml(item.id)}" type="button">Excluir</button></div></div>`;
+      })
+      .join("");
   }
 
   async function loadConteudoHistorico() {
-    const data = await rpc("listar_conteudo_admin", { p_estabelecimento: state.conteudoEstabelecimento, p_limite: 120 });
-    state.conteudoHistorico = Array.isArray(data) ? data : Array.isArray(data?.geracoes) ? data.geracoes : [];
+    const data = await rpc("listar_conteudo_admin", {
+      p_estabelecimento: state.conteudoEstabelecimento,
+      p_limite: 120,
+    });
+    state.conteudoHistorico = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.geracoes)
+        ? data.geracoes
+        : [];
     renderConteudoHistory();
     updateConteudoVariationHint();
   }
@@ -13464,26 +14151,36 @@ ${printableOrderAddressHtml(order)}
     if (!el.conteudoCanvas) return;
     updateConteudoCompanyUI();
     updateConteudoTypeUI();
-    if (resetSelection || !(state.conteudoSelecionados instanceof Set) || (conteudoSelectionMode() !== "none" && !state.conteudoSelecionados.size)) conteudoResetSelectedItems();
-    if (el.conteudoFormatSelect) el.conteudoFormatSelect.value = state.conteudoFormato;
+    if (
+      resetSelection ||
+      !(state.conteudoSelecionados instanceof Set) ||
+      (conteudoSelectionMode() !== "none" && !state.conteudoSelecionados.size)
+    )
+      conteudoResetSelectedItems();
+    if (el.conteudoFormatSelect)
+      el.conteudoFormatSelect.value = state.conteudoFormato;
     renderConteudoItems();
     renderConteudoHistory();
     updateConteudoVariationHint();
     renderConteudoCanvasPlaceholder();
-    if (el.conteudoDownloadButton) el.conteudoDownloadButton.disabled = !state.conteudoUltimaGeracao;
-    if (el.conteudoVariationButton) el.conteudoVariationButton.disabled = !state.conteudoUltimaGeracao;
+    if (el.conteudoDownloadButton)
+      el.conteudoDownloadButton.disabled = !state.conteudoUltimaGeracao;
+    if (el.conteudoVariationButton)
+      el.conteudoVariationButton.disabled = !state.conteudoUltimaGeracao;
   }
 
   async function loadConteudo() {
     if (!state.operacao) state.operacao = await rpc("listar_operacao_admin");
-    if (!state.phConfig) state.phConfig = await rpc("obter_configuracao_ph_admin");
+    if (!state.phConfig)
+      state.phConfig = await rpc("obter_configuracao_ph_admin");
     conteudoResetSelectedItems();
     await loadConteudoHistorico();
     renderConteudoSection(false);
   }
 
   async function setConteudoEstabelecimento(estabelecimento) {
-    state.conteudoEstabelecimento = estabelecimento === "ph_sabor_cia" ? "ph_sabor_cia" : "azury";
+    state.conteudoEstabelecimento =
+      estabelecimento === "ph_sabor_cia" ? "ph_sabor_cia" : "azury";
     state.conteudoUltimaGeracao = null;
     updateConteudoCompanyUI();
     conteudoResetSelectedItems();
@@ -13497,21 +14194,43 @@ ${printableOrderAddressHtml(order)}
 
   async function generateConteudo(forceNext = false) {
     const meta = conteudoTypeMeta();
-    const items = conteudoSelectionMode() === "none" ? [] : conteudoSelectedItems();
+    const items =
+      conteudoSelectionMode() === "none" ? [] : conteudoSelectedItems();
     const maxItems = state.conteudoFormato === "post" ? 10 : 12;
-    if (meta.azuryOnly && state.conteudoEstabelecimento === "ph_sabor_cia") throw new Error("Este tipo de conteúdo é exclusivo da Azury.");
+    if (meta.azuryOnly && state.conteudoEstabelecimento === "ph_sabor_cia")
+      throw new Error("Este tipo de conteúdo é exclusivo da Azury.");
     if (meta.requiresOpen) {
-      if (!conteudoOrdersActive()) throw new Error("Os pedidos desta loja estão pausados. Ative a loja antes de gerar este conteúdo.");
-      if (conteudoCurrentSchedule().ativo === false) throw new Error("Hoje está marcado como dia fechado para esta loja.");
+      if (!conteudoOrdersActive())
+        throw new Error(
+          "Os pedidos desta loja estão pausados. Ative a loja antes de gerar este conteúdo.",
+        );
+      if (conteudoCurrentSchedule().ativo === false)
+        throw new Error("Hoje está marcado como dia fechado para esta loja.");
     }
-    if (conteudoSelectionMode() === "single" && items.length !== 1) throw new Error("Escolha um produto para esta arte.");
-    if (conteudoSelectionMode() === "multi" && !items.length) throw new Error("Marque pelo menos um item para esta arte.");
-    if (items.length > maxItems) throw new Error(`Para manter o post legível, selecione no máximo ${maxItems} itens neste formato.`);
-    if (state.conteudoTipo === "aviso" && !conteudoReadCustomData().message) throw new Error("Digite a mensagem do comunicado antes de gerar.");
+    if (conteudoSelectionMode() === "single" && items.length !== 1)
+      throw new Error("Escolha um produto para esta arte.");
+    if (conteudoSelectionMode() === "multi" && !items.length)
+      throw new Error("Marque pelo menos um item para esta arte.");
+    if (items.length > maxItems)
+      throw new Error(
+        `Para manter o post legível, selecione no máximo ${maxItems} itens neste formato.`,
+      );
+    if (state.conteudoTipo === "aviso" && !conteudoReadCustomData().message)
+      throw new Error("Digite a mensagem do comunicado antes de gerar.");
 
     const templateId = conteudoNextTemplate(forceNext);
     const snapshot = conteudoSnapshot(templateId);
-    const signature = conteudoSimpleHash(JSON.stringify({ estabelecimento: snapshot.estabelecimento, tipo: snapshot.tipo, formato: snapshot.formato, template_id: snapshot.template_id, data_uso: snapshot.data_uso, items: snapshot.items, custom: snapshot.custom }));
+    const signature = conteudoSimpleHash(
+      JSON.stringify({
+        estabelecimento: snapshot.estabelecimento,
+        tipo: snapshot.tipo,
+        formato: snapshot.formato,
+        template_id: snapshot.template_id,
+        data_uso: snapshot.data_uso,
+        items: snapshot.items,
+        custom: snapshot.custom,
+      }),
+    );
 
     if (el.conteudoGenerateButton) {
       el.conteudoGenerateButton.disabled = true;
@@ -13519,12 +14238,26 @@ ${printableOrderAddressHtml(order)}
     }
     try {
       await renderConteudoCanvas(snapshot);
-      const saved = await rpc("registrar_conteudo_admin", { p_dados: { estabelecimento: snapshot.estabelecimento, tipo: snapshot.tipo, formato: snapshot.formato, template_id: snapshot.template_id, data_uso: snapshot.data_uso, assinatura: signature, dados_snapshot: snapshot } });
+      const saved = await rpc("registrar_conteudo_admin", {
+        p_dados: {
+          estabelecimento: snapshot.estabelecimento,
+          tipo: snapshot.tipo,
+          formato: snapshot.formato,
+          template_id: snapshot.template_id,
+          data_uso: snapshot.data_uso,
+          assinatura: signature,
+          dados_snapshot: snapshot,
+        },
+      });
       state.conteudoUltimaGeracao = snapshot;
       if (el.conteudoDownloadButton) el.conteudoDownloadButton.disabled = false;
-      if (el.conteudoVariationButton) el.conteudoVariationButton.disabled = false;
+      if (el.conteudoVariationButton)
+        el.conteudoVariationButton.disabled = false;
       await loadConteudoHistorico();
-      showMessage(`${CONTEUDO_TYPE_META[snapshot.tipo]?.label || "Conteúdo"} gerado e registrado no histórico.`, "success");
+      showMessage(
+        `${CONTEUDO_TYPE_META[snapshot.tipo]?.label || "Conteúdo"} gerado e registrado no histórico.`,
+        "success",
+      );
       return saved;
     } finally {
       if (el.conteudoGenerateButton) {
@@ -13545,7 +14278,8 @@ ${printableOrderAddressHtml(order)}
       }
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      const store = snapshot.estabelecimento === "ph_sabor_cia" ? "ph" : "azury";
+      const store =
+        snapshot.estabelecimento === "ph_sabor_cia" ? "ph" : "azury";
       const type = String(snapshot.tipo || "conteudo").replaceAll("_", "-");
       link.href = url;
       link.download = `${store}-${type}-${snapshot.data_uso}.png`;
@@ -13557,7 +14291,9 @@ ${printableOrderAddressHtml(order)}
   }
 
   function openConteudoHistory(id) {
-    const entry = (state.conteudoHistorico || []).find((item) => String(item.id) === String(id));
+    const entry = (state.conteudoHistorico || []).find(
+      (item) => String(item.id) === String(id),
+    );
     const snapshot = entry?.dados_snapshot;
     if (!entry || !snapshot) {
       showMessage("Não foi possível abrir os dados desta arte.", "error");
@@ -13567,16 +14303,23 @@ ${printableOrderAddressHtml(order)}
     state.conteudoFormato = snapshot.formato || entry.formato || "story";
     state.conteudoUltimaGeracao = snapshot;
     updateConteudoTypeUI();
-    if (el.conteudoFormatSelect) el.conteudoFormatSelect.value = state.conteudoFormato;
-    renderConteudoCanvas(snapshot).then(() => {
-      if (el.conteudoDownloadButton) el.conteudoDownloadButton.disabled = false;
-      if (el.conteudoVariationButton) el.conteudoVariationButton.disabled = false;
-      showMessage("Arte do histórico aberta na prévia.");
-    }).catch((error) => showMessage(error.message, "error"));
+    if (el.conteudoFormatSelect)
+      el.conteudoFormatSelect.value = state.conteudoFormato;
+    renderConteudoCanvas(snapshot)
+      .then(() => {
+        if (el.conteudoDownloadButton)
+          el.conteudoDownloadButton.disabled = false;
+        if (el.conteudoVariationButton)
+          el.conteudoVariationButton.disabled = false;
+        showMessage("Arte do histórico aberta na prévia.");
+      })
+      .catch((error) => showMessage(error.message, "error"));
   }
 
   async function deleteConteudoHistory(id) {
-    const entry = (state.conteudoHistorico || []).find((item) => String(item.id) === String(id));
+    const entry = (state.conteudoHistorico || []).find(
+      (item) => String(item.id) === String(id),
+    );
     if (!entry) return;
     const label = CONTEUDO_TYPE_META[entry.tipo]?.label || "conteúdo";
     openModal({
@@ -13593,7 +14336,6 @@ ${printableOrderAddressHtml(order)}
       },
     });
   }
-
 
   function setSidebarOpen(open) {
     const shouldOpen = Boolean(open);
@@ -14056,7 +14798,10 @@ ${printableOrderAddressHtml(order)}
   updatePushNotificationButton();
 
   restoreOrderSoundPreference().catch((error) => {
-    console.info("O som será retomado após uma interação permitida pelo navegador.", error);
+    console.info(
+      "O som será retomado após uma interação permitida pelo navegador.",
+      error,
+    );
   });
 
   const restorePersistentDevicePreferences = () => {
@@ -14064,8 +14809,12 @@ ${printableOrderAddressHtml(order)}
     void restorePreferredPushAfterInteraction();
   };
 
-  document.addEventListener("pointerdown", restorePersistentDevicePreferences, { passive: true });
-  document.addEventListener("touchstart", restorePersistentDevicePreferences, { passive: true });
+  document.addEventListener("pointerdown", restorePersistentDevicePreferences, {
+    passive: true,
+  });
+  document.addEventListener("touchstart", restorePersistentDevicePreferences, {
+    passive: true,
+  });
   document.addEventListener("keydown", restorePersistentDevicePreferences);
 
   el.loginForm.addEventListener("submit", handleLogin);
@@ -14541,7 +15290,9 @@ ${printableOrderAddressHtml(order)}
 
       if (conteudoCompanyButton) {
         setConteudoEstabelecimento(
-          conteudoCompanyButton.id === "conteudoPhButton" ? "ph_sabor_cia" : "azury",
+          conteudoCompanyButton.id === "conteudoPhButton"
+            ? "ph_sabor_cia"
+            : "azury",
         ).catch((error) => showMessage(error.message, "error"));
         return;
       }
@@ -14549,35 +15300,49 @@ ${printableOrderAddressHtml(order)}
       const conteudoTypeButton = event.target.closest("[data-conteudo-type]");
 
       if (conteudoTypeButton) {
-        state.conteudoTipo = conteudoTypeButton.dataset.conteudoType || "cardapio_dia";
+        state.conteudoTipo =
+          conteudoTypeButton.dataset.conteudoType || "cardapio_dia";
         state.conteudoUltimaGeracao = null;
         conteudoResetSelectedItems();
         updateConteudoTypeUI();
         renderConteudoItems();
         updateConteudoVariationHint();
         renderConteudoCanvasPlaceholder();
-        if (el.conteudoDownloadButton) el.conteudoDownloadButton.disabled = true;
-        if (el.conteudoVariationButton) el.conteudoVariationButton.disabled = true;
+        if (el.conteudoDownloadButton)
+          el.conteudoDownloadButton.disabled = true;
+        if (el.conteudoVariationButton)
+          el.conteudoVariationButton.disabled = true;
         return;
       }
 
       if (event.target.closest("#conteudoSelectAllButton")) {
         if (conteudoSelectionMode() !== "multi") return;
         const items = conteudoMenuItems();
-        const allSelected = items.length && items.every((item) => state.conteudoSelecionados.has(item.id));
-        state.conteudoSelecionados = allSelected ? new Set() : new Set(items.map((item) => item.id));
+        const allSelected =
+          items.length &&
+          items.every((item) => state.conteudoSelecionados.has(item.id));
+        state.conteudoSelecionados = allSelected
+          ? new Set()
+          : new Set(items.map((item) => item.id));
         renderConteudoItems();
-        if (el.conteudoSelectAllButton) el.conteudoSelectAllButton.textContent = allSelected ? "Marcar todos" : "Desmarcar todos";
+        if (el.conteudoSelectAllButton)
+          el.conteudoSelectAllButton.textContent = allSelected
+            ? "Marcar todos"
+            : "Desmarcar todos";
         return;
       }
 
       if (event.target.closest("#conteudoGenerateButton")) {
-        generateConteudo(false).catch((error) => showMessage(error.message, "error"));
+        generateConteudo(false).catch((error) =>
+          showMessage(error.message, "error"),
+        );
         return;
       }
 
       if (event.target.closest("#conteudoVariationButton")) {
-        generateConteudo(true).catch((error) => showMessage(error.message, "error"));
+        generateConteudo(true).catch((error) =>
+          showMessage(error.message, "error"),
+        );
         return;
       }
 
@@ -14593,17 +15358,21 @@ ${printableOrderAddressHtml(order)}
         return;
       }
 
-      const conteudoOpenHistory = event.target.closest("[data-conteudo-open-history]");
+      const conteudoOpenHistory = event.target.closest(
+        "[data-conteudo-open-history]",
+      );
       if (conteudoOpenHistory) {
         openConteudoHistory(conteudoOpenHistory.dataset.conteudoOpenHistory);
         return;
       }
 
-      const conteudoDeleteHistory = event.target.closest("[data-conteudo-delete-history]");
+      const conteudoDeleteHistory = event.target.closest(
+        "[data-conteudo-delete-history]",
+      );
       if (conteudoDeleteHistory) {
-        deleteConteudoHistory(conteudoDeleteHistory.dataset.conteudoDeleteHistory).catch(
-          (error) => showMessage(error.message, "error"),
-        );
+        deleteConteudoHistory(
+          conteudoDeleteHistory.dataset.conteudoDeleteHistory,
+        ).catch((error) => showMessage(error.message, "error"));
         return;
       }
 
@@ -14814,12 +15583,15 @@ ${printableOrderAddressHtml(order)}
       }
 
       if (event.target === el.conteudoFormatSelect) {
-        state.conteudoFormato = el.conteudoFormatSelect.value === "post" ? "post" : "story";
+        state.conteudoFormato =
+          el.conteudoFormatSelect.value === "post" ? "post" : "story";
         state.conteudoUltimaGeracao = null;
         renderConteudoCanvasPlaceholder();
         updateConteudoVariationHint();
-        if (el.conteudoDownloadButton) el.conteudoDownloadButton.disabled = true;
-        if (el.conteudoVariationButton) el.conteudoVariationButton.disabled = true;
+        if (el.conteudoDownloadButton)
+          el.conteudoDownloadButton.disabled = true;
+        if (el.conteudoVariationButton)
+          el.conteudoVariationButton.disabled = true;
         return;
       }
 
@@ -14838,7 +15610,6 @@ ${printableOrderAddressHtml(order)}
 
         row.querySelector("[data-close]").disabled = !active.checked;
       }
-
 
       const phActive = event.target.closest("[data-ph-active]");
 
@@ -14889,10 +15660,7 @@ ${printableOrderAddressHtml(order)}
       .sort((a, b) => a.ateKm - b.ateKm);
 
     const storeCep = String(
-      address.cep ||
-        store.cep ||
-        state.phConfig?.cep ||
-        "04433050",
+      address.cep || store.cep || state.phConfig?.cep || "04433050",
     )
       .replace(/\D/g, "")
       .slice(0, 8);
@@ -14994,15 +15762,25 @@ ${printableOrderAddressHtml(order)}
   }
 
   function buildManualPhClientAddressCandidates(formNode) {
-    const street = String(formNode.querySelector('[name="rua"]')?.value || "").trim();
-    const number = String(formNode.querySelector('[name="numero"]')?.value || "").trim();
-    const district = String(formNode.querySelector('[name="bairro"]')?.value || "").trim();
-    const cep = String(formNode.querySelector('[name="cep"]')?.value || "").trim();
+    const street = String(
+      formNode.querySelector('[name="rua"]')?.value || "",
+    ).trim();
+    const number = String(
+      formNode.querySelector('[name="numero"]')?.value || "",
+    ).trim();
+    const district = String(
+      formNode.querySelector('[name="bairro"]')?.value || "",
+    ).trim();
+    const cep = String(
+      formNode.querySelector('[name="cep"]')?.value || "",
+    ).trim();
     const city = String(formNode.dataset.manualCepCity || "São Paulo").trim();
     const stateCode = String(formNode.dataset.manualCepState || "SP").trim();
 
     return [
-      [street, number, district, city, stateCode, "Brasil"].filter(Boolean).join(", "),
+      [street, number, district, city, stateCode, "Brasil"]
+        .filter(Boolean)
+        .join(", "),
       [street, number, city, stateCode, "Brasil"].filter(Boolean).join(", "),
       [street, district, city, stateCode, "Brasil"].filter(Boolean).join(", "),
       [cep, number, city, stateCode, "Brasil"].filter(Boolean).join(", "),
@@ -15198,7 +15976,10 @@ ${printableOrderAddressHtml(order)}
       try {
         coordinates = await geocodeManualCep(store.cep);
       } catch (error) {
-        console.warn("CEP da PH não pôde ser geolocalizado; usando endereço.", error);
+        console.warn(
+          "CEP da PH não pôde ser geolocalizado; usando endereço.",
+          error,
+        );
       }
     }
 
@@ -15221,8 +16002,12 @@ ${printableOrderAddressHtml(order)}
 
   async function getManualPhClientCoordinates(formNode) {
     const cep = manualPhCepDigits(formNode);
-    const street = String(formNode.querySelector('[name="rua"]')?.value || "").trim();
-    const number = String(formNode.querySelector('[name="numero"]')?.value || "").trim();
+    const street = String(
+      formNode.querySelector('[name="rua"]')?.value || "",
+    ).trim();
+    const number = String(
+      formNode.querySelector('[name="numero"]')?.value || "",
+    ).trim();
 
     if (street && number) {
       try {
@@ -15281,7 +16066,9 @@ ${printableOrderAddressHtml(order)}
     const earthRadiusKm = 6371;
     const radians = (degrees) => (degrees * Math.PI) / 180;
     const latitudeDifference = radians(destination.latitude - origin.latitude);
-    const longitudeDifference = radians(destination.longitude - origin.longitude);
+    const longitudeDifference = radians(
+      destination.longitude - origin.longitude,
+    );
     const originLatitude = radians(origin.latitude);
     const destinationLatitude = radians(destination.latitude);
 
@@ -15326,7 +16113,9 @@ ${printableOrderAddressHtml(order)}
 
     const calculationVersion = ++manualPhDeliveryVersion;
     const feeInput = formNode.querySelector('[name="taxa_entrega"]');
-    const number = String(formNode.querySelector('[name="numero"]')?.value || "").trim();
+    const number = String(
+      formNode.querySelector('[name="numero"]')?.value || "",
+    ).trim();
 
     formNode.dataset.phDeliveryCalculating = "true";
     feeInput?.setAttribute("aria-busy", "true");
@@ -15376,7 +16165,8 @@ ${printableOrderAddressHtml(order)}
         feeInput.dispatchEvent(new Event("change", { bubbles: true }));
       }
 
-      const approximate = result.aproximada || clientCoordinates.aproximadaPorCep;
+      const approximate =
+        result.aproximada || clientCoordinates.aproximadaPorCep;
       const detail = !number
         ? " • estimada pelo CEP; informe o número para refinar"
         : approximate
@@ -15457,7 +16247,9 @@ ${printableOrderAddressHtml(order)}
     );
 
     if (feeInput) {
-      feeInput.value = Number(district?.taxa || 0).toFixed(2).replace(".", ",");
+      feeInput.value = Number(district?.taxa || 0)
+        .toFixed(2)
+        .replace(".", ",");
     }
 
     setManualDeliveryStatus(
@@ -15498,8 +16290,9 @@ ${printableOrderAddressHtml(order)}
       if (
         candidateForm?.querySelector("[data-manual-establishment]") &&
         ["numero", "rua", "bairro"].includes(String(cepInput?.name || "")) &&
-        String(candidateForm.querySelector('[name="estabelecimento"]')?.value || "") ===
-          "ph_sabor_cia"
+        String(
+          candidateForm.querySelector('[name="estabelecimento"]')?.value || "",
+        ) === "ph_sabor_cia"
       ) {
         invalidateManualPhDelivery(candidateForm);
         scheduleManualPhDelivery(candidateForm);
@@ -15530,8 +16323,9 @@ ${printableOrderAddressHtml(order)}
         delete formNode.dataset.manualCepState;
 
         if (
-          String(formNode.querySelector('[name="estabelecimento"]')?.value || "") ===
-          "ph_sabor_cia"
+          String(
+            formNode.querySelector('[name="estabelecimento"]')?.value || "",
+          ) === "ph_sabor_cia"
         ) {
           invalidateManualPhDelivery(
             formNode,
@@ -15544,8 +16338,9 @@ ${printableOrderAddressHtml(order)}
 
       if (cepInput.dataset.cepConsultado === digits) {
         if (
-          String(formNode.querySelector('[name="estabelecimento"]')?.value || "") ===
-          "ph_sabor_cia"
+          String(
+            formNode.querySelector('[name="estabelecimento"]')?.value || "",
+          ) === "ph_sabor_cia"
         ) {
           scheduleManualPhDelivery(formNode);
         }
@@ -15581,7 +16376,9 @@ ${printableOrderAddressHtml(order)}
           formNode.dataset.manualCepState = String(address.uf || "SP").trim();
 
           if (establishment === "azury") {
-            const district = findManualOrderDistrictByName(address.bairro || "");
+            const district = findManualOrderDistrictByName(
+              address.bairro || "",
+            );
 
             if (district) {
               if (districtInput) {
@@ -15632,8 +16429,9 @@ ${printableOrderAddressHtml(order)}
           console.error(error);
 
           if (
-            String(formNode.querySelector('[name="estabelecimento"]')?.value || "") ===
-            "ph_sabor_cia"
+            String(
+              formNode.querySelector('[name="estabelecimento"]')?.value || "",
+            ) === "ph_sabor_cia"
           ) {
             invalidateManualPhDelivery(
               formNode,
