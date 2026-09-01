@@ -1148,9 +1148,9 @@
 
     ["azury-box-p", 4],
 
-    ["azury-box-m", 5],
+    ["azury-box-m", 4],
 
-    ["azury-box-g", 6],
+    ["azury-box-g", 5],
   ]);
 
   const AZURY_BOXES_DEFAULTS = [
@@ -1170,7 +1170,7 @@
       label: "M",
       nome: "Azury Box M",
       preco: 25,
-      limite: 5,
+      limite: 4,
       disponivel: true,
       visivel: true,
       ordem: 2,
@@ -1181,7 +1181,7 @@
       label: "G",
       nome: "Azury Box G",
       preco: 35,
-      limite: 6,
+      limite: 5,
       disponivel: true,
       visivel: true,
       ordem: 3,
@@ -1257,6 +1257,16 @@
 
     return AZURY_SPECIAL_COMPLEMENT_TERMS.some((term) =>
       key.includes(normalizeKey(term)),
+    );
+  }
+
+  const AZURY_BOX_PAID_COMPLEMENT_TERMS = ["nutella", "morango"];
+
+  function azuryBoxComplementIsAlwaysPaid(name) {
+    const key = normalizeKey(name);
+
+    return AZURY_BOX_PAID_COMPLEMENT_TERMS.some(
+      (term) => key === normalizeKey(term) || key.includes(normalizeKey(term)),
     );
   }
 
@@ -1648,7 +1658,7 @@
 
     const eligible =
       descriptor.tipo === "azury_box"
-        ? selected
+        ? selected.filter((item) => !azuryBoxComplementIsAlwaysPaid(item.nome))
         : selected.filter((item) => !item.especial);
 
     const freeSet = new Set(
@@ -1658,9 +1668,13 @@
     let extras = 0;
 
     selected.forEach((item) => {
+      const boxAlwaysPaid =
+        descriptor.tipo === "azury_box" &&
+        azuryBoxComplementIsAlwaysPaid(item.nome);
+
       const paid =
         descriptor.tipo === "azury_box"
-          ? !freeSet.has(item.input)
+          ? boxAlwaysPaid || !freeSet.has(item.input)
           : item.especial || !freeSet.has(item.input);
 
       item.preco_cobrado = paid ? item.preco : 0;
@@ -1748,11 +1762,21 @@
         const price = Number(input.dataset.complementPrice || 0);
 
         if (descriptor.tipo === "azury_box") {
-          rule.textContent = `Incluído dentro do limite • Extra ${formatMoney(
-            price,
-          )}`;
+          if (
+            azuryBoxComplementIsAlwaysPaid(input.dataset.complementName || "")
+          ) {
+            rule.textContent = `Adicional pago • ${formatMoney(
+              price,
+            )} • não ocupa vaga`;
 
-          rule.classList.remove("is-special");
+            rule.classList.add("is-special");
+          } else {
+            rule.textContent = `Incluído dentro do limite • Extra ${formatMoney(
+              price,
+            )}`;
+
+            rule.classList.remove("is-special");
+          }
         } else if (special) {
           rule.textContent = `Especial pago • ${formatMoney(price)}`;
 
@@ -2948,7 +2972,15 @@
 
     const establishment = String(form.get("estabelecimento") || "azury").trim();
 
+    const atendimento =
+      String(form.get("atendimento") || "entrega")
+        .trim()
+        .toLowerCase() === "retirada"
+        ? "retirada"
+        : "entrega";
+
     if (
+      atendimento === "entrega" &&
       establishment === "ph_sabor_cia" &&
       formNode.dataset.phDeliveryCalculating === "true"
     ) {
@@ -2972,25 +3004,31 @@
         ? rows.map(buildManualPhItem)
         : rows.map(buildManualAzuryItem);
 
-    const districtName = String(form.get("bairro") || "").trim();
+    const districtName =
+      atendimento === "entrega" ? String(form.get("bairro") || "").trim() : "";
 
     const districtKey = normalizeKey(districtName);
 
-    const district = (state.operacao?.bairros || []).find((item) => {
-      const itemKey = normalizeKey(item.nome);
+    const district =
+      atendimento === "entrega"
+        ? (state.operacao?.bairros || []).find((item) => {
+            const itemKey = normalizeKey(item.nome);
 
-      const aliases = Array.isArray(item.aliases) ? item.aliases : [];
+            const aliases = Array.isArray(item.aliases) ? item.aliases : [];
 
-      return (
-        itemKey === districtKey ||
-        aliases.some((alias) => normalizeKey(alias) === districtKey)
-      );
-    });
+            return (
+              itemKey === districtKey ||
+              aliases.some((alias) => normalizeKey(alias) === districtKey)
+            );
+          })
+        : null;
 
     const payment = String(form.get("forma_pagamento") || "");
 
     const payload = {
       estabelecimento: establishment,
+
+      atendimento,
 
       cliente_nome: String(form.get("cliente_nome") || "").trim(),
 
@@ -3012,20 +3050,31 @@
             : null
           : null,
 
-      bairro_entrega_id: district?.id || null,
+      bairro_entrega_id:
+        atendimento === "entrega" ? district?.id || null : null,
 
-      cep: String(form.get("cep") || "").trim(),
+      cep:
+        atendimento === "entrega" ? String(form.get("cep") || "").trim() : "",
 
-      rua: String(form.get("rua") || "").trim(),
+      rua:
+        atendimento === "entrega" ? String(form.get("rua") || "").trim() : "",
 
-      numero: String(form.get("numero") || "").trim(),
+      numero:
+        atendimento === "entrega"
+          ? String(form.get("numero") || "").trim()
+          : "",
 
       bairro: districtName,
 
       complemento_endereco:
-        String(form.get("complemento_endereco") || "").trim() || null,
+        atendimento === "entrega"
+          ? String(form.get("complemento_endereco") || "").trim() || null
+          : null,
 
-      taxa_entrega: parseMoneyInput(form.get("taxa_entrega")),
+      taxa_entrega:
+        atendimento === "entrega"
+          ? parseMoneyInput(form.get("taxa_entrega"))
+          : 0,
 
       desconto: parseMoneyInput(form.get("desconto")),
 
@@ -3187,6 +3236,13 @@
     const storeName =
       establishment === "ph_sabor_cia" ? "PH Sabor & Cia" : "Azury";
 
+    const atendimento =
+      String(payload?.atendimento || "entrega")
+        .trim()
+        .toLowerCase() === "retirada"
+        ? "retirada"
+        : "entrega";
+
     const items = Array.isArray(payload?.itens) ? payload.itens : [];
 
     const productsTotal = items.reduce(
@@ -3196,7 +3252,8 @@
       0,
     );
 
-    const deliveryFee = Number(payload?.taxa_entrega || 0);
+    const deliveryFee =
+      atendimento === "entrega" ? Number(payload?.taxa_entrega || 0) : 0;
 
     const discount = Number(payload?.desconto || 0);
 
@@ -3231,6 +3288,18 @@
       ? "Assim que o comprovante for enviado, conseguimos confirmar o pedido e seguir com o preparo. __AZURY_BLUE_HEART__"
       : "Se estiver tudo certo, responda *CONFIRMO* para iniciarmos o preparo. __AZURY_CHECK__";
 
+    const atendimentoLines =
+      atendimento === "entrega"
+        ? [
+            "*Entrega*",
+            deliveryAddress || "Endereço não informado",
+            zip ? `CEP ${zip}` : null,
+            payload?.complemento_endereco
+              ? `Complemento: ${payload.complemento_endereco}`
+              : null,
+          ]
+        : ["*Atendimento*", "Retirada / sem entrega"];
+
     const lines = [
       "__AZURY_RECEIPT__ *CONFIRMAÇÃO DO PEDIDO*",
 
@@ -3250,15 +3319,7 @@
 
       "",
 
-      "*Entrega*",
-
-      deliveryAddress || "Endereço não informado",
-
-      zip ? `CEP ${zip}` : null,
-
-      payload?.complemento_endereco
-        ? `Complemento: ${payload.complemento_endereco}`
-        : null,
+      ...atendimentoLines,
 
       payload?.observacoes ? `Observações: ${payload.observacoes}` : null,
 
@@ -3278,7 +3339,9 @@
 
       `Produtos: ${formatMoney(productsTotal)}`,
 
-      `Entrega: ${formatMoney(deliveryFee)}`,
+      atendimento === "entrega"
+        ? `Entrega: ${formatMoney(deliveryFee)}`
+        : "Entrega: R$ 0,00",
 
       discount > 0 ? `Desconto: -${formatMoney(discount)}` : null,
 
@@ -3410,6 +3473,28 @@
         <label class="modal-field">
 
           <span>
+            Atendimento
+          </span>
+
+          <select
+            name="atendimento"
+            data-manual-attendance
+            required
+          >
+            <option value="entrega" selected>
+              Entrega
+            </option>
+
+            <option value="retirada">
+              Retirada / sem entrega
+            </option>
+          </select>
+
+        </label>
+
+        <label class="modal-field">
+
+          <span>
             Nome do cliente
           </span>
 
@@ -3514,7 +3599,7 @@
 
         </label>
 
-        <label class="modal-field">
+        <label class="modal-field" data-manual-delivery-field>
 
           <span>
             CEP
@@ -3528,7 +3613,7 @@
 
         </label>
 
-        <label class="modal-field">
+        <label class="modal-field" data-manual-delivery-field>
 
           <span>
             Rua / Avenida
@@ -3541,7 +3626,7 @@
 
         </label>
 
-        <label class="modal-field">
+        <label class="modal-field" data-manual-delivery-field>
 
           <span>
             Número
@@ -3554,7 +3639,7 @@
 
         </label>
 
-        <label class="modal-field">
+        <label class="modal-field" data-manual-delivery-field>
 
           <span>
             Bairro
@@ -3582,7 +3667,7 @@
 
         </label>
 
-        <label class="modal-field">
+        <label class="modal-field" data-manual-delivery-field>
 
           <span>
             Complemento do endereço
@@ -3595,7 +3680,7 @@
 
         </label>
 
-        <label class="modal-field">
+        <label class="modal-field" data-manual-delivery-field>
 
           <span>
             Taxa de entrega
@@ -3769,6 +3854,8 @@
     document.body.style.overflow = "hidden";
 
     resetManualItemsForEstablishment(state.ordersEstabelecimento);
+
+    updateManualAttendance(el.dynamicModalForm);
 
     refreshManualDeliveryForEstablishment(
       el.dynamicModalForm,
@@ -15503,9 +15590,31 @@ ${printableOrderAddressHtml(order)}
       if (manualEstablishment) {
         resetManualItemsForEstablishment(manualEstablishment.value);
 
+        updateManualAttendance(
+          manualEstablishment.closest("#dynamicModalForm"),
+        );
+
         refreshManualDeliveryForEstablishment(
           manualEstablishment.closest("#dynamicModalForm"),
           manualEstablishment.value,
+        );
+
+        return;
+      }
+
+      const manualAttendance = event.target.closest("[data-manual-attendance]");
+
+      if (manualAttendance) {
+        const formNode = manualAttendance.closest("#dynamicModalForm");
+
+        updateManualAttendance(formNode);
+
+        refreshManualDeliveryForEstablishment(
+          formNode,
+          String(
+            formNode?.querySelector('[name="estabelecimento"]')?.value ||
+              "azury",
+          ),
         );
 
         return;
@@ -15724,6 +15833,68 @@ ${printableOrderAddressHtml(order)}
     }
   }
 
+  function manualOrderIsDelivery(formNode) {
+    return (
+      String(
+        formNode?.querySelector('[name="atendimento"]')?.value || "entrega",
+      )
+        .trim()
+        .toLowerCase() !== "retirada"
+    );
+  }
+
+  function updateManualAttendance(formNode) {
+    if (!formNode) {
+      return;
+    }
+
+    const deliveryActive = manualOrderIsDelivery(formNode);
+
+    formNode
+      .querySelectorAll("[data-manual-delivery-field]")
+      .forEach((field) => {
+        field.hidden = !deliveryActive;
+      });
+
+    ["cep", "rua", "numero", "bairro", "taxa_entrega"].forEach((name) => {
+      const input = formNode.querySelector(`[name="${name}"]`);
+
+      if (!input) {
+        return;
+      }
+
+      input.required = deliveryActive;
+      input.disabled = !deliveryActive;
+    });
+
+    const complementInput = formNode.querySelector(
+      '[name="complemento_endereco"]',
+    );
+
+    if (complementInput) {
+      complementInput.disabled = !deliveryActive;
+    }
+
+    if (!deliveryActive) {
+      invalidateManualPhDelivery(formNode);
+
+      const feeInput = formNode.querySelector('[name="taxa_entrega"]');
+
+      if (feeInput) {
+        feeInput.value = "0,00";
+      }
+
+      delete formNode.dataset.manualCepCity;
+      delete formNode.dataset.manualCepState;
+
+      setManualDeliveryStatus(
+        formNode,
+        "Retirada / sem entrega • taxa R$ 0,00.",
+        "success",
+      );
+    }
+  }
+
   function manualPhCepDigits(formNode) {
     return String(formNode?.querySelector('[name="cep"]')?.value || "")
       .replace(/\D/g, "")
@@ -15731,7 +15902,7 @@ ${printableOrderAddressHtml(order)}
   }
 
   function manualPhAddressReady(formNode) {
-    if (!formNode) {
+    if (!formNode || !manualOrderIsDelivery(formNode)) {
       return false;
     }
 
@@ -16225,6 +16396,20 @@ ${printableOrderAddressHtml(order)}
 
     const feeInput = formNode.querySelector('[name="taxa_entrega"]');
 
+    if (!manualOrderIsDelivery(formNode)) {
+      if (feeInput) {
+        feeInput.value = "0,00";
+      }
+
+      setManualDeliveryStatus(
+        formNode,
+        "Retirada / sem entrega • taxa R$ 0,00.",
+        "success",
+      );
+
+      return;
+    }
+
     if (establishment === "ph_sabor_cia") {
       if (feeInput) {
         feeInput.value = "0,00";
@@ -16286,6 +16471,16 @@ ${printableOrderAddressHtml(order)}
     (event) => {
       const cepInput = event.target;
       const candidateForm = cepInput?.closest?.("#dynamicModalForm");
+
+      if (
+        candidateForm?.querySelector("[data-manual-establishment]") &&
+        !manualOrderIsDelivery(candidateForm) &&
+        ["cep", "numero", "rua", "bairro"].includes(
+          String(cepInput?.name || ""),
+        )
+      ) {
+        return;
+      }
 
       if (
         candidateForm?.querySelector("[data-manual-establishment]") &&
