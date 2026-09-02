@@ -89,8 +89,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     [500, 3],
     [700, 4],
     ["azury-box-p", 4],
-    ["azury-box-m", 5],
-    ["azury-box-g", 6],
+    ["azury-box-m", 4],
+    ["azury-box-g", 5],
   ]);
 
   const CUP_PRODUCT_NAMES = new Map([
@@ -109,6 +109,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     "power ball",
   ];
 
+  const BOX_ALWAYS_PAID_COMPLEMENT_TERMS = ["nutella", "morango"];
+
   const AZURY_BOX_DEFAULTS = [
     {
       key: "azury-box-p",
@@ -125,7 +127,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       label: "M",
       nome: "Azury Box M",
       preco: 25,
-      limite: 5,
+      limite: 4,
       disponivel: true,
       visivel: true,
       ordem: 2,
@@ -135,7 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       label: "G",
       nome: "Azury Box G",
       preco: 35,
-      limite: 6,
+      limite: 5,
       disponivel: true,
       visivel: true,
       ordem: 3,
@@ -391,6 +393,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   };
 
+  const isAlwaysPaidBoxComplement = (name) => {
+    const normalizedName = norm(name);
+
+    return BOX_ALWAYS_PAID_COMPLEMENT_TERMS.some((term) =>
+      normalizedName.includes(term),
+    );
+  };
+
+  const isPaidComplementForProduct = (name, product) =>
+    isAzuryBoxProduct(product)
+      ? isAlwaysPaidBoxComplement(name)
+      : isAlwaysPaidComplement(name);
+
   function priceComplements(complements, product) {
     const limit = freeComplementLimit(product);
     const boxMode = isAzuryBoxProduct(product);
@@ -438,11 +453,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         a.primeiro_indice - b.primeiro_indice,
     );
 
-    const eligible = boxMode
-      ? uniqueComplements
-      : uniqueComplements.filter(
-          (complement) => !isAlwaysPaidComplement(complement.nome),
-        );
+    const eligible = uniqueComplements.filter(
+      (complement) => !isPaidComplementForProduct(complement.nome, product),
+    );
 
     const freeKeys = new Set(
       eligible.slice(0, limit).map((complement) => complement.key),
@@ -451,7 +464,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return rows.map((row) => {
       const key = norm(row.nome);
       const group = groups.get(key);
-      const alwaysPaid = !boxMode && isAlwaysPaidComplement(row.nome);
+      const alwaysPaid = isPaidComplementForProduct(row.nome, product);
       const free = !alwaysPaid && freeKeys.has(key);
       const firstOccurrence = !group || row._index === group.primeiro_indice;
       const { _index, ...clean } = row;
@@ -3611,7 +3624,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       title.textContent = boxMode ? "Monte sua Azury Box" : "Monte seu açaí";
     if (description) {
       description.textContent = boxMode
-        ? "Escolha o tamanho da Box e seus complementos. Dentro do limite, todos os complementos disponíveis podem ser escolhidos sem custo adicional."
+        ? "Escolha o tamanho da Box e seus complementos. Nutella e morango são adicionais pagos e não ocupam vaga no limite da Box."
         : "Escolha o tamanho, os complementos e monte do seu jeito.";
     }
     if (sizeTitle)
@@ -3629,7 +3642,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     if (structureDetail) {
       structureDetail.textContent = boxMode
-        ? "Cada tipo de complemento conta uma vez. Somente os que passarem do limite da Box são cobrados como extras."
+        ? "Os complementos comuns ocupam as vagas da Box. Nutella e morango são cobrados à parte e não ocupam vaga."
         : "Escolher “Nos dois” continua contando como um único complemento.";
     }
     if (subtotalLabel)
@@ -3638,7 +3651,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         : "Subtotal deste açaí";
     if (help) {
       help.innerHTML = boxMode
-        ? `Escolha seus complementos. <strong>Todos entram no limite da Box</strong>, inclusive os especiais. Somente os adicionais acima do limite são cobrados.`
+        ? `Escolha seus complementos. <strong>Nutella e morango são adicionais pagos</strong> e não ocupam nenhuma vaga. Os demais entram no limite da Box e só geram extra ao ultrapassar esse limite.`
         : `Escolha o complemento <strong>uma vez</strong> e defina onde ele vai: meio, cobertura ou nos dois. <strong>“Nos dois” continua contando como 1 complemento.</strong>`;
     }
     if (counterTitle)
@@ -3655,10 +3668,38 @@ document.addEventListener("DOMContentLoaded", async () => {
               : "Complementos grátis / extras",
           ),
         );
-    }
-    if (specialHeader) specialHeader.hidden = boxMode;
 
-    d.middle?.querySelectorAll(".complemento-card").forEach((card) => {
+      const regularText = regularHeader.querySelector("small");
+      if (regularText) {
+        regularText.textContent = boxMode
+          ? "Entram no limite da Box. Depois do limite, o valor extra é cobrado."
+          : "Entram no limite grátis do seu açaí. Depois do limite, o valor extra é cobrado.";
+      }
+    }
+
+    if (specialHeader) {
+      specialHeader.hidden = false;
+
+      const specialTitle = specialHeader.querySelector("strong");
+      if (specialTitle) {
+        specialTitle.textContent = boxMode
+          ? "Adicionais pagos"
+          : "Especiais pagos";
+      }
+
+      const specialText = specialHeader.querySelector("small");
+      if (specialText) {
+        specialText.textContent = boxMode
+          ? "Na Box, somente Nutella e morango são cobrados à parte e não ocupam vaga."
+          : "São cobrados à parte e não ocupam nenhuma vaga dos complementos grátis.";
+      }
+    }
+
+    const cards = Array.from(
+      d.middle?.querySelectorAll(".complemento-card") || [],
+    );
+
+    cards.forEach((card) => {
       const input = card.querySelector(".complemento-monte-seu");
       const name = input?.value || "";
       const current = state.complements.find(
@@ -3666,21 +3707,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
       const info = card.querySelector(".complemento-card-info small");
       const layers = card.querySelector(".complemento-camadas");
+      const special = isPaidComplementForProduct(name, product);
 
       if (layers) layers.hidden = boxMode;
-      card.classList.toggle(
-        "especial-pago",
-        !boxMode && isAlwaysPaidComplement(name),
-      );
+      card.classList.toggle("especial-pago", special);
 
       if (info && current) {
-        const special = isAlwaysPaidComplement(name);
-        info.textContent = boxMode
-          ? `Incluído dentro do limite • Extra ${money(current.preco)}`
-          : special
-            ? `Adicional pago • ${money(current.preco)}`
+        info.textContent = special
+          ? `Adicional pago • ${money(current.preco)}`
+          : boxMode
+            ? `Incluído dentro do limite • Extra ${money(current.preco)}`
             : `Grátis dentro do limite • Extra ${money(current.preco)}`;
-        info.classList.toggle("especial", !boxMode && special);
+        info.classList.toggle("especial", special);
+      }
+
+      if (input) {
+        input.dataset.especialPago = special ? "true" : "false";
       }
 
       card.querySelectorAll(".complemento-camada").forEach((layerInput) => {
@@ -3690,6 +3732,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       });
     });
+
+    if (d.middle && regularHeader && specialHeader) {
+      cards
+        .filter((card) => {
+          const input = card.querySelector(".complemento-monte-seu");
+          return !isPaidComplementForProduct(input?.value || "", product);
+        })
+        .forEach((card) => d.middle.insertBefore(card, specialHeader));
+
+      cards
+        .filter((card) => {
+          const input = card.querySelector(".complemento-monte-seu");
+          return isPaidComplementForProduct(input?.value || "", product);
+        })
+        .forEach((card) => d.middle.appendChild(card));
+    }
 
     calculate();
   }
@@ -5574,7 +5632,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const eligibleKeys = new Set(
       (complements || [])
         .filter(
-          (complement) => boxMode || !isAlwaysPaidComplement(complement.nome),
+          (complement) => !isPaidComplementForProduct(complement.nome, product),
         )
         .map((complement) => norm(complement.nome))
         .filter(Boolean),
