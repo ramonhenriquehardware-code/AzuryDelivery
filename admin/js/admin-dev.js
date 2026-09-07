@@ -3086,8 +3086,52 @@
     return payload;
   }
 
-  async function submitManualOrder(formNode) {
+  async function buildManualOrderPayloadWithCoordinates(formNode) {
     const payload = buildManualOrderPayload(formNode);
+
+    if (payload.atendimento !== "entrega") {
+      return payload;
+    }
+
+    const street = String(
+      formNode.querySelector('[name="rua"]')?.value || "",
+    ).trim();
+    const number = String(
+      formNode.querySelector('[name="numero"]')?.value || "",
+    ).trim();
+
+    if (!street || !number) {
+      throw new Error(
+        "Informe rua e número para localizar o endereço da entrega no mapa.",
+      );
+    }
+
+    let coordinates;
+
+    try {
+      const exactCandidates =
+        buildManualPhClientAddressCandidates(formNode).slice(0, 2);
+
+      coordinates = await geocodeManualWithAttempts(exactCandidates);
+    } catch (error) {
+      console.error(
+        "Não foi possível geolocalizar o endereço do pedido manual:",
+        error,
+      );
+
+      throw new Error(
+        "Não foi possível localizar o endereço da entrega no mapa. Confira CEP, rua e número e tente novamente.",
+      );
+    }
+
+    payload.endereco_latitude = coordinates.latitude;
+    payload.endereco_longitude = coordinates.longitude;
+
+    return payload;
+  }
+
+  async function submitManualOrder(formNode) {
+    const payload = await buildManualOrderPayloadWithCoordinates(formNode);
 
     const data = await rpc("criar_pedido_manual_admin", {
       p_dados: payload,
@@ -3362,7 +3406,7 @@
       return false;
     }
 
-    const payload = buildManualOrderPayload(formNode);
+    const payload = await buildManualOrderPayloadWithCoordinates(formNode);
 
     const normalizedPhone = normalizeWhatsAppPhone(payload.cliente_telefone);
 
