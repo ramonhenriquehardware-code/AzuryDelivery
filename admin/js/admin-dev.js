@@ -10792,6 +10792,9 @@ ${printableOrderAddressHtml(order)}
 
       picadinho:
         "Arroz, feijão e picadinho. Salada opcional, sem alteração no valor da marmita.",
+
+      costela:
+        "Arroz, feijão e costela. Salada opcional, sem alteração no valor da marmita.",
     };
 
     next.marmitas.forEach((item) => {
@@ -10836,6 +10839,24 @@ ${printableOrderAddressHtml(order)}
           criarTamanhoPhAtualizacao("P", 500, "Rasa", 18, true),
 
           criarTamanhoPhAtualizacao("M", 750, "Média", 28, true),
+
+          criarTamanhoPhAtualizacao("G", 1100, "Grande", null, false),
+        ],
+      },
+
+      {
+        id: "costela",
+
+        nome: "Costela",
+
+        descricao: descricoes.costela,
+
+        ativo: true,
+
+        tamanhos: [
+          criarTamanhoPhAtualizacao("P", 500, "Rasa", 15, true),
+
+          criarTamanhoPhAtualizacao("M", 750, "Média", 25, true),
 
           criarTamanhoPhAtualizacao("G", 1100, "Grande", null, false),
         ],
@@ -10982,7 +11003,7 @@ ${printableOrderAddressHtml(order)}
 
     await savePhConfig(
       next,
-      "Cardápio PH atualizado: Contra Filé, Picadinho e nova regra de salada aplicados.",
+      "Cardápio PH atualizado: Contra Filé, Picadinho, Costela e nova regra de salada aplicados.",
     );
   }
 
