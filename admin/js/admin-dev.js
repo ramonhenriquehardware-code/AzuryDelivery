@@ -2191,11 +2191,23 @@
       },
 
       {
+        label: "Porções de batata",
+
+        type: "adicional",
+
+        items: (state.phConfig?.adicionais || []).filter((item) =>
+          isPhPortionItem(item),
+        ),
+      },
+
+      {
         label: "Adicionais",
 
         type: "adicional",
 
-        items: state.phConfig?.adicionais || [],
+        items: (state.phConfig?.adicionais || []).filter(
+          (item) => !isPhPortionItem(item),
+        ),
       },
     ];
 
@@ -10368,6 +10380,19 @@ ${printableOrderAddressHtml(order)}
       .join("");
   }
 
+  function isPhPortionItem(itemOrId) {
+    const id = String(
+      itemOrId && typeof itemOrId === "object" ? itemOrId.id : itemOrId || "",
+    );
+
+    return [
+      "batata-ketchup-maionese-500",
+      "batata-cheddar-bacon-500",
+      "batata-ketchup-maionese-750",
+      "batata-cheddar-bacon-750",
+    ].includes(id);
+  }
+
   function phConfigCards(items, type) {
     if (!items.length) {
       return `
@@ -10515,9 +10540,13 @@ ${printableOrderAddressHtml(order)}
       (item) => cardapioMatchesAvailability(item?.ativo !== false),
     );
 
-    const addons = (
+    const allAddons = (
       Array.isArray(config.adicionais) ? config.adicionais : []
     ).filter((item) => cardapioMatchesAvailability(item?.ativo !== false));
+
+    const portions = allAddons.filter((item) => isPhPortionItem(item));
+
+    const addons = allAddons.filter((item) => !isPhPortionItem(item));
 
     const accompaniments = (
       Array.isArray(config.acompanhamentos) ? config.acompanhamentos : []
@@ -10618,6 +10647,32 @@ ${printableOrderAddressHtml(order)}
           "
         >
           ${phConfigCards(drinks, "bebida")}
+        </div>
+
+      </div>
+
+      <div
+        style="
+          margin-bottom:24px;
+        "
+      >
+
+        <h3
+          style="
+            margin-bottom:12px;
+          "
+        >
+          Porções de batata
+        </h3>
+
+        <div
+          style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+            gap:14px;
+          "
+        >
+          ${phConfigCards(portions, "adicional")}
         </div>
 
       </div>
@@ -10753,6 +10808,12 @@ ${printableOrderAddressHtml(order)}
       changed = true;
     }
 
+    if (!Array.isArray(next.adicionais)) {
+      next.adicionais = [];
+
+      changed = true;
+    }
+
     if (!Array.isArray(next.acompanhamentos)) {
       next.acompanhamentos = [];
 
@@ -10790,11 +10851,8 @@ ${printableOrderAddressHtml(order)}
       "contra-file":
         "Arroz, feijão e contra filé preparado na chapa. Salada opcional, sem alteração no valor da marmita.",
 
-      picadinho:
-        "Arroz, feijão e picadinho. Salada opcional, sem alteração no valor da marmita.",
-
-      costela:
-        "Arroz, feijão e costela. Salada opcional, sem alteração no valor da marmita.",
+      "macarrao-com-frango":
+        "Arroz, feijão, macarrão e frango. Salada opcional, sem alteração no valor da marmita.",
     };
 
     next.marmitas.forEach((item) => {
@@ -10807,93 +10865,158 @@ ${printableOrderAddressHtml(order)}
       }
     });
 
-    const novasMarmitas = [
+    const novaMarmita = {
+      id: "macarrao-com-frango",
+
+      nome: "Macarrão com Frango",
+
+      descricao: descricoes["macarrao-com-frango"],
+
+      ativo: true,
+
+      tamanhos: [
+        criarTamanhoPhAtualizacao("P", 500, "Rasa", 15, true),
+
+        criarTamanhoPhAtualizacao("M", 750, "Média", 25, true),
+
+        criarTamanhoPhAtualizacao("G", 1100, "Grande", null, false),
+      ],
+    };
+
+    const marmitaExistente = next.marmitas.find(
+      (item) => String(item?.id || "") === novaMarmita.id,
+    );
+
+    if (!marmitaExistente) {
+      next.marmitas.push(novaMarmita);
+
+      changed = true;
+    } else {
+      if (marmitaExistente.nome !== novaMarmita.nome) {
+        marmitaExistente.nome = novaMarmita.nome;
+
+        changed = true;
+      }
+
+      if (marmitaExistente.descricao !== novaMarmita.descricao) {
+        marmitaExistente.descricao = novaMarmita.descricao;
+
+        changed = true;
+      }
+
+      if (marmitaExistente.ativo === false) {
+        marmitaExistente.ativo = true;
+
+        changed = true;
+      }
+
+      if (!Array.isArray(marmitaExistente.tamanhos)) {
+        marmitaExistente.tamanhos = [];
+
+        changed = true;
+      }
+
+      novaMarmita.tamanhos.forEach((padrao) => {
+        const atual = marmitaExistente.tamanhos.find(
+          (tamanho) =>
+            Number(tamanho?.capacidade_ml) === Number(padrao.capacidade_ml),
+        );
+
+        if (!atual) {
+          marmitaExistente.tamanhos.push(padrao);
+
+          changed = true;
+
+          return;
+        }
+
+        if (atual.ativo !== padrao.ativo) {
+          atual.ativo = padrao.ativo;
+
+          changed = true;
+        }
+
+        if (padrao.ativo && Number(atual.preco) !== Number(padrao.preco)) {
+          atual.preco = padrao.preco;
+
+          changed = true;
+        }
+      });
+    }
+
+    ["picadinho", "costela"].forEach((id) => {
+      const item = next.marmitas.find(
+        (marmita) => String(marmita?.id || "") === id,
+      );
+
+      if (item && item.ativo !== false) {
+        item.ativo = false;
+
+        changed = true;
+      }
+    });
+
+    const novasPorcoes = [
       {
-        id: "picadinho",
-
-        nome: "Picadinho",
-
-        descricao: descricoes.picadinho,
-
+        id: "batata-ketchup-maionese-500",
+        nome: "Batata Pequena — Ketchup e Maionese",
+        descricao: "Porção de batata frita de 500 ml com ketchup e maionese.",
+        preco: 12,
         ativo: true,
-
-        tamanhos: [
-          criarTamanhoPhAtualizacao("P", 500, "Rasa", 15, true),
-
-          criarTamanhoPhAtualizacao("M", 750, "Média", 22, true),
-
-          criarTamanhoPhAtualizacao("G", 1100, "Grande", null, false),
-        ],
       },
-
       {
-        id: "contra-file",
-
-        nome: "Contra Filé",
-
-        descricao: descricoes["contra-file"],
-
+        id: "batata-cheddar-bacon-500",
+        nome: "Batata Pequena — Cheddar e Bacon",
+        descricao: "Porção de batata frita de 500 ml com cheddar e bacon.",
+        preco: 16,
         ativo: true,
-
-        tamanhos: [
-          criarTamanhoPhAtualizacao("P", 500, "Rasa", 18, true),
-
-          criarTamanhoPhAtualizacao("M", 750, "Média", 28, true),
-
-          criarTamanhoPhAtualizacao("G", 1100, "Grande", null, false),
-        ],
       },
-
       {
-        id: "costela",
-
-        nome: "Costela",
-
-        descricao: descricoes.costela,
-
+        id: "batata-ketchup-maionese-750",
+        nome: "Batata Média — Ketchup e Maionese",
+        descricao: "Porção de batata frita de 750 ml com ketchup e maionese.",
+        preco: 18,
         ativo: true,
-
-        tamanhos: [
-          criarTamanhoPhAtualizacao("P", 500, "Rasa", 15, true),
-
-          criarTamanhoPhAtualizacao("M", 750, "Média", 25, true),
-
-          criarTamanhoPhAtualizacao("G", 1100, "Grande", null, false),
-        ],
+      },
+      {
+        id: "batata-cheddar-bacon-750",
+        nome: "Batata Média — Cheddar e Bacon",
+        descricao: "Porção de batata frita de 750 ml com cheddar e bacon.",
+        preco: 23,
+        ativo: true,
       },
     ];
 
-    novasMarmitas.forEach((nova) => {
-      const existente = next.marmitas.find(
+    novasPorcoes.forEach((nova) => {
+      const existente = next.adicionais.find(
         (item) => String(item?.id || "") === nova.id,
       );
 
       if (!existente) {
-        next.marmitas.push(nova);
+        next.adicionais.push(nova);
 
         changed = true;
 
         return;
       }
 
-      if (!Array.isArray(existente.tamanhos)) {
-        existente.tamanhos = [];
-
-        changed = true;
-      }
-
-      nova.tamanhos.forEach((padrao) => {
-        const atual = existente.tamanhos.find(
-          (tamanho) =>
-            Number(tamanho?.capacidade_ml) === Number(padrao.capacidade_ml),
-        );
-
-        if (!atual) {
-          existente.tamanhos.push(padrao);
+      ["nome", "descricao", "preco", "ativo"].forEach((campo) => {
+        if (existente[campo] !== nova[campo]) {
+          existente[campo] = nova[campo];
 
           changed = true;
         }
       });
+    });
+
+    next.adicionais.forEach((item) => {
+      if (normalizeKey(item?.id) === "batata") {
+        if (item.ativo !== false) {
+          item.ativo = false;
+
+          changed = true;
+        }
+      }
     });
 
     const salada = next.acompanhamentos.find(
@@ -10993,7 +11116,7 @@ ${printableOrderAddressHtml(order)}
 
     try {
       localStorage.setItem(
-        "ph-config-backup-20260819",
+        "ph-config-backup-20260910",
 
         JSON.stringify(state.phConfig),
       );
@@ -11003,7 +11126,7 @@ ${printableOrderAddressHtml(order)}
 
     await savePhConfig(
       next,
-      "Cardápio PH atualizado: Contra Filé, Picadinho, Costela e nova regra de salada aplicados.",
+      "Cardápio PH atualizado: Macarrão com Frango e porções de batata adicionados; Picadinho e Costela desativados.",
     );
   }
 
@@ -11480,6 +11603,8 @@ ${printableOrderAddressHtml(order)}
 
     const isDrink = type === "bebida";
 
+    const isPortion = !isDrink && isPhPortionItem(item);
+
     const collectionKey = isDrink ? "bebidas" : "adicionais";
 
     openModal({
@@ -11489,7 +11614,11 @@ ${printableOrderAddressHtml(order)}
         {
           name: "nome",
 
-          label: isDrink ? "Nome da bebida" : "Nome do adicional",
+          label: isDrink
+            ? "Nome da bebida"
+            : isPortion
+              ? "Nome da porção"
+              : "Nome do adicional",
 
           value: item.nome || "",
 
